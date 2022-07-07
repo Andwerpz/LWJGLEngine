@@ -14,8 +14,9 @@ public class Shader {
 	//location when passed into shaders
 	public static final int VERTEX_ATTRIB = 0;
 	public static final int TCOORD_ATTRIB = 1;
+	public static final int NORMAL_ATTRIB = 2;
 	
-	public static Shader HTRI, PERS;
+	public static Shader PERS;
 	
 	private boolean enabled = false;
 	
@@ -27,8 +28,7 @@ public class Shader {
 	}
 	
 	public static void loadAll() {
-		HTRI = new Shader("shaders/hellotri.vert", "shaders/hellotri.frag");
-		PERS = new Shader("shaders/perspective.vert", "shaders/perspective.frag");
+		PERS = new Shader("/perspective.vert", "/perspective.frag");
 	}
 	
 	public int getUniform(String name) {

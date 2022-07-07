@@ -501,41 +501,4 @@ public class MathTools {
 		return ans;
 	}
 
-	public static Vec3 rotateVector(Vec3 p, double xRot, double yRot, double zRot) {
-		Vec3 p1 = new Vec3(p.x, p.y, p.z);
-
-		rotateX(p1, xRot);
-		rotateY(p1, yRot);
-		rotateZ(p1, zRot);
-
-		return p1;
-	}
-
-	public static void rotateX(Vec3 p, double xRot) {
-		double x = p.x;
-		double y = p.y;
-		double z = p.z;
-		p.x = (float) x;
-		p.y = (float) ((y * Math.cos(xRot)) + (z * -Math.sin(xRot)));
-		p.z = (float) ((y * Math.sin(xRot)) + (z * Math.cos(xRot)));
-	}
-
-	public static void rotateY(Vec3 p, double yRot) {
-		double x = p.x;
-		double y = p.y;
-		double z = p.z;
-		p.x = (float) ((x * Math.cos(yRot)) + (z * Math.sin(yRot)));
-		p.y = (float) y;
-		p.z = (float) ((x * -Math.sin(yRot)) + (z * Math.cos(yRot)));
-	}
-
-	public static void rotateZ(Vec3 p, double zRot) {
-		double x = p.x;
-		double y = p.y;
-		double z = p.z;
-		p.x = (float) ((x * Math.cos(zRot)) + (y * -Math.sin(zRot)));
-		p.y = (float) ((x * Math.sin(zRot)) + (y * Math.cos(zRot)));
-		p.z = (float) z;
-	}
-
 }

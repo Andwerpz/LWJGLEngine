@@ -24,7 +24,6 @@ public class Mat4 {
 
 	/**
 	 * Makes an orthographic projection matrix.
-	 * 
 	 * @param left
 	 * @param right
 	 * @param bottom
@@ -46,6 +45,16 @@ public class Mat4 {
 
 		return result;
 	}
+	
+	/**
+	 * Makes a perspective projection matrix
+	 * @param viewAngleRad
+	 * @param width
+	 * @param height
+	 * @param nearClippingPlaneDistance
+	 * @param farClippingPlaneDistance
+	 * @return
+	 */
 
 	public static Mat4 perspective(float viewAngleRad, float width, float height, float nearClippingPlaneDistance,
 			float farClippingPlaneDistance) {
@@ -62,7 +71,7 @@ public class Mat4 {
 		return projection;
 	}
 
-	public static Mat4 perspectiveFrustum(float left, float right, float bottom, float top, float near, float far) {
+	private static Mat4 perspectiveFrustum(float left, float right, float bottom, float top, float near, float far) {
 		Mat4 result = new Mat4();
 
 		result.mat[0][0] = (2f * near) / (right - left);
@@ -79,7 +88,7 @@ public class Mat4 {
 
 		return result;
 	}
-
+	
 	public static Mat4 translate(Vec3 vec) {
 		Mat4 result = identity();
 
@@ -91,7 +100,7 @@ public class Mat4 {
 	}
 
 	/**
-	 * For use in 2D rotation returns a matrix that will rotate around the z axis
+	 * Returns a matrix that will rotate around the z axis
 	 * 
 	 * @param rad
 	 * @return
@@ -110,18 +119,30 @@ public class Mat4 {
 		return result;
 	}
 	
+	/**
+	 * Returns a matrix that will rotate around the x axis
+	 * @param rad
+	 * @return
+	 */
+	
 	public static Mat4 rotateX(float rad) {
 		Mat4 result = identity();
 		float cos = (float) Math.cos(rad);
 		float sin = (float) Math.sin(rad);
 
 		result.mat[1][1] = cos;
-		result.mat[2][1] = sin;
-		result.mat[1][2] = -sin;
+		result.mat[2][1] = -sin;
+		result.mat[1][2] = sin;
 		result.mat[2][2] = cos;
 
 		return result;
 	}
+	
+	/**
+	 * Returns a matrix that will rotate around the y axis
+	 * @param rad
+	 * @return
+	 */
 	
 	public static Mat4 rotateY(float rad) {
 		Mat4 result = identity();
@@ -152,7 +173,7 @@ public class Mat4 {
 			for (int x = 0; x < 4; x++) {
 				float sum = 0f;
 				for (int e = 0; e < 4; e++) {
-					sum += this.mat[x][e] * matrix.mat[e][y];
+					sum += this.mat[e][y] * matrix.mat[x][e];
 				}
 				result.mat[x][y] = sum;
 			}

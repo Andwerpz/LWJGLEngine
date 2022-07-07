@@ -10,6 +10,7 @@ import util.BufferUtils;
 import util.GraphicsTools;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
 
 public class Texture {
 
@@ -22,16 +23,12 @@ public class Texture {
 	
 	public int load(String path) {
 		int[] pixels = null;
-		try {
-			BufferedImage image = ImageIO.read(new FileInputStream(path));
-			image = GraphicsTools.verticalFlip(image);
-			width = image.getWidth();
-			height = image.getHeight();
-			pixels = new int[width * height];
-			image.getRGB(0, 0, width, height, pixels, 0, width);
-		} catch(IOException e) {
-			e.printStackTrace();
-		}
+		BufferedImage image = GraphicsTools.loadImage(path);
+		image = GraphicsTools.verticalFlip(image);
+		width = image.getWidth();
+		height = image.getHeight();
+		pixels = new int[width * height];
+		image.getRGB(0, 0, width, height, pixels, 0, width);
 		
 		int[] data = new int[width * height];
 		for(int i = 0; i < width * height; i++) {
@@ -45,7 +42,8 @@ public class Texture {
 		
 		int result = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, result);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);	//GL_LINEAR for interpolation
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);	//magnification filter
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
 		glBindTexture(GL_TEXTURE_2D, 0);
 		return result;

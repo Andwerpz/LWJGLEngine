@@ -2,6 +2,18 @@ package util;
 
 public class Vec3 {
 	public float x, y, z;
+	
+	public Vec3() {
+		this.x = 0;
+		this.y = 0;
+		this.z = 0;
+	}
+	
+	public Vec3(float val) {
+		this.x = val;
+		this.y = val;
+		this.z = val;
+	}
 
 	public Vec3(float x, float y, float z) {
 		this.x = x;
@@ -28,6 +40,12 @@ public class Vec3 {
 		return this;
 	}
 	
+	public Vec3 add(Vec3 v) {
+		Vec3 result = new Vec3(this);
+		result.addi(v);
+		return result;
+	}
+	
 	public Vec3 subi(Vec3 v) {
 		this.x -= v.x;
 		this.y -= v.y;
@@ -45,6 +63,14 @@ public class Vec3 {
 		this.y *= val;
 		this.z *= val;
 		return this;
+	}
+	
+	public Vec3 mul(float val) {
+		Vec3 result = new Vec3(this);
+		result.x *= val;
+		result.y *= val;
+		result.z *= val;
+		return result;
 	}
 	
 	public Vec3 normalize() {
@@ -68,23 +94,27 @@ public class Vec3 {
 		float y = this.y;
 		float z = this.z;
 		this.x = x;
-		this.y = (float) ((y * Math.cos(xRot)) + (z * -Math.sin(xRot)));
-		this.z = (float) ((y * Math.sin(xRot)) + (z * Math.cos(xRot)));
+		this.y = (float) ((y * Math.cos(xRot)) + (z * Math.sin(xRot)));
+		this.z = (float) ((y * -Math.sin(xRot)) + (z * Math.cos(xRot)));
 	}
 	public void rotateY(float yRot) {
 		float x = this.x;
 		float y = this.y;
 		float z = this.z;
-		this.x = (float) ((x * Math.cos(yRot)) + (z * Math.sin(yRot)));
+		this.x = (float) ((x * Math.cos(yRot)) + (z * -Math.sin(yRot)));
 		this.y = y;
-		this.z = (float) ((x * -Math.sin(yRot)) + (z * Math.cos(yRot)));
+		this.z = (float) ((x * Math.sin(yRot)) + (z * Math.cos(yRot)));
 	}
 	public void rotateZ(float zRot) {
 		float x = this.x;
 		float y = this.y;
 		float z = this.z;
-		this.x = (float) ((x * Math.cos(zRot)) + (y * -Math.sin(zRot)));
-		this.y = (float) ((x * Math.sin(zRot)) + (y * Math.cos(zRot)));
+		this.x = (float) ((x * Math.cos(zRot)) + (y * Math.sin(zRot)));
+		this.y = (float) ((x * -Math.sin(zRot)) + (y * Math.cos(zRot)));
 		this.z = z;
+	}
+	
+	public String toString() {
+		return this.x + ", " + this.y + ", " + this.z;
 	}
 }
