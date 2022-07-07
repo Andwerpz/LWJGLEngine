@@ -67,7 +67,6 @@ public class Main implements Runnable{
 		createCapabilities();
 		glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
 		glEnable(GL_DEPTH_TEST);
-		glActiveTexture(GL_TEXTURE1);
 		System.out.println("OpenGL : " + glGetString(GL_VERSION));
 		Shader.loadAll();
 		
@@ -82,7 +81,8 @@ public class Main implements Runnable{
 		Shader.PERS.setUniformMat4("pr_matrix", pr_matrix);
 		Shader.PERS.setUniformMat4("vw_matrix", vw_matrix);
 		Shader.PERS.setUniformMat4("md_matrix", md_matrix);
-		Shader.PERS.setUniform1i("tex", 1);
+		Shader.PERS.setUniform1i("tex_diffuse", 0);
+		Shader.PERS.setUniform1i("tex_specular", 1);
 		Shader.PERS.setUniform3f("view_pos", new Vec3(0));
 		
 		//INIT

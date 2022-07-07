@@ -11,14 +11,16 @@ import util.GraphicsTools;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL13.*;
 
 public class Texture {
 
 	private int width, height;
-	private int texture;
+	private int texture_diffuse, texture_specular;
 	
-	public Texture(String path) {
-		texture = load(path);
+	public Texture(String diffuse, String specular) {
+		texture_diffuse = load(diffuse);
+		texture_specular = load(specular);
 	}
 	
 	public int load(String path) {
@@ -50,10 +52,16 @@ public class Texture {
 	}
 	
 	public void bind() {
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture_diffuse);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture_specular);
 	}
 	
 	public void unbind() {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 }

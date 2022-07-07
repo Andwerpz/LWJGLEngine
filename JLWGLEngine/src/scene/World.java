@@ -34,12 +34,19 @@ public class World {
 	public static final int UP = 4;
 	public static final int DOWN = 5;
 	
+	public static final int MAX_LIGHTS = 256;
+	
 	Player player;
-	static Texture astolfo;
+	static Texture container;
+	
+	public static ArrayList<Light> lights;
 	
 	public static void init() {
-		astolfo = new Texture("/astolfo 11.jpg");
+		container = new Texture("/container_diffuse.png", "/container_specular.png");
 		Cube.create();
+		lights = new ArrayList<>();
+		//lights.add(new DirLight(new Vec3(0.1f, -1, 0.5f), new Vec3(1)));
+		lights.add(new PointLight(new Vec3(1.2f, 0.9f, -1.5f), new Vec3(1), 1f, 0.09f, 0.032f));
 	}
 
 	public World() {
@@ -54,13 +61,27 @@ public class World {
 	public void render() {
 		Shader.PERS.enable();
 		
+		//lights
+		Shader.PERS.setUniform1i("nrLights", lights.size());
+		for(int i = 0; i < lights.size(); i++) {
+			lights.get(i).bind(Shader.PERS, i);
+		}
+		
 		Mat4 vw_matrix = player.camera.getViewMatrix();
 		Shader.PERS.setUniformMat4("vw_matrix", vw_matrix);
 		Shader.PERS.setUniform3f("view_pos", player.camera.pos);
 		
 		Mat4 md_matrix = Mat4.translate(new Vec3(0, 0, -3));
 		Shader.PERS.setUniformMat4("md_matrix", md_matrix);
-		Cube.render(astolfo);
+		Cube.render(container);
+		
+		md_matrix = Mat4.translate(new Vec3(0, 1, -2));
+		Shader.PERS.setUniformMat4("md_matrix", md_matrix);
+		Cube.render(container);
+		
+		md_matrix = Mat4.translate(new Vec3(4, -1, 0));
+		Shader.PERS.setUniformMat4("md_matrix", md_matrix);
+		Cube.render(container);
 		
 		Shader.PERS.disable();
 	}

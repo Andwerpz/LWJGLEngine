@@ -96,7 +96,7 @@ public class Cube extends Model {
 		for(int i = 0; i < 6; i++) {
 			vert[i].render();
 		}
-		tex.unbind();
+		tex.bind();
 	}
 	
 }

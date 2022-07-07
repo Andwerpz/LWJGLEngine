@@ -1,34 +1,37 @@
 package player;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
+import static org.lwjgl.glfw.GLFW.*;
 
 import entity.Entity;
 import input.KeyboardInput;
 import input.MouseInput;
 import model.Hitbox;
+import scene.SpotLight;
+import scene.World;
 import util.MathTools;
 import util.Vec2;
 import util.Vec3;
 
-public class Player extends Entity{
-	
+public class Player extends Entity {
+
 	public static Hitbox h = new Hitbox(new Vec3(0), new Vec3(0.6f, 1.8f, 0.6f));
 	public static float moveSpeed = 0.05f;
 	public static float jumpVel = 0.25f;
 	public static Vec3 cameraVec = new Vec3(0.3f, 1.6f, 0.3f);
-	
+
 	Vec2 mouse;
 	public Camera camera;
-	
+
+	public SpotLight flashlight;
+	public boolean flashlightOn = false;
+	int flashlightToggleDelay = 15;
+	int flashlightToggleCounter = 0;
+
 	public Player(Vec3 pos) {
 		super(pos);
 		camera = new Camera();
 		mouse = MouseInput.getMousePos();
+		flashlight = new SpotLight(this.camera.pos, this.camera.getFacing(), new Vec3(1), 25f, 30f, 1f, 0.9f, 0.032f);
 	}
 
 	@Override
@@ -41,10 +44,10 @@ public class Player extends Entity{
 		// ROTATION
 		Vec2 nextMouse = MouseInput.getMousePos();
 		Vec2 delta = nextMouse.sub(mouse);
-		camera.yRot += Math.toRadians(delta.x / 10f); 
+		camera.yRot += Math.toRadians(delta.x / 10f);
 		camera.xRot += Math.toRadians(delta.y / 10f);
 		mouse = nextMouse;
-		
+
 		camera.xRot = (float) MathTools.clamp(-Math.PI / 2f, Math.PI / 2f, camera.xRot);
 
 		// TRANSLATION
@@ -71,10 +74,24 @@ public class Player extends Entity{
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
 			vel.y -= moveSpeed;
 		}
-		
+
 		move();
-		
+
 		camera.pos = this.pos.add(cameraVec);
+
+		// flashlight
+		this.flashlight.pos = this.camera.pos;
+		this.flashlight.dir = this.camera.getFacing();
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_E) && flashlightToggleCounter >= flashlightToggleDelay) {
+			flashlightToggleCounter = 0;
+			if (flashlightOn) {
+				World.lights.remove(flashlight);
+			} else {
+				World.lights.add(flashlight);
+			}
+			flashlightOn = !flashlightOn;
+		}
+		flashlightToggleCounter = Math.min(flashlightToggleCounter + 1, flashlightToggleDelay);
 	}
-	
+
 }
