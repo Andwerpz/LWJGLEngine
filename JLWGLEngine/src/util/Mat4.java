@@ -165,7 +165,12 @@ public class Mat4 {
 
 		return result;
 	}
-
+	
+	/**
+	 * Returns a new matrix equal to the product between itself and the input
+	 * @param matrix
+	 * @return
+	 */
 	public Mat4 mul(Mat4 matrix) {
 		Mat4 result = new Mat4();
 
@@ -180,6 +185,16 @@ public class Mat4 {
 		}
 
 		return result;
+	}
+	
+	/**
+	 * Sets itself equal to the product from a multiplication with itself and the input
+	 * @param matrix
+	 * @return
+	 */
+	public Mat4 muli(Mat4 matrix) {
+		this.mat = this.mul(matrix).mat;
+		return this;
 	}
 
 	public FloatBuffer toFloatBuffer() {

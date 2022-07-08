@@ -3,20 +3,19 @@ package graphics;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL31.*;
 
 import util.BufferUtils;
 import util.MathTools;
 import util.Vec3;
 
-public class VertexArray {
-	
+public class InstancedArray {
+
 	private int renderType;
-	private int vao, vbo, tbo, nbo, ibo;
+	private int vao, vbo, tbo, nbo, ibo, mvo;
 	private int count;
 	
-	public VertexArray(float[] vertices, byte[] indices, float[] texCoordinates, int renderType) {
+	public InstancedArray(float[] vertices, byte[] indices, float[] texCoordinates, int renderType) {
 		float[] normals = computeNormals(vertices, indices);
 		this.renderType = renderType;
 		count = indices.length;

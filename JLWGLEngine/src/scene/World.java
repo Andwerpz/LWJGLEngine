@@ -40,13 +40,38 @@ public class World {
 	static Texture container;
 	
 	public static ArrayList<Light> lights;
+	public static ArrayList<Mat4> model;
 	
 	public static void init() {
 		container = new Texture("/container_diffuse.png", "/container_specular.png");
 		Cube.create();
 		lights = new ArrayList<>();
-		//lights.add(new DirLight(new Vec3(0.1f, -1, 0.5f), new Vec3(1)));
-		lights.add(new PointLight(new Vec3(1.2f, 0.9f, -1.5f), new Vec3(1), 1f, 0.09f, 0.032f));
+		lights.add(new DirLight(new Vec3(0.1f, -1f, 0.5f), new Vec3(1)));
+		//lights.add(new PointLight(new Vec3(1.2f, 0.9f, -1.5f), new Vec3(1), 1f, 0.09f, 0.032f));
+		
+		model = new ArrayList<>();
+		float radius = 50f;
+		float offset = 5f;
+		for(int i = 0; i < 150; i++) {
+			Mat4 md_matrix = Mat4.identity();
+			
+			//scale 
+			md_matrix.muli(Mat4.scale((float) (Math.random() * 1f + 0.05f)));
+			
+			//rotate
+			md_matrix.muli(Mat4.rotateX((float) (Math.random() * Math.PI))).muli(Mat4.rotateY((float) (Math.random() * Math.PI))).muli(Mat4.rotateZ((float) (Math.random() * Math.PI)));
+			
+			//translate
+			float angle = (float) (Math.random() * Math.PI * 2f);
+		    float displacement = (float) (Math.random() * (int)(2 * offset * 100)) / 100.0f - offset;
+		    float x = (float) Math.sin(angle) * radius + displacement;
+		    displacement = (float) (Math.random() * (int)(2 * offset * 100)) / 100.0f - offset;
+		    float y = displacement * 0.4f; // keep height of field smaller compared to width of x and z
+		    displacement = (float) (Math.random() * (int)(2 * offset * 100)) / 100.0f - offset;
+		    float z = (float) Math.cos(angle) * radius + displacement;
+			md_matrix.muli(Mat4.translate(new Vec3(x, y, z)));
+			model.add(md_matrix);
+		}
 	}
 
 	public World() {
@@ -61,27 +86,19 @@ public class World {
 	public void render() {
 		Shader.PERS.enable();
 		
-		//lights
+		//bind lights
 		Shader.PERS.setUniform1i("nrLights", lights.size());
 		for(int i = 0; i < lights.size(); i++) {
 			lights.get(i).bind(Shader.PERS, i);
 		}
 		
+		//bind view matrix
 		Mat4 vw_matrix = player.camera.getViewMatrix();
 		Shader.PERS.setUniformMat4("vw_matrix", vw_matrix);
 		Shader.PERS.setUniform3f("view_pos", player.camera.pos);
 		
-		Mat4 md_matrix = Mat4.translate(new Vec3(0, 0, -3));
-		Shader.PERS.setUniformMat4("md_matrix", md_matrix);
-		Cube.render(container);
-		
-		md_matrix = Mat4.translate(new Vec3(0, 1, -2));
-		Shader.PERS.setUniformMat4("md_matrix", md_matrix);
-		Cube.render(container);
-		
-		md_matrix = Mat4.translate(new Vec3(4, -1, 0));
-		Shader.PERS.setUniformMat4("md_matrix", md_matrix);
-		Cube.render(container);
+		//render world
+		Cube.renderInstanced(container, model);
 		
 		Shader.PERS.disable();
 	}
