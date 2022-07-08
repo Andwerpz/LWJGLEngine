@@ -27,4 +27,18 @@ public class BufferUtils {
 		((Buffer) result.put(array)).flip();
 		return result;
 	}
+	
+	public static FloatBuffer createFloatBuffer(Mat4[] array) {
+		float[] elements = new float[array.length * 16];
+		// have to convert to column major order
+		for (int k = 0; k < array.length; k++) {
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < 4; j++) {
+					elements[i + j * 4 + k * 16] = array[k].mat[i][j];
+				}
+			}
+		}
+		
+		return createFloatBuffer(elements);
+	}
 }

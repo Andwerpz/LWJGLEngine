@@ -25,7 +25,7 @@ public class SpotLight extends Light{
 		shader.setUniform1f("lights[" + index + "].cutOff", (float) Math.cos(Math.toRadians(this.cutOff)));
 		shader.setUniform1f("lights[" + index + "].outerCutOff", (float) Math.cos(Math.toRadians(this.outerCutOff)));
 		shader.setUniform1f("lights[" + index + "].constant", this.constant);
-		shader.setUniform1f("lights[" + index + "].linear", this.constant);
+		shader.setUniform1f("lights[" + index + "].linear", this.linear);
 		shader.setUniform1f("lights[" + index + "].quadratic", this.quadratic);
 	}
 	

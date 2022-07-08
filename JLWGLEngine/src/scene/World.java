@@ -40,19 +40,19 @@ public class World {
 	static Texture container;
 	
 	public static ArrayList<Light> lights;
-	public static ArrayList<Mat4> model;
 	
 	public static void init() {
 		container = new Texture("/container_diffuse.png", "/container_specular.png");
-		Cube.create();
-		lights = new ArrayList<>();
-		lights.add(new DirLight(new Vec3(0.1f, -1f, 0.5f), new Vec3(1)));
-		//lights.add(new PointLight(new Vec3(1.2f, 0.9f, -1.5f), new Vec3(1), 1f, 0.09f, 0.032f));
 		
-		model = new ArrayList<>();
+		lights = new ArrayList<>();
+		//lights.add(new DirLight(new Vec3(0.1f, -1f, 0.5f), new Vec3(1)));
+		//lights.add(new PointLight(new Vec3(1.2f, 0.9f, -1.5f), new Vec3(1), 1f, 0.09f, 0.032f));
+		lights.add(new PointLight(new Vec3(0), new Vec3(1), 1f, 0.0014f, 0.000007f));
+		
+		Mat4[] modelMats = new Mat4[1000];
 		float radius = 50f;
 		float offset = 5f;
-		for(int i = 0; i < 150; i++) {
+		for(int i = 0; i < modelMats.length; i++) {
 			Mat4 md_matrix = Mat4.identity();
 			
 			//scale 
@@ -70,8 +70,11 @@ public class World {
 		    displacement = (float) (Math.random() * (int)(2 * offset * 100)) / 100.0f - offset;
 		    float z = (float) Math.cos(angle) * radius + displacement;
 			md_matrix.muli(Mat4.translate(new Vec3(x, y, z)));
-			model.add(md_matrix);
+			modelMats[i] = (md_matrix);
 		}
+		
+		Cube.create();
+		Cube.updateModelMats(modelMats);
 	}
 
 	public World() {
@@ -98,7 +101,7 @@ public class World {
 		Shader.PERS.setUniform3f("view_pos", player.camera.pos);
 		
 		//render world
-		Cube.renderInstanced(container, model);
+		Cube.render(container);
 		
 		Shader.PERS.disable();
 	}

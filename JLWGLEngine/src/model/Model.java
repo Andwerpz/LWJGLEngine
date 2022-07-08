@@ -2,7 +2,8 @@ package model;
 
 public class Model {
 	
-	//when rendering, assume model transforms already applied
+	//always instanced rendering
+	//in order to render with correct model matrices, you must first update the model matrices. 
 
 	public Model() {
 		

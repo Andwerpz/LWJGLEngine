@@ -13,6 +13,7 @@ import util.Vec3;
 public class Cube extends Model {
 	
 	static VertexArray v_top, v_bottom, v_north, v_south, v_east, v_west;
+	static VertexArray[] vert;
 
 	public static void create() {
 		byte[] indices = new byte[] {
@@ -86,33 +87,20 @@ public class Cube extends Model {
 			},
 			indices, tex, GL_TRIANGLES
 		);
+		
+		vert = new VertexArray[] {v_top, v_bottom, v_north, v_south, v_east, v_west};
 	}
 	
-	public static void render(Texture tex) {
-		VertexArray[] vert = new VertexArray[] {
-			v_top, v_bottom, v_north, v_south, v_east, v_west
-		};
-		
+	public static void updateModelMats(Mat4[] modelMats) {
+		for(int i = 0; i < 6; i++) {
+			vert[i].updateModelMats(modelMats);
+		}
+	}
+	
+	public static void render(Texture tex) {		
 		tex.bind();
 		for(int i = 0; i < 6; i++) {
 			vert[i].render();
-		}
-	}
-	
-	public static void renderInstanced(Texture tex, ArrayList<Mat4> model) {
-		VertexArray[] vert = new VertexArray[] {
-			v_top, v_bottom, v_north, v_south, v_east, v_west
-		};
-		
-		//bind matrices
-		for(int i = 0; i < model.size(); i++) {
-			Shader.PERS.setUniformMat4("md_matrix[" + i + "]", model.get(i));
-		}
-		
-		//render
-		tex.bind();
-		for(int i = 0; i < 6; i++) {
-			vert[i].renderInstanced(model.size());
 		}
 	}
 	

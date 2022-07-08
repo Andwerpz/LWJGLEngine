@@ -19,7 +19,7 @@ public class PointLight extends Light{
 		shader.setUniform3f("lights[" + index + "].pos", this.pos);
 		shader.setUniform3f("lights[" + index + "].color", this.color);
 		shader.setUniform1f("lights[" + index + "].constant", this.constant);
-		shader.setUniform1f("lights[" + index + "].linear", this.constant);
+		shader.setUniform1f("lights[" + index + "].linear", this.linear);
 		shader.setUniform1f("lights[" + index + "].quadratic", this.quadratic);
 	}
 	
