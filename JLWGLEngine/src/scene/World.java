@@ -15,6 +15,7 @@ import graphics.Texture;
 import input.MouseInput;
 import main.Main;
 import model.Cube;
+import model.Model;
 import player.Camera;
 import player.Player;
 import util.Mat4;
@@ -37,22 +38,25 @@ public class World {
 	public static final int MAX_LIGHTS = 256;
 	
 	Player player;
-	static Texture container;
+	static Texture containerTex;
+	static Cube containerModel;
 	
 	public static ArrayList<Light> lights;
 	
 	public static void init() {
-		container = new Texture("/container_diffuse.png", "/container_specular.png");
+		Model.create();
+		containerTex = new Texture("/container_diffuse.png", "/container_specular.png");
+		containerModel = new Cube();
 		
 		lights = new ArrayList<>();
 		//lights.add(new DirLight(new Vec3(0.1f, -1f, 0.5f), new Vec3(1)));
 		//lights.add(new PointLight(new Vec3(1.2f, 0.9f, -1.5f), new Vec3(1), 1f, 0.09f, 0.032f));
 		lights.add(new PointLight(new Vec3(0), new Vec3(1), 1f, 0.0014f, 0.000007f));
 		
-		Mat4[] modelMats = new Mat4[1000];
+		int amt = 1000;
 		float radius = 50f;
 		float offset = 5f;
-		for(int i = 0; i < modelMats.length; i++) {
+		for(int i = 0; i < amt; i++) {
 			Mat4 md_matrix = Mat4.identity();
 			
 			//scale 
@@ -70,11 +74,9 @@ public class World {
 		    displacement = (float) (Math.random() * (int)(2 * offset * 100)) / 100.0f - offset;
 		    float z = (float) Math.cos(angle) * radius + displacement;
 			md_matrix.muli(Mat4.translate(new Vec3(x, y, z)));
-			modelMats[i] = (md_matrix);
+			containerModel.modelMats.add(md_matrix);
 		}
-		
-		Cube.create();
-		Cube.updateModelMats(modelMats);
+		containerModel.updateModelMats();
 	}
 
 	public World() {
@@ -101,7 +103,7 @@ public class World {
 		Shader.PERS.setUniform3f("view_pos", player.camera.pos);
 		
 		//render world
-		Cube.render(container);
+		containerModel.render(containerTex);
 		
 		Shader.PERS.disable();
 	}

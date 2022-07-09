@@ -7,6 +7,8 @@ import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.opengl.GL33.*;
 
+import java.util.ArrayList;
+
 import util.BufferUtils;
 import util.Mat4;
 import util.MathTools;
@@ -70,6 +72,10 @@ public class VertexArray {
 		glBindBuffer(GL_ARRAY_BUFFER, mbo);
 		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_STREAM_DRAW);
 		glBindVertexArray(0);
+	}
+	
+	public void updateModelMats(ArrayList<Mat4> modelMats) {
+		this.updateModelMats(modelMats.toArray(new Mat4[modelMats.size()]));
 	}
 
 	// for each vertex, it's normal is the weighted average of all the normals of

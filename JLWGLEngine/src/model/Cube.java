@@ -2,23 +2,53 @@ package model;
 
 import static org.lwjgl.opengl.GL11.*;
 
-import java.util.ArrayList;
-
-import graphics.Shader;
-import graphics.Texture;
 import graphics.VertexArray;
-import util.Mat4;
-import util.Vec3;
 
 public class Cube extends Model {
 	
-	static VertexArray v_top, v_bottom, v_north, v_south, v_east, v_west;
-	static VertexArray[] vert;
+	public static VertexArray cubeVAO;
 
 	public static void create() {
+		float[] vertices = new float[] {
+			0f, 1f, 0f,
+			0f, 1f, 1f,
+			1f, 1f, 1f,
+			1f, 1f, 0f,
+			0f, 0f, 1f,
+			0f, 0f, 0f,
+			1f, 0f, 0f,
+			1f, 0f, 1f,
+			0f, 0f, 0f,
+			0f, 1f, 0f,
+			1f, 1f, 0f,
+			1f, 0f, 0f,
+			1f, 0f, 1f,
+			1f, 1f, 1f,
+			0f, 1f, 1f,
+			0f, 0f, 1f,
+			0f, 0f, 1f,
+			0f, 1f, 1f,
+			0f, 1f, 0f,
+			0f, 0f, 0f,
+			1f, 0f, 0f,
+			1f, 1f, 0f,
+			1f, 1f, 1f,
+			1f, 0f, 1f,
+		};
+		
 		byte[] indices = new byte[] {
 			0, 1, 2,
 			0, 2, 3,
+			4, 5, 6,
+			4, 6, 7,
+			8, 9, 10,
+			8, 10, 11,
+			12, 13, 14,
+			12, 14, 15,
+			16, 17, 18,
+			16, 18, 19,
+			20, 21, 22,
+			20, 22, 23,
 		};
 		
 		float[] tex = new float[] {
@@ -26,82 +56,38 @@ public class Cube extends Model {
 			0f, 1f,
 			1f, 1f,
 			1f, 0f,
+			0f, 0f,
+			0f, 1f,
+			1f, 1f,
+			1f, 0f,
+			0f, 0f,
+			0f, 1f,
+			1f, 1f,
+			1f, 0f,
+			0f, 0f,
+			0f, 1f,
+			1f, 1f,
+			1f, 0f,
+			0f, 0f,
+			0f, 1f,
+			1f, 1f,
+			1f, 0f,
+			0f, 0f,
+			0f, 1f,
+			1f, 1f,
+			1f, 0f,
 		};
 		
-		v_top = new VertexArray(
-			new float[] {
-				0f, 1f, 0f,
-				0f, 1f, 1f,
-				1f, 1f, 1f,
-				1f, 1f, 0f,
-			},
-			indices, tex, GL_TRIANGLES
-		);
-		
-		v_bottom = new VertexArray(
-			new float[] {
-				0f, 0f, 1f,
-				0f, 0f, 0f,
-				1f, 0f, 0f,
-				1f, 0f, 1f,
-			},
-			indices, tex, GL_TRIANGLES
-		);
-		
-		v_north = new VertexArray(
-			new float[] {
-				0f, 0f, 0f,
-				0f, 1f, 0f,
-				1f, 1f, 0f,
-				1f, 0f, 0f,
-			},
-			indices, tex, GL_TRIANGLES
-		);
-		
-		v_south = new VertexArray(
-			new float[] {
-				1f, 0f, 1f,
-				1f, 1f, 1f,
-				0f, 1f, 1f,
-				0f, 0f, 1f,
-			},
-			indices, tex, GL_TRIANGLES
-		);
-		
-		v_east = new VertexArray(
-			new float[] {
-				0f, 0f, 1f,
-				0f, 1f, 1f,
-				0f, 1f, 0f,
-				0f, 0f, 0f,
-			},
-			indices, tex, GL_TRIANGLES
-		);
-		
-		v_west = new VertexArray(
-			new float[] {
-				1f, 0f, 0f,
-				1f, 1f, 0f,
-				1f, 1f, 1f,
-				1f, 0f, 1f,
-			},
-			indices, tex, GL_TRIANGLES
-		);
-		
-		vert = new VertexArray[] {v_top, v_bottom, v_north, v_south, v_east, v_west};
+		Cube.cubeVAO = new VertexArray(vertices, indices, tex, GL_TRIANGLES);
 	}
 	
-	public static void updateModelMats(Mat4[] modelMats) {
-		for(int i = 0; i < 6; i++) {
-			vert[i].updateModelMats(modelMats);
-		}
+	public Cube() {
+		super();
 	}
-	
-	public static void render(Texture tex) {		
-		tex.bind();
-		for(int i = 0; i < 6; i++) {
-			vert[i].render();
-		}
+
+	@Override
+	public VertexArray getVAO() {
+		return Cube.cubeVAO;
 	}
 	
 }
