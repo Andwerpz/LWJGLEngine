@@ -13,7 +13,7 @@ const int DIR_LIGHT = 0;
 const int POINT_LIGHT = 1;
 const int SPOT_LIGHT = 2;
 
-const int MAX_NR_LIGHTS = 256;
+const int MAX_NR_LIGHTS = 100;
 
 struct Light {
 	int type;
@@ -31,6 +31,10 @@ struct Light {
 };	
 
 uniform Light lights[MAX_NR_LIGHTS];
+uniform Light lights2[MAX_NR_LIGHTS];
+uniform Light lights3[MAX_NR_LIGHTS];
+uniform Light lights4[MAX_NR_LIGHTS];
+uniform Light lights5[MAX_NR_LIGHTS];
 uniform int nrLights;
 
 vec3 calculateDirLight(Light light, vec3 viewDir)
