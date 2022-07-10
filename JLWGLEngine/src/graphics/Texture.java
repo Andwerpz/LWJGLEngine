@@ -16,9 +16,9 @@ import static org.lwjgl.opengl.GL13.*;
 public class Texture {
 
 	private int width, height;
-	private int diffuse, specular, normal;
+	private int diffuse, specular, normal, displacement;
 	
-	public Texture(String diffusePath, String specularPath, String normalPath) {
+	public Texture(String diffusePath, String specularPath, String normalPath, String displacementPath) {
 		if(diffusePath == null) {
 			diffuse = load("/tex_diffuse_default.png");
 		}
@@ -38,6 +38,13 @@ public class Texture {
 		}
 		else {
 			normal = load(normalPath);
+		}
+		
+		if(displacementPath == null) {
+			displacement = load("/tex_displacement_default.png");
+		}
+		else {
+			displacement = load(displacementPath);
 		}
 	}
 	
@@ -76,6 +83,8 @@ public class Texture {
 		glBindTexture(GL_TEXTURE_2D, specular);
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, normal);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, displacement);
 	}
 	
 	public void unbind() {
@@ -84,6 +93,8 @@ public class Texture {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 }

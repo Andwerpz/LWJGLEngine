@@ -10,7 +10,7 @@ import util.Vec3;
 public class Hitbox {
 	// just an axis aligned bounding box.
 
-	public static Texture texture = new Texture("/hitbox.png", null, null);
+	public static Texture texture = new Texture("/hitbox.png", null, null, null);
 
 	VertexArray model;
 	public Vec3 min, max;

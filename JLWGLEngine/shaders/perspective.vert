@@ -19,10 +19,16 @@ void main()
     frag_pos = vec3(md_matrix * vec4(pos, 1.0));
     frag_uv = uv;
    	
+   	//convert from tangent to real space. 
    	mat3 normalMatrix = transpose(inverse(mat3(md_matrix)));
     vec3 T = normalize(normalMatrix * tangent);
     vec3 N = normalize(normalMatrix * normal);
     vec3 B = normalize(normalMatrix * bitangent);
     
-   	TBN = mat3(T, B, N);
+    //convert from real to tangent space
+    //vec3 T = normalize(mat3(md_matrix) * tangent);
+    //vec3 B = normalize(mat3(md_matrix) * bitangent);
+    //vec3 N = normalize(mat3(md_matrix) * normal);
+    
+   	TBN = transpose(mat3(T, B, N));
 }

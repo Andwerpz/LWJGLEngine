@@ -38,8 +38,11 @@ public class World {
 	public static final int MAX_LIGHTS = 100;
 	
 	Player player;
-	static Texture crystalBoxTex;
-	static Cube crystalBoxModel;
+	static Texture crystalTex;
+	static Texture containerTex;
+	static Texture goldtilesTex;
+	static Texture goldnuggetTex;
+	static Cube boxModel;
 	
 	public static ArrayList<Light> lights;
 	
@@ -47,9 +50,11 @@ public class World {
 	
 	public static void init() {
 		startTime = System.currentTimeMillis();
-		
-		crystalBoxTex = new Texture("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg");
-		crystalBoxModel = new Cube();
+		goldtilesTex = new Texture("/goldtiles_diffuse.jpg", "/goldtiles_specular.jpg", "/goldtiles_normal.jpg", null);
+		containerTex = new Texture("/container_diffuse.png", "/container_specular.png", null, null);
+		crystalTex = new Texture("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg", "/crystal_displacement.png");
+		goldnuggetTex = new Texture("/goldnugget_diffuse.jpg", "/goldnugget_specular.jpg", "/goldnugget_normal.jpg", null);
+		boxModel = new Cube();
 		
 		lights = new ArrayList<>();
 		lights.add(new PointLight(new Vec3(0), new Vec3(1), 1f, 0.0014f, 0.000007f));
@@ -75,10 +80,10 @@ public class World {
 		    displacement = (float) (Math.random() * (int)(2 * offset * 100)) / 100.0f - offset;
 		    float z = (float) Math.cos(angle) * radius + displacement;
 			md_matrix.muli(Mat4.translate(new Vec3(x, y, z)));
-			crystalBoxModel.modelMats.add(md_matrix);
+			boxModel.modelMats.add(md_matrix);
 		}
-		//crystalBoxModel.modelMats.add(Mat4.identity());
-		crystalBoxModel.updateModelMats();
+		//boxModel.modelMats.add(Mat4.identity());
+		boxModel.updateModelMats();
 	}
 
 	public World() {
@@ -90,8 +95,8 @@ public class World {
 		
 //		float rads = (float) (System.currentTimeMillis() - startTime) / 1000f;
 //		
-//		crystalBoxModel.modelMats.set(0, Mat4.rotateY(rads));
-//		crystalBoxModel.updateModelMats();
+//		boxModel.modelMats.set(0, Mat4.rotateY(rads));
+//		boxModel.updateModelMats();
 	}
 	
 	//assume that the perspective shader is enabled
@@ -110,7 +115,7 @@ public class World {
 		Shader.PERS.setUniform3f("view_pos", player.camera.pos);
 		
 		//render world
-		crystalBoxModel.render(crystalBoxTex);
+		boxModel.render(crystalTex);
 		
 		Shader.PERS.disable();
 	}
