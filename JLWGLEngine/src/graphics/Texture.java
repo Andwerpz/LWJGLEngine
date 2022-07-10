@@ -16,11 +16,29 @@ import static org.lwjgl.opengl.GL13.*;
 public class Texture {
 
 	private int width, height;
-	private int texture_diffuse, texture_specular;
+	private int diffuse, specular, normal;
 	
-	public Texture(String diffuse, String specular) {
-		texture_diffuse = load(diffuse);
-		texture_specular = load(specular);
+	public Texture(String diffusePath, String specularPath, String normalPath) {
+		if(diffusePath == null) {
+			diffuse = load("/tex_diffuse_default.png");
+		}
+		else {
+			diffuse = load(diffusePath);
+		}
+		
+		if(specularPath == null) {
+			specular = load("/tex_specular_default.png");
+		}
+		else {
+			specular = load(specularPath);
+		}
+		
+		if(normalPath == null) {
+			normal = load("/tex_normal_default.png");
+		}
+		else {
+			normal = load(normalPath);
+		}
 	}
 	
 	public int load(String path) {
@@ -44,8 +62,8 @@ public class Texture {
 		
 		int result = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, result);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);	//magnification filter
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);	//magnification filter
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
 		glBindTexture(GL_TEXTURE_2D, 0);
 		return result;
@@ -53,15 +71,19 @@ public class Texture {
 	
 	public void bind() {
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture_diffuse);
+		glBindTexture(GL_TEXTURE_2D, diffuse);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture_specular);
+		glBindTexture(GL_TEXTURE_2D, specular);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, normal);
 	}
 	
 	public void unbind() {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 }

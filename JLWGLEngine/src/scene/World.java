@@ -35,22 +35,23 @@ public class World {
 	public static final int UP = 4;
 	public static final int DOWN = 5;
 	
-	public static final int MAX_LIGHTS = 256;
+	public static final int MAX_LIGHTS = 100;
 	
 	Player player;
-	static Texture containerTex;
-	static Cube containerModel;
+	static Texture crystalBoxTex;
+	static Cube crystalBoxModel;
 	
 	public static ArrayList<Light> lights;
 	
+	public static long startTime;
+	
 	public static void init() {
-		Model.create();
-		containerTex = new Texture("/container_diffuse.png", "/container_specular.png");
-		containerModel = new Cube();
+		startTime = System.currentTimeMillis();
+		
+		crystalBoxTex = new Texture("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg");
+		crystalBoxModel = new Cube();
 		
 		lights = new ArrayList<>();
-		//lights.add(new DirLight(new Vec3(0.1f, -1f, 0.5f), new Vec3(1)));
-		//lights.add(new PointLight(new Vec3(1.2f, 0.9f, -1.5f), new Vec3(1), 1f, 0.09f, 0.032f));
 		lights.add(new PointLight(new Vec3(0), new Vec3(1), 1f, 0.0014f, 0.000007f));
 		
 		int amt = 1000;
@@ -74,9 +75,10 @@ public class World {
 		    displacement = (float) (Math.random() * (int)(2 * offset * 100)) / 100.0f - offset;
 		    float z = (float) Math.cos(angle) * radius + displacement;
 			md_matrix.muli(Mat4.translate(new Vec3(x, y, z)));
-			containerModel.modelMats.add(md_matrix);
+			crystalBoxModel.modelMats.add(md_matrix);
 		}
-		containerModel.updateModelMats();
+		//crystalBoxModel.modelMats.add(Mat4.identity());
+		crystalBoxModel.updateModelMats();
 	}
 
 	public World() {
@@ -85,6 +87,11 @@ public class World {
 
 	public void update() {
 		player.update();
+		
+//		float rads = (float) (System.currentTimeMillis() - startTime) / 1000f;
+//		
+//		crystalBoxModel.modelMats.set(0, Mat4.rotateY(rads));
+//		crystalBoxModel.updateModelMats();
 	}
 	
 	//assume that the perspective shader is enabled
@@ -103,7 +110,7 @@ public class World {
 		Shader.PERS.setUniform3f("view_pos", player.camera.pos);
 		
 		//render world
-		containerModel.render(containerTex);
+		crystalBoxModel.render(crystalBoxTex);
 		
 		Shader.PERS.disable();
 	}

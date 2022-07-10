@@ -31,7 +31,7 @@ public class Player extends Entity {
 		super(pos);
 		camera = new Camera();
 		mouse = MouseInput.getMousePos();
-		flashlight = new SpotLight(this.camera.pos, this.camera.getFacing(), new Vec3(1), 25f, 30f, 1f, 0.022f, 0.0019f);
+		flashlight = new SpotLight(this.camera.pos, this.camera.getFacing(), new Vec3(1), 25f, 30f, 1.5f, 0.022f, 0.0019f);
 	}
 
 	@Override

@@ -6,9 +6,12 @@ import graphics.VertexArray;
 
 public class Cube extends Model {
 	
-	public static VertexArray cubeVAO;
-
-	public static void create() {
+	public Cube() {
+		super();
+	}
+	
+	@Override
+	public VertexArray create() {
 		float[] vertices = new float[] {
 			0f, 1f, 0f,
 			0f, 1f, 1f,
@@ -78,16 +81,6 @@ public class Cube extends Model {
 			1f, 0f,
 		};
 		
-		Cube.cubeVAO = new VertexArray(vertices, indices, tex, GL_TRIANGLES);
+		return new VertexArray(vertices, indices, tex, GL_TRIANGLES);
 	}
-	
-	public Cube() {
-		super();
-	}
-
-	@Override
-	public VertexArray getVAO() {
-		return Cube.cubeVAO;
-	}
-	
 }

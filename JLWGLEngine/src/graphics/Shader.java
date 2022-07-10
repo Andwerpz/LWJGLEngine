@@ -15,7 +15,9 @@ public class Shader {
 	public static final int VERTEX_ATTRIB = 0;
 	public static final int TCOORD_ATTRIB = 1;
 	public static final int NORMAL_ATTRIB = 2;
-	public static final int INSTANCED_MODEL_ATTRIB = 3;
+	public static final int TANGENT_ATTRIB = 3;
+	public static final int BITANGENT_ATTRIB = 4;
+	public static final int INSTANCED_MODEL_ATTRIB = 5;	//takes up 4 slots
 	
 	public static Shader PERS;
 	

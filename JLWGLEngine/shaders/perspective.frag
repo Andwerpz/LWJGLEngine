@@ -3,11 +3,12 @@ layout (location = 0) out vec4 color;
 
 in vec3 frag_pos;
 in vec2 frag_uv;
-in vec3 frag_normal;
+in mat3 TBN;
 
 uniform vec3 view_pos;
 uniform sampler2D tex_diffuse;
 uniform sampler2D tex_specular;
+uniform sampler2D tex_normal;
 
 const int DIR_LIGHT = 0;
 const int POINT_LIGHT = 1;
@@ -33,14 +34,14 @@ struct Light {
 uniform Light lights[MAX_NR_LIGHTS];
 uniform int nrLights;
 
-vec3 calculateDirLight(Light light, vec3 viewDir)
+vec3 calculateDirLight(Light light, vec3 viewDir, vec3 normal)
 {
 	vec3 lightDir = normalize(-light.dir);
 	
 	// diffuse shading
-    float diff = max(dot(frag_normal, lightDir), 0.0);
+    float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
-    vec3 reflectDir = reflect(-lightDir, frag_normal);
+    vec3 reflectDir = reflect(-lightDir, normal);
     float specularStrength = 64;
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularStrength);
     
@@ -51,14 +52,14 @@ vec3 calculateDirLight(Light light, vec3 viewDir)
     return (ambient + diffuse + specular);
 }
 
-vec3 calculatePointLight(Light light, vec3 viewDir)
+vec3 calculatePointLight(Light light, vec3 viewDir, vec3 normal)
 {
 	vec3 lightDir = normalize(light.pos - frag_pos);
 	
 	//diffuse shading
-	float diff = max(dot(frag_normal, lightDir), 0.0);
+	float diff = max(dot(normal, lightDir), 0.0);
 	//specular shading
-	vec3 reflectDir = reflect(-lightDir, frag_normal);
+	vec3 reflectDir = reflect(-lightDir, normal);
     float specularStrength = 64;
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularStrength);
     
@@ -77,16 +78,16 @@ vec3 calculatePointLight(Light light, vec3 viewDir)
 	return (ambient + diffuse + specular);
 }
 
-vec3 calculateSpotLight(Light light, vec3 viewDir)
+vec3 calculateSpotLight(Light light, vec3 viewDir, vec3 normal)
 {
 	vec3 lightDir = normalize(light.pos - frag_pos);
 	
 	float theta = dot(lightDir, normalize(-light.dir));    
   		
 	//diffuse shading
-	float diff = max(dot(frag_normal, lightDir), 0.0);
+	float diff = max(dot(normal, lightDir), 0.0);
 	//specular shading
-	vec3 reflectDir = reflect(-lightDir, frag_normal);
+	vec3 reflectDir = reflect(-lightDir, normal);
     float specularStrength = 64;
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularStrength);
     
@@ -115,6 +116,9 @@ void main()
 {
 
 	vec4 fragColor = texture(tex_diffuse, frag_uv);
+	vec3 normal = texture(tex_normal, frag_uv).xyz;
+	normal = normal * 2.0 - 1.0;
+	normal = normalize(TBN * normal); 
 	
 	if(fragColor.w == 0){	//alpha = 0
     	discard;
@@ -126,13 +130,13 @@ void main()
 	
 	for(int i = 0; i < nrLights; i++){
 		if(lights[i].type == DIR_LIGHT){
-			result += calculateDirLight(lights[i], viewDir);
+			result += calculateDirLight(lights[i], viewDir, normal);
 		}
 		if(lights[i].type == POINT_LIGHT){
-			result += calculatePointLight(lights[i], viewDir);
+			result += calculatePointLight(lights[i], viewDir, normal);
 		}
 		if(lights[i].type == SPOT_LIGHT){
-			result += calculateSpotLight(lights[i], viewDir);
+			result += calculateSpotLight(lights[i], viewDir, normal);
 		}
 	}	
 	

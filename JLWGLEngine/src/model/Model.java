@@ -14,17 +14,13 @@ public abstract class Model {
 	
 	public ArrayList<Mat4> modelMats;
 	public VertexArray vao;
-	
-	public static void create() {
-		Cube.create();
-	}
 
 	public Model() {
 		this.modelMats = new ArrayList<Mat4>();
-		this.vao = this.getVAO();
+		this.vao = this.create();
 	}
 	
-	public abstract VertexArray getVAO();
+	public abstract VertexArray create();
 	
 	public void updateModelMats() {
 		this.vao.updateModelMats(modelMats);
