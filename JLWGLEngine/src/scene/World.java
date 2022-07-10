@@ -42,6 +42,8 @@ public class World {
 	static Texture containerTex;
 	static Texture goldtilesTex;
 	static Texture goldnuggetTex;
+	static Texture woodboxTex;
+	static Texture metalpanelTex;
 	static Cube boxModel;
 	
 	public static ArrayList<Light> lights;
@@ -54,10 +56,13 @@ public class World {
 		containerTex = new Texture("/container_diffuse.png", "/container_specular.png", null, null);
 		crystalTex = new Texture("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg", "/crystal_displacement.png");
 		goldnuggetTex = new Texture("/goldnugget_diffuse.jpg", "/goldnugget_specular.jpg", "/goldnugget_normal.jpg", null);
+		woodboxTex = new Texture("/woodbox_diffuse.png", null, "/woodbox_normal.png", "/woodbox_displacement.png");
+		metalpanelTex = new Texture("/metalpanel_diffuse.jpg", "/metalpanel_specular.jpg", "/metalpanel_normal.jpg", "/metalpanel_displacement.png");
 		boxModel = new Cube();
 		
 		lights = new ArrayList<>();
 		lights.add(new PointLight(new Vec3(0), new Vec3(1), 1f, 0.0014f, 0.000007f));
+		//lights.add(new DirLight(new Vec3(0.1f, 1f, 0.5f), new Vec3(1)));
 		
 		int amt = 1000;
 		float radius = 50f;
@@ -115,7 +120,7 @@ public class World {
 		Shader.PERS.setUniform3f("view_pos", player.camera.pos);
 		
 		//render world
-		boxModel.render(crystalTex);
+		boxModel.render(metalpanelTex);
 		
 		Shader.PERS.disable();
 	}

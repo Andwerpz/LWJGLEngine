@@ -20,35 +20,35 @@ public class Texture {
 	
 	public Texture(String diffusePath, String specularPath, String normalPath, String displacementPath) {
 		if(diffusePath == null) {
-			diffuse = load("/tex_diffuse_default.png");
+			diffuse = load("/tex_diffuse_default.png", false);
 		}
 		else {
-			diffuse = load(diffusePath);
+			diffuse = load(diffusePath, false);
 		}
 		
 		if(specularPath == null) {
-			specular = load("/tex_specular_default.png");
+			specular = load("/tex_specular_default.png", false);
 		}
 		else {
-			specular = load(specularPath);
+			specular = load(specularPath, false);
 		}
 		
 		if(normalPath == null) {
-			normal = load("/tex_normal_default.png");
+			normal = load("/tex_normal_default.png", false);
 		}
 		else {
-			normal = load(normalPath);
+			normal = load(normalPath, false);
 		}
 		
 		if(displacementPath == null) {
-			displacement = load("/tex_displacement_default.png");
+			displacement = load("/tex_displacement_default.png", true);
 		}
 		else {
-			displacement = load(displacementPath);
+			displacement = load(displacementPath, true);
 		}
 	}
 	
-	public int load(String path) {
+	public int load(String path, boolean invert) {
 		int[] pixels = null;
 		BufferedImage image = GraphicsTools.loadImage(path);
 		image = GraphicsTools.verticalFlip(image);
@@ -63,6 +63,13 @@ public class Texture {
 			int r = (pixels[i] & 0xff0000) >> 16;
 			int g = (pixels[i] & 0xff00) >> 8;
 			int b = (pixels[i] & 0xff);
+			
+			if(invert) {
+				a = 255 - a;
+				r = 255 - r;
+				g = 255 - g;
+				b = 255 - b;
+			}
 			
 			data[i] = a << 24 | b << 16 | g << 8 | r;
 		}

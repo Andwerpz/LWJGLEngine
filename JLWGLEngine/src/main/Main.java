@@ -82,6 +82,7 @@ public class Main implements Runnable{
 		Shader.PERS.setUniform1i("tex_diffuse", 0);
 		Shader.PERS.setUniform1i("tex_specular", 1);
 		Shader.PERS.setUniform1i("tex_normal", 2);
+		Shader.PERS.setUniform1i("tex_displacement", 3);
 		
 		//INIT
 		World.init();
