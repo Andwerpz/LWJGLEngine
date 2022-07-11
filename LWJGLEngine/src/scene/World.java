@@ -64,9 +64,9 @@ public class World {
 		lights.add(new PointLight(new Vec3(0), new Vec3(1), 1f, 0.0014f, 0.000007f));
 		//lights.add(new DirLight(new Vec3(0.1f, 1f, 0.5f), new Vec3(1)));
 		
-		int amt = 1000;
-		float radius = 50f;
-		float offset = 5f;
+		int amt = 100;
+		float radius = 10f;
+		float offset = 2.5f;
 		for(int i = 0; i < amt; i++) {
 			Mat4 md_matrix = Mat4.identity();
 			
@@ -120,7 +120,7 @@ public class World {
 		Shader.PERS.setUniform3f("view_pos", player.camera.pos);
 		
 		//render world
-		boxModel.render(woodboxTex);
+		boxModel.render(metalpanelTex);
 		
 		Shader.PERS.disable();
 	}

@@ -48,9 +48,11 @@ vec3 calculateLight(Light light, vec3 viewDir, vec3 normal, vec2 texCoords){
 	//diffuse shading
 	float diff = max(dot(normal, lightDir), 0.0);
 	//specular shading
-	vec3 reflectDir = reflect(-lightDir, normal);
-    float specularStrength = 64;
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularStrength);
+	vec3 halfwayDir = normalize(lightDir + viewDir); 
+	float specularStrength = 64; 
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
+	//vec3 reflectDir = reflect(-lightDir, normal);
+    //float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularStrength);
     
     //combine results
     vec3 ambient  = light.color * vec3(texture(tex_diffuse, texCoords)) * 0.1;
@@ -87,7 +89,7 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     
     
     // number of depth layers
-    const float numLayers = 320;
+    const float numLayers = 8;
     // calculate the size of each layer
     float layerDepth = 1.0 / numLayers;
     // depth of current layer
@@ -139,6 +141,7 @@ void main()
 	vec4 fragColor = texture(tex_diffuse, texCoords);
 	vec3 normal = texture(tex_normal, texCoords).xyz;
 	normal = normalize(normal * 2.0 - 1.0);
+	//normal = vec3(0, 0, 1);
 	
 	if(fragColor.w == 0){	//alpha = 0
     	discard;
