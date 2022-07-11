@@ -87,7 +87,7 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     
     
     // number of depth layers
-    const float numLayers = 10;
+    const float numLayers = 320;
     // calculate the size of each layer
     float layerDepth = 1.0 / numLayers;
     // depth of current layer
