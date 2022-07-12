@@ -19,7 +19,7 @@ public class Shader {
 	public static final int BITANGENT_ATTRIB = 4;
 	public static final int INSTANCED_MODEL_ATTRIB = 5;	//takes up 4 slots
 	
-	public static Shader PERS;
+	public static Shader PERS, POST_PROCESS;
 	
 	private boolean enabled = false;
 	
@@ -32,6 +32,7 @@ public class Shader {
 	
 	public static void loadAll() {
 		PERS = new Shader("/perspective.vert", "/perspective.frag");
+		POST_PROCESS = new Shader("/postprocessing.vert", "/postprocessing.frag");
 	}
 	
 	public int getUniform(String name) {

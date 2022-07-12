@@ -12,10 +12,12 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import graphics.Shader;
 import graphics.Texture;
+import graphics.Framebuffer;
 import input.MouseInput;
 import main.Main;
 import model.Cube;
 import model.Model;
+import model.ScreenQuad;
 import player.Camera;
 import player.Player;
 import util.Mat4;
@@ -44,7 +46,9 @@ public class World {
 	static Texture goldnuggetTex;
 	static Texture woodboxTex;
 	static Texture metalpanelTex;
-	static Cube boxModel;
+	static Texture woodfloorTex;
+	static Cube boxModel, floorModel;
+	static ScreenQuad quadModel;
 	
 	public static ArrayList<Light> lights;
 	
@@ -52,6 +56,7 @@ public class World {
 	
 	public static void init() {
 		startTime = System.currentTimeMillis();
+		woodfloorTex = new Texture("/woodbox_diffuse.png", null, null, null);
 		goldtilesTex = new Texture("/goldtiles_diffuse.jpg", "/goldtiles_specular.jpg", "/goldtiles_normal.jpg", null);
 		containerTex = new Texture("/container_diffuse.png", "/container_specular.png", null, null);
 		crystalTex = new Texture("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg", "/crystal_displacement.png");
@@ -59,9 +64,11 @@ public class World {
 		woodboxTex = new Texture("/woodbox_diffuse.png", null, "/woodbox_normal.png", "/woodbox_displacement.png");
 		metalpanelTex = new Texture("/metalpanel_diffuse.jpg", "/metalpanel_specular.jpg", "/metalpanel_normal.jpg", "/metalpanel_displacement.png");
 		boxModel = new Cube();
+		floorModel = new Cube();
+		quadModel = new ScreenQuad();
 		
 		lights = new ArrayList<>();
-		lights.add(new PointLight(new Vec3(0), new Vec3(1), 1f, 0.0014f, 0.000007f));
+		lights.add(new PointLight(new Vec3(0, 10, 0), new Vec3(1), 1f, 0.0014f, 0.000007f));
 		//lights.add(new DirLight(new Vec3(0.1f, 1f, 0.5f), new Vec3(1)));
 		
 		int amt = 100;
@@ -87,8 +94,12 @@ public class World {
 			md_matrix.muli(Mat4.translate(new Vec3(x, y, z)));
 			boxModel.modelMats.add(md_matrix);
 		}
-		//boxModel.modelMats.add(Mat4.identity());
+		floorModel.modelMats.add(Mat4.scale(1000).mul(Mat4.translate(new Vec3(-500, -1003, -500))));
+		floorModel.updateModelMats();
 		boxModel.updateModelMats();
+		
+		quadModel.modelMats.add(Mat4.identity());
+		quadModel.updateModelMats();
 	}
 
 	public World() {
@@ -120,7 +131,17 @@ public class World {
 		Shader.PERS.setUniform3f("view_pos", player.camera.pos);
 		
 		//render world
-		boxModel.render(metalpanelTex);
+		Shader.PERS.setUniform1i("enableParallaxMapping", 0);
+		Shader.PERS.setUniform1i("enableTexScaling", 0);
+		woodfloorTex.bind();
+		floorModel.render();
+		
+		Shader.PERS.setUniform1i("enableTexScaling", 1);
+		Shader.PERS.setUniform1i("enableParallaxMapping", 1);
+		woodboxTex.bind();
+		boxModel.render();
+		
+		quadModel.render();
 		
 		Shader.PERS.disable();
 	}

@@ -28,16 +28,6 @@ public class VertexArray {
 		float[] normals = new float[n], tangents = new float[n], bitangents = new float[n];
 		computeTBN(vertices, indices, uvs, normals, tangents, bitangents);
 		
-		System.out.println(indices.length);
-		
-		for(int i = 0; i < n; i += 3) {
-			System.out.println(normals[i] + " " + normals[i + 1] + " " + normals[i + 2]);
-			System.out.println(tangents[i] + " " + tangents[i + 1] + " " + tangents[i + 2]);
-			System.out.println(bitangents[i] + " " + bitangents[i + 1] + " " + bitangents[i + 2]);
-			System.out.println();
-		}
-		System.out.println("DONE");
-		
 		this.renderType = renderType;
 		count = indices.length;
 

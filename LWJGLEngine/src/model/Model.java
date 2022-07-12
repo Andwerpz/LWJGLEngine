@@ -26,8 +26,7 @@ public abstract class Model {
 		this.vao.updateModelMats(modelMats);
 	}
 	
-	public void render(Texture tex) {		
-		tex.bind();
+	public void render() {		
 		this.vao.render();
 	}
 	

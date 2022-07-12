@@ -8,6 +8,7 @@ layout (location = 5) in mat4 md_matrix;
 
 uniform mat4 pr_matrix;	//projection
 uniform mat4 vw_matrix;	//view
+uniform bool enableTexScaling;
 
 out vec3 frag_pos;
 out vec2 frag_uv;
@@ -18,6 +19,9 @@ void main()
     gl_Position = pr_matrix * vw_matrix * md_matrix * vec4(pos, 1.0);
     frag_pos = vec3(md_matrix * vec4(pos, 1.0));
     frag_uv = uv;
+    if(!enableTexScaling){
+    	frag_uv = mat2(md_matrix) * uv;
+    }
    	
    	mat3 normalMatrix = transpose(inverse(mat3(md_matrix)));
     vec3 T = normalize(normalMatrix * tangent);

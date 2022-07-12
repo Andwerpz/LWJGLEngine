@@ -188,7 +188,7 @@ public class MathTools {
 	// -------------- 3D graphics --------------
 
 	// camera settings
-	public static double aspectRatio = (double) Main.height / (double) Main.width;
+	public static double aspectRatio = (double) Main.windowHeight / (double) Main.windowWidth;
 	public static double fov = Math.toRadians(90);
 	public static double fovScalingFactor = 1d / Math.tan(fov * 0.5d);
 	public static double zNear = 0.1;
@@ -225,10 +225,10 @@ public class MathTools {
 	public static Vec3 scaleVector(Vec3 p) {
 		Vec3 ans = new Vec3(p);
 
-		ans.x = (float) ((p.x + 1d) * (0.5 * Main.width));
-		ans.y = (float) ((p.y + 1d) * (0.5 * Main.height));
+		ans.x = (float) ((p.x + 1d) * (0.5 * Main.windowWidth));
+		ans.y = (float) ((p.y + 1d) * (0.5 * Main.windowHeight));
 
-		ans.y = Main.height - ans.y;
+		ans.y = Main.windowHeight - ans.y;
 
 		return ans;
 	}

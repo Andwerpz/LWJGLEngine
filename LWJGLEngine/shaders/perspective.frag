@@ -15,6 +15,7 @@ uniform sampler2D tex_diffuse;
 uniform sampler2D tex_specular;
 uniform sampler2D tex_normal;
 uniform sampler2D tex_displacement;
+uniform bool enableParallaxMapping;
 
 struct Light {
 	int type;
@@ -126,6 +127,16 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 	return finalTexCoords; 
 } 
 
+float near = 0.1;
+float far = 100;
+
+float LinearizeDepth(float depth) 
+{
+    float z = depth * 2.0 - 1.0; // back to NDC 
+    return (2.0 * near * far) / (far + near - z * (far - near));	
+}
+
+
 void main()
 {
 	//all calculations done in tangent space now
@@ -134,8 +145,10 @@ void main()
 
 	//offset texture coordinates with parallax mapping
 	vec3 viewDir = normalize(tangentViewPos - tangentFragPos);
-	vec2 texCoords = ParallaxMapping(frag_uv, viewDir);
-	//vec2 texCoords = frag_uv;
+	vec2 texCoords = frag_uv;
+	if(enableParallaxMapping){
+		texCoords = ParallaxMapping(frag_uv, viewDir);
+	}
 	
 	//proceed with lighting
 	vec4 fragColor = texture(tex_diffuse, texCoords);
