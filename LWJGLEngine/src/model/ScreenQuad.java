@@ -17,10 +17,10 @@ public class ScreenQuad extends Model{
 	public VertexArray create() {
 		
 		float[] vertices = new float[] {
-			-1f, -1f, -1f,
-			-1f, 1f, -1f,
-			1f, 1f, -1f,
-			1f, -1f, -1f,
+			-1f, -1f, -0f,
+			-1f, 1f, -0f,
+			1f, 1f, -0f,
+			1f, -1f, -0f,
 		};
 		
 		float[] uvs = new float[] {

@@ -1,24 +1,11 @@
 package scene;
 
-import java.nio.DoubleBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.StringTokenizer;
-
-import org.lwjgl.BufferUtils;
-
-import static org.lwjgl.glfw.GLFW.*;
 
 import graphics.Shader;
 import graphics.Texture;
-import graphics.Framebuffer;
-import input.MouseInput;
-import main.Main;
 import model.Cube;
-import model.Model;
 import model.ScreenQuad;
-import player.Camera;
 import player.Player;
 import util.Mat4;
 import util.Vec3;
@@ -39,7 +26,6 @@ public class World {
 	
 	public static final int MAX_LIGHTS = 100;
 	
-	Player player;
 	static Texture crystalTex;
 	static Texture containerTex;
 	static Texture goldtilesTex;
@@ -47,12 +33,13 @@ public class World {
 	static Texture woodboxTex;
 	static Texture metalpanelTex;
 	static Texture woodfloorTex;
-	static Cube boxModel, floorModel;
-	static ScreenQuad quadModel;
-	
-	public static ArrayList<Light> lights;
+	static Cube boxModel;
+	static ScreenQuad quadModel, floorModel;
 	
 	public static long startTime;
+	
+	public Player player;
+	public static ArrayList<Light> lights;
 	
 	public static void init() {
 		startTime = System.currentTimeMillis();
@@ -64,12 +51,8 @@ public class World {
 		woodboxTex = new Texture("/woodbox_diffuse.png", null, "/woodbox_normal.png", "/woodbox_displacement.png");
 		metalpanelTex = new Texture("/metalpanel_diffuse.jpg", "/metalpanel_specular.jpg", "/metalpanel_normal.jpg", "/metalpanel_displacement.png");
 		boxModel = new Cube();
-		floorModel = new Cube();
+		floorModel = new ScreenQuad();
 		quadModel = new ScreenQuad();
-		
-		lights = new ArrayList<>();
-		lights.add(new PointLight(new Vec3(0, 10, 0), new Vec3(1), 1f, 0.0014f, 0.000007f));
-		//lights.add(new DirLight(new Vec3(0.1f, 1f, 0.5f), new Vec3(1)));
 		
 		int amt = 100;
 		float radius = 10f;
@@ -94,9 +77,16 @@ public class World {
 			md_matrix.muli(Mat4.translate(new Vec3(x, y, z)));
 			boxModel.modelMats.add(md_matrix);
 		}
-		floorModel.modelMats.add(Mat4.scale(1000).mul(Mat4.translate(new Vec3(-500, -1003, -500))));
-		floorModel.updateModelMats();
 		boxModel.updateModelMats();
+		
+		int floorSize = 10;
+		float floorYOffset = -3;
+		for(int i = -floorSize; i <= floorSize; i += 2) {
+			for(int j = -floorSize; j <= floorSize; j += 2) {
+				floorModel.modelMats.add(Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.translate(new Vec3(i, floorYOffset, j))));
+			}
+		}
+		floorModel.updateModelMats();
 		
 		quadModel.modelMats.add(Mat4.identity());
 		quadModel.updateModelMats();
@@ -104,10 +94,16 @@ public class World {
 
 	public World() {
 		player = new Player(new Vec3(0, 0, 0));
+		
+		lights = new ArrayList<>();
+		lights.add(new PointLight(new Vec3(0, 10, 0), new Vec3(1), 1f, 0.0014f, 0.000007f));
+		//lights.add(new DirLight(new Vec3(0.1f, 1f, 0.5f), new Vec3(1)));
 	}
 
 	public void update() {
 		player.update();
+		
+		//lights.get(0).pos = new Vec3(player.camera.pos);
 		
 //		float rads = (float) (System.currentTimeMillis() - startTime) / 1000f;
 //		
@@ -115,34 +111,22 @@ public class World {
 //		boxModel.updateModelMats();
 	}
 	
-	//assume that the perspective shader is enabled
+	//assume that the geometry shader is enabled
 	public void render() {
-		Shader.PERS.enable();
-		
-		//bind lights
-		Shader.PERS.setUniform1i("nrLights", lights.size());
-		for(int i = 0; i < lights.size(); i++) {
-			lights.get(i).bind(Shader.PERS, i);
-		}
-		
 		//bind view matrix
 		Mat4 vw_matrix = player.camera.getViewMatrix();
-		Shader.PERS.setUniformMat4("vw_matrix", vw_matrix);
-		Shader.PERS.setUniform3f("view_pos", player.camera.pos);
+		Shader.GEOMETRY.setUniformMat4("vw_matrix", vw_matrix);
+		Shader.GEOMETRY.setUniform3f("view_pos", player.camera.pos);
 		
 		//render world
-		Shader.PERS.setUniform1i("enableParallaxMapping", 0);
-		Shader.PERS.setUniform1i("enableTexScaling", 0);
-		woodfloorTex.bind();
+		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 1);
+		Shader.GEOMETRY.setUniform1i("enableTexScaling", 1);
+		goldtilesTex.bind();
 		floorModel.render();
 		
-		Shader.PERS.setUniform1i("enableTexScaling", 1);
-		Shader.PERS.setUniform1i("enableParallaxMapping", 1);
+		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 1);
 		woodboxTex.bind();
 		boxModel.render();
-		
 		quadModel.render();
-		
-		Shader.PERS.disable();
 	}
 }

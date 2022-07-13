@@ -11,53 +11,97 @@ import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL33.*;
 
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import util.BufferUtils;
 
 import main.Main;
 
 public class Framebuffer {
 	
-	private int fbo;
-	private int dbo, cbo, rbo;
+	//after creating a new instance, you need to add either one color buffer, or a render buffer
+	//check if complete using the isComplete function. 
 	
-	public Framebuffer() {
+	private int fbo;
+	private int renderBuffer, depthBuffer;
+	private HashMap<Integer, Integer> colorBuffers;
+	
+	private int width, height;
+	
+	public Framebuffer(int width, int height) {
+		this.width = width;
+		this.height = height;
+		this.colorBuffers = new HashMap<>();
+		
 		fbo = glGenFramebuffers();
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-		
-		dbo = glGenTextures();
-		glBindTexture(GL_TEXTURE_2D, dbo);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, Main.windowWidth, Main.windowHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, (FloatBuffer) null);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT, dbo, 0); 
-		glBindTexture(GL_TEXTURE_2D, 0);
-		
-		cbo = glGenTextures();
-		glBindTexture(GL_TEXTURE_2D, cbo);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Main.windowWidth, Main.windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, (FloatBuffer) null);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cbo, 0);  
-		glBindTexture(GL_TEXTURE_2D, 0);
-		
-		rbo = glGenRenderbuffers();
-		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, Main.windowWidth, Main.windowHeight);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); 
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-		
-		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
-			System.out.println("Framebuffer " + fbo + " generated successfully");
-		}
-		
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 	
-	public int getColorbuffer() {
-		return this.cbo;
+	public void addRenderBuffer() {
+		this.bind();
+		renderBuffer = glGenRenderbuffers();
+		glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBuffer); 
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+		this.unbind();
+	}
+	
+	public void addColorBuffer(int internalFormat, int dataFormat, int dataType, int layoutLocation) {
+		this.bind();
+		int id = glGenTextures();
+		glBindTexture(GL_TEXTURE_2D, id);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, dataType, (FloatBuffer) null);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
+		glFramebufferTexture2D(GL_FRAMEBUFFER, layoutLocation, GL_TEXTURE_2D, id, 0);  
+		glBindTexture(GL_TEXTURE_2D, 0);
+		this.unbind();
+		
+		colorBuffers.put(layoutLocation, id);
+	}
+	
+	public void addDepthBuffer() {
+		this.bind();
+		depthBuffer = glGenTextures();
+		glBindTexture(GL_TEXTURE_2D, depthBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT24, GL_UNSIGNED_BYTE, (FloatBuffer) null);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT, depthBuffer, 0); 
+		glBindTexture(GL_TEXTURE_2D, 0);
+		this.unbind();
+	}
+	
+	public void setDrawBuffers(int[] which) {
+		this.bind();
+		glDrawBuffers(BufferUtils.createIntBuffer(which));
+		this.unbind();
+	}
+	
+	public boolean isComplete() {
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		boolean ans = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		if(ans) {
+			System.out.println("Framebuffer " + fbo + " generated successfully");
+		}
+		else {
+			System.err.println("Framebuffer " + fbo + " generation unsuccessful");
+		}
+		return ans;
+	}
+	
+	public int getColorBuffer(int layoutLocation) {
+		return this.colorBuffers.get(layoutLocation);
+	}
+	
+	public int getRenderBuffer() {
+		return this.renderBuffer;
 	}
 	
 	public int getDepthbuffer() {
-		return this.dbo;
+		return this.depthBuffer;
 	}
 	
 	public void bind() {

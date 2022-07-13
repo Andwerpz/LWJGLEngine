@@ -8,7 +8,9 @@ layout (location = 5) in mat4 md_matrix;
 
 uniform mat4 pr_matrix;	//projection
 uniform mat4 vw_matrix;	//view
+
 uniform bool enableTexScaling;
+uniform float texScaleFactor;
 
 out vec3 frag_pos;
 out vec2 frag_uv;
@@ -20,13 +22,13 @@ void main()
     frag_pos = vec3(md_matrix * vec4(pos, 1.0));
     frag_uv = uv;
     if(!enableTexScaling){
-    	frag_uv = mat2(md_matrix) * uv;
+    	frag_uv = uv * texScaleFactor;
     }
-   	
-   	mat3 normalMatrix = transpose(inverse(mat3(md_matrix)));
+    
+    mat3 normalMatrix = transpose(inverse(mat3(md_matrix)));
     vec3 T = normalize(normalMatrix * tangent);
-    vec3 N = normalize(normalMatrix * normal);
     vec3 B = normalize(normalMatrix * bitangent);
+    vec3 N = normalize(normalMatrix * normal);
     
     //convert from real to tangent space
    	TBN = transpose(mat3(T, B, N));
