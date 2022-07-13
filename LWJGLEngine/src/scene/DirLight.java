@@ -16,9 +16,9 @@ public class DirLight extends Light{
 	
 	@Override
 	public void bind(Shader shader, int index) {
-		shader.setUniform1i("lights[" + index + "].type", Light.DIR_LIGHT);
-		shader.setUniform3f("lights[" + index + "].dir", dir);
-		shader.setUniform3f("lights[" + index + "].color", color);
+		shader.setUniform1i("light.type", Light.DIR_LIGHT);
+		shader.setUniform3f("light.dir", dir);
+		shader.setUniform3f("light.color", color);
 		
 	}
 	

@@ -52,8 +52,8 @@ public class Framebuffer {
 		int id = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, id);
 		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, dataType, (FloatBuffer) null);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);  
 		glFramebufferTexture2D(GL_FRAMEBUFFER, layoutLocation, GL_TEXTURE_2D, id, 0);  
 		glBindTexture(GL_TEXTURE_2D, 0);
 		this.unbind();
@@ -66,8 +66,8 @@ public class Framebuffer {
 		depthBuffer = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, depthBuffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0, GL_DEPTH_COMPONENT24, GL_UNSIGNED_BYTE, (FloatBuffer) null);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);  
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT, depthBuffer, 0); 
 		glBindTexture(GL_TEXTURE_2D, 0);
 		this.unbind();

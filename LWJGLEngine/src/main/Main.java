@@ -42,6 +42,7 @@ public class Main implements Runnable{
 	private long startTime;
 	
 	public static long window;
+	private boolean fullscreen = false;
 	
 	private World world;
 	private Framebuffer geometryBuffer;
@@ -62,7 +63,8 @@ public class Main implements Runnable{
 		}
 		
 		glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-		window = glfwCreateWindow(windowWidth, windowHeight, "LWJGL", NULL, NULL);
+		long primaryMonitor = glfwGetPrimaryMonitor();
+		window = glfwCreateWindow(windowWidth, windowHeight, "LWJGL", fullscreen? primaryMonitor : NULL, NULL);
 		
 		if(window == NULL) {
 			return;
@@ -179,27 +181,21 @@ public class Main implements Runnable{
 	Texture triTex;
 	
 	private void render() {
-		//render 3d perspective to geometry buffer
+		// -- GEOMETRY -- : render 3d perspective to geometry buffer
 		geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 		Shader.GEOMETRY.enable();
-		
 		world.render();
-
 		
-		//using information from the geometryBuffer, calculate lighting.
+		// -- LIGHTING -- : using information from the geometry buffer, calculate lighting.
 		lightingBuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
-		Shader.LIGHTING.enable();
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE);
 		
-		ArrayList<Light> lights = World.lights;
-		Shader.LIGHTING.setUniform1i("nrLights", lights.size());
-		for(int i = 0; i < lights.size(); i++) {
-			lights.get(i).bind(Shader.LIGHTING, i);
-		}
-		Shader.LIGHTING.setUniform3f("view_pos", this.world.player.camera.pos);
+		Shader.LIGHTING.enable();
 		
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
@@ -207,12 +203,20 @@ public class Main implements Runnable{
 		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT1));
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT2));
-		screenQuad.render();
+		Shader.LIGHTING.setUniform3f("view_pos", this.world.player.camera.pos);
+		
+		//calculate lighting with each light seperately
+		ArrayList<Light> lights = World.lights;
+		for(int i = 0; i < lights.size(); i++) {
+			lights.get(i).bind(Shader.LIGHTING, i);
+			screenQuad.render();
+		}
 				
-		//render contents of lighting buffer onto screen sized quad
+		// -- POST PROCESSING -- : render contents of lighting buffer onto screen sized quad
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);	//back to default framebuffer
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
 		Shader.POST_PROCESS.enable();
 		
 		glActiveTexture(GL_TEXTURE0);

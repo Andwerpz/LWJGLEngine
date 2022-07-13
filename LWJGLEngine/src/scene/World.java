@@ -122,12 +122,11 @@ public class World {
 		//render world
 		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 1);
 		Shader.GEOMETRY.setUniform1i("enableTexScaling", 1);
-		goldtilesTex.bind();
+		metalpanelTex.bind();
 		floorModel.render();
 		
 		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 1);
 		woodboxTex.bind();
 		boxModel.render();
-		quadModel.render();
 	}
 }

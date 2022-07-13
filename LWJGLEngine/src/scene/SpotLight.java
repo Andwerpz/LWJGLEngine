@@ -18,15 +18,15 @@ public class SpotLight extends Light{
 	
 	@Override
 	public void bind(Shader shader, int index) {
-		shader.setUniform1i("lights[" + index + "].type", Light.SPOT_LIGHT);
-		shader.setUniform3f("lights[" + index + "].pos", this.pos);
-		shader.setUniform3f("lights[" + index + "].dir", this.dir);
-		shader.setUniform3f("lights[" + index + "].color", this.color);
-		shader.setUniform1f("lights[" + index + "].cutOff", (float) Math.cos(Math.toRadians(this.cutOff)));
-		shader.setUniform1f("lights[" + index + "].outerCutOff", (float) Math.cos(Math.toRadians(this.outerCutOff)));
-		shader.setUniform1f("lights[" + index + "].constant", this.constant);
-		shader.setUniform1f("lights[" + index + "].linear", this.linear);
-		shader.setUniform1f("lights[" + index + "].quadratic", this.quadratic);
+		shader.setUniform1i("light.type", Light.SPOT_LIGHT);
+		shader.setUniform3f("light.pos", this.pos);
+		shader.setUniform3f("light.dir", this.dir);
+		shader.setUniform3f("light.color", this.color);
+		shader.setUniform1f("light.cutOff", (float) Math.cos(Math.toRadians(this.cutOff)));
+		shader.setUniform1f("light.outerCutOff", (float) Math.cos(Math.toRadians(this.outerCutOff)));
+		shader.setUniform1f("light.constant", this.constant);
+		shader.setUniform1f("light.linear", this.linear);
+		shader.setUniform1f("light.quadratic", this.quadratic);
 	}
 	
 }
