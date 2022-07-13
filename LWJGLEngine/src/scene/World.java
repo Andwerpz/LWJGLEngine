@@ -1,5 +1,6 @@
 package scene;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 
 import graphics.Shader;
@@ -43,11 +44,11 @@ public class World {
 	
 	public static void init() {
 		startTime = System.currentTimeMillis();
-		woodfloorTex = new Texture("/woodbox_diffuse.png", null, null, null);
+		//woodfloorTex = new Texture("/woodbox_diffuse.png", null, null, null);
 		goldtilesTex = new Texture("/goldtiles_diffuse.jpg", "/goldtiles_specular.jpg", "/goldtiles_normal.jpg", null);
-		containerTex = new Texture("/container_diffuse.png", "/container_specular.png", null, null);
-		crystalTex = new Texture("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg", "/crystal_displacement.png");
-		goldnuggetTex = new Texture("/goldnugget_diffuse.jpg", "/goldnugget_specular.jpg", "/goldnugget_normal.jpg", "/goldnugget_displacement.png");
+		//containerTex = new Texture("/container_diffuse.png", "/container_specular.png", null, null);
+		//crystalTex = new Texture("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg", "/crystal_displacement.png");
+		//goldnuggetTex = new Texture("/goldnugget_diffuse.jpg", "/goldnugget_specular.jpg", "/goldnugget_normal.jpg", "/goldnugget_displacement.png");
 		woodboxTex = new Texture("/woodbox_diffuse.png", null, "/woodbox_normal.png", "/woodbox_displacement.png");
 		metalpanelTex = new Texture("/metalpanel_diffuse.jpg", "/metalpanel_specular.jpg", "/metalpanel_normal.jpg", "/metalpanel_displacement.png");
 		boxModel = new Cube();

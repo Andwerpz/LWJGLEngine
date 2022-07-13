@@ -27,6 +27,7 @@ import model.ScreenQuad;
 import scene.Light;
 import scene.World;
 import util.Mat4;
+import util.SystemUtils;
 
 import static org.lwjgl.opengl.GL.*;
 
@@ -61,7 +62,7 @@ public class Main implements Runnable{
 		}
 		
 		glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-		window = glfwCreateWindow(windowWidth, windowHeight, "JLWGL", NULL, NULL);
+		window = glfwCreateWindow(windowWidth, windowHeight, "LWJGL", NULL, NULL);
 		
 		if(window == NULL) {
 			return;
@@ -185,6 +186,7 @@ public class Main implements Runnable{
 		Shader.GEOMETRY.enable();
 		
 		world.render();
+
 		
 		//using information from the geometryBuffer, calculate lighting.
 		lightingBuffer.bind();
@@ -206,7 +208,7 @@ public class Main implements Runnable{
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT2));
 		screenQuad.render();
-		
+				
 		//render contents of lighting buffer onto screen sized quad
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);	//back to default framebuffer
 		glClear(GL_COLOR_BUFFER_BIT);

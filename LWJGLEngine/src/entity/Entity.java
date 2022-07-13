@@ -177,7 +177,7 @@ public abstract class Entity {
 	
 	public void applyModelTransform() {
 		Mat4 md_matrix = Mat4.translate(pos);
-		Shader.PERS.setUniformMat4("md_matrix", md_matrix);
+		Shader.GEOMETRY.setUniformMat4("md_matrix", md_matrix);
 	}
 	
 	public void renderHitbox() {
