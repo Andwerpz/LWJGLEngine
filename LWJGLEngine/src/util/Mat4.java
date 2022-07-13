@@ -11,6 +11,20 @@ public class Mat4 {
 	public Mat4() {
 
 	}
+	
+	public Mat4(Vec3 row1, Vec3 row2, Vec3 row3) {
+		mat[0][0] = row1.x;
+		mat[0][1] = row1.y;
+		mat[0][2] = row1.z;
+		
+		mat[1][0] = row2.x;
+		mat[1][1] = row2.y;
+		mat[1][2] = row2.z;
+		
+		mat[2][0] = row3.x;
+		mat[2][1] = row3.y;
+		mat[2][2] = row3.z;
+	}
 
 	public static Mat4 identity() {
 		Mat4 result = new Mat4();
@@ -38,10 +52,10 @@ public class Mat4 {
 
 		result.mat[0][0] = 2f / (right - left);
 		result.mat[1][1] = 2f / (top - bottom);
-		result.mat[2][2] = 2f / (near - far);
-		result.mat[0][3] = (left + right) / (left - right);
-		result.mat[1][3] = (bottom + top) / (bottom - top);
-		result.mat[2][3] = (far + near) / (far - near);
+		result.mat[2][2] = -2f / (far - near);
+		result.mat[0][3] = -(right + left) / (right - left);
+		result.mat[1][3] = -(top + bottom) / (top - bottom);
+		result.mat[2][3] = -(far + near) / (far - near);
 
 		return result;
 	}
@@ -86,6 +100,30 @@ public class Mat4 {
 		result.mat[3][2] = -1;
 		result.mat[3][3] = 0;
 
+		return result;
+	}
+	
+	/**
+	 * Essentially the same as glm::lookAt()
+	 * Eye is the viewing position
+	 * Center is the position that you are looking at
+	 * @param eye
+	 * @param pos
+	 * @param up
+	 * @return
+	 */
+	
+	//still need to know why this works. 
+	public static Mat4 lookAt(Vec3 eye, Vec3 center) {
+		Vec3 dir = new Vec3(center, eye).normalize();	//this makes a vector in the wrong direction i think. 
+		Vec3 right = MathTools.crossProduct(new Vec3(0, 1, 0), dir).normalize();
+		Vec3 up = MathTools.crossProduct(dir, right).normalize();
+		
+		Mat4 result = Mat4.translate(eye.mul(-1f));
+		Mat4 viewSpace = new Mat4(right, up, dir);
+		viewSpace.mat[3][3] = 1;
+		result.muli(viewSpace);
+		
 		return result;
 	}
 	

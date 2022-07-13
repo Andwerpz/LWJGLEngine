@@ -7,6 +7,7 @@ import graphics.Shader;
 import graphics.Texture;
 import model.Cube;
 import model.ScreenQuad;
+import player.Camera;
 import player.Player;
 import util.Mat4;
 import util.Vec3;
@@ -44,11 +45,11 @@ public class World {
 	
 	public static void init() {
 		startTime = System.currentTimeMillis();
-		//woodfloorTex = new Texture("/woodbox_diffuse.png", null, null, null);
+		woodfloorTex = new Texture("/woodbox_diffuse.png", null, null, null);
 		goldtilesTex = new Texture("/goldtiles_diffuse.jpg", "/goldtiles_specular.jpg", "/goldtiles_normal.jpg", null);
-		//containerTex = new Texture("/container_diffuse.png", "/container_specular.png", null, null);
-		//crystalTex = new Texture("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg", "/crystal_displacement.png");
-		//goldnuggetTex = new Texture("/goldnugget_diffuse.jpg", "/goldnugget_specular.jpg", "/goldnugget_normal.jpg", "/goldnugget_displacement.png");
+		containerTex = new Texture("/container_diffuse.png", "/container_specular.png", null, null);
+		crystalTex = new Texture("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg", "/crystal_displacement.png");
+		goldnuggetTex = new Texture("/goldnugget_diffuse.jpg", "/goldnugget_specular.jpg", "/goldnugget_normal.jpg", "/goldnugget_displacement.png");
 		woodboxTex = new Texture("/woodbox_diffuse.png", null, "/woodbox_normal.png", "/woodbox_displacement.png");
 		metalpanelTex = new Texture("/metalpanel_diffuse.jpg", "/metalpanel_specular.jpg", "/metalpanel_normal.jpg", "/metalpanel_displacement.png");
 		boxModel = new Cube();
@@ -97,8 +98,8 @@ public class World {
 		player = new Player(new Vec3(0, 0, 0));
 		
 		lights = new ArrayList<>();
-		lights.add(new PointLight(new Vec3(0, 10, 0), new Vec3(1), 1f, 0.0014f, 0.000007f));
-		//lights.add(new DirLight(new Vec3(0.1f, 1f, 0.5f), new Vec3(1)));
+		//lights.add(new PointLight(new Vec3(0, 10, 0), new Vec3(1), 1f, 0.0014f, 0.000007f));
+		lights.add(new DirLight(new Vec3(-0.2f, -1f, 0.4f), new Vec3(1)));
 	}
 
 	public void update() {
@@ -113,20 +114,28 @@ public class World {
 	}
 	
 	//assume that the geometry shader is enabled
-	public void render() {
+	public void renderGeometry(Camera camera) {
 		//bind view matrix
-		Mat4 vw_matrix = player.camera.getViewMatrix();
-		Shader.GEOMETRY.setUniformMat4("vw_matrix", vw_matrix);
-		Shader.GEOMETRY.setUniform3f("view_pos", player.camera.pos);
+		Shader.GEOMETRY.setUniformMat4("vw_matrix", camera.getViewMatrix());
+		Shader.GEOMETRY.setUniform3f("view_pos", camera.pos);
 		
 		//render world
-		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 1);
+		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 0);
 		Shader.GEOMETRY.setUniform1i("enableTexScaling", 1);
-		metalpanelTex.bind();
+		woodfloorTex.bind();
 		floorModel.render();
 		
 		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 1);
-		woodboxTex.bind();
+		containerTex.bind();
+		boxModel.render();
+	}
+	
+	//assume depth shader is enabled
+	public void renderDepth(Mat4 projectionMat, Mat4 viewMat) {
+		Shader.DEPTH.setUniformMat4("pr_matrix", projectionMat);
+		Shader.DEPTH.setUniformMat4("vw_matrix", viewMat);
+		
+		floorModel.render();
 		boxModel.render();
 	}
 }

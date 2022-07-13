@@ -6,12 +6,10 @@ import util.Vec3;
 
 public class DirLight extends Light{
 	
-	private Framebuffer depthMap;
-	
 	public DirLight(Vec3 dir, Vec3 color) {
-		this.dir = new Vec3(dir);
+		this.type = Light.DIR_LIGHT;
+		this.dir = new Vec3(dir).normalize();
 		this.color = new Vec3(color);
-		this.depthMap = new Framebuffer(1024, 1024);
 	}
 	
 	@Override
@@ -19,7 +17,6 @@ public class DirLight extends Light{
 		shader.setUniform1i("light.type", Light.DIR_LIGHT);
 		shader.setUniform3f("light.dir", dir);
 		shader.setUniform3f("light.color", color);
-		
 	}
 	
 }

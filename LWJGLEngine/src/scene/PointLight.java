@@ -6,6 +6,7 @@ import util.Vec3;
 public class PointLight extends Light{
 	
 	public PointLight(Vec3 pos, Vec3 color, float constant, float linear, float quadratic) {
+		this.type = Light.POINT_LIGHT;
 		this.pos = new Vec3(pos);
 		this.color = new Vec3(color);
 		this.constant = constant;

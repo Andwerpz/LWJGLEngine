@@ -28,6 +28,7 @@ import scene.Light;
 import scene.World;
 import util.Mat4;
 import util.SystemUtils;
+import util.Vec3;
 
 import static org.lwjgl.opengl.GL.*;
 
@@ -44,9 +45,12 @@ public class Main implements Runnable{
 	public static long window;
 	private boolean fullscreen = false;
 	
+	private boolean depthDebugMode = false;
+	
 	private World world;
 	private Framebuffer geometryBuffer;
 	private Framebuffer lightingBuffer;
+	private Framebuffer depthBuffer; 
 	private Model screenQuad;
 	
 	public void start() {
@@ -98,6 +102,7 @@ public class Main implements Runnable{
 		Shader.LIGHTING.setUniform1i("tex_position", 0);
 		Shader.LIGHTING.setUniform1i("tex_normal", 1);
 		Shader.LIGHTING.setUniform1i("tex_diffuse", 2);
+		Shader.LIGHTING.setUniform1i("tex_depth", 3);
 		
 		Shader.POST_PROCESS.setUniform1i("tex_color", 0);
 		
@@ -122,6 +127,10 @@ public class Main implements Runnable{
 		this.lightingBuffer.addRenderBuffer();
 		this.lightingBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
 		this.lightingBuffer.isComplete();
+		
+		this.depthBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
+		this.depthBuffer.addDepthBuffer();
+		this.depthBuffer.isComplete();
 		
 		//wireframe
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -175,6 +184,10 @@ public class Main implements Runnable{
 			running = false;
 		}
 		
+		if(KeyboardInput.isKeyPressed(GLFW_KEY_B)) {
+			depthDebugMode = !depthDebugMode;
+		}
+		
 		world.update();
 	}
 	
@@ -186,7 +199,7 @@ public class Main implements Runnable{
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 		Shader.GEOMETRY.enable();
-		world.render();
+		world.renderGeometry(world.player.camera);
 		
 		// -- LIGHTING -- : using information from the geometry buffer, calculate lighting.
 		lightingBuffer.bind();
@@ -203,11 +216,40 @@ public class Main implements Runnable{
 		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT1));
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT2));
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, depthBuffer.getDepthBuffer());
 		Shader.LIGHTING.setUniform3f("view_pos", this.world.player.camera.pos);
 		
 		//calculate lighting with each light seperately
 		ArrayList<Light> lights = World.lights;
 		for(int i = 0; i < lights.size(); i++) {
+			//generate depth map for light
+			if(lights.get(i).type == Light.DIR_LIGHT) {
+				depthBuffer.bind();
+				glEnable(GL_DEPTH_TEST);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				glDisable(GL_BLEND);
+				
+				//offset the eye around 100 units above the player
+				Vec3 dir = new Vec3(lights.get(i).dir);
+				Vec3 eye = new Vec3(world.player.camera.pos).subi(dir.mul(100));
+				Vec3 center = new Vec3(world.player.camera.pos);
+				
+				Mat4 projectionMat = Mat4.orthographic(-5f, 5f, -5f, 5f, 0.1f, 300f);
+				Mat4 viewMat = Mat4.lookAt(eye, center);
+				Shader.LIGHTING.setUniformMat4("lightSpace_matrix", viewMat.mul(projectionMat));
+				
+				Shader.DEPTH.enable();
+				world.renderDepth(projectionMat, viewMat);
+			}
+			else {
+				//generate cubemap
+			}
+			
+			lightingBuffer.bind();
+			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_BLEND);
+			Shader.LIGHTING.enable();
 			lights.get(i).bind(Shader.LIGHTING, i);
 			screenQuad.render();
 		}
@@ -220,7 +262,14 @@ public class Main implements Runnable{
 		Shader.POST_PROCESS.enable();
 		
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, lightingBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
+		
+		if(depthDebugMode) {
+			glBindTexture(GL_TEXTURE_2D, depthBuffer.getDepthBuffer());
+		}
+		else {
+			glBindTexture(GL_TEXTURE_2D, lightingBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
+		}
+		
 		screenQuad.render();
 		
 		glfwSwapBuffers(window);

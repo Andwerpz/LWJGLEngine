@@ -6,10 +6,10 @@ layout (location = 3) in vec3 tangent;
 layout (location = 4) in vec3 bitangent;
 layout (location = 5) in mat4 md_matrix;
 
-out vec2 frag_uv;
+uniform mat4 pr_matrix;
+uniform mat4 vw_matrix;
 
 void main()
 {
-    gl_Position = vec4(pos, 1.0);
-    frag_uv = uv;
+    gl_Position = pr_matrix * vw_matrix * md_matrix * vec4(pos, 1.0);
 }

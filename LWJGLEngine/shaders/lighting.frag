@@ -11,6 +11,9 @@ uniform vec3 view_pos;
 uniform sampler2D tex_position;
 uniform sampler2D tex_normal;
 uniform sampler2D tex_diffuse;
+uniform sampler2D tex_depth;	//shadow map for directional lights
+
+uniform mat4 lightSpace_matrix;	//matrix for directional lights
 
 struct Light {
 	int type;
@@ -28,48 +31,6 @@ struct Light {
 };	
 
 uniform Light light;
-
-vec3 calculateLight(Light light, vec3 viewDir, vec3 normal, vec3 fragColor, float fragSpec, vec3 fragPos){
-
-	vec3 lightDir = normalize(light.pos - fragPos);
-	if(light.type == DIR_LIGHT){
-		lightDir = light.dir;
-	}
-	
-	//diffuse shading
-	float diff = max(dot(normal, lightDir), 0.0);
-	//specular shading
-	vec3 halfwayDir = normalize(lightDir + viewDir); 
-	float specularStrength = 64; 
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
-	//vec3 reflectDir = reflect(-lightDir, normal);
-    //float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularStrength);
-    
-    //combine results
-    vec3 ambient  = light.color * fragColor * 0.1;
-    vec3 diffuse  = light.color * diff * fragColor;
-    vec3 specular = light.color * spec * fragSpec;
-    
-    if(light.type == SPOT_LIGHT){
-    	//calculate cutoff
-    	float theta = dot(lightDir, normalize(-light.dir)); 
-		float epsilon   = light.cutOff - light.outerCutOff;
-		float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);    
-		diffuse *= intensity;
-		specular *= intensity;
-    }
-    
-    if(light.type == SPOT_LIGHT || light.type == POINT_LIGHT){
-    	//attenuation
-		float distance = length(light.pos - fragPos);
-		float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
-		ambient  *= attenuation; 
-		diffuse  *= attenuation;
-		specular *= attenuation;
-    }
-    
-    return (ambient + diffuse + specular);
-}
 
 void main()
 {	
@@ -96,9 +57,9 @@ void main()
 	}	
 	
 	//proceed with lighting
-	vec3 lightDir = normalize(light.pos - fragPos);
+	vec3 lightDir = normalize(light.pos - fragPos);	//direction from fragment to light source
 	if(light.type == DIR_LIGHT){
-		lightDir = light.dir;
+		lightDir = -light.dir;
 	}
 	
 	//diffuse shading
@@ -130,7 +91,38 @@ void main()
 		diffuse  *= attenuation;
 		specular *= attenuation;
     }
+    
+	//test if frag is in shadow
+	float shadow = 0.0;
+	if(light.type == DIR_LIGHT){
+		vec4 lightSpace_frag_pos = lightSpace_matrix * vec4(fragPos, 1.0);
+		// perform perspective divide
+   	 	vec3 projCoords = lightSpace_frag_pos.xyz / lightSpace_frag_pos.w;
+   	 	projCoords = projCoords * 0.5 + 0.5; //transform from [-1, 1] to [0, 1]
+   	 	
+   	 	float closestDepth = texture(tex_depth, projCoords.xy).r;   
+   	 	float currentDepth = projCoords.z; 
+   	 	
+   	 	float bias = 0.005;
+   	 	shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+   	 	
+   	 	vec2 texelSize = 1.0 / textureSize(tex_depth, 0);
+		for(int x = -1; x <= 1; ++x)
+		{
+		    for(int y = -1; y <= 1; ++y)
+		    {
+		        float pcfDepth = texture(tex_depth, projCoords.xy + vec2(x, y) * texelSize).r; 
+		        shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+		    }    
+		}
+		shadow /= 9.0;
+   	 	
+   	 	if(projCoords.z > 1.0){
+        	shadow = 0.0;
+        }
+	}
 	
-    color = vec4(ambient + diffuse + specular, 1.0);
+	color = vec4(ambient + (diffuse + specular) * (1 - shadow), 1.0);
+    
 } 
 

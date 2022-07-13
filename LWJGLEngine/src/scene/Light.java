@@ -9,6 +9,8 @@ public abstract class Light {
 	public static final int POINT_LIGHT = 1;
 	public static final int SPOT_LIGHT = 2;
 	
+	public int type;
+	
 	public Vec3 pos, dir, color;
 	
 	public float cutOff, outerCutOff;
