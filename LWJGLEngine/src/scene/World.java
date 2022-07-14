@@ -3,6 +3,7 @@ package scene;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 
+import graphics.Cubemap;
 import graphics.Shader;
 import graphics.Texture;
 import model.Cube;
@@ -35,6 +36,10 @@ public class World {
 	static Texture woodboxTex;
 	static Texture metalpanelTex;
 	static Texture woodfloorTex;
+	static Texture skyboxTex;
+	
+	public static Cubemap skybox;
+	
 	static Cube boxModel;
 	static ScreenQuad quadModel, floorModel;
 	
@@ -52,6 +57,17 @@ public class World {
 		goldnuggetTex = new Texture("/goldnugget_diffuse.jpg", "/goldnugget_specular.jpg", "/goldnugget_normal.jpg", "/goldnugget_displacement.png");
 		woodboxTex = new Texture("/woodbox_diffuse.png", null, "/woodbox_normal.png", "/woodbox_displacement.png");
 		metalpanelTex = new Texture("/metalpanel_diffuse.jpg", "/metalpanel_specular.jpg", "/metalpanel_normal.jpg", "/metalpanel_displacement.png");
+		skyboxTex = new Texture("/skybox/right.jpg", null, null, null);
+		
+		skybox = new Cubemap(
+			"/skybox/right.jpg",
+			"/skybox/left.jpg",
+			"/skybox/top.jpg",
+			"/skybox/bottom.jpg",
+			"/skybox/back.jpg",
+			"/skybox/front.jpg"
+		);
+		
 		boxModel = new Cube();
 		floorModel = new ScreenQuad();
 		quadModel = new ScreenQuad();

@@ -23,6 +23,7 @@ import graphics.Texture;
 import graphics.VertexArray;
 import input.KeyboardInput;
 import input.MouseInput;
+import model.Cube;
 import model.Model;
 import model.ScreenQuad;
 import player.Camera;
@@ -62,13 +63,16 @@ public class Main implements Runnable{
 	private static final float ASPECT_RATIO = (float) windowWidth / (float) windowHeight;
 	private static final float FOV = (float) Math.toRadians(90f);	//vertical FOV
 	
-	private static final int SHADOW_MAP_NR_CASCADES = 5;
-	private static float[] shadowCascades = new float[] {NEAR, 5, 10, 20, 50, FAR};
+	private static final int SHADOW_MAP_NR_CASCADES = 6;
+	private static float[] shadowCascades = new float[] {NEAR, 2, 5, 10, 20, 50, FAR};
 	
 	private World world;
 	private Framebuffer geometryBuffer;
 	private Framebuffer lightingBuffer;
 	private Framebuffer shadowMap;
+	private Framebuffer skyboxBuffer;
+	
+	private Model skyboxCube;
 	private Model screenQuad;
 	
 	public void start() {
@@ -107,23 +111,6 @@ public class Main implements Runnable{
 		glEnable(GL_CULL_FACE);  
 		glCullFace(GL_BACK);  
 		System.out.println("OpenGL : " + glGetString(GL_VERSION));
-		Shader.loadAll();
-		
-		Mat4 pr_matrix = Mat4.perspective(FOV, (float) windowWidth, (float) windowHeight, NEAR, FAR);
-		
-		Shader.GEOMETRY.setUniformMat4("pr_matrix", pr_matrix);
-		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
-		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
-		Shader.GEOMETRY.setUniform1i("tex_normal", 2);
-		Shader.GEOMETRY.setUniform1i("tex_displacement", 3);
-		
-		Shader.LIGHTING.setUniform1i("tex_position", 0);
-		Shader.LIGHTING.setUniform1i("tex_normal", 1);
-		Shader.LIGHTING.setUniform1i("tex_diffuse", 2);
-		Shader.LIGHTING.setUniform1i("shadowMap", 3);
-		
-		
-		Shader.POST_PROCESS.setUniform1i("tex_color", 0);
 		
 		//INIT
 		World.init();
@@ -132,6 +119,10 @@ public class Main implements Runnable{
 		this.screenQuad = new ScreenQuad();
 		this.screenQuad.modelMats.add(Mat4.identity());
 		this.screenQuad.updateModelMats();
+		
+		this.skyboxCube = new Cube();
+		this.skyboxCube.modelMats.add(Mat4.scale(2).mul(Mat4.translate(new Vec3(-1f))));
+		this.skyboxCube.updateModelMats();
 		
 		this.geometryBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.geometryBuffer.addColorBuffer(GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0);	//RGB: position, A: depth
@@ -142,7 +133,7 @@ public class Main implements Runnable{
 		this.geometryBuffer.isComplete();
 		
 		this.lightingBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.lightingBuffer.addColorBuffer(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT0);
+		this.lightingBuffer.addColorBuffer(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT0);	//RGB: color
 		this.lightingBuffer.addRenderBuffer();
 		this.lightingBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
 		this.lightingBuffer.isComplete();
@@ -150,6 +141,33 @@ public class Main implements Runnable{
 		this.shadowMap = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.shadowMap.addDepthBuffer();
 		this.shadowMap.isComplete();
+		
+		this.skyboxBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
+		this.skyboxBuffer.addColorBuffer(GL_RGBA, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0);	//RGB: color
+		this.skyboxBuffer.addRenderBuffer();
+		this.skyboxBuffer.isComplete();
+		
+		//init shaders
+		Shader.loadAll();
+		Mat4 pr_matrix = Mat4.perspective(FOV, (float) windowWidth, (float) windowHeight, NEAR, FAR);
+		
+		Shader.GEOMETRY.setUniformMat4("pr_matrix", pr_matrix);
+		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
+		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
+		Shader.GEOMETRY.setUniform1i("tex_normal", 2);
+		Shader.GEOMETRY.setUniform1i("tex_displacement", 3);
+		
+		Shader.SKYBOX.setUniformMat4("pr_matrix", pr_matrix);
+		Shader.SKYBOX.setUniform1i("skybox", 0);
+		
+		Shader.LIGHTING.setUniform1i("tex_position", 0);
+		Shader.LIGHTING.setUniform1i("tex_normal", 1);
+		Shader.LIGHTING.setUniform1i("tex_diffuse", 2);
+		Shader.LIGHTING.setUniform1i("shadowMap", 3);
+		
+		Shader.POST_PROCESS.setUniform1i("tex_color", 0);
+		Shader.POST_PROCESS.setUniform1i("tex_position", 1);
+		Shader.POST_PROCESS.setUniform1i("skybox", 2);
 		
 		//wireframe
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -228,6 +246,7 @@ public class Main implements Runnable{
 		// -- GEOMETRY -- : render 3d perspective to geometry buffer
 		geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 		Shader.GEOMETRY.enable();
 		world.renderGeometry(world.player.camera);
@@ -239,14 +258,23 @@ public class Main implements Runnable{
 			orthographicFrustum.render();
 		}
 		
+		// -- SKYBOX -- : we'll use this texture in the post-processing step
+		skyboxBuffer.bind();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_CULL_FACE);
+		//glCullFace(GL_FRONT);  
+		Shader.SKYBOX.enable();
+		Shader.SKYBOX.setUniformMat4("vw_matrix", world.player.camera.getViewMatrix());
+		World.skybox.bind(GL_TEXTURE0);
+		skyboxCube.render();
+		
 		// -- LIGHTING -- : using information from the geometry buffer, calculate lighting.
 		lightingBuffer.bind();
+		Shader.LIGHTING.enable();
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
-		
-		Shader.LIGHTING.enable();
 		
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
@@ -373,7 +401,7 @@ public class Main implements Runnable{
 					}
 					
 					//construct orthographic projection matrix
-					Mat4 projectionMat = Mat4.orthographic(left, right, bottom, top, near - 10f, far + 10f);
+					Mat4 projectionMat = Mat4.orthographic(left, right, bottom, top, near - 20f, far + 20f);
 					
 					//render shadow map
 					shadowMap.bind();
@@ -422,6 +450,11 @@ public class Main implements Runnable{
 		else {
 			glBindTexture(GL_TEXTURE_2D, lightingBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
 		}
+		
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, skyboxBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
 		
 		screenQuad.render();
 		

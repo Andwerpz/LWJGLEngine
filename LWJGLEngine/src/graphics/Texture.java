@@ -49,11 +49,31 @@ public class Texture {
 	}
 	
 	public int load(String path, boolean invert) {
+		int[] outWH = new int[2];
+		int[] data = getDataFromImage(path, invert, false, outWH);
+		this.width = outWH[0];
+		this.height = outWH[1];
+		
+		int result = glGenTextures();
+		glBindTexture(GL_TEXTURE_2D, result);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);	//magnification filter
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);  
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
+		glBindTexture(GL_TEXTURE_2D, 0);
+		return result;
+	}
+	
+	public static int[] getDataFromImage(String path, boolean invert, boolean rotate180, int[] outWH) {
 		int[] pixels = null;
 		BufferedImage image = GraphicsTools.loadImage(path);
 		image = GraphicsTools.verticalFlip(image);
-		width = image.getWidth();
-		height = image.getHeight();
+		if(rotate180) image = GraphicsTools.rotateImageByDegrees(image, 180);
+		int width = image.getWidth();
+		int height = image.getHeight();
+		outWH[0] = image.getWidth();
+		outWH[1] = image.getHeight();
 		pixels = new int[width * height];
 		image.getRGB(0, 0, width, height, pixels, 0, width);
 		
@@ -74,15 +94,7 @@ public class Texture {
 			data[i] = a << 24 | b << 16 | g << 8 | r;
 		}
 		
-		int result = glGenTextures();
-		glBindTexture(GL_TEXTURE_2D, result);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);	//magnification filter
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);  
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
-		glBindTexture(GL_TEXTURE_2D, 0);
-		return result;
+		return data;
 	}
 	
 	public void bind() {

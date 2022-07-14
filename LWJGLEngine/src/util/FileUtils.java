@@ -14,7 +14,7 @@ public class FileUtils {
 		StringBuilder result = new StringBuilder();
 		InputStream is;
 		try {
-			System.out.println("LOADING: " + file);
+			System.out.println("LOADING FILE: " + file);
 			is = FileUtils.class.getResourceAsStream(file);
 			BufferedReader fin = new BufferedReader(new InputStreamReader(is));
 			String buffer = "";

@@ -19,7 +19,7 @@ public class Shader {
 	public static final int BITANGENT_ATTRIB = 4;
 	public static final int INSTANCED_MODEL_ATTRIB = 5;	//takes up 4 slots
 	
-	public static Shader GEOMETRY, LIGHTING, DEPTH, POST_PROCESS;
+	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, POST_PROCESS;
 	
 	private boolean enabled = false;
 	
@@ -32,6 +32,7 @@ public class Shader {
 	
 	public static void loadAll() {
 		GEOMETRY = new Shader("/geometry.vert", "/geometry.frag");
+		SKYBOX = new Shader("/skybox.vert", "/skybox.frag");
 		LIGHTING = new Shader("/lighting.vert", "/lighting.frag");
 		DEPTH = new Shader("/simpleDepthShader.vert", "/simpleDepthShader.frag");
 		POST_PROCESS = new Shader("/postprocessing.vert", "/postprocessing.frag");

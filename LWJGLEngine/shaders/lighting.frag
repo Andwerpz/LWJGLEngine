@@ -80,7 +80,7 @@ void main()
     //float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularStrength);
     
     //combine results
-    vec3 ambient  = light.color * fragColor * 0.1;
+    vec3 ambient  = light.color * fragColor * 0.15;
     vec3 diffuse  = light.color * diff * fragColor;
     vec3 specular = light.color * spec * fragSpec;
     
