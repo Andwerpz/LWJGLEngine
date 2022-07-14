@@ -13,6 +13,7 @@ uniform bool enableTexScaling;
 uniform float texScaleFactor;
 
 out vec3 frag_pos;
+out float frag_depth;
 out vec2 frag_uv;
 out mat3 TBN;
 
@@ -20,6 +21,7 @@ void main()
 {
     gl_Position = pr_matrix * vw_matrix * md_matrix * vec4(pos, 1.0);
     frag_pos = vec3(md_matrix * vec4(pos, 1.0));
+    frag_depth = -vec3(vw_matrix * md_matrix * vec4(pos, 1.0)).z;
     frag_uv = uv;
     if(!enableTexScaling){
     	frag_uv = uv * texScaleFactor;

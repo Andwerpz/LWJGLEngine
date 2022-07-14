@@ -79,9 +79,12 @@ public class World {
 			md_matrix.muli(Mat4.translate(new Vec3(x, y, z)));
 			boxModel.modelMats.add(md_matrix);
 		}
+		
+		boxModel.modelMats.add(Mat4.translate(new Vec3(0, -3, 0)));
+		
 		boxModel.updateModelMats();
 		
-		int floorSize = 10;
+		int floorSize = 20;
 		float floorYOffset = -3;
 		for(int i = -floorSize; i <= floorSize; i += 2) {
 			for(int j = -floorSize; j <= floorSize; j += 2) {
@@ -99,7 +102,10 @@ public class World {
 		
 		lights = new ArrayList<>();
 		//lights.add(new PointLight(new Vec3(0, 10, 0), new Vec3(1), 1f, 0.0014f, 0.000007f));
-		lights.add(new DirLight(new Vec3(-0.2f, -1f, 0.4f), new Vec3(1)));
+		//lights.add(new DirLight(new Vec3(0f, -1f, -1f), new Vec3(1f)));
+		//lights.add(new DirLight(new Vec3(-0.2f, -1f, 0.4f), new Vec3(0.5f)));
+		//lights.add(new DirLight(new Vec3(0.3f, -1f, 1f), new Vec3(0.5f)));
+		lights.add(new DirLight(new Vec3(0.2f, -1f, 0.3f), new Vec3(1f)));
 	}
 
 	public void update() {
@@ -124,8 +130,7 @@ public class World {
 		Shader.GEOMETRY.setUniform1i("enableTexScaling", 1);
 		woodfloorTex.bind();
 		floorModel.render();
-		
-		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 1);
+	
 		containerTex.bind();
 		boxModel.render();
 	}

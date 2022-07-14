@@ -11,9 +11,11 @@ uniform vec3 view_pos;
 uniform sampler2D tex_position;
 uniform sampler2D tex_normal;
 uniform sampler2D tex_diffuse;
-uniform sampler2D tex_depth;	//shadow map for directional lights
 
-uniform mat4 lightSpace_matrix;	//matrix for directional lights
+uniform float shadowMapNear;	// >= near
+uniform float shadowMapFar;	// < far
+uniform sampler2D shadowMap;
+uniform mat4 lightSpace_matrix;
 
 struct Light {
 	int type;
@@ -35,10 +37,16 @@ uniform Light light;
 void main()
 {	
 	vec3 fragPos = texture(tex_position, frag_uv).rgb;
+	float fragDepth = texture(tex_position, frag_uv).a;
 	vec3 fragColor = texture(tex_diffuse, frag_uv).rgb;
 	float fragSpec = texture(tex_diffuse, frag_uv).a;
 	vec3 normal = texture(tex_normal, frag_uv).rgb;
 	vec3 viewDir = normalize(view_pos - fragPos);
+	
+	//we do cascaded shadows in multiple passes to render the whole scene
+	if(light.type == DIR_LIGHT && (fragDepth < shadowMapNear || fragDepth >= shadowMapFar)){
+		discard;
+	}
 	
 	//check if we can discard
 	if(texture(tex_position, frag_uv).w == 0.0){
@@ -100,18 +108,18 @@ void main()
    	 	vec3 projCoords = lightSpace_frag_pos.xyz / lightSpace_frag_pos.w;
    	 	projCoords = projCoords * 0.5 + 0.5; //transform from [-1, 1] to [0, 1]
    	 	
-   	 	float closestDepth = texture(tex_depth, projCoords.xy).r;   
+   	 	float closestDepth = texture(shadowMap, projCoords.xy).r;   
    	 	float currentDepth = projCoords.z; 
    	 	
-   	 	float bias = 0.005;
+   	 	float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);  
    	 	shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
    	 	
-   	 	vec2 texelSize = 1.0 / textureSize(tex_depth, 0);
+   	 	vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
 		for(int x = -1; x <= 1; ++x)
 		{
 		    for(int y = -1; y <= 1; ++y)
 		    {
-		        float pcfDepth = texture(tex_depth, projCoords.xy + vec2(x, y) * texelSize).r; 
+		        float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
 		        shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
 		    }    
 		}

@@ -24,6 +24,8 @@ public class Camera {
 		pos = new Vec3(0, 0, 0);
 	}
 
+	//convert from real space to camera space
+	
 	// inverting camera transform:
 	// -translate, -yrot, -xrot, -zrot
 	public Mat4 getViewMatrix() {
@@ -32,6 +34,27 @@ public class Camera {
 		out = out.mul(Mat4.rotateY(-yRot));
 		out = out.mul(Mat4.rotateX(-xRot));
 		out = out.mul(Mat4.rotateZ(-zRot));
+		
+		return out;
+	}
+	
+	public Mat4 getViewRotMatrix() {
+		Mat4 out = Mat4.identity();
+		out = out.mul(Mat4.rotateY(-yRot));
+		out = out.mul(Mat4.rotateX(-xRot));
+		out = out.mul(Mat4.rotateZ(-zRot));
+		
+		return out;
+	}
+	
+	//convert from camera space to real space
+	public Mat4 getInvViewMatrix() {
+		Mat4 out = Mat4.identity();
+		//out = out.mul(Mat4.rotateY((float) Math.PI));
+		out = out.mul(Mat4.rotateZ(zRot));
+		out = out.mul(Mat4.rotateX(xRot));
+		out = out.mul(Mat4.rotateY(yRot));
+		out = out.mul(Mat4.translate(pos));
 		
 		return out;
 	}

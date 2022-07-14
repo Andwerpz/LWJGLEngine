@@ -4,6 +4,7 @@ layout (location = 1) out vec4 gNormal;
 layout (location = 2) out vec4 gColor;
 
 in vec3 frag_pos;
+in float frag_depth;
 in vec2 frag_uv;
 in mat3 TBN;
 
@@ -86,7 +87,8 @@ void main()
 	
     gColor.rgb = texture(tex_diffuse, texCoords).rgb;
     gColor.a = texture(tex_specular, texCoords).r;
-    gPosition = vec4(frag_pos, 1.0);
+    gPosition.rgb = frag_pos;
+    gPosition.a = frag_depth;
     gNormal = vec4(normalize(normal), 1.0);
 } 
 

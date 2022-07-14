@@ -12,6 +12,14 @@ public class Mat4 {
 
 	}
 	
+	public Mat4(Mat4 mat) {
+		for(int i = 0; i < 4; i++) {
+			for(int j = 0; j < 4; j++) {
+				this.mat[i][j] = mat.mat[i][j];
+			}
+		}
+	}
+	
 	public Mat4(Vec3 row1, Vec3 row2, Vec3 row3) {
 		mat[0][0] = row1.x;
 		mat[0][1] = row1.y;
@@ -24,6 +32,17 @@ public class Mat4 {
 		mat[2][0] = row3.x;
 		mat[2][1] = row3.y;
 		mat[2][2] = row3.z;
+	}
+	
+	public Mat4 transpose() {
+		float[][] nextMat = new float[4][4];
+		for(int i = 0; i < 4; i++) {
+			for(int j = 0; j < 4; j++) {
+				nextMat[i][j] = this.mat[j][i];
+			}
+		}
+		this.mat = nextMat;
+		return this;
 	}
 
 	public static Mat4 identity() {
@@ -72,7 +91,6 @@ public class Mat4 {
 
 	public static Mat4 perspective(float viewAngleRad, float width, float height, float nearClippingPlaneDistance,
 			float farClippingPlaneDistance) {
-		// convert angle from degree to radians
 		final float radians = viewAngleRad;
 
 		float halfHeight = (float) (Math.tan(radians / 2) * nearClippingPlaneDistance);
@@ -104,20 +122,23 @@ public class Mat4 {
 	}
 	
 	/**
-	 * Essentially the same as glm::lookAt()
-	 * Eye is the viewing position
-	 * Center is the position that you are looking at
+	 * Essentially the same as glm::lookAt(). 
+	 * Eye is the viewing position. 
+	 * Center is the position that you are looking at. 
+	 * 
+	 * This matrix transforms space so that eye is at the origin, and the vector from eye to center 
+	 * looks down the -z axis. 
 	 * @param eye
 	 * @param pos
 	 * @param up
 	 * @return
 	 */
 	
-	//still need to know why this works. 
 	public static Mat4 lookAt(Vec3 eye, Vec3 center) {
-		Vec3 dir = new Vec3(center, eye).normalize();	//this makes a vector in the wrong direction i think. 
-		Vec3 right = MathTools.crossProduct(new Vec3(0, 1, 0), dir).normalize();
-		Vec3 up = MathTools.crossProduct(dir, right).normalize();
+		//define our 3 basis vectors for the new space
+		Vec3 dir = new Vec3(center, eye).normalize();	//Z
+		Vec3 right = MathTools.crossProduct(new Vec3(0, 1, 0), dir).normalize();	//X
+		Vec3 up = MathTools.crossProduct(dir, right).normalize();	//Y
 		
 		Mat4 result = Mat4.translate(eye.mul(-1f));
 		Mat4 viewSpace = new Mat4(right, up, dir);
@@ -233,6 +254,20 @@ public class Mat4 {
 	public Mat4 muli(Mat4 matrix) {
 		this.mat = this.mul(matrix).mat;
 		return this;
+	}
+	
+	public Vec3 mul(Vec3 vec, float w) {
+//		return new Vec3(
+//			vec.x * mat[0][0] + vec.y * mat[1][0] + vec.z * mat[2][0] + w * mat[3][0],
+//			vec.x * mat[0][1] + vec.y * mat[1][1] + vec.z * mat[2][1] + w * mat[3][1],
+//			vec.x * mat[0][2] + vec.y * mat[1][2] + vec.z * mat[2][2] + w * mat[3][2]
+//		);
+		
+		return new Vec3(
+			vec.x * mat[0][0] + vec.y * mat[0][1] + vec.z * mat[0][2] + w * mat[0][3],
+			vec.x * mat[1][0] + vec.y * mat[1][1] + vec.z * mat[1][2] + w * mat[1][3],
+			vec.x * mat[2][0] + vec.y * mat[2][1] + vec.z * mat[2][2] + w * mat[2][3]
+		);
 	}
 
 	public FloatBuffer toFloatBuffer() {
