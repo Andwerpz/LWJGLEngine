@@ -12,10 +12,24 @@ uniform sampler2D tex_position;
 uniform sampler2D tex_normal;
 uniform sampler2D tex_diffuse;
 
+//directional shadows
 uniform float shadowMapNear;	// >= near
 uniform float shadowMapFar;	// < far
 uniform sampler2D shadowMap;
 uniform mat4 lightSpace_matrix;
+
+//point shadows
+uniform samplerCube shadowCubemap;
+uniform float shadowCubemapFar;
+
+vec3 sampleOffsetDirections[20] = vec3[]
+(
+   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+);   
 
 struct Light {
 	int type;
@@ -128,6 +142,29 @@ void main()
    	 	if(projCoords.z > 1.0){
         	shadow = 0.0;
         }
+	}
+	
+	if(light.type == POINT_LIGHT || light.type == SPOT_LIGHT){
+		vec3 toFrag = lightDir * -1;
+		float currentDepth = distance; 
+		float sampledDepth = texture(shadowCubemap, toFrag).r * shadowCubemapFar;
+		
+		//float bias = 0.05;
+		
+		//shadow = currentDepth - bias > sampledDepth? 1.0 : 0.0;
+		
+		float bias   = 0.1;
+		int samples  = 20;
+		float viewDistance = length(view_pos - fragPos);
+		float diskRadius = 0.003;
+		for(int i = 0; i < samples; i++) {
+		    float closestDepth = texture(shadowCubemap, toFrag + sampleOffsetDirections[i] * diskRadius).r;
+		    closestDepth *= shadowCubemapFar;   // undo mapping [0;1]
+		    if(currentDepth - bias > closestDepth) {
+		        shadow += 1.0;
+		    }
+		}
+		shadow /= float(samples);  
 	}
 	
 	color = vec4(ambient + (diffuse + specular) * (1 - shadow), 1.0);

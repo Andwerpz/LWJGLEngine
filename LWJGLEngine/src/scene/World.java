@@ -73,7 +73,7 @@ public class World {
 		quadModel = new ScreenQuad();
 		
 		int amt = 100;
-		float radius = 10f;
+		float radius = 6f;
 		float offset = 2.5f;
 		for(int i = 0; i < amt; i++) {
 			Mat4 md_matrix = Mat4.identity();
@@ -96,7 +96,7 @@ public class World {
 			boxModel.modelMats.add(md_matrix);
 		}
 		
-		boxModel.modelMats.add(Mat4.translate(new Vec3(0, -3, 0)));
+		boxModel.modelMats.add(Mat4.translate(new Vec3(0, -1, 0)));
 		
 		boxModel.updateModelMats();
 		
@@ -117,11 +117,13 @@ public class World {
 		player = new Player(new Vec3(0, 0, 0));
 		
 		lights = new ArrayList<>();
-		//lights.add(new PointLight(new Vec3(0, 10, 0), new Vec3(1), 1f, 0.0014f, 0.000007f));
+		//lights.add(new DirLight(new Vec3(0.2f, -1f, 0.3f), new Vec3(1f)));
+		//lights.add(new PointLight(new Vec3(2.5f, 5, 2.5f), new Vec3(0.5f), 1f, 0.0014f, 0.000007f));
+		lights.add(new PointLight(new Vec3(-2.5f, 5, -2.5f), new Vec3(0.7f), 1f, 0.0014f, 0.000007f));
 		//lights.add(new DirLight(new Vec3(0f, -1f, -1f), new Vec3(1f)));
 		//lights.add(new DirLight(new Vec3(-0.2f, -1f, 0.4f), new Vec3(0.5f)));
 		//lights.add(new DirLight(new Vec3(0.3f, -1f, 1f), new Vec3(0.5f)));
-		lights.add(new DirLight(new Vec3(0.2f, -1f, 0.3f), new Vec3(1f)));
+		
 	}
 
 	public void update() {
@@ -152,9 +154,10 @@ public class World {
 	}
 	
 	//assume depth shader is enabled
-	public void renderDepth(Mat4 projectionMat, Mat4 viewMat) {
-		Shader.DEPTH.setUniformMat4("pr_matrix", projectionMat);
-		Shader.DEPTH.setUniformMat4("vw_matrix", viewMat);
+	public void renderDepth(Mat4 projectionMat, Mat4 viewMat, Shader shader) {
+		shader.enable();
+		shader.setUniformMat4("pr_matrix", projectionMat);
+		shader.setUniformMat4("vw_matrix", viewMat);
 		
 		floorModel.render();
 		boxModel.render();

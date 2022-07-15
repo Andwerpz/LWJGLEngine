@@ -134,14 +134,14 @@ public class Mat4 {
 	 * @return
 	 */
 	
-	public static Mat4 lookAt(Vec3 eye, Vec3 center) {
+	public static Mat4 lookAt(Vec3 eye, Vec3 center, Vec3 up) {
 		//define our 3 basis vectors for the new space
-		Vec3 dir = new Vec3(center, eye).normalize();	//Z
-		Vec3 right = MathTools.crossProduct(new Vec3(0, 1, 0), dir).normalize();	//X
-		Vec3 up = MathTools.crossProduct(dir, right).normalize();	//Y
+		Vec3 z = new Vec3(center, eye).normalize();	//Z
+		Vec3 x = MathTools.crossProduct(up, z).normalize();	//X
+		Vec3 y = MathTools.crossProduct(z, x).normalize();	//Y
 		
 		Mat4 result = Mat4.translate(eye.mul(-1f));
-		Mat4 viewSpace = new Mat4(right, up, dir);
+		Mat4 viewSpace = new Mat4(x, y, z);
 		viewSpace.mat[3][3] = 1;
 		result.muli(viewSpace);
 		
