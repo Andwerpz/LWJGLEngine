@@ -5,6 +5,7 @@ import static org.lwjgl.glfw.GLFW.*;
 import entity.Entity;
 import input.KeyboardInput;
 import input.MouseInput;
+import main.Main;
 import model.Hitbox;
 import scene.SpotLight;
 import scene.World;
@@ -21,17 +22,25 @@ public class Player extends Entity {
 
 	Vec2 mouse;
 	public Camera camera;
+	
+	public float camXRot;
+	public float camYRot;
+	public float camZRot;
 
 	public SpotLight flashlight;
 	public boolean flashlightOn = false;
 	int flashlightToggleDelay = 15;
 	int flashlightToggleCounter = 0;
+	
+	public boolean moveFlashlightWithPlayer = true;
+	int moveFlashlightToggleDelay = 15;
+	int moveFlashlightToggleCounter = 0;
 
 	public Player(Vec3 pos) {
 		super(pos);
-		camera = new Camera();
+		camera = new Camera(Main.FOV, (float) Main.windowWidth, (float) Main.windowHeight, Main.NEAR, Main.FAR);
 		mouse = MouseInput.getMousePos();
-		flashlight = new SpotLight(this.camera.pos, this.camera.getFacing(), new Vec3(1), 25f, 30f, 1.5f, 0.022f, 0.0019f);
+		flashlight = new SpotLight(this.camera.getPos(), this.camera.getFacing(), new Vec3(1), 25f, 30f, 1.5f, 0.022f, 0.0019f);
 	}
 
 	@Override
@@ -44,15 +53,18 @@ public class Player extends Entity {
 		// ROTATION
 		Vec2 nextMouse = MouseInput.getMousePos();
 		Vec2 delta = nextMouse.sub(mouse);
-		camera.yRot += Math.toRadians(delta.x / 10f);
-		camera.xRot += Math.toRadians(delta.y / 10f);
+		camYRot += Math.toRadians(delta.x / 10f);
+		camXRot += Math.toRadians(delta.y / 10f);
 		mouse = nextMouse;
 
-		camera.xRot = (float) MathTools.clamp(-Math.PI / 2f, Math.PI / 2f, camera.xRot);
+		camXRot = (float) MathTools.clamp(-(Math.PI - 0.01) / 2f, (Math.PI - 0.01) / 2f, camXRot);
+		
+		camera.setFacing(camXRot, camYRot);
+		camera.setUp(camZRot);
 
 		// TRANSLATION
 		Vec3 forward = new Vec3(0, 0, -moveSpeed);
-		forward.rotateY(camera.yRot);
+		forward.rotateY(camYRot);
 		Vec3 right = new Vec3(forward);
 		right.rotateY((float) Math.toRadians(-90));
 
@@ -77,11 +89,14 @@ public class Player extends Entity {
 
 		move();
 
-		camera.pos = this.pos.add(cameraVec);
+		camera.setPos(this.pos.add(cameraVec));
 
 		// flashlight
-		this.flashlight.pos = this.camera.pos;
-		this.flashlight.dir = this.camera.getFacing();
+		if(moveFlashlightWithPlayer) {
+			this.flashlight.pos = this.camera.getPos();
+			this.flashlight.dir = this.camera.getFacing();
+		}
+		
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_E) && flashlightToggleCounter >= flashlightToggleDelay) {
 			flashlightToggleCounter = 0;
 			if (flashlightOn) {
@@ -92,6 +107,12 @@ public class Player extends Entity {
 			flashlightOn = !flashlightOn;
 		}
 		flashlightToggleCounter = Math.min(flashlightToggleCounter + 1, flashlightToggleDelay);
+		
+		if(KeyboardInput.isKeyPressed(GLFW_KEY_L) && moveFlashlightToggleCounter >= moveFlashlightToggleDelay) {
+			moveFlashlightToggleCounter = 0;
+			this.moveFlashlightWithPlayer = !moveFlashlightWithPlayer;
+		}
+		moveFlashlightToggleCounter ++;
 	}
 
 }

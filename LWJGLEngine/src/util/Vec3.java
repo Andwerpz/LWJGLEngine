@@ -89,29 +89,34 @@ public class Vec3 {
 		return this;
 	}
 	
-	public void rotateX(float xRot) {
+	public Vec3 rotateX(float xRot) {
 		float x = this.x;
 		float y = this.y;
 		float z = this.z;
 		this.x = x;
 		this.y = (float) ((y * Math.cos(xRot)) + (z * Math.sin(xRot)));
 		this.z = (float) ((y * -Math.sin(xRot)) + (z * Math.cos(xRot)));
+		return this;
 	}
-	public void rotateY(float yRot) {
+	
+	public Vec3 rotateY(float yRot) {
 		float x = this.x;
 		float y = this.y;
 		float z = this.z;
 		this.x = (float) ((x * Math.cos(yRot)) + (z * -Math.sin(yRot)));
 		this.y = y;
 		this.z = (float) ((x * Math.sin(yRot)) + (z * Math.cos(yRot)));
+		return this;
 	}
-	public void rotateZ(float zRot) {
+	
+	public Vec3 rotateZ(float zRot) {
 		float x = this.x;
 		float y = this.y;
 		float z = this.z;
 		this.x = (float) ((x * Math.cos(zRot)) + (y * Math.sin(zRot)));
 		this.y = (float) ((x * -Math.sin(zRot)) + (y * Math.cos(zRot)));
 		this.z = z;
+		return this;
 	}
 	
 	public String toString() {

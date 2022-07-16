@@ -59,20 +59,10 @@ public class Main implements Runnable{
 	public static long window;
 	private boolean fullscreen = false;
 	
-	private boolean depthDebugMode = false;
-	private int depthDebugToggleDelay = 15;
-	private int depthDebugToggleDelayCounter = 0;
-	
-	private VertexArray perspectiveFrustum;
-	private boolean resamplePerspectiveFrustum = false;
-	
-	private VertexArray orthographicFrustum;
-	private boolean resampleOrthographicFrustum = false;
-	
-	private static final float NEAR = 0.1f;
-	private static final float FAR = 200.0f;
-	private static final float ASPECT_RATIO = (float) windowWidth / (float) windowHeight;
-	private static final float FOV = (float) Math.toRadians(90f);	//vertical FOV
+	public static final float NEAR = 0.1f;
+	public static final float FAR = 200.0f;
+	public static final float ASPECT_RATIO = (float) windowWidth / (float) windowHeight;
+	public static final float FOV = (float) Math.toRadians(90f);	//vertical FOV
 	
 	private static final int SHADOW_MAP_NR_CASCADES = 6;
 	private static float[] shadowCascades = new float[] {NEAR, 2, 5, 10, 20, 50, FAR};
@@ -150,16 +140,16 @@ public class Main implements Runnable{
 		
 		this.lightingBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.lightingBuffer.addColorBuffer(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT0);	//RGB: color
-		this.lightingBuffer.addRenderBuffer();
+		//this.lightingBuffer.addRenderBuffer();	//on big pc, works without renderbuffer
 		this.lightingBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
 		this.lightingBuffer.isComplete();
 		
 		this.shadowBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.shadowBuffer.addRenderBuffer();
+		//this.shadowBuffer.addRenderBuffer();	//on big pc, works without renderbuffer
 		this.shadowBuffer.addDepthBuffer();
 		this.shadowBuffer.isComplete();
-		this.shadowDepthMapID = shadowBuffer.getDepthBuffer();
 		
+		this.shadowDepthMapID = shadowBuffer.getDepthBuffer();
 		this.shadowCubemap = new Cubemap();
 		
 		this.testTextureID = glGenTextures();
@@ -180,7 +170,6 @@ public class Main implements Runnable{
 		Shader.loadAll();
 		Mat4 pr_matrix = Mat4.perspective(FOV, (float) windowWidth, (float) windowHeight, NEAR, FAR);
 		
-		Shader.GEOMETRY.setUniformMat4("pr_matrix", pr_matrix);
 		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
 		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
 		Shader.GEOMETRY.setUniform1i("tex_normal", 2);
@@ -251,22 +240,6 @@ public class Main implements Runnable{
 			running = false;
 		}
 		
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_B) && depthDebugToggleDelayCounter >= depthDebugToggleDelay) {
-			depthDebugMode = !depthDebugMode;
-			depthDebugToggleDelayCounter = 0;
-		}
-		depthDebugToggleDelayCounter ++;
-		
-		resamplePerspectiveFrustum = false;
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_X)) {
-			resamplePerspectiveFrustum = true;
-		}
-		
-		resampleOrthographicFrustum = false;
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_Z)) {
-			resampleOrthographicFrustum = true;
-		}
-		
 		world.update();
 	}
 	
@@ -279,14 +252,7 @@ public class Main implements Runnable{
 		glEnable(GL_CULL_FACE);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 		Shader.GEOMETRY.enable();
-		world.renderGeometry(world.player.camera);
-		if(perspectiveFrustum != null) {
-			perspectiveFrustum.render();
-		}
-		
-		if(orthographicFrustum != null) {
-			orthographicFrustum.render();
-		}
+		world.render(Shader.GEOMETRY, world.player.camera);
 		
 		// -- LIGHTING -- : using information from the geometry buffer, calculate lighting.
 		lightingBuffer.bind();
@@ -304,20 +270,19 @@ public class Main implements Runnable{
 		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT2));
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, shadowDepthMapID);
-		Shader.LIGHTING.setUniform3f("view_pos", this.world.player.camera.pos);
+		Shader.LIGHTING.setUniform3f("view_pos", this.world.player.camera.getPos());
 		
 		//calculate lighting with each light seperately
 		ArrayList<Light> lights = World.lights;
 		for(int i = 0; i < lights.size(); i++) {
 			//generate depth map for light
 			if(lights.get(i).type == Light.DIR_LIGHT) {
-				Vec3 dir = new Vec3(lights.get(i).dir).normalize();
+				Vec3 lightDir = new Vec3(lights.get(i).dir).normalize();
 				Vec3 eye = new Vec3(0);
-				Mat4 lightMat = Mat4.lookAt(eye, dir, new Vec3(0, 1, 0));
+				Mat4 lightMat = Mat4.lookAt(eye, lightDir, new Vec3(0, 1, 0));
 				
 				//re-bind directional depth map texture as depth map
-				shadowBuffer.bind();
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowDepthMapID, 0);
+				shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowDepthMapID);
 				
 				//do this for each cascade near / far plane
 				for(int cascade = 0; cascade < Main.SHADOW_MAP_NR_CASCADES; cascade++) {
@@ -344,41 +309,11 @@ public class Main implements Runnable{
 					Shader.LIGHTING.setUniform1f("shadowMapNear", near);
 					Shader.LIGHTING.setUniform1f("shadowMapFar", far);
 					
-					float[] vertices = new float[8 * 3];
-					byte[] indices = new byte[] {
-						0, 1, 2,
-						0, 2, 3,
-						4, 5, 6,
-						4, 6, 7
-					};
-					
-					float[] tex = new float[] {
-						1, 1,
-						0, 1,
-						0, 0,
-						1, 0,
-						
-						1, 1,
-						0, 1,
-						0, 0,
-						1, 0,
-					};
-					
 					//transform frustum corners from camera space to light space
 					Mat4 transformMatrix = new Mat4(world.player.camera.getInvViewMatrix());	//from camera to world space
 					transformMatrix.muli(lightMat);	//apply rotation to align light dir with -z axis
 					for(int j = 0; j < corners.length; j++) {
-						corners[j] = world.player.camera.getInvViewMatrix().mul(corners[j], 1f);
-						vertices[j * 3 + 0] = corners[j].x;
-						vertices[j * 3 + 1] = corners[j].y;
-						vertices[j * 3 + 2] = corners[j].z;
-						
-						corners[j] = lightMat.mul(corners[j], 1f);
-					}
-					
-					if(resamplePerspectiveFrustum) {
-						perspectiveFrustum = new VertexArray(vertices, indices, tex, GL_TRIANGLES);
-						perspectiveFrustum.updateModelMats(new Mat4[] {Mat4.identity()});
+						corners[j] = transformMatrix.mul(corners[j], 1f);
 					}
 					
 					//generate the AABB that bounds the corners in light space
@@ -398,34 +333,11 @@ public class Main implements Runnable{
 						far = Math.max(far, v.z);
 					}
 					
-					Mat4 invLightMat = new Mat4(lightMat).transpose();
-					vertices = new float[] {
-						left, bottom, near,
-						right, bottom, near,
-						right, top, near,
-						left, top, near,
-						
-						left, bottom, far,
-						right, bottom, far,
-						right, top, far,
-						left, top, far,
-					};
-					
-					for(int j = 0; j < vertices.length; j += 3) {
-						Vec3 vec = new Vec3(vertices[j], vertices[j + 1], vertices[j + 2]);
-						vec = invLightMat.mul(vec, 1.0f);
-						vertices[j] = vec.x;
-						vertices[j + 1] = vec.y;
-						vertices[j + 2] = vec.z;
-					}
-					
-					if(resampleOrthographicFrustum) {
-						orthographicFrustum = new VertexArray(vertices, indices, tex, GL_TRIANGLES);
-						orthographicFrustum.updateModelMats(new Mat4[] {Mat4.identity()});
-					}
-					
 					//construct orthographic projection matrix
-					Mat4 projectionMat = Mat4.orthographic(left, right, bottom, top, near - 20f, far + 20f);
+					Mat4 projectionMat = Mat4.orthographic(left, right, bottom, top, near - 100f, far + 20f);
+					
+					Camera lightCamera = new Camera(left, right, bottom, top, near - 100f, far + 20f);
+					lightCamera.setFacing(lightDir);
 					
 					//render shadow map
 					shadowBuffer.bind();
@@ -435,9 +347,10 @@ public class Main implements Runnable{
 					
 					Shader.LIGHTING.setUniformMat4("lightSpace_matrix", lightMat.mul(projectionMat));
 					Shader.DEPTH.enable();
-					world.renderDepth(projectionMat, lightMat, Shader.DEPTH);
+					//world.renderDepth(projectionMat, lightMat, Shader.DEPTH);
+					world.renderDepth(Shader.DEPTH, lightCamera);
 					
-					//render lit scene
+					//render portion of lit scene
 					lightingBuffer.bind();
 					glDisable(GL_DEPTH_TEST);
 					glEnable(GL_BLEND);
@@ -448,39 +361,43 @@ public class Main implements Runnable{
 			}
 			else {
 				Light light = lights.get(i);
-				Vec3 pos = light.pos;
 				
 				//generate cubemap
 				shadowBuffer.bind();
 				Shader.CUBE_DEPTH.enable();
 				float near = 0.1f;
 				float far = 50f;
-				Mat4 pr_matrix = Mat4.perspective((float) Math.toRadians(90), 1024f, 1024f, near, far);	//aspect ratio of 1
 				
 				Shader.CUBE_DEPTH.setUniform1f("far", far);
 				
-				Mat4[] vw_matrix = new Mat4[] {
-					Mat4.lookAt(pos, pos.add(new Vec3(1, 0, 0)), new Vec3(0, -1, 0)),
-					Mat4.lookAt(pos, pos.add(new Vec3(-1, 0, 0)), new Vec3(0, -1, 0)),
-					Mat4.lookAt(pos, pos.add(new Vec3(0, 1, 0)), new Vec3(0, 0, 1)),
-					Mat4.lookAt(pos, pos.add(new Vec3(0, -1, 0)), new Vec3(0, 0, -1)),
-					Mat4.lookAt(pos, pos.add(new Vec3(0, 0, 1)), new Vec3(0, -1, 0)),
-					Mat4.lookAt(pos, pos.add(new Vec3(0, 0, -1)), new Vec3(0, -1, 0)),
+				Vec3[][] camVectors = new Vec3[][] {
+					{new Vec3(1, 0, 0), new Vec3(0, -1, 0)},	//-x
+					{new Vec3(-1, 0, 0), new Vec3(0, -1, 0)},	//+x
+					{new Vec3(0, 1, 0), new Vec3(0, 0, 1)},		//-y
+					{new Vec3(0, -1, 0), new Vec3(0, 0, -1)},	//+y
+					{new Vec3(0, 0, 1), new Vec3(0, -1, 0)},	//-z
+					{new Vec3(0, 0, -1), new Vec3(0, -1, 0)},	//+z
 				};
+				
+				Camera cubemapCamera = new Camera((float) Math.toRadians(90), 1f, 1f, near, far);	//aspect ratio of 1
+				cubemapCamera.setPos(light.pos);
 				
 				glViewport(0, 0, shadowCubemap.getSize(), shadowCubemap.getSize());
 				glEnable(GL_DEPTH_TEST);
 				glDisable(GL_BLEND);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				glClear(GL_DEPTH_BUFFER_BIT);
 				
+				//render each side of cubemap separately
 				for(int j = 0; j < 6; j++) {
+					cubemapCamera.setFacing(camVectors[j][0]);
+					cubemapCamera.setUp(camVectors[j][1]);
+					
 					int face = GL_TEXTURE_CUBE_MAP_POSITIVE_X + j;
-					//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, face, shadowCubemap.getID(), 0);
-					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, face, shadowCubemap.getID(), 0);
-					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-					world.renderDepth(pr_matrix, vw_matrix[j], Shader.CUBE_DEPTH);
+					shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, face, shadowCubemap.getID());
+					shadowBuffer.bind();
+					glClear(GL_DEPTH_BUFFER_BIT);
+					world.renderDepth(Shader.CUBE_DEPTH, cubemapCamera);
 				}
-				//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);	//make sure to unbind
 				
 				//render lit scene
 				lightingBuffer.bind();
@@ -488,12 +405,11 @@ public class Main implements Runnable{
 				glDisable(GL_DEPTH_TEST);
 				glEnable(GL_BLEND);
 				glEnable(GL_CULL_FACE);
-				Shader.LIGHTING.enable();
 				
+				Shader.LIGHTING.enable();
 				Shader.LIGHTING.setUniform1f("shadowCubemapFar", far);
 				
-				glActiveTexture(GL_TEXTURE4);
-				glBindTexture(GL_TEXTURE_CUBE_MAP, shadowCubemap.getID());
+				shadowCubemap.bind(GL_TEXTURE4);
 				
 				lights.get(i).bind(Shader.LIGHTING, i);
 				screenQuad.render();
@@ -518,14 +434,7 @@ public class Main implements Runnable{
 		Shader.POST_PROCESS.enable();
 		
 		glActiveTexture(GL_TEXTURE0);
-		
-		if(depthDebugMode) {
-			glBindTexture(GL_TEXTURE_2D, testTextureID);
-		}
-		else {
-			glBindTexture(GL_TEXTURE_2D, lightingBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
-		}
-		
+		glBindTexture(GL_TEXTURE_2D, lightingBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
 		glActiveTexture(GL_TEXTURE2);

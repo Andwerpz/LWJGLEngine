@@ -14,57 +14,89 @@ import util.Vec3;
 
 public class Camera {
 
-	public Vec3 pos;
-	public float xRot, yRot, zRot;
+	private Vec3 pos, facing, up;
+	
+	public Mat4 projectionMatrix;
 
-	public Camera() {
-		xRot = 0;
-		yRot = 0;
-		zRot = 0;
+	public Camera(float verticalFOV, float width, float height, float near, float far) {
+		init();
+		this.projectionMatrix = Mat4.perspective(verticalFOV, width, height, near, far);
+	}
+	
+	public Camera(float left, float right, float bottom, float top, float near, float far) {
+		init();
+		this.projectionMatrix = Mat4.orthographic(left, right, bottom, top, near, far);
+	}
+	
+	public Camera(Mat4 projectionMatrix) {
+		init();
+		this.projectionMatrix = new Mat4(projectionMatrix);
+	}
+	
+	public void init() {
+		facing = new Vec3(0, 0, -1);
+		up = new Vec3(0, 1, 0);
 		pos = new Vec3(0, 0, 0);
+	}
+	
+	public Mat4 getProjectionMatrix() {
+		return this.projectionMatrix;
 	}
 
 	//convert from real space to camera space
-	
-	// inverting camera transform:
-	// -translate, -yrot, -xrot, -zrot
 	public Mat4 getViewMatrix() {
-		Mat4 out = Mat4.identity();
-		out = out.mul(Mat4.translate(pos.mul(-1f)));
-		out = out.mul(Mat4.rotateY(-yRot));
-		out = out.mul(Mat4.rotateX(-xRot));
-		out = out.mul(Mat4.rotateZ(-zRot));
-		
-		return out;
-	}
-	
-	public Mat4 getViewRotMatrix() {
-		Mat4 out = Mat4.identity();
-		out = out.mul(Mat4.rotateY(-yRot));
-		out = out.mul(Mat4.rotateX(-xRot));
-		out = out.mul(Mat4.rotateZ(-zRot));
-		
-		return out;
+		return Mat4.lookAt(this.pos, this.pos.add(this.getFacing()), up);
 	}
 	
 	//convert from camera space to real space
 	public Mat4 getInvViewMatrix() {
-		Mat4 out = Mat4.identity();
-		//out = out.mul(Mat4.rotateY((float) Math.PI));
-		out = out.mul(Mat4.rotateZ(zRot));
-		out = out.mul(Mat4.rotateX(xRot));
-		out = out.mul(Mat4.rotateY(yRot));
-		out = out.mul(Mat4.translate(pos));
+		Mat4 ans = Mat4.lookAt(new Vec3(0, 0, 0), this.getFacing(), up).transpose();
+		ans.muli(Mat4.translate(pos.mul(1f)));
+		return ans;	
+	}
+	
+	public Mat4 getInvRotMatrix() {
+		Mat4 ans = this.getInvViewMatrix();
 		
-		return out;
+		ans.mat[0][3] = 0;
+		ans.mat[1][3] = 0;
+		ans.mat[2][3] = 0;
+		
+		return ans;
+	}
+	
+	public Vec3 getPos() {
+		return this.pos;
+	}
+	
+	public void setPos(Vec3 pos) {
+		this.pos = new Vec3(pos);
+	}
+	
+	public void setUp(Vec3 up) {
+		this.up = new Vec3(up).normalize();
+	}
+	
+	public void setUp(float zRot) {
+		this.up = new Vec3(0, 1, 0).rotateZ(zRot);
+	}
+	
+	public Vec3 getUp() {
+		return this.up;
+	}
+	
+	public void setFacing(float xRot, float yRot) {
+		this.facing = new Vec3(0, 0, -1);
+		this.facing.rotateX(xRot);
+		this.facing.rotateY(yRot);
+	}
+	
+	public void setFacing(Vec3 facing) {
+		this.facing = new Vec3(facing).normalize();
 	}
 	
 	public Vec3 getFacing() {
-		Vec3 output = new Vec3(0, 0, -1);
-		output.rotateZ(zRot);
-		output.rotateX(xRot);
-		output.rotateY(yRot);
-		return output;
+		return this.facing;
 	}
 
 }

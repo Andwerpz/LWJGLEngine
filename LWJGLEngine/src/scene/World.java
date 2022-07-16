@@ -1,11 +1,31 @@
 package scene;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL14.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL21.*;
+import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL31.*;
+import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL42.*;
+import static org.lwjgl.opengl.GL40.*;
+import static org.lwjgl.opengl.GL41.*;
+import static org.lwjgl.opengl.GL43.*;
+import static org.lwjgl.opengl.GL44.*;
+import static org.lwjgl.opengl.GL45.*;
+
+import java.nio.IntBuffer;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 
 import graphics.Cubemap;
+import graphics.Material;
 import graphics.Shader;
-import graphics.Texture;
+import graphics.Material;
 import model.Cube;
 import model.ScreenQuad;
 import player.Camera;
@@ -29,14 +49,14 @@ public class World {
 	
 	public static final int MAX_LIGHTS = 100;
 	
-	static Texture crystalTex;
-	static Texture containerTex;
-	static Texture goldtilesTex;
-	static Texture goldnuggetTex;
-	static Texture woodboxTex;
-	static Texture metalpanelTex;
-	static Texture woodfloorTex;
-	static Texture skyboxTex;
+	static Material crystalTex;
+	static Material containerTex;
+	static Material goldtilesTex;
+	static Material goldnuggetTex;
+	static Material woodboxTex;
+	static Material metalpanelTex;
+	static Material woodfloorTex;
+	static Material skyboxTex;
 	
 	public static Cubemap skybox;
 	
@@ -50,14 +70,14 @@ public class World {
 	
 	public static void init() {
 		startTime = System.currentTimeMillis();
-		woodfloorTex = new Texture("/woodbox_diffuse.png", null, null, null);
-		goldtilesTex = new Texture("/goldtiles_diffuse.jpg", "/goldtiles_specular.jpg", "/goldtiles_normal.jpg", null);
-		containerTex = new Texture("/container_diffuse.png", "/container_specular.png", null, null);
-		crystalTex = new Texture("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg", "/crystal_displacement.png");
-		goldnuggetTex = new Texture("/goldnugget_diffuse.jpg", "/goldnugget_specular.jpg", "/goldnugget_normal.jpg", "/goldnugget_displacement.png");
-		woodboxTex = new Texture("/woodbox_diffuse.png", null, "/woodbox_normal.png", "/woodbox_displacement.png");
-		metalpanelTex = new Texture("/metalpanel_diffuse.jpg", "/metalpanel_specular.jpg", "/metalpanel_normal.jpg", "/metalpanel_displacement.png");
-		skyboxTex = new Texture("/skybox/right.jpg", null, null, null);
+		woodfloorTex = new Material("/woodbox_diffuse.png", null, null, null);
+		goldtilesTex = new Material("/goldtiles_diffuse.jpg", "/goldtiles_specular.jpg", "/goldtiles_normal.jpg", null);
+		containerTex = new Material("/container_diffuse.png", "/container_specular.png", null, null);
+		crystalTex = new Material("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg", "/crystal_displacement.png");
+		goldnuggetTex = new Material("/goldnugget_diffuse.jpg", "/goldnugget_specular.jpg", "/goldnugget_normal.jpg", "/goldnugget_displacement.png");
+		woodboxTex = new Material("/woodbox_diffuse.png", null, "/woodbox_normal.png", "/woodbox_displacement.png");
+		metalpanelTex = new Material("/metalpanel_diffuse.jpg", "/metalpanel_specular.jpg", "/metalpanel_normal.jpg", "/metalpanel_displacement.png");
+		skyboxTex = new Material("/skybox/right.jpg", null, null, null);
 		
 		skybox = new Cubemap(
 			"/skybox/right.jpg",
@@ -96,7 +116,7 @@ public class World {
 			boxModel.modelMats.add(md_matrix);
 		}
 		
-		boxModel.modelMats.add(Mat4.translate(new Vec3(0, -1, 0)));
+		boxModel.modelMats.add(Mat4.translate(new Vec3(0, -3, 0)));
 		
 		boxModel.updateModelMats();
 		
@@ -117,9 +137,9 @@ public class World {
 		player = new Player(new Vec3(0, 0, 0));
 		
 		lights = new ArrayList<>();
-		//lights.add(new DirLight(new Vec3(0.2f, -1f, 0.3f), new Vec3(1f)));
+		lights.add(new DirLight(new Vec3(0.2f, -1f, 0.3f), new Vec3(1f)));
 		//lights.add(new PointLight(new Vec3(2.5f, 5, 2.5f), new Vec3(0.5f), 1f, 0.0014f, 0.000007f));
-		lights.add(new PointLight(new Vec3(-2.5f, 5, -2.5f), new Vec3(0.7f), 1f, 0.0014f, 0.000007f));
+		//lights.add(new PointLight(new Vec3(-2.5f, 5, -2.5f), new Vec3(0.7f), 1f, 0.0014f, 0.000007f));
 		//lights.add(new DirLight(new Vec3(0f, -1f, -1f), new Vec3(1f)));
 		//lights.add(new DirLight(new Vec3(-0.2f, -1f, 0.4f), new Vec3(0.5f)));
 		//lights.add(new DirLight(new Vec3(0.3f, -1f, 1f), new Vec3(0.5f)));
@@ -128,6 +148,8 @@ public class World {
 
 	public void update() {
 		player.update();
+		
+		player.camera.setFacing(player.camera.getFacing());
 		
 		//lights.get(0).pos = new Vec3(player.camera.pos);
 		
@@ -138,28 +160,31 @@ public class World {
 	}
 	
 	//assume that the geometry shader is enabled
-	public void renderGeometry(Camera camera) {
-		//bind view matrix
-		Shader.GEOMETRY.setUniformMat4("vw_matrix", camera.getViewMatrix());
-		Shader.GEOMETRY.setUniform3f("view_pos", camera.pos);
+	public void render(Shader shader, Camera camera) {
+		setShaderUniforms(shader, camera);
 		
-		//render world
-		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 0);
-		Shader.GEOMETRY.setUniform1i("enableTexScaling", 1);
 		woodfloorTex.bind();
 		floorModel.render();
-	
+		
 		containerTex.bind();
 		boxModel.render();
 	}
 	
 	//assume depth shader is enabled
-	public void renderDepth(Mat4 projectionMat, Mat4 viewMat, Shader shader) {
-		shader.enable();
-		shader.setUniformMat4("pr_matrix", projectionMat);
-		shader.setUniformMat4("vw_matrix", viewMat);
+	//render everything, just don't bind any textures
+	public void renderDepth(Shader shader, Camera camera) {
+		setShaderUniforms(shader, camera);
 		
 		floorModel.render();
 		boxModel.render();
 	}
+	
+	public void setShaderUniforms(Shader shader, Camera camera) {
+		shader.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
+		shader.setUniformMat4("vw_matrix", camera.getViewMatrix());
+		shader.setUniform3f("view_pos", camera.getPos());
+		shader.setUniform1i("enableParallaxMapping", 0);
+		shader.setUniform1i("enableTexScaling", 1);
+	}
+	
 }

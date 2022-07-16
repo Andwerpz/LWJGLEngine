@@ -80,13 +80,16 @@ public class Framebuffer {
 	public void setDrawBuffers(int[] which) {
 		this.bind();
 		glDrawBuffers(BufferUtils.createIntBuffer(which));
-		this.unbind();
+	}
+	
+	public void bindTextureToBuffer(int bufferType, int textureType, int textureID) {
+		this.bind();
+		glFramebufferTexture2D(GL_FRAMEBUFFER, bufferType, textureType, textureID, 0);
 	}
 	
 	public boolean isComplete() {
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		this.bind();
 		boolean ans = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		if(ans) {
 			System.out.println("Framebuffer " + fbo + " generated successfully");
 		}

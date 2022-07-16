@@ -16,41 +16,15 @@ import static org.lwjgl.opengl.GL13.*;
 public class Texture {
 
 	private int width, height;
-	private int diffuse, specular, normal, displacement;
+	private int textureID;
 	
-	public Texture(String diffusePath, String specularPath, String normalPath, String displacementPath) {
-		if(diffusePath == null) {
-			diffuse = load("/tex_diffuse_default.png", false);
-		}
-		else {
-			diffuse = load(diffusePath, false);
-		}
-		
-		if(specularPath == null) {
-			specular = load("/tex_specular_default.png", false);
-		}
-		else {
-			specular = load(specularPath, false);
-		}
-		
-		if(normalPath == null) {
-			normal = load("/tex_normal_default.png", false);
-		}
-		else {
-			normal = load(normalPath, false);
-		}
-		
-		if(displacementPath == null) {
-			displacement = load("/tex_displacement_default.png", true);
-		}
-		else {
-			displacement = load(displacementPath, true);
-		}
+	public Texture(String path, boolean invert, boolean rotate180) {
+		this.textureID = this.load(path, false, false);
 	}
 	
-	public int load(String path, boolean invert) {
+	public int load(String path, boolean invert, boolean rotate180) {
 		int[] outWH = new int[2];
-		int[] data = getDataFromImage(path, invert, false, outWH);
+		int[] data = getDataFromImage(path, invert, rotate180, outWH);
 		this.width = outWH[0];
 		this.height = outWH[1];
 		
@@ -97,25 +71,13 @@ public class Texture {
 		return data;
 	}
 	
-	public void bind() {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuse);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specular);
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, normal);
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, displacement);
+	public void bind(int glTextureLocation) {
+		glActiveTexture(glTextureLocation);
+		glBindTexture(GL_TEXTURE_2D, this.textureID);
 	}
 	
-	public void unbind() {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glActiveTexture(GL_TEXTURE3);
+	public void unbind(int glTextureLocation) {
+		glActiveTexture(glTextureLocation);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 }
