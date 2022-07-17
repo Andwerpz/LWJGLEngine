@@ -73,10 +73,8 @@ public class Main implements Runnable{
 	private Framebuffer shadowBuffer;
 	private Framebuffer skyboxBuffer;
 	
-	private int shadowDepthMapID;
+	private Texture shadowDepthMap;
 	private Cubemap shadowCubemap;
-	
-	private int testTextureID;
 	
 	private Model skyboxCube;
 	private Model screenQuad;
@@ -149,17 +147,9 @@ public class Main implements Runnable{
 		this.shadowBuffer.addDepthBuffer();
 		this.shadowBuffer.isComplete();
 		
-		this.shadowDepthMapID = shadowBuffer.getDepthBuffer();
+		this.shadowDepthMap = new Texture(GL_DEPTH_COMPONENT, Main.windowWidth, Main.windowHeight, GL_DEPTH_COMPONENT, GL_FLOAT);
+		this.shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.shadowDepthMap.getID());
 		this.shadowCubemap = new Cubemap();
-		
-		this.testTextureID = glGenTextures();
-		glBindTexture(GL_TEXTURE_2D, testTextureID);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);	//magnification filter
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Main.windowWidth, Main.windowHeight, 0, GL_RGBA, GL_FLOAT, (FloatBuffer) null);
-		glBindTexture(GL_TEXTURE_2D, 0);
 		
 		this.skyboxBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.skyboxBuffer.addColorBuffer(GL_RGBA, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0);	//RGB: color
@@ -268,9 +258,13 @@ public class Main implements Runnable{
 		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT1));
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT2));
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, shadowDepthMapID);
+		shadowDepthMap.bind(GL_TEXTURE3);
+		shadowCubemap.bind(GL_TEXTURE4);
 		Shader.LIGHTING.setUniform3f("view_pos", this.world.player.camera.getPos());
+		
+		//disable to prevent overwriting geometry buffer textures
+		//don't forget to re-enable
+		Texture.bindingEnabled = false;
 		
 		//calculate lighting with each light seperately
 		ArrayList<Light> lights = World.lights;
@@ -278,11 +272,10 @@ public class Main implements Runnable{
 			//generate depth map for light
 			if(lights.get(i).type == Light.DIR_LIGHT) {
 				Vec3 lightDir = new Vec3(lights.get(i).dir).normalize();
-				Vec3 eye = new Vec3(0);
-				Mat4 lightMat = Mat4.lookAt(eye, lightDir, new Vec3(0, 1, 0));
+				Mat4 lightMat = Mat4.lookAt(new Vec3(0), lightDir, new Vec3(0, 1, 0));
 				
 				//re-bind directional depth map texture as depth map
-				shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowDepthMapID);
+				shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowDepthMap.getID());
 				
 				//do this for each cascade near / far plane
 				for(int cascade = 0; cascade < Main.SHADOW_MAP_NR_CASCADES; cascade++) {
@@ -334,21 +327,18 @@ public class Main implements Runnable{
 					}
 					
 					//construct orthographic projection matrix
-					Mat4 projectionMat = Mat4.orthographic(left, right, bottom, top, near - 100f, far + 20f);
-					
 					Camera lightCamera = new Camera(left, right, bottom, top, near - 100f, far + 20f);
 					lightCamera.setFacing(lightDir);
 					
 					//render shadow map
 					shadowBuffer.bind();
 					glEnable(GL_DEPTH_TEST);
-					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+					glClear(GL_DEPTH_BUFFER_BIT);
 					glDisable(GL_BLEND);
 					
-					Shader.LIGHTING.setUniformMat4("lightSpace_matrix", lightMat.mul(projectionMat));
+					Shader.LIGHTING.setUniformMat4("lightSpace_matrix", lightMat.mul(lightCamera.getProjectionMatrix()));
 					Shader.DEPTH.enable();
-					//world.renderDepth(projectionMat, lightMat, Shader.DEPTH);
-					world.renderDepth(Shader.DEPTH, lightCamera);
+					world.render(Shader.DEPTH, lightCamera);
 					
 					//render portion of lit scene
 					lightingBuffer.bind();
@@ -396,7 +386,7 @@ public class Main implements Runnable{
 					shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, face, shadowCubemap.getID());
 					shadowBuffer.bind();
 					glClear(GL_DEPTH_BUFFER_BIT);
-					world.renderDepth(Shader.CUBE_DEPTH, cubemapCamera);
+					world.render(Shader.CUBE_DEPTH, cubemapCamera);
 				}
 				
 				//render lit scene
@@ -409,12 +399,12 @@ public class Main implements Runnable{
 				Shader.LIGHTING.enable();
 				Shader.LIGHTING.setUniform1f("shadowCubemapFar", far);
 				
-				shadowCubemap.bind(GL_TEXTURE4);
-				
 				lights.get(i).bind(Shader.LIGHTING, i);
 				screenQuad.render();
 			}
 		}
+		
+		Texture.bindingEnabled = true;
 		
 		// -- SKYBOX -- : we'll use this texture in the post-processing step
 		skyboxBuffer.bind();

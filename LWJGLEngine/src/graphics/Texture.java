@@ -3,6 +3,7 @@ package graphics;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.FloatBuffer;
 
 import javax.imageio.ImageIO;
 
@@ -15,11 +16,30 @@ import static org.lwjgl.opengl.GL13.*;
 
 public class Texture {
 
+	//if this is false, bind() and unbind() will not work. 
+	//used for rendering depth maps with the same draw method as the geometry map
+	public static boolean bindingEnabled = true;
+	
 	private int width, height;
 	private int textureID;
 	
 	public Texture(String path, boolean invert, boolean rotate180) {
 		this.textureID = this.load(path, false, false);
+	}
+	
+	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType) {
+		this.textureID = glGenTextures();
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, dataType, (FloatBuffer) null);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);  
+		if(internalFormat == GL_DEPTH_COMPONENT) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);  
+			float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor); 
+		}
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 	
 	public int load(String path, boolean invert, boolean rotate180) {
@@ -71,12 +91,18 @@ public class Texture {
 		return data;
 	}
 	
+	public int getID() {
+		return this.textureID;
+	}
+	
 	public void bind(int glTextureLocation) {
+		if(!bindingEnabled) return;
 		glActiveTexture(glTextureLocation);
 		glBindTexture(GL_TEXTURE_2D, this.textureID);
 	}
 	
 	public void unbind(int glTextureLocation) {
+		if(!bindingEnabled) return;
 		glActiveTexture(glTextureLocation);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}

@@ -137,7 +137,7 @@ public class World {
 		player = new Player(new Vec3(0, 0, 0));
 		
 		lights = new ArrayList<>();
-		lights.add(new DirLight(new Vec3(0.2f, -1f, 0.3f), new Vec3(1f)));
+		lights.add(new DirLight(new Vec3(0.2f, -1f, 0.3f), new Vec3(.1f)));
 		//lights.add(new PointLight(new Vec3(2.5f, 5, 2.5f), new Vec3(0.5f), 1f, 0.0014f, 0.000007f));
 		//lights.add(new PointLight(new Vec3(-2.5f, 5, -2.5f), new Vec3(0.7f), 1f, 0.0014f, 0.000007f));
 		//lights.add(new DirLight(new Vec3(0f, -1f, -1f), new Vec3(1f)));
@@ -159,23 +159,14 @@ public class World {
 //		boxModel.updateModelMats();
 	}
 	
-	//assume that the geometry shader is enabled
 	public void render(Shader shader, Camera camera) {
 		setShaderUniforms(shader, camera);
+		shader.enable();
 		
 		woodfloorTex.bind();
 		floorModel.render();
 		
 		containerTex.bind();
-		boxModel.render();
-	}
-	
-	//assume depth shader is enabled
-	//render everything, just don't bind any textures
-	public void renderDepth(Shader shader, Camera camera) {
-		setShaderUniforms(shader, camera);
-		
-		floorModel.render();
 		boxModel.render();
 	}
 	
