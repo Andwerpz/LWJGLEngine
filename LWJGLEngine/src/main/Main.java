@@ -73,8 +73,16 @@ public class Main implements Runnable{
 	private Framebuffer shadowBuffer;
 	private Framebuffer skyboxBuffer;
 	
-	private Texture shadowDepthMap;
+	private Texture geometryPositionMap;	//RGB: pos, A: depth
+	private Texture geometryNormalMap;		//RGB: normal
+	private Texture geometryColorMap;		//RGB: color, A: specular
+	
+	private Texture lightingColorMap;		//RGB: color
+	
+	private Texture shadowDepthMap;			//R: depth
 	private Cubemap shadowCubemap;
+	
+	private Texture skyboxColorMap;			//RGB: color
 	
 	private Model skyboxCube;
 	private Model screenQuad;
@@ -129,31 +137,33 @@ public class Main implements Runnable{
 		this.skyboxCube.updateModelMats();
 		
 		this.geometryBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.geometryBuffer.addColorBuffer(GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0);	//RGB: position, A: depth
-		this.geometryBuffer.addColorBuffer(GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT1);	//RGB: normal
-		this.geometryBuffer.addColorBuffer(GL_RGBA, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT2);	//RGB: color, A: specular
-		this.geometryBuffer.addRenderBuffer();
+		this.geometryPositionMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.geometryNormalMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.geometryColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.geometryPositionMap.getID());
+		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this.geometryNormalMap.getID());
+		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, this.geometryColorMap.getID());
+		this.geometryBuffer.addDepthBuffer();
 		this.geometryBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2});
 		this.geometryBuffer.isComplete();
 		
 		this.lightingBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.lightingBuffer.addColorBuffer(GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT0);	//RGB: color
-		//this.lightingBuffer.addRenderBuffer();	//on big pc, works without renderbuffer
+		this.lightingColorMap = new Texture(GL_RGB, Main.windowWidth, Main.windowHeight, GL_RGB, GL_UNSIGNED_BYTE);
+		this.lightingBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.lightingColorMap.getID());
 		this.lightingBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
 		this.lightingBuffer.isComplete();
 		
 		this.shadowBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		//this.shadowBuffer.addRenderBuffer();	//on big pc, works without renderbuffer
-		this.shadowBuffer.addDepthBuffer();
-		this.shadowBuffer.isComplete();
-		
 		this.shadowDepthMap = new Texture(GL_DEPTH_COMPONENT, Main.windowWidth, Main.windowHeight, GL_DEPTH_COMPONENT, GL_FLOAT);
 		this.shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.shadowDepthMap.getID());
+		this.shadowBuffer.addDepthBuffer();
+		this.shadowBuffer.isComplete();
 		this.shadowCubemap = new Cubemap();
 		
 		this.skyboxBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.skyboxBuffer.addColorBuffer(GL_RGBA, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0);	//RGB: color
-		this.skyboxBuffer.addRenderBuffer();
+		this.skyboxColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.skyboxBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.skyboxColorMap.getID());
+		this.skyboxBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
 		this.skyboxBuffer.isComplete();
 		
 		//init shaders
@@ -252,14 +262,12 @@ public class Main implements Runnable{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
 		
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT1));
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT2));
-		shadowDepthMap.bind(GL_TEXTURE3);
-		shadowCubemap.bind(GL_TEXTURE4);
+		this.geometryPositionMap.bind(GL_TEXTURE0);
+		this.geometryNormalMap.bind(GL_TEXTURE1);
+		this.geometryColorMap.bind(GL_TEXTURE2);
+		this.shadowDepthMap.bind(GL_TEXTURE3);
+		this.shadowCubemap.bind(GL_TEXTURE4);
+		
 		Shader.LIGHTING.setUniform3f("view_pos", this.world.player.camera.getPos());
 		
 		//disable to prevent overwriting geometry buffer textures
@@ -275,7 +283,7 @@ public class Main implements Runnable{
 				Mat4 lightMat = Mat4.lookAt(new Vec3(0), lightDir, new Vec3(0, 1, 0));
 				
 				//re-bind directional depth map texture as depth map
-				shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowDepthMap.getID());
+				shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.shadowDepthMap.getID());
 				
 				//do this for each cascade near / far plane
 				for(int cascade = 0; cascade < Main.SHADOW_MAP_NR_CASCADES; cascade++) {
@@ -423,12 +431,9 @@ public class Main implements Runnable{
 		glDisable(GL_BLEND);
 		Shader.POST_PROCESS.enable();
 		
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, lightingBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, geometryBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, skyboxBuffer.getColorBuffer(GL_COLOR_ATTACHMENT0));
+		this.lightingColorMap.bind(GL_TEXTURE0);
+		this.geometryPositionMap.bind(GL_TEXTURE1);
+		this.skyboxColorMap.bind(GL_TEXTURE2);
 		
 		screenQuad.render();
 		

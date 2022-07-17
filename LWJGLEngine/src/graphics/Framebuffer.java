@@ -25,14 +25,12 @@ public class Framebuffer {
 	
 	private int fbo;
 	private int renderBuffer, depthBuffer;
-	private HashMap<Integer, Integer> colorBuffers;
 	
 	private int width, height;
 	
 	public Framebuffer(int width, int height) {
 		this.width = width;
 		this.height = height;
-		this.colorBuffers = new HashMap<>();
 		
 		fbo = glGenFramebuffers();
 	}
@@ -47,7 +45,7 @@ public class Framebuffer {
 		this.unbind();
 	}
 	
-	public void addColorBuffer(int internalFormat, int dataFormat, int dataType, int layoutLocation) {
+	public int addColorBuffer(int internalFormat, int dataFormat, int dataType, int layoutLocation) {
 		this.bind();
 		int id = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, id);
@@ -57,11 +55,10 @@ public class Framebuffer {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, layoutLocation, GL_TEXTURE_2D, id, 0);  
 		glBindTexture(GL_TEXTURE_2D, 0);
 		this.unbind();
-		
-		colorBuffers.put(layoutLocation, id);
+		return id;
 	}
 	
-	public void addDepthBuffer() {
+	public int addDepthBuffer() {
 		this.bind();
 		depthBuffer = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, depthBuffer);
@@ -75,6 +72,7 @@ public class Framebuffer {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthBuffer, 0); 
 		glBindTexture(GL_TEXTURE_2D, 0);
 		this.unbind();
+		return depthBuffer;
 	}
 	
 	public void setDrawBuffers(int[] which) {
@@ -97,10 +95,6 @@ public class Framebuffer {
 			System.err.println("Framebuffer " + fbo + " generation unsuccessful");
 		}
 		return ans;
-	}
-	
-	public int getColorBuffer(int layoutLocation) {
-		return this.colorBuffers.get(layoutLocation);
 	}
 	
 	public int getRenderBuffer() {
