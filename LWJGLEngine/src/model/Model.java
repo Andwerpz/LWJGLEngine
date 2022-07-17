@@ -1,6 +1,12 @@
 package model;
 
+import static org.lwjgl.assimp.Assimp.*;
+
 import java.util.ArrayList;
+
+import org.lwjgl.PointerBuffer;
+import org.lwjgl.assimp.AIMesh;
+import org.lwjgl.assimp.AIScene;
 
 import graphics.Texture;
 import graphics.VertexArray;
@@ -18,6 +24,16 @@ public abstract class Model {
 	public Model() {
 		this.modelMats = new ArrayList<Mat4>();
 		this.vao = this.create();
+	}
+	
+	private static void loadModelFile(String filepath) {
+		AIScene scene = aiImportFile(filepath, aiProcess_Triangulate);
+		
+		PointerBuffer buffer = scene.mMeshes();
+		
+		for(int i = 0; i < buffer.limit(); i++) {
+			AIMesh mesh = AIMesh.create(buffer.get(i));
+		}
 	}
 	
 	public abstract VertexArray create();
