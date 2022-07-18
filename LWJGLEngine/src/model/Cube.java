@@ -2,6 +2,8 @@ package model;
 
 import static org.lwjgl.opengl.GL11.*;
 
+import java.util.ArrayList;
+
 import graphics.VertexArray;
 
 public class Cube extends Model {
@@ -11,7 +13,7 @@ public class Cube extends Model {
 	}
 	
 	@Override
-	public VertexArray create() {
+	public void create() {
 		float[] vertices = new float[] {
 			0f, 1f, 0f,
 			0f, 1f, 1f,
@@ -39,7 +41,7 @@ public class Cube extends Model {
 			1f, 0f, 1f,
 		};
 		
-		byte[] indices = new byte[] {
+		int[] indices = new int[] {
 			0, 1, 2,
 			0, 2, 3,
 			4, 5, 6,
@@ -81,6 +83,7 @@ public class Cube extends Model {
 			1f, 0f,
 		};
 		
-		return new VertexArray(vertices, indices, tex, GL_TRIANGLES);
+		this.meshes.add(new VertexArray(vertices, tex, indices, GL_TRIANGLES));
+		this.materials.add(null);
 	}
 }

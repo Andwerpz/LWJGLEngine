@@ -15,6 +15,11 @@ import static org.lwjgl.opengl.GL13.*;
 
 public class Material {
 	
+	public static final int DIFFUSE = 0;
+	public static final int SPECULAR = 1;
+	public static final int NORMAL = 3;
+	public static final int DISPLACEMENT = 4;
+	
 	public static final Texture DIFFUSE_DEFAULT = new Texture("/tex_diffuse_default.png", false, false);
 	public static final Texture SPECULAR_DEFAULT = new Texture("/tex_specular_default.png", false, false);
 	public static final Texture NORMAL_DEFAULT = new Texture("/tex_normal_default.png", false, false);
@@ -50,6 +55,70 @@ public class Material {
 		}
 		else {
 			displacement = new Texture(displacementPath, true, false);
+		}
+	}
+	
+	public static Material defaultMaterial() {
+		return new Material(null, null, null, null);
+	}
+	
+	public void setTexture(String path, int which) {
+		switch(which) {
+		case DIFFUSE:
+			diffuse = new Texture(path, false, false);
+			break;
+			
+		case SPECULAR:
+			specular = new Texture(path, false, false);
+			break;
+			
+		case NORMAL:
+			normal = new Texture(path, false, false);
+			break;
+			
+		case DISPLACEMENT:
+			displacement = new Texture(path, true, false);
+			break;
+		}
+	}
+	
+	public void setTexture(BufferedImage img, int which) {
+		switch(which) {
+		case DIFFUSE:
+			diffuse = new Texture(img, false, false);
+			break;
+			
+		case SPECULAR:
+			specular = new Texture(img, false, false);
+			break;
+			
+		case NORMAL:
+			normal = new Texture(img, false, false);
+			break;
+			
+		case DISPLACEMENT:
+			displacement = new Texture(img, true, false);
+			break;
+		}
+	}
+	
+	public void setTexture(Texture tex, int which) {
+		switch(which) {
+		case DIFFUSE:
+			diffuse = tex;
+			break;
+			
+		case SPECULAR:
+			specular = tex;
+			break;
+			
+		case NORMAL:
+			normal = tex;
+			break;
+			
+		case DISPLACEMENT:
+			displacement = tex;
+			break;
 		}
 	}
 	

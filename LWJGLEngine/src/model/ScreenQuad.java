@@ -2,6 +2,8 @@ package model;
 
 import static org.lwjgl.opengl.GL11.*;
 
+import java.util.ArrayList;
+
 import graphics.VertexArray;
 
 public class ScreenQuad extends Model{
@@ -14,7 +16,7 @@ public class ScreenQuad extends Model{
 	}
 	
 	@Override
-	public VertexArray create() {
+	public void create() {
 		
 		float[] vertices = new float[] {
 			-1f, -1f, -0f,
@@ -30,12 +32,13 @@ public class ScreenQuad extends Model{
 			1f, 0f,
 		};
 		
-		byte[] indices = new byte[] {
+		int[] indices = new int[] {
 			0, 3, 2,
 			0, 2, 1,
 		};
 		
-		return new VertexArray(vertices, indices, uvs, GL_TRIANGLES);
+		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_TRIANGLES));
+		this.materials.add(null);
 	}
 
 }

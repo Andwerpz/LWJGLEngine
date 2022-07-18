@@ -80,7 +80,7 @@ public class Main implements Runnable{
 	private Texture lightingColorMap;		//RGB: color
 	
 	private Texture shadowDepthMap;			//R: depth
-	private Cubemap shadowCubemap;
+	private Cubemap shadowCubemap;			//R: depth
 	
 	private Texture skyboxColorMap;			//RGB: color
 	
@@ -274,6 +274,9 @@ public class Main implements Runnable{
 		//don't forget to re-enable
 		Texture.bindingEnabled = false;
 		
+		//backfaces should also be able to cast shadows
+		glDisable(GL_CULL_FACE);
+		
 		//calculate lighting with each light seperately
 		ArrayList<Light> lights = World.lights;
 		for(int i = 0; i < lights.size(); i++) {
@@ -335,7 +338,7 @@ public class Main implements Runnable{
 					}
 					
 					//construct orthographic projection matrix
-					Camera lightCamera = new Camera(left, right, bottom, top, near - 100f, far + 20f);
+					Camera lightCamera = new Camera(left, right, bottom, top, near - 100f, far + 100f);
 					lightCamera.setFacing(lightDir);
 					
 					//render shadow map
@@ -402,7 +405,6 @@ public class Main implements Runnable{
 				glViewport(0, 0, Main.windowWidth, Main.windowHeight);
 				glDisable(GL_DEPTH_TEST);
 				glEnable(GL_BLEND);
-				glEnable(GL_CULL_FACE);
 				
 				Shader.LIGHTING.enable();
 				Shader.LIGHTING.setUniform1f("shadowCubemapFar", far);
@@ -418,7 +420,6 @@ public class Main implements Runnable{
 		skyboxBuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
-		//glCullFace(GL_FRONT);  
 		Shader.SKYBOX.enable();
 		Shader.SKYBOX.setUniformMat4("vw_matrix", world.player.camera.getViewMatrix());
 		World.skybox.bind(GL_TEXTURE0);
@@ -435,7 +436,9 @@ public class Main implements Runnable{
 		this.geometryPositionMap.bind(GL_TEXTURE1);
 		this.skyboxColorMap.bind(GL_TEXTURE2);
 		
+		Texture.bindingEnabled = false;
 		screenQuad.render();
+		Texture.bindingEnabled = true;
 		
 		glfwSwapBuffers(window);
 		

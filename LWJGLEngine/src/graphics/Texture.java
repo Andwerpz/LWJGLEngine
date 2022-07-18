@@ -23,8 +23,12 @@ public class Texture {
 	private int width, height;
 	private int textureID;
 	
-	public Texture(String path, boolean invert, boolean rotate180) {
+	public Texture(String path, boolean invertColors, boolean horizontalFlip) {
 		this.textureID = this.load(path, false, false);
+	}
+	
+	public Texture(BufferedImage img, boolean invertColors, boolean horizontalFlip) {
+		this.textureID = this.load(img, invertColors, horizontalFlip);
 	}
 	
 	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType) {
@@ -42,9 +46,9 @@ public class Texture {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 	
-	public int load(String path, boolean invert, boolean rotate180) {
+	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip) {
 		int[] outWH = new int[2];
-		int[] data = getDataFromImage(path, invert, rotate180, outWH);
+		int[] data = getDataFromImage(img, invertColors, horizontalFlip, outWH);
 		this.width = outWH[0];
 		this.height = outWH[1];
 		
@@ -59,11 +63,18 @@ public class Texture {
 		return result;
 	}
 	
-	public static int[] getDataFromImage(String path, boolean invert, boolean rotate180, int[] outWH) {
+	public int load(String path, boolean invertColors, boolean horizontalFlip) {
+		return this.load(GraphicsTools.loadImage(path), invertColors, horizontalFlip);
+	}
+	
+	public static int[] getDataFromImage(String path, boolean invertColors, boolean horizontalFlip, int[] outWH) {
+		return Texture.getDataFromImage(GraphicsTools.loadImage(path), invertColors, horizontalFlip, outWH);
+	}
+	
+	public static int[] getDataFromImage(BufferedImage img, boolean invertColors, boolean horizontalFlip, int[] outWH) {
 		int[] pixels = null;
-		BufferedImage image = GraphicsTools.loadImage(path);
-		image = GraphicsTools.verticalFlip(image);
-		if(rotate180) image = GraphicsTools.rotateImageByDegrees(image, 180);
+		BufferedImage image = GraphicsTools.copyImage(img);
+		if(horizontalFlip) image = GraphicsTools.horizontalFlip(image);
 		int width = image.getWidth();
 		int height = image.getHeight();
 		outWH[0] = image.getWidth();
@@ -78,7 +89,7 @@ public class Texture {
 			int g = (pixels[i] & 0xff00) >> 8;
 			int b = (pixels[i] & 0xff);
 			
-			if(invert) {
+			if(invertColors) {
 				a = 255 - a;
 				r = 255 - r;
 				g = 255 - g;

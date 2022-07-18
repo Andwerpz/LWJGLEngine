@@ -21,16 +21,19 @@ import static org.lwjgl.opengl.GL45.*;
 import java.nio.IntBuffer;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import graphics.Cubemap;
 import graphics.Material;
 import graphics.Shader;
 import graphics.Material;
 import model.Cube;
+import model.Model;
 import model.ScreenQuad;
 import player.Camera;
 import player.Player;
 import util.Mat4;
+import util.SystemUtils;
 import util.Vec3;
 
 public class World {
@@ -62,6 +65,7 @@ public class World {
 	
 	static Cube boxModel;
 	static ScreenQuad quadModel, floorModel;
+	static Model dust2;
 	
 	public static long startTime;
 	
@@ -91,6 +95,10 @@ public class World {
 		boxModel = new Cube();
 		floorModel = new ScreenQuad();
 		quadModel = new ScreenQuad();
+		
+		dust2 = new Model("/dust2/", "dust2_blend.obj");
+		dust2.modelMats.add(Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)));
+		dust2.updateModelMats();
 		
 		int amt = 100;
 		float radius = 6f;
@@ -137,12 +145,10 @@ public class World {
 		player = new Player(new Vec3(0, 0, 0));
 		
 		lights = new ArrayList<>();
-		lights.add(new DirLight(new Vec3(0.2f, -1f, 0.3f), new Vec3(.1f)));
-		//lights.add(new PointLight(new Vec3(2.5f, 5, 2.5f), new Vec3(0.5f), 1f, 0.0014f, 0.000007f));
-		//lights.add(new PointLight(new Vec3(-2.5f, 5, -2.5f), new Vec3(0.7f), 1f, 0.0014f, 0.000007f));
+		lights.add(new DirLight(new Vec3(0.2f, -1f, 0.3f), new Vec3(0.6f)));
 		//lights.add(new DirLight(new Vec3(0f, -1f, -1f), new Vec3(1f)));
 		//lights.add(new DirLight(new Vec3(-0.2f, -1f, 0.4f), new Vec3(0.5f)));
-		//lights.add(new DirLight(new Vec3(0.3f, -1f, 1f), new Vec3(0.5f)));
+		//lights.add(new DirLight(new Vec3(0.3f, -1f, 1f), new Vec3(0.6f)));
 		
 	}
 
@@ -163,11 +169,9 @@ public class World {
 		setShaderUniforms(shader, camera);
 		shader.enable();
 		
-		woodfloorTex.bind();
-		floorModel.render();
+		//floorModel.render(new ArrayList<Material>(Arrays.asList(woodfloorTex)));
 		
-		containerTex.bind();
-		boxModel.render();
+		dust2.render();
 	}
 	
 	public void setShaderUniforms(Shader shader, Camera camera) {

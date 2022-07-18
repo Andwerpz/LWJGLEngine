@@ -29,7 +29,7 @@ public class Hitbox {
 	}
 
 	private void createModel() {
-		byte[] indices = new byte[] { 0, 1, 1, 2, 2, 3, 3, 0,
+		int[] indices = new int[] { 0, 1, 1, 2, 2, 3, 3, 0,
 
 				4, 5, 5, 6, 6, 7, 7, 4,
 
@@ -44,7 +44,7 @@ public class Hitbox {
 
 				0, 0, 0, 0, 0, 0, 0, 0, };
 
-		model = new VertexArray(vertices, indices, tex, GL_LINES);
+		model = new VertexArray(vertices, tex, indices, GL_LINES);
 	}
 
 	public float getWidth() {

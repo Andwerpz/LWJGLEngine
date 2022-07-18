@@ -16,7 +16,7 @@ public class Cubemap {
 	
 	//images have to have the same dimensions
 	public Cubemap(String right, String left, String up, String down, String back, String front) {
-		String[] sides = new String[] {right, left, up, down, back, front};
+		String[] sides = new String[] {right, left, up, down, front, back};	//front and back are in wrong order
 		cubemapID = load(sides);
 	}
 	
@@ -63,7 +63,7 @@ public class Cubemap {
 		
 		for(int i = 0; i < 6; i++) {
 			int[] outWH = new int[2];
-			int[] data = Texture.getDataFromImage(sides[i], false, (i != 2 && i != 3), outWH);
+			int[] data = Texture.getDataFromImage(sides[i], false, false, outWH);
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, outWH[0], outWH[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 			this.size = outWH[0];
 		}

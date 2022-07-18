@@ -21,4 +21,8 @@ public class SystemUtils {
 		System.out.println(sb);
 	}
 	
+	public static String getWorkingDirectory() {
+		return System.getProperty("user.dir");
+	}
+	
 }
