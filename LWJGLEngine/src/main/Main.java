@@ -66,6 +66,7 @@ public class Main implements Runnable{
 	
 	private static final int SHADOW_MAP_NR_CASCADES = 6;
 	private static float[] shadowCascades = new float[] {NEAR, 2, 5, 10, 20, 50, FAR};
+	//private static float[] shadowCascades = new float[] {NEAR, 2, 5, 10};
 	
 	private World world;
 	private Framebuffer geometryBuffer;
@@ -80,6 +81,7 @@ public class Main implements Runnable{
 	private Texture lightingColorMap;		//RGB: color
 	
 	private Texture shadowDepthMap;			//R: depth
+	private Texture shadowBackfaceMap;		//R: isBackface
 	private Cubemap shadowCubemap;			//R: depth
 	
 	private Texture skyboxColorMap;			//RGB: color
@@ -155,8 +157,12 @@ public class Main implements Runnable{
 		
 		this.shadowBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.shadowDepthMap = new Texture(GL_DEPTH_COMPONENT, Main.windowWidth, Main.windowHeight, GL_DEPTH_COMPONENT, GL_FLOAT);
+		this.shadowBackfaceMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		//this.shadowDepthMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		//this.shadowBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.shadowDepthMap.getID());
 		this.shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.shadowDepthMap.getID());
-		this.shadowBuffer.addDepthBuffer();
+		this.shadowBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.shadowBackfaceMap.getID());
+		this.shadowBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
 		this.shadowBuffer.isComplete();
 		this.shadowCubemap = new Cubemap();
 		
@@ -182,7 +188,8 @@ public class Main implements Runnable{
 		Shader.LIGHTING.setUniform1i("tex_normal", 1);
 		Shader.LIGHTING.setUniform1i("tex_diffuse", 2);
 		Shader.LIGHTING.setUniform1i("shadowMap", 3);
-		Shader.LIGHTING.setUniform1i("shadowCubemap", 4);
+		Shader.LIGHTING.setUniform1i("shadowBackfaceMap", 4);
+		Shader.LIGHTING.setUniform1i("shadowCubemap", 5);
 		
 		Shader.POST_PROCESS.setUniform1i("tex_color", 0);
 		Shader.POST_PROCESS.setUniform1i("tex_position", 1);
@@ -266,7 +273,8 @@ public class Main implements Runnable{
 		this.geometryNormalMap.bind(GL_TEXTURE1);
 		this.geometryColorMap.bind(GL_TEXTURE2);
 		this.shadowDepthMap.bind(GL_TEXTURE3);
-		this.shadowCubemap.bind(GL_TEXTURE4);
+		this.shadowBackfaceMap.bind(GL_TEXTURE4);
+		this.shadowCubemap.bind(GL_TEXTURE5);
 		
 		Shader.LIGHTING.setUniform3f("view_pos", this.world.player.camera.getPos());
 		
@@ -282,6 +290,7 @@ public class Main implements Runnable{
 		for(int i = 0; i < lights.size(); i++) {
 			//generate depth map for light
 			if(lights.get(i).type == Light.DIR_LIGHT) {
+				
 				Vec3 lightDir = new Vec3(lights.get(i).dir).normalize();
 				Mat4 lightMat = Mat4.lookAt(new Vec3(0), lightDir, new Vec3(0, 1, 0));
 				
@@ -343,8 +352,9 @@ public class Main implements Runnable{
 					
 					//render shadow map
 					shadowBuffer.bind();
+					glViewport(0, 0, Main.windowWidth, Main.windowHeight);
 					glEnable(GL_DEPTH_TEST);
-					glClear(GL_DEPTH_BUFFER_BIT);
+					glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 					glDisable(GL_BLEND);
 					
 					Shader.LIGHTING.setUniformMat4("lightSpace_matrix", lightMat.mul(lightCamera.getProjectionMatrix()));
