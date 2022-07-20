@@ -8,6 +8,8 @@ import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.opengl.GL33.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import util.BufferUtils;
 import util.Mat4;
@@ -100,8 +102,8 @@ public class VertexArray {
 		glBindVertexArray(0);
 	}
 	
-	public void updateModelMats(ArrayList<Mat4> modelMats) {
-		this.updateModelMats(modelMats.toArray(new Mat4[modelMats.size()]));
+	public void updateModelMats(HashMap<Long, Mat4> modelMats) {
+		this.updateModelMats(modelMats.values().toArray(new Mat4[modelMats.size()]));
 	}
 	
 	public static void computeTB(float[] vertices, float[] normals, float[] uvs, int[] indices, float[] outTangents, float[] outBitangents) {

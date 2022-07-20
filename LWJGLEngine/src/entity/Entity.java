@@ -1,28 +1,76 @@
 package entity;
 
+import java.util.HashMap;
+
 import graphics.Shader;
 import model.Hitbox;
+import model.Model;
 import scene.World;
 import util.Mat4;
 import util.Vec3;
 
 public abstract class Entity {
 	
+	public static HashMap<Long, Entity> entities = new HashMap<>();
+	
+	//of the form [0 - 255][0 - 255][0 - 255] : RGB
+	//never equal to 0
+	public long ID;	
+	
 	public static float friction = 0.7f;
 	public static float cushion = 0.001f;
 	public static float gravity = 0.025f;
 	
 	public Vec3 pos, vel;
+	public float xRot, yRot, zRot;
 	public boolean onGround = false;
 	
-	public Entity(Vec3 pos) {
+	private Model model;
+	private Mat4 modelMat4;
+	
+	public Entity(Vec3 pos, float xRot, float yRot, float zRot, Model model) {
+		this.ID = Model.generateNewID();
 		this.pos = new Vec3(pos);
 		this.vel = new Vec3(0);
+		this.xRot = xRot;
+		this.yRot = yRot;
+		this.zRot = zRot;
+		this.model = model;
+		
+		this.model.addInstance(this.getModelMat4());
+		Entity.entities.put(this.ID, this);
+	}
+	
+	protected void switchModel(Model newModel) {
+		//old model
+		this.model.removeInstance(this.ID);
+		
+		//new model
+		newModel.addInstance(this.getModelMat4(), ID);
+		this.model = newModel;
+	}
+	
+	public Model getModel() {
+		return this.model;
+	}
+	
+	public Mat4 getModelMat4() {
+		return Mat4.rotateZ(this.zRot).mul(Mat4.rotateX(xRot)).mul(Mat4.rotateY(yRot)).mul(Mat4.translate(this.pos));
+	}
+	
+	public void updateModelMat4() {
+		this.model.updateInstance(this.getModelMat4(), this.ID);
 	}
 	
 	public abstract Hitbox getHitbox();
 	
 	public abstract void update();
+	
+	public static void updateEntities() {
+		for(Entity e : entities.values()) {
+			e.update();
+		}
+	}
 	
 	public boolean collision(Vec3 translate, Hitbox h) {
 		return this.getHitbox().collision(translate, this.pos, h);

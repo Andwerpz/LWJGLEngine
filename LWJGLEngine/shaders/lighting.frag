@@ -12,6 +12,8 @@ uniform sampler2D tex_position;
 uniform sampler2D tex_normal;
 uniform sampler2D tex_diffuse;
 
+uniform float ambientIntensity;
+
 //directional shadows
 uniform float shadowMapNear;	// >= near
 uniform float shadowMapFar;	// < far
@@ -75,7 +77,7 @@ void main()
 		distance = length(light.pos - fragPos);
 		attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
     }
-    if(attenuation < 0.01){
+    if(attenuation < 0.001){
 		discard;
 	}	
 	
@@ -90,13 +92,11 @@ void main()
 	//specular shading
 	vec3 halfwayDir = normalize(lightDir + viewDir); 
 	float specularStrength = 64; 
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
-	//vec3 reflectDir = reflect(-lightDir, normal);
-    //float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularStrength);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), specularStrength);
     
     //combine results
-    vec3 ambient  = light.color * fragColor * 0.15;
-    vec3 diffuse  = light.color * diff * fragColor;
+    vec3 ambient  = light.color * fragColor * ambientIntensity;
+    vec3 diffuse  = light.color * diff * fragColor * (1 - ambientIntensity);
     vec3 specular = light.color * spec * fragSpec;
     
     if(light.type == SPOT_LIGHT){

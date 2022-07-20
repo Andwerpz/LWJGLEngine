@@ -12,6 +12,8 @@ import static org.lwjgl.assimp.Assimp.*;
 import java.awt.image.BufferedImage;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.assimp.AIFace;
@@ -42,20 +44,51 @@ public class Model {
 	
 	public static final Material DEFAULT_MATERIAL = new Material(null, null, null, null);
 	
-	public ArrayList<Mat4> modelMats;
+	private static ArrayList<Model> models = new ArrayList<>();
+	private static HashSet<Long> modelInstanceIDs = new HashSet<>();
+	
+	//K : entity ID, Can be translated to a color to draw 
+	//V : model Mat4, Where to draw each instance of the model
+	private HashMap<Long, Mat4> modelMats;
+	private boolean modelMatrixUpdateNeeded = false;
+	
 	public ArrayList<VertexArray> meshes;
 	public ArrayList<Material> materials;
 
 	public Model() {
-		this.modelMats = new ArrayList<Mat4>();
+		this.modelMats = new HashMap<Long, Mat4>();
 		this.meshes = new ArrayList<>();
 		this.materials = new ArrayList<>();
 		this.create();
+		
+		init();
 	}
 	
 	public Model(String filepath, String filename) {
-		this.modelMats = new ArrayList<Mat4>();
+		this.modelMats = new HashMap<Long, Mat4>();
 		this.loadModelFile(filepath, filename);
+		
+		init();
+	}
+	
+	private void init() {
+		models.add(this);
+	}
+	
+	public static long generateNewID() {
+		long ans = 0;
+		while(ans == 0 || modelInstanceIDs.contains(ans)) {
+			ans = (long) (Math.random() * 256) + (long) (Math.random() * 256) * 1000l + (long) (Math.random() * 256)  * 1000000l;
+		}
+		return ans;
+	}
+	
+	private static Vec3 convertIDToRGB(long ID) {
+		return new Vec3((ID / 1000000) % 1000, (ID / 1000) % 1000, ID % 1000);
+	}
+	
+	private static long convertRGBToID(Vec3 rgb) {
+		return (long) rgb.x * 1000000l + (long) rgb.y * 1000l + (long) rgb.z;
 	}
 	
 	//must have .mtl file to be able to load materials
@@ -143,13 +176,24 @@ public class Model {
 			//load material data
 			AIMaterial AIMat = AIMaterial.create(materials.get(i)); // wrap raw pointer in AIMaterial instance
 			Material material = Material.defaultMaterial();
-			    
-		    AIString path = AIString.calloc();
+		    AIString path;
+		    
+		    //map_Kd in .mtl
+		    path = AIString.calloc();
 		    aiGetMaterialTexture(AIMat, aiTextureType_DIFFUSE, 0, path, (IntBuffer) null, null, null, null, null, null);
 		    String diffusePath = path.dataString();
 		    if(diffusePath != null && diffusePath.length() != 0) {
 		    	Texture diffuseTexture = new Texture(loadImage(workingDirectory + "/res" + filepath + diffusePath), false, false);
 		    	material.setTexture(diffuseTexture, Material.DIFFUSE);
+		    }
+		    
+		    //norm in .mtl
+		    path = AIString.calloc();
+		    aiGetMaterialTexture(AIMat, aiTextureType_NORMALS, 0, path, (IntBuffer) null, null, null, null, null, null);
+		    String normalsPath = path.dataString();
+		    if(normalsPath != null && normalsPath.length() != 0) {
+		    	Texture normalsTexture = new Texture(loadImage(workingDirectory + "/res" + filepath + normalsPath), false, false);
+		    	material.setTexture(normalsTexture, Material.NORMAL);
 		    }
 		    
 		    this.materials.add(material);
@@ -185,17 +229,53 @@ public class Model {
 		return path.substring(0, lastPeriod);
 	}
 	
-	public void create() {
-		
+	public void create() {}
+	
+	//adds the mat4, and returns a new id
+	public long addInstance(Mat4 model) {
+		long ID = generateNewID();
+		modelInstanceIDs.add(ID);
+		this.addInstance(model, ID);
+		return ID;
 	}
 	
-	public void updateModelMats() {
+	public void addInstance(Mat4 model, long ID) {
+		modelMats.put(ID, model);
+		modelMatrixUpdateNeeded = true;
+	}
+	
+	public void removeInstance(long ID) {
+		modelMats.remove(ID);
+		modelMatrixUpdateNeeded = true;
+	}
+	
+	public void updateInstance(Mat4 model, long ID) {
+		modelMats.put(ID, model);
+		modelMatrixUpdateNeeded = true;
+	}
+	
+	public static void updateModels() {
+		for(Model m : models) {
+			if(m.modelMatrixUpdateNeeded) {
+				m.updateModelMats();
+				m.modelMatrixUpdateNeeded = false;
+			}
+		}
+	}
+	
+	private void updateModelMats() {
 		for(VertexArray v : meshes) {
 			v.updateModelMats(modelMats);
 		}
 	}
 	
-	public void render() {		
+	public static void renderModels() {
+		for(Model m : models) {
+			m.render();
+		}
+	}
+	
+	protected void render() {		
 		for(int i = 0; i < meshes.size(); i++) {
 			if(i < this.materials.size() && this.materials.get(i) != null) {
 				this.materials.get(i).bind();
@@ -207,7 +287,7 @@ public class Model {
 		}
 	}
 	
-	public void render(ArrayList<Material> materials) {
+	private void render(ArrayList<Material> materials) {
 		for(int i = 0; i < meshes.size(); i++) {
 			if(i < materials.size() && materials.get(i) != null) {
 				materials.get(i).bind();

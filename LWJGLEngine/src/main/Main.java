@@ -33,9 +33,9 @@ import graphics.Texture;
 import graphics.VertexArray;
 import input.KeyboardInput;
 import input.MouseInput;
-import model.Cube;
 import model.Model;
 import model.ScreenQuad;
+import model.SkyboxCube;
 import player.Camera;
 import scene.Light;
 import scene.World;
@@ -86,8 +86,8 @@ public class Main implements Runnable{
 	
 	private Texture skyboxColorMap;			//RGB: color
 	
-	private Model skyboxCube;
-	private Model screenQuad;
+	private SkyboxCube skyboxCube;
+	private ScreenQuad screenQuad;
 	
 	public void start() {
 		running = true;
@@ -131,12 +131,7 @@ public class Main implements Runnable{
 		this.world = new World();
 		
 		this.screenQuad = new ScreenQuad();
-		this.screenQuad.modelMats.add(Mat4.identity());
-		this.screenQuad.updateModelMats();
-		
-		this.skyboxCube = new Cube();
-		this.skyboxCube.modelMats.add(Mat4.scale(2).mul(Mat4.translate(new Vec3(-1f))));
-		this.skyboxCube.updateModelMats();
+		this.skyboxCube = new SkyboxCube();
 		
 		this.geometryBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.geometryPositionMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
@@ -158,8 +153,6 @@ public class Main implements Runnable{
 		this.shadowBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.shadowDepthMap = new Texture(GL_DEPTH_COMPONENT, Main.windowWidth, Main.windowHeight, GL_DEPTH_COMPONENT, GL_FLOAT);
 		this.shadowBackfaceMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-		//this.shadowDepthMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-		//this.shadowBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.shadowDepthMap.getID());
 		this.shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.shadowDepthMap.getID());
 		this.shadowBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.shadowBackfaceMap.getID());
 		this.shadowBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
@@ -190,6 +183,7 @@ public class Main implements Runnable{
 		Shader.LIGHTING.setUniform1i("shadowMap", 3);
 		Shader.LIGHTING.setUniform1i("shadowBackfaceMap", 4);
 		Shader.LIGHTING.setUniform1i("shadowCubemap", 5);
+		Shader.LIGHTING.setUniform1f("ambientIntensity", 0.3f);
 		
 		Shader.POST_PROCESS.setUniform1i("tex_color", 0);
 		Shader.POST_PROCESS.setUniform1i("tex_position", 1);

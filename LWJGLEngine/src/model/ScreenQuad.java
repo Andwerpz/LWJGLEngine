@@ -5,19 +5,16 @@ import static org.lwjgl.opengl.GL11.*;
 import java.util.ArrayList;
 
 import graphics.VertexArray;
+import util.Mat4;
 
-public class ScreenQuad extends Model{
+public class ScreenQuad {
 	
 	//a quad that covers the entire screen in normalized device coords (NDC)
 	//used for post-processing
+	
+	private VertexArray mesh;
 
 	public ScreenQuad() {
-		super();
-	}
-	
-	@Override
-	public void create() {
-		
 		float[] vertices = new float[] {
 			-1f, -1f, -0f,
 			-1f, 1f, -0f,
@@ -37,8 +34,13 @@ public class ScreenQuad extends Model{
 			0, 2, 1,
 		};
 		
-		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_TRIANGLES));
-		this.materials.add(null);
+		this.mesh = new VertexArray(vertices, uvs, indices, GL_TRIANGLES);
+		this.mesh.updateModelMats(new Mat4[] {Mat4.identity()});
+	}
+	
+	//used in main to render framebuffers
+	public void render() {
+		this.mesh.render();
 	}
 
 }

@@ -7,8 +7,10 @@ import input.KeyboardInput;
 import input.MouseInput;
 import main.Main;
 import model.Hitbox;
+import model.Model;
 import scene.SpotLight;
 import scene.World;
+import util.Mat4;
 import util.MathTools;
 import util.Vec2;
 import util.Vec3;
@@ -37,10 +39,15 @@ public class Player extends Entity {
 	int moveFlashlightToggleCounter = 0;
 
 	public Player(Vec3 pos) {
-		super(pos);
+		super(pos, 0, 0, 0, new Model());
 		camera = new Camera(Main.FOV, (float) Main.windowWidth, (float) Main.windowHeight, Main.NEAR, Main.FAR);
 		mouse = MouseInput.getMousePos();
 		flashlight = new SpotLight(this.camera.getPos(), this.camera.getFacing(), new Vec3(1), 25f, 30f, 1.5f, 0.022f, 0.0019f);
+	}
+	
+	@Override
+	public Model getModel() {
+		return null;
 	}
 
 	@Override
