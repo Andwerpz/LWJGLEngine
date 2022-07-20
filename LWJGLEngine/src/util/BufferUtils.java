@@ -16,6 +16,11 @@ public class BufferUtils {
 		return result;
 	}
 	
+	public static ByteBuffer createByteBuffer(int capacity) {
+		ByteBuffer result = ByteBuffer.allocateDirect(capacity).order(ByteOrder.nativeOrder());
+		return result;
+	}
+	
 	public static FloatBuffer createFloatBuffer(float[] array) {
 		FloatBuffer result = ByteBuffer.allocateDirect(array.length << 2).order(ByteOrder.nativeOrder()).asFloatBuffer();
 		((Buffer) result.put(array)).flip();
@@ -38,7 +43,16 @@ public class BufferUtils {
 				}
 			}
 		}
-		
+		return createFloatBuffer(elements);
+	}
+	
+	public static FloatBuffer createFloatBuffer(Vec3[] array) {
+		float[] elements = new float[array.length * 3];
+		for(int i = 0; i < array.length; i++) {
+			elements[i * 3 + 0] = array[i].x;
+			elements[i * 3 + 1] = array[i].y;
+			elements[i * 3 + 2] = array[i].z;
+		}
 		return createFloatBuffer(elements);
 	}
 }

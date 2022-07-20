@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import model.Model;
 import util.BufferUtils;
 import util.Mat4;
 import util.MathTools;
@@ -20,7 +21,7 @@ import util.Vec3;
 public class VertexArray {
 
 	protected int renderType;
-	protected int vao, vbo, tbo, nbo, ntbo, nbtbo, ibo, mbo;
+	protected int vao, vbo, tbo, nbo, ntbo, nbtbo, ibo, mbo, icido;
 	protected int count;
 
 	protected int numInstances = 0;
@@ -84,6 +85,13 @@ public class VertexArray {
 			glVertexAttribDivisor(Shader.INSTANCED_MODEL_ATTRIB + i, 1);
 			glEnableVertexAttribArray(Shader.INSTANCED_MODEL_ATTRIB + i);
 		}
+		
+		icido = glGenBuffers(); //per instance color id
+		glBindBuffer(GL_ARRAY_BUFFER, icido);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[0]), GL_STREAM_DRAW);
+		glVertexAttribPointer(Shader.INSTANCED_COLOR_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+		glVertexAttribDivisor(Shader.INSTANCED_COLOR_ATTRIB, 1);
+		glEnableVertexAttribArray(Shader.INSTANCED_COLOR_ATTRIB);
 
 		ibo = glGenBuffers();
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
@@ -95,15 +103,31 @@ public class VertexArray {
 	}
 
 	public void updateModelMats(Mat4[] modelMats) {
-		numInstances = modelMats.length;
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ARRAY_BUFFER, mbo);
 		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_STREAM_DRAW);
 		glBindVertexArray(0);
 	}
 	
-	public void updateModelMats(HashMap<Long, Mat4> modelMats) {
-		this.updateModelMats(modelMats.values().toArray(new Mat4[modelMats.size()]));
+	public void updateInstanceColorIDs(Vec3[] colorIDs) {
+		glBindVertexArray(vao);
+		glBindBuffer(GL_ARRAY_BUFFER, icido);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_STREAM_DRAW);
+		glBindVertexArray(0);
+	}
+	
+	public void updateInstances(HashMap<Long, Mat4> map) {
+		numInstances = map.size();
+		Mat4[] modelMats = new Mat4[numInstances];
+		Vec3[] colorIDs = new Vec3[numInstances];
+		int i = 0;
+		for(long ID : map.keySet()) {
+			colorIDs[i] = Model.convertIDToRGB(ID);
+			modelMats[i] = map.get(ID);
+			i ++;
+		}
+		this.updateModelMats(modelMats);
+		this.updateInstanceColorIDs(colorIDs);
 	}
 	
 	public static void computeTB(float[] vertices, float[] normals, float[] uvs, int[] indices, float[] outTangents, float[] outBitangents) {

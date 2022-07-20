@@ -22,6 +22,7 @@ import java.nio.IntBuffer;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import entity.Entity;
 import graphics.Cubemap;
@@ -64,7 +65,6 @@ public class World {
 	public static Cubemap skybox;
 	
 	static Model dust2;
-	static Model rock1;
 	
 	public static long startTime;
 	
@@ -93,14 +93,13 @@ public class World {
 		
 		dust2 = new Model("/dust2/", "dust2_blend.obj");
 		dust2.addInstance(Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)));
-		
 	}
 
 	public World() {
 		player = new Player(new Vec3(0, 0, 0));
 		
 		lights = new ArrayList<>();
-		lights.add(new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.6f)));
+		lights.add(new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f)));
 	}
 
 	public void update() {

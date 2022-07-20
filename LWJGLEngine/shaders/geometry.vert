@@ -5,6 +5,7 @@ layout (location = 2) in vec3 normal;
 layout (location = 3) in vec3 tangent;
 layout (location = 4) in vec3 bitangent;
 layout (location = 5) in mat4 md_matrix;
+layout (location = 9) in vec3 colorID;
 
 uniform mat4 pr_matrix;	//projection
 uniform mat4 vw_matrix;	//view
@@ -17,12 +18,15 @@ out float frag_depth;
 out vec2 frag_uv;
 out mat3 TBN;
 
+out vec3 frag_colorID;
+
 void main()
 {
     gl_Position = pr_matrix * vw_matrix * md_matrix * vec4(pos, 1.0);
     frag_pos = vec3(md_matrix * vec4(pos, 1.0));
     frag_depth = -vec3(vw_matrix * md_matrix * vec4(pos, 1.0)).z;
     frag_uv = uv;
+    frag_colorID = colorID;
     if(!enableTexScaling){
     	frag_uv = uv * texScaleFactor;
     }

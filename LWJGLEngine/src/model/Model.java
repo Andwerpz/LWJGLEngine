@@ -83,12 +83,12 @@ public class Model {
 		return ans;
 	}
 	
-	private static Vec3 convertIDToRGB(long ID) {
-		return new Vec3((ID / 1000000) % 1000, (ID / 1000) % 1000, ID % 1000);
+	public static long convertRGBToID(Vec3 rgb) {
+		return (long) rgb.x * 1000000l + (long) rgb.y * 1000l + (long) rgb.z;
 	}
 	
-	private static long convertRGBToID(Vec3 rgb) {
-		return (long) rgb.x * 1000000l + (long) rgb.y * 1000l + (long) rgb.z;
+	public static Vec3 convertIDToRGB(long ID) {
+		return new Vec3((ID / 1000000) % 1000, (ID / 1000) % 1000, ID % 1000);
 	}
 	
 	//must have .mtl file to be able to load materials
@@ -265,7 +265,7 @@ public class Model {
 	
 	private void updateModelMats() {
 		for(VertexArray v : meshes) {
-			v.updateModelMats(modelMats);
+			v.updateInstances(modelMats);
 		}
 	}
 	

@@ -21,6 +21,7 @@ import static org.lwjgl.opengl.GL44.*;
 import static org.lwjgl.opengl.GL45.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
@@ -39,8 +40,10 @@ import model.SkyboxCube;
 import player.Camera;
 import scene.Light;
 import scene.World;
+import util.BufferUtils;
 import util.Mat4;
 import util.SystemUtils;
+import util.Vec2;
 import util.Vec3;
 
 import static org.lwjgl.opengl.GL.*;
@@ -68,6 +71,8 @@ public class Main implements Runnable{
 	private static float[] shadowCascades = new float[] {NEAR, 2, 5, 10, 20, 50, FAR};
 	//private static float[] shadowCascades = new float[] {NEAR, 2, 5, 10};
 	
+	public static long selectedEntityID = 0;
+	
 	private World world;
 	private Framebuffer geometryBuffer;
 	private Framebuffer lightingBuffer;
@@ -77,6 +82,7 @@ public class Main implements Runnable{
 	private Texture geometryPositionMap;	//RGB: pos, A: depth
 	private Texture geometryNormalMap;		//RGB: normal
 	private Texture geometryColorMap;		//RGB: color, A: specular
+	private Texture geometryColorIDMap;		//RGB: colorID
 	
 	private Texture lightingColorMap;		//RGB: color
 	
@@ -120,7 +126,7 @@ public class Main implements Runnable{
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);	//lock mouse to center
 		
 		createCapabilities();
-		glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
+		glClearColor(0f, 0f, 0f, 0f);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);  
 		glCullFace(GL_BACK);  
@@ -137,11 +143,13 @@ public class Main implements Runnable{
 		this.geometryPositionMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
 		this.geometryNormalMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
 		this.geometryColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.geometryColorIDMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
 		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.geometryPositionMap.getID());
 		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this.geometryNormalMap.getID());
 		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, this.geometryColorMap.getID());
+		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, this.geometryColorIDMap.getID());
 		this.geometryBuffer.addDepthBuffer();
-		this.geometryBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2});
+		this.geometryBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
 		this.geometryBuffer.isComplete();
 		
 		this.lightingBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
@@ -254,6 +262,13 @@ public class Main implements Runnable{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 		Shader.GEOMETRY.enable();
 		world.render(Shader.GEOMETRY, world.player.camera);
+		
+		//find selected model ID
+		glReadBuffer(GL_COLOR_ATTACHMENT3);
+		ByteBuffer pixels = BufferUtils.createByteBuffer(4);
+		Vec2 mousePos = MouseInput.getMousePos();
+		glReadPixels((int) mousePos.x, (int) (Main.windowHeight - mousePos.y), 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+		Main.selectedEntityID = Model.convertRGBToID(new Vec3((pixels.get(0) & 0xFF), (pixels.get(1) & 0xFF), (pixels.get(2) & 0xFF)));
 		
 		// -- LIGHTING -- : using information from the geometry buffer, calculate lighting.
 		lightingBuffer.bind();
@@ -437,6 +452,7 @@ public class Main implements Runnable{
 		Shader.POST_PROCESS.enable();
 		
 		this.lightingColorMap.bind(GL_TEXTURE0);
+		//this.geometryColorIDMap.bind(GL_TEXTURE0);
 		this.geometryPositionMap.bind(GL_TEXTURE1);
 		this.skyboxColorMap.bind(GL_TEXTURE2);
 		

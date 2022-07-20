@@ -426,5 +426,9 @@ public class Vec2 {
 
 		return array;
 	}
+	
+	public String toString() {
+		return "[" + this.x + ", " + this.y + "]";
+	}
 
 }

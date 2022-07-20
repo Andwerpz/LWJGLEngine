@@ -3,6 +3,7 @@ package model;
 import static org.lwjgl.opengl.GL11.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import graphics.VertexArray;
 import util.Mat4;
@@ -35,7 +36,9 @@ public class ScreenQuad {
 		};
 		
 		this.mesh = new VertexArray(vertices, uvs, indices, GL_TRIANGLES);
-		this.mesh.updateModelMats(new Mat4[] {Mat4.identity()});
+		HashMap<Long, Mat4> map = new HashMap<>();
+		map.put((long) 0, Mat4.identity());
+		this.mesh.updateInstances(map);
 	}
 	
 	//used in main to render framebuffers
