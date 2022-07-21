@@ -165,7 +165,7 @@ public class Main implements Runnable{
 		this.shadowBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.shadowBackfaceMap.getID());
 		this.shadowBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
 		this.shadowBuffer.isComplete();
-		this.shadowCubemap = new Cubemap();
+		this.shadowCubemap = new Cubemap(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
 		
 		this.skyboxBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.skyboxColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);

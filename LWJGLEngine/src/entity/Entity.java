@@ -72,6 +72,11 @@ public abstract class Entity {
 		}
 	}
 	
+	//remove model instance
+	public void kill() {
+		this.model.removeInstance(this.ID);
+	}
+	
 	public boolean collision(Vec3 translate, Hitbox h) {
 		return this.getHitbox().collision(translate, this.pos, h);
 	}
@@ -223,6 +228,7 @@ public abstract class Entity {
 	}
 	*/
 	
+	//TODO : replace or rework these
 	public void applyModelTransform() {
 		Mat4 md_matrix = Mat4.translate(pos);
 		Shader.GEOMETRY.setUniformMat4("md_matrix", md_matrix);

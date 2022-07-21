@@ -234,18 +234,19 @@ public class Model {
 	//adds the mat4, and returns a new id
 	public long addInstance(Mat4 model) {
 		long ID = generateNewID();
-		modelInstanceIDs.add(ID);
 		this.addInstance(model, ID);
 		return ID;
 	}
 	
 	public void addInstance(Mat4 model, long ID) {
 		modelMats.put(ID, model);
+		modelInstanceIDs.add(ID);
 		modelMatrixUpdateNeeded = true;
 	}
 	
 	public void removeInstance(long ID) {
 		modelMats.remove(ID);
+		modelInstanceIDs.remove(ID);
 		modelMatrixUpdateNeeded = true;
 	}
 	
