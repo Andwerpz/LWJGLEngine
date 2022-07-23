@@ -53,15 +53,6 @@ public class World {
 	
 	public static final int MAX_LIGHTS = 100;
 	
-	static Material crystalTex;
-	static Material containerTex;
-	static Material goldtilesTex;
-	static Material goldnuggetTex;
-	static Material woodboxTex;
-	static Material metalpanelTex;
-	static Material woodfloorTex;
-	static Material skyboxTex;
-	
 	public static Cubemap skybox;
 	
 	static Model dust2;
@@ -73,14 +64,6 @@ public class World {
 	
 	public static void init() {
 		startTime = System.currentTimeMillis();
-		woodfloorTex = new Material("/woodbox_diffuse.png", null, null, null);
-		goldtilesTex = new Material("/goldtiles_diffuse.jpg", "/goldtiles_specular.jpg", "/goldtiles_normal.jpg", null);
-		containerTex = new Material("/container_diffuse.png", "/container_specular.png", null, null);
-		crystalTex = new Material("/crystal_diffuse.jpg", "/crystal_specular.jpg", "/crystal_normal.jpg", "/crystal_displacement.png");
-		goldnuggetTex = new Material("/goldnugget_diffuse.jpg", "/goldnugget_specular.jpg", "/goldnugget_normal.jpg", "/goldnugget_displacement.png");
-		woodboxTex = new Material("/woodbox_diffuse.png", null, "/woodbox_normal.png", "/woodbox_displacement.png");
-		metalpanelTex = new Material("/metalpanel_diffuse.jpg", "/metalpanel_specular.jpg", "/metalpanel_normal.jpg", "/metalpanel_displacement.png");
-		skyboxTex = new Material("/skybox/right.jpg", null, null, null);
 		
 		skybox = new Cubemap(
 			"/skybox/right.jpg",

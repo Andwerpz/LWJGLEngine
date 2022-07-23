@@ -38,6 +38,7 @@ import model.Model;
 import model.ScreenQuad;
 import model.SkyboxCube;
 import player.Camera;
+import player.Player;
 import scene.Light;
 import scene.World;
 import util.BufferUtils;
@@ -66,6 +67,8 @@ public class Main implements Runnable{
 	public static final float FAR = 200.0f;
 	public static final float ASPECT_RATIO = (float) windowWidth / (float) windowHeight;
 	public static final float FOV = (float) Math.toRadians(90f);	//vertical FOV
+	
+	public static Camera camera;
 	
 	private static final int SHADOW_MAP_NR_CASCADES = 6;
 	private static float[] shadowCascades = new float[] {NEAR, 2, 5, 10, 20, 50, FAR};
@@ -197,6 +200,8 @@ public class Main implements Runnable{
 		Shader.POST_PROCESS.setUniform1i("tex_position", 1);
 		Shader.POST_PROCESS.setUniform1i("skybox", 2);
 		
+		Main.camera = new Camera(FOV, (float) windowWidth, (float) windowHeight, NEAR, FAR);
+		
 		//wireframe
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -249,10 +254,17 @@ public class Main implements Runnable{
 			running = false;
 		}
 		
+		updateCamera();
 		world.update();
 	}
 	
-	Texture triTex;
+	private void updateCamera() {
+		Player p = world.player;
+		
+		Main.camera.setPos(p.pos.add(Player.cameraVec));
+		Main.camera.setFacing(p.camXRot, p.camYRot);
+		Main.camera.setUp(new Vec3(0, 1, 0));
+	}
 	
 	private void render() {
 		// -- GEOMETRY -- : render 3d perspective to geometry buffer
@@ -261,7 +273,7 @@ public class Main implements Runnable{
 		glEnable(GL_CULL_FACE);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 		Shader.GEOMETRY.enable();
-		world.render(Shader.GEOMETRY, world.player.camera);
+		world.render(Shader.GEOMETRY, Main.camera);
 		
 		//find selected model ID
 		glReadBuffer(GL_COLOR_ATTACHMENT3);
@@ -285,7 +297,7 @@ public class Main implements Runnable{
 		this.shadowBackfaceMap.bind(GL_TEXTURE4);
 		this.shadowCubemap.bind(GL_TEXTURE5);
 		
-		Shader.LIGHTING.setUniform3f("view_pos", this.world.player.camera.getPos());
+		Shader.LIGHTING.setUniform3f("view_pos", Main.camera.getPos());
 		
 		//disable to prevent overwriting geometry buffer textures
 		//don't forget to re-enable
@@ -332,7 +344,7 @@ public class Main implements Runnable{
 					Shader.LIGHTING.setUniform1f("shadowMapFar", far);
 					
 					//transform frustum corners from camera space to light space
-					Mat4 transformMatrix = new Mat4(world.player.camera.getInvViewMatrix());	//from camera to world space
+					Mat4 transformMatrix = new Mat4(Main.camera.getInvViewMatrix());	//from camera to world space
 					transformMatrix.muli(lightMat);	//apply rotation to align light dir with -z axis
 					for(int j = 0; j < corners.length; j++) {
 						corners[j] = transformMatrix.mul(corners[j], 1f);
@@ -365,6 +377,8 @@ public class Main implements Runnable{
 					glEnable(GL_DEPTH_TEST);
 					glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 					glDisable(GL_BLEND);
+					glEnable(GL_CULL_FACE);
+					glCullFace(GL_FRONT);
 					
 					Shader.LIGHTING.setUniformMat4("lightSpace_matrix", lightMat.mul(lightCamera.getProjectionMatrix()));
 					Shader.DEPTH.enable();
@@ -374,6 +388,8 @@ public class Main implements Runnable{
 					lightingBuffer.bind();
 					glDisable(GL_DEPTH_TEST);
 					glEnable(GL_BLEND);
+					glDisable(GL_CULL_FACE);
+					glCullFace(GL_BACK);
 					Shader.LIGHTING.enable();
 					lights.get(i).bind(Shader.LIGHTING, i);
 					screenQuad.render();
@@ -440,7 +456,7 @@ public class Main implements Runnable{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_CULL_FACE);
 		Shader.SKYBOX.enable();
-		Shader.SKYBOX.setUniformMat4("vw_matrix", world.player.camera.getViewMatrix());
+		Shader.SKYBOX.setUniformMat4("vw_matrix", Main.camera.getViewMatrix());
 		World.skybox.bind(GL_TEXTURE0);
 		skyboxCube.render();
 				

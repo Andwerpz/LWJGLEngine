@@ -124,10 +124,11 @@ void main()
    	 	projCoords = projCoords * 0.5 + 0.5; //transform from [-1, 1] to [0, 1]
    	 	
    	 	float currentDepth = projCoords.z; 
-   	 	float backfaceBias = texture(shadowBackfaceMap, projCoords.xy).r == 1? -1 : 0;
+   	 	float backfaceBias = texture(shadowBackfaceMap, projCoords.xy).r == 1? 0 : 0;
    	 	//float backfaceBias = 0;
    	 	
-   	 	float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.0005);  
+   	 	//float bias = max(0.0001 * (1.0 - dot(normal, lightDir)), 0.0001);  
+   	 	float bias = 0.0001;
    	 	
    	 	vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
 		for(int x = -1; x <= 1; ++x)
