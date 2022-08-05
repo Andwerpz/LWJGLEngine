@@ -48,12 +48,19 @@
 \maketitle
 
 \section{Rendering Pipeline}
-The rendering pipeline supports:
+The engine supports multiple dynamic directional and point lights, with shadowing. Cascaded shadow maps are used for directional lights. 
 
-\begin{itemize}
-	\item Multiple dynamic lights
-	\item Dynamic point and directional shadows
-\end{itemize}
+For optimization and abstraction reasons, I implemented a deferred rendering pipeline. Position, depth, and color information is captured in the geometry rendering step, which is then used in the lighting step to add shadows and modify the color information. Finally, a skybox is rendered seperately to it's own framebuffer, which is combined with the final lighting color in the postprocessing shader to produce the final rendered result. 
+
+\section{Entity and Models}
+A Model consists of one or many pairs of VertexArrays and Materials. Models also have a list of model matrices that are used in instanced rendering to transform the 3D geometry of each instance of the model. Each model instance also has it's own unique model ID, which takes on the form of 3 numbers between 0 and 255. This model ID can also be interpreted as a color vector, which we draw to the screen to support quick entity selection by mouse without having to go through 3D ray-mesh collision detection. 
+
+An Entity consists of a Model, and a set of vectors to define position, rotation, and velocity. This is the main way that you should load dynamic models to render. 
+
+\section{Material}
+
+\section{VertexArray}
+
 
 \end{document}
 
