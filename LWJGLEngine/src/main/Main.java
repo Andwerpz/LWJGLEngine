@@ -88,6 +88,7 @@ public class Main implements Runnable{
 	private Texture geometryColorIDMap;		//RGB: colorID
 	
 	private Texture lightingColorMap;		//RGB: color
+	private Texture lightingBrightnessMap;	//R: brightness
 	
 	private Texture shadowDepthMap;			//R: depth
 	private Texture shadowBackfaceMap;		//R: isBackface
@@ -157,8 +158,10 @@ public class Main implements Runnable{
 		
 		this.lightingBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.lightingColorMap = new Texture(GL_RGB, Main.windowWidth, Main.windowHeight, GL_RGB, GL_UNSIGNED_BYTE);
+		this.lightingBrightnessMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
 		this.lightingBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.lightingColorMap.getID());
-		this.lightingBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
+		this.lightingBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this.lightingBrightnessMap.getID());
+		this.lightingBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1});
 		this.lightingBuffer.isComplete();
 		
 		this.shadowBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
@@ -194,7 +197,6 @@ public class Main implements Runnable{
 		Shader.LIGHTING.setUniform1i("shadowMap", 3);
 		Shader.LIGHTING.setUniform1i("shadowBackfaceMap", 4);
 		Shader.LIGHTING.setUniform1i("shadowCubemap", 5);
-		Shader.LIGHTING.setUniform1f("ambientIntensity", 0.3f);
 		
 		Shader.POST_PROCESS.setUniform1i("tex_color", 0);
 		Shader.POST_PROCESS.setUniform1i("tex_position", 1);
@@ -254,8 +256,9 @@ public class Main implements Runnable{
 			running = false;
 		}
 		
-		updateCamera();
+		
 		world.update();
+		updateCamera();
 	}
 	
 	private void updateCamera() {
@@ -469,6 +472,7 @@ public class Main implements Runnable{
 		
 		this.lightingColorMap.bind(GL_TEXTURE0);
 		//this.geometryColorIDMap.bind(GL_TEXTURE0);
+		this.lightingBrightnessMap.bind(GL_TEXTURE0);
 		this.geometryPositionMap.bind(GL_TEXTURE1);
 		this.skyboxColorMap.bind(GL_TEXTURE2);
 		

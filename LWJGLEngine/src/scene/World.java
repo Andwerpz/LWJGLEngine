@@ -82,7 +82,7 @@ public class World {
 		player = new Player(new Vec3(0, 0, 0));
 		
 		lights = new ArrayList<>();
-		lights.add(new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f)));
+		lights.add(new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 	}
 
 	public void update() {

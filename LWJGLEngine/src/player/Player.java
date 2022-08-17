@@ -8,6 +8,7 @@ import input.MouseInput;
 import main.Main;
 import model.Hitbox;
 import model.Model;
+import scene.PointLight;
 import scene.SpotLight;
 import scene.World;
 import util.Mat4;
@@ -29,7 +30,7 @@ public class Player extends Entity {
 	public float camYRot;
 	public float camZRot;
 
-	public SpotLight flashlight;
+	public PointLight flashlight;
 	public boolean flashlightOn = false;
 	int flashlightToggleDelay = 15;
 	int flashlightToggleCounter = 0;
@@ -42,7 +43,7 @@ public class Player extends Entity {
 		super(pos, 0, 0, 0, new Model());
 		camera = new Camera(Main.FOV, (float) Main.windowWidth, (float) Main.windowHeight, Main.NEAR, Main.FAR);
 		mouse = MouseInput.getMousePos();
-		flashlight = new SpotLight(this.camera.getPos(), this.camera.getFacing(), new Vec3(1), 25f, 30f, 1.5f, 0.022f, 0.0019f);
+		flashlight = new PointLight(this.camera.getPos(), new Vec3(1), 0f, 1.5f, 0.022f, 0.0019f);
 	}
 	
 	@Override

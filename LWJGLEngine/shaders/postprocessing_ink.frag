@@ -13,10 +13,22 @@ float kernel[9] = float[](
     1, 2, 1  
 );
 
-float aspectRatio = 1920.0 / 1080.0;
+int numColors = 6;
+
+float bayer4[4 * 4] = float[] (
+	0, 8, 2, 10,
+	12, 4, 14, 6,
+	3, 11, 1, 9,
+	15, 7, 13, 5
+);
+
+float noiseScale = 0.5;
+
+float windowWidth = 1920.0;
+float windowHeight = 1080.0;
+float aspectRatio = windowWidth / windowHeight;
 float xOffset = 1.0 / 800.0;
 float yOffset = xOffset * aspectRatio;
-
 
 vec2 offsets[9] = vec2[](
     vec2(-xOffset,  yOffset), // top-left
@@ -48,7 +60,24 @@ float sampleDepth(vec2 uv){
 void main()
 {
 	float depth = texture(tex_position, frag_uv).a;
-	vec3 result = sampleColor(frag_uv);
+	vec3 sampledColor = sampleColor(frag_uv);
+	
+	int pixelX = int(frag_uv.x * windowWidth);
+	int pixelY = int(frag_uv.y * windowHeight);
+	float noise = bayer4[int(mod(pixelX, 4) + mod(pixelY, 4) * 4)] / 16.0;
+	
+	float r = floor(sampledColor.x * (numColors - 1) + (noise * noiseScale) + 0.5) / (numColors - 1);
+	float g = floor(sampledColor.y * (numColors - 1) + (noise * noiseScale) + 0.5) / (numColors - 1);
+	float b = floor(sampledColor.z * (numColors - 1) + (noise * noiseScale) + 0.5) / (numColors - 1);
+	
+	vec3 result = vec3(r, g, b);
+	
+	float edgeDetColor = 0;
+	for(int i = 0; i < 9; i++){
+		edgeDetColor += sampleDepth(frag_uv + offsets[i]) * kernel[i];
+	}
+	edgeDetColor = clamp(edgeDetColor, 0, 1);
+	result -= vec3(edgeDetColor);
 	
 	color = vec4(result, 1.0);
 }

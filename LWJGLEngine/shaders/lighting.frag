@@ -1,5 +1,6 @@
 #version 330 core
-layout (location = 0) out vec4 color;
+layout (location = 0) out vec4 lColor;
+layout (location = 1) out vec4 lBrightness;
 
 const int DIR_LIGHT = 0;
 const int POINT_LIGHT = 1;
@@ -11,8 +12,6 @@ uniform vec3 view_pos;
 uniform sampler2D tex_position;
 uniform sampler2D tex_normal;
 uniform sampler2D tex_diffuse;
-
-uniform float ambientIntensity;
 
 //directional shadows
 uniform float shadowMapNear;	// >= near
@@ -40,6 +39,8 @@ struct Light {
 	vec3 pos;
 	vec3 dir;
 	vec3 color;
+	
+	float ambientIntensity;
 	
 	float cutOff;
 	float outerCutOff;
@@ -95,9 +96,9 @@ void main()
     float spec = pow(max(dot(normal, halfwayDir), 0.0), specularStrength);
     
     //combine results
-    vec3 ambient  = light.color * fragColor * ambientIntensity;
-    vec3 diffuse  = light.color * diff * fragColor * (1 - ambientIntensity);
-    vec3 specular = light.color * spec * fragSpec;
+    float ambient  = light.ambientIntensity;
+    float diffuse  = diff * (1 - light.ambientIntensity);
+    float specular = spec * fragSpec;
     
     if(light.type == SPOT_LIGHT){
     	//calculate cutoff
@@ -127,7 +128,7 @@ void main()
    	 	float backfaceBias = texture(shadowBackfaceMap, projCoords.xy).r == 1? 0 : 0;
    	 	//float backfaceBias = 0;
    	 	
-   	 	//float bias = max(0.0001 * (1.0 - dot(normal, lightDir)), 0.0001);  
+   	 	//float bias = max(0.001 * (1.0 - dot(normal, lightDir)), 0.005);  
    	 	float bias = 0.0001;
    	 	
    	 	vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
@@ -135,8 +136,8 @@ void main()
 		{
 		    for(int y = -1; y <= 1; ++y)
 		    {
-		        float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-		        shadow += currentDepth - bias > pcfDepth + backfaceBias? 1.0 : 0.0;        
+		    	float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+		        shadow += currentDepth - bias > pcfDepth + backfaceBias? 1.0 : 0.0; 
 		    }    
 		}
 		shadow /= 9.0;
@@ -169,7 +170,17 @@ void main()
 		shadow /= float(samples);  
 	}
 	
-	color = vec4(ambient + (diffuse + specular) * (1 - shadow), 1.0);
+	//account for shadows
+	diffuse *= (1 - shadow);
+	specular *= (1 - shadow);
+	
+	//compute color vector
+	vec3 ambientColor  = light.color * fragColor * ambient;
+    vec3 diffuseColor  = light.color * fragColor * diffuse;
+    vec3 specularColor = light.color * specular;
+    
+	lColor = vec4(ambientColor + (diffuseColor + specularColor) * (1 - shadow), 1.0);
+	lBrightness = vec4(vec3(ambient + diffuse + specular), 1);
     
 } 
 

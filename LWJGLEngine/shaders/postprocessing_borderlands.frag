@@ -50,6 +50,13 @@ void main()
 	float depth = texture(tex_position, frag_uv).a;
 	vec3 result = sampleColor(frag_uv);
 	
+	float edgeDetColor = 0;
+	for(int i = 0; i < 9; i++){
+		edgeDetColor += sampleDepth(frag_uv + offsets[i]) * kernel[i];
+	}
+	edgeDetColor = clamp(edgeDetColor, 0, 1);
+	result -= vec3(edgeDetColor);
+	
 	color = vec4(result, 1.0);
 }
 
