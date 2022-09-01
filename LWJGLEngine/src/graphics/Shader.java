@@ -37,7 +37,7 @@ public class Shader {
 		LIGHTING = new Shader("/lighting.vert", "/lighting.frag");
 		DEPTH = new Shader("/simpleDepthShader.vert", "/simpleDepthShader.frag");
 		CUBE_DEPTH = new Shader("/cubemapDepthShader.vert", "/cubemapDepthShader.frag");
-		POST_PROCESS = new Shader("/postprocessing.vert", "/postprocessing_ink.frag");
+		POST_PROCESS = new Shader("/postprocessing.vert", "/postprocessing.frag");
 	}
 	
 	public int getUniform(String name) {

@@ -471,8 +471,6 @@ public class Main implements Runnable{
 		Shader.POST_PROCESS.enable();
 		
 		this.lightingColorMap.bind(GL_TEXTURE0);
-		//this.geometryColorIDMap.bind(GL_TEXTURE0);
-		this.lightingBrightnessMap.bind(GL_TEXTURE0);
 		this.geometryPositionMap.bind(GL_TEXTURE1);
 		this.skyboxColorMap.bind(GL_TEXTURE2);
 		
