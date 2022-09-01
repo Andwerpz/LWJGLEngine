@@ -79,7 +79,7 @@ public class VertexArray {
 		
 		mbo = glGenBuffers(); // per instance model matrix
 		glBindBuffer(GL_ARRAY_BUFFER, mbo);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[0]), GL_STREAM_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[0]), GL_DYNAMIC_DRAW);
 		for (int i = 0; i < 4; i++) {
 			glVertexAttribPointer(Shader.INSTANCED_MODEL_ATTRIB + i, 4, GL_FLOAT, false, 16 * 4, 16 * i);
 			glVertexAttribDivisor(Shader.INSTANCED_MODEL_ATTRIB + i, 1);
@@ -88,7 +88,7 @@ public class VertexArray {
 		
 		icido = glGenBuffers(); //per instance color id
 		glBindBuffer(GL_ARRAY_BUFFER, icido);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[0]), GL_STREAM_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[0]), GL_DYNAMIC_DRAW);
 		glVertexAttribPointer(Shader.INSTANCED_COLOR_ATTRIB, 3, GL_FLOAT, false, 0, 0);
 		glVertexAttribDivisor(Shader.INSTANCED_COLOR_ATTRIB, 1);
 		glEnableVertexAttribArray(Shader.INSTANCED_COLOR_ATTRIB);
@@ -101,18 +101,21 @@ public class VertexArray {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
+	
+	//note that we can switch model mat4 buffers. Might be useful to save seperate buffers for different screens.
+	//maybe for each instanced buffer, have it be associated with a specific screen id. 
 
 	public void updateModelMats(Mat4[] modelMats) {
 		glBindVertexArray(vao);
-		glBindBuffer(GL_ARRAY_BUFFER, mbo);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_STREAM_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, mbo);	
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW);	//TODO switch to glBufferSubData
 		glBindVertexArray(0);
 	}
 	
 	public void updateInstanceColorIDs(Vec3[] colorIDs) {
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ARRAY_BUFFER, icido);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_STREAM_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW);	//TODO switch to glBufferSubData
 		glBindVertexArray(0);
 	}
 	

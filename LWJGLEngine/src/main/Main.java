@@ -71,7 +71,7 @@ public class Main implements Runnable{
 	public static Camera camera;
 	
 	private static final int SHADOW_MAP_NR_CASCADES = 6;
-	private static float[] shadowCascades = new float[] {NEAR, 2, 5, 10, 20, 50, FAR};
+	private static float[] shadowCascades = new float[] {NEAR, 1, 3, 7, 15, 30, FAR};
 	//private static float[] shadowCascades = new float[] {NEAR, 2, 5, 10};
 	
 	public static long selectedEntityID = 0;
@@ -95,6 +95,8 @@ public class Main implements Runnable{
 	private Cubemap shadowCubemap;			//R: depth
 	
 	private Texture skyboxColorMap;			//RGB: color
+	
+	private Texture uiColorMap;				//RGB: color
 	
 	private SkyboxCube skyboxCube;
 	private ScreenQuad screenQuad;
@@ -462,6 +464,9 @@ public class Main implements Runnable{
 		Shader.SKYBOX.setUniformMat4("vw_matrix", Main.camera.getViewMatrix());
 		World.skybox.bind(GL_TEXTURE0);
 		skyboxCube.render();
+		
+		// -- UI -- : render a ui to be layered on top of the rendered 3D scene
+		
 				
 		// -- POST PROCESSING -- : render contents of lighting buffer onto screen sized quad
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);	//back to default framebuffer
