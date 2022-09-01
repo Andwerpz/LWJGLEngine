@@ -20,11 +20,11 @@ import util.Vec3;
 
 public class VertexArray {
 
-	protected int renderType;
-	protected int vao, vbo, tbo, nbo, ntbo, nbtbo, ibo, mbo, icido;
-	protected int count;
-
-	protected int numInstances = 0;
+	private int renderType;
+	private int vao, vbo, tbo, nbo, ntbo, nbtbo, ibo;
+	private int mbo, icido;	//TODO move to screenInstances
+	private HashMap<Integer, int[]> screenInstances;	//numInstances, mat4, colorID
+	private int triCount;	//number of triangles in the mesh
 	
 	public VertexArray(float[] vertices, float[] normals, float[] uvs, int[] indices, int renderType) {
 		int n = vertices.length;
@@ -42,7 +42,8 @@ public class VertexArray {
 	
 	private void init(float[] vertices, float[] normals, float[] tangents, float[] bitangents, float[] uvs, int[] indices, int renderType) {
 		this.renderType = renderType;
-		count = indices.length;
+		triCount = indices.length;
+		this.screenInstances = new HashMap<Integer, int[]>();
 
 		vao = glGenVertexArrays();
 		glBindVertexArray(vao);
@@ -104,7 +105,6 @@ public class VertexArray {
 	
 	//note that we can switch model mat4 buffers. Might be useful to save seperate buffers for different screens.
 	//maybe for each instanced buffer, have it be associated with a specific screen id. 
-
 	public void updateModelMats(Mat4[] modelMats) {
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ARRAY_BUFFER, mbo);	
@@ -119,8 +119,31 @@ public class VertexArray {
 		glBindVertexArray(0);
 	}
 	
-	public void updateInstances(HashMap<Long, Mat4> map) {
-		numInstances = map.size();
+	public int createNewModelMatBuffer() {
+		int buffer = glGenBuffers(); // per instance model matrix
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[0]), GL_DYNAMIC_DRAW);
+		for (int i = 0; i < 4; i++) {
+			glVertexAttribPointer(Shader.INSTANCED_MODEL_ATTRIB + i, 4, GL_FLOAT, false, 16 * 4, 16 * i);
+			glVertexAttribDivisor(Shader.INSTANCED_MODEL_ATTRIB + i, 1);
+			glEnableVertexAttribArray(Shader.INSTANCED_MODEL_ATTRIB + i);
+		}
+		return buffer;
+	}
+	
+	public int createNewColorIDBuffer() {
+		int buffer = glGenBuffers(); //per instance color id
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[0]), GL_DYNAMIC_DRAW);
+		glVertexAttribPointer(Shader.INSTANCED_COLOR_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+		glVertexAttribDivisor(Shader.INSTANCED_COLOR_ATTRIB, 1);
+		glEnableVertexAttribArray(Shader.INSTANCED_COLOR_ATTRIB);
+		return buffer;
+	}
+	
+	public void updateInstances(HashMap<Long, Mat4> map) {	//TODO int whichScreen
+		int whichScreen = 0;
+		int numInstances = map.size();
 		Mat4[] modelMats = new Mat4[numInstances];
 		Vec3[] colorIDs = new Vec3[numInstances];
 		int i = 0;
@@ -129,8 +152,24 @@ public class VertexArray {
 			modelMats[i] = map.get(ID);
 			i ++;
 		}
-		this.updateModelMats(modelMats);
-		this.updateInstanceColorIDs(colorIDs);
+		if(screenInstances.get(whichScreen) == null) {
+			//instanced model buffer doesn't exist yet
+			System.out.println("SCREEN " + whichScreen + " MODEL INSTANTIATED");
+			screenInstances.put(whichScreen, new int[] {numInstances, createNewModelMatBuffer(), createNewColorIDBuffer()});
+		}
+		int[] screenInstance = screenInstances.get(whichScreen);
+		int modelMatBuffer = screenInstance[1];
+		int colorIDBuffer = screenInstance[2];
+		
+		glBindVertexArray(vao);
+		glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);	
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW);	//TODO switch to glBufferSubData
+		glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW);	//TODO switch to glBufferSubData
+		glBindVertexArray(0);
+		
+		//this.updateModelMats(modelMats);
+		//this.updateInstanceColorIDs(colorIDs);
 	}
 	
 	public static void computeTB(float[] vertices, float[] normals, float[] uvs, int[] indices, float[] outTangents, float[] outBitangents) {
@@ -372,11 +411,22 @@ public class VertexArray {
 	}
 
 	public void drawInstanced(int amt) {
-		glDrawElementsInstanced(renderType, count, GL_UNSIGNED_INT, 0, amt);
+		glDrawElementsInstanced(this.renderType, this.triCount, GL_UNSIGNED_INT, 0, amt);
 	}
 
-	public void render() {
+	public void render() {	//TODO whichScreen
+		int whichScreen = 0;
+		if(screenInstances.get(whichScreen) == null) {
+			System.out.println("SCREEN INSTANCE NOT INSTANTIATED");
+			return;
+		}
+		int[] screenInstance = screenInstances.get(whichScreen);
+		int modelMatBuffer = screenInstance[1];
+		int colorIDBuffer = screenInstance[2];
+		int numInstances = screenInstance[0];
 		bind();
+		glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
 		drawInstanced(numInstances);
 		unbind();
 	}
