@@ -58,10 +58,11 @@ public class Hitbox {
 	public float getHeight() {
 		return this.max.y - this.min.y;
 	}
-
+	
+	//TODO fix this
 	public void render() {
 		texture.bind();
-		model.render();
+		//model.render();
 		texture.unbind();
 	}
 	

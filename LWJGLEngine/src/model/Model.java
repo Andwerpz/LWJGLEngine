@@ -42,21 +42,25 @@ public class Model {
 	//in order to render with correct model matrices, you must first update the model matrices. 
 	//if model matrix updates aren't needed, then you shouldn't update them. 
 	
+	//each model will have separate instances per scene. 
+	
 	public static final Material DEFAULT_MATERIAL = new Material(null, null, null, null);
 	
 	private static ArrayList<Model> models = new ArrayList<>();
 	private static HashSet<Long> modelInstanceIDs = new HashSet<>();
+	private static HashMap<Long, Integer> modelInstanceScenes = new HashMap<>();	//which scene each instance is in
 	
+	//first, specify which scene
 	//K : entity ID, Can be translated to a color to draw 
 	//V : model Mat4, Where to draw each instance of the model
-	private HashMap<Long, Mat4> modelMats;
+	private HashMap<Integer, HashMap<Long, Mat4>> modelMats;
 	private boolean modelMatrixUpdateNeeded = false;
 	
 	public ArrayList<VertexArray> meshes;
 	public ArrayList<Material> materials;
 
 	public Model() {
-		this.modelMats = new HashMap<Long, Mat4>();
+		this.modelMats = new HashMap<Integer, HashMap<Long, Mat4>>();
 		this.meshes = new ArrayList<>();
 		this.materials = new ArrayList<>();
 		this.create();
@@ -65,7 +69,7 @@ public class Model {
 	}
 	
 	public Model(String filepath, String filename) {
-		this.modelMats = new HashMap<Long, Mat4>();
+		this.modelMats = new HashMap<Integer, HashMap<Long, Mat4>>();
 		this.loadModelFile(filepath, filename);
 		
 		init();
@@ -231,27 +235,41 @@ public class Model {
 	
 	public void create() {}
 	
+	public static int getScene(long ID) {
+		return modelInstanceScenes.get(ID);
+	}
+	
 	//adds the mat4, and returns a new id
-	public long addInstance(Mat4 model) {
+	public long addInstance(Mat4 model, int scene) {
 		long ID = generateNewID();
-		this.addInstance(model, ID);
+		this.addInstance(model, ID, scene);
 		return ID;
 	}
 	
-	public void addInstance(Mat4 model, long ID) {
-		modelMats.put(ID, model);
+	public void addInstance(Mat4 model, long ID, int scene) {
+		if(modelMats.get(scene) == null) {
+			modelInstanceScenes.put(ID, scene);
+			modelMats.put(scene, new HashMap<Long, Mat4>());
+		}
+		modelMats.get(scene).put(ID, model);
 		modelInstanceIDs.add(ID);
 		modelMatrixUpdateNeeded = true;
 	}
 	
 	public void removeInstance(long ID) {
-		modelMats.remove(ID);
+		int scene = modelInstanceScenes.get(ID);
+		modelInstanceScenes.remove(ID);
+		modelMats.get(scene).remove(ID);
+		if(modelMats.get(scene).size() == 0) {
+			modelMats.remove(scene);
+		}
 		modelInstanceIDs.remove(ID);
 		modelMatrixUpdateNeeded = true;
 	}
 	
 	public void updateInstance(Mat4 model, long ID) {
-		modelMats.put(ID, model);
+		int scene = modelInstanceScenes.get(ID);
+		modelMats.get(scene).put(ID, model);
 		modelMatrixUpdateNeeded = true;
 	}
 	
@@ -266,17 +284,19 @@ public class Model {
 	
 	private void updateModelMats() {
 		for(VertexArray v : meshes) {
-			v.updateInstances(modelMats);
+			for(int scene : modelMats.keySet()) {
+				v.updateInstances(modelMats.get(scene), scene);
+			}
 		}
 	}
 	
-	public static void renderModels() {
+	public static void renderModels(int scene) {
 		for(Model m : models) {
-			m.render();
+			m.render(scene);
 		}
 	}
 	
-	protected void render() {		
+	protected void render(int scene) {		
 		for(int i = 0; i < meshes.size(); i++) {
 			if(i < this.materials.size() && this.materials.get(i) != null) {
 				this.materials.get(i).bind();
@@ -284,11 +304,11 @@ public class Model {
 			else {
 				DEFAULT_MATERIAL.bind();
 			}
-			this.meshes.get(i).render();
+			this.meshes.get(i).render(scene);
 		}
 	}
 	
-	private void render(ArrayList<Material> materials) {
+	private void render(ArrayList<Material> materials, int scene) {
 		for(int i = 0; i < meshes.size(); i++) {
 			if(i < materials.size() && materials.get(i) != null) {
 				materials.get(i).bind();
@@ -296,7 +316,7 @@ public class Model {
 			else {
 				DEFAULT_MATERIAL.bind();
 			}
-			this.meshes.get(i).render();
+			this.meshes.get(i).render(scene);
 		}
 	}
 }

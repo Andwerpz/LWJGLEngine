@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import graphics.VertexArray;
+import main.Main;
 import util.Mat4;
 
 public class SkyboxCube {
@@ -85,10 +86,10 @@ public class SkyboxCube {
 		this.mesh = new VertexArray(vertices, tex, indices, GL_TRIANGLES);
 		HashMap<Long, Mat4> map = new HashMap<>();
 		map.put((long) 0, Mat4.identity());
-		this.mesh.updateInstances(map);
+		this.mesh.updateInstances(map, Main.FRAMEBUFFER_SCENE);
 	}
 	
 	public void render() {
-		this.mesh.render();
+		this.mesh.render(Main.FRAMEBUFFER_SCENE);
 	}
 }

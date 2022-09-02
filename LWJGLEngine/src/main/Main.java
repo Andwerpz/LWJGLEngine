@@ -68,6 +68,8 @@ public class Main implements Runnable{
 	public static final float ASPECT_RATIO = (float) windowWidth / (float) windowHeight;
 	public static final float FOV = (float) Math.toRadians(90f);	//vertical FOV
 	
+	public static final int FRAMEBUFFER_SCENE = 0;
+	
 	public static Camera camera;
 	
 	private static final int SHADOW_MAP_NR_CASCADES = 6;
@@ -239,7 +241,7 @@ public class Main implements Runnable{
 				System.out.println(frames + " fps \\ " + updates + " ups");
 				updates = 0;
 				frames = 0;
-			}
+			}			
 			
 			if(glfwWindowShouldClose(window)) {
 				running = false;

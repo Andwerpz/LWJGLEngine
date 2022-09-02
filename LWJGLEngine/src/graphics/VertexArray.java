@@ -19,11 +19,19 @@ import util.Vec2;
 import util.Vec3;
 
 public class VertexArray {
+	
+	//vertex array buffers and buffer objects aren't created under each other,
+	//but a buffer object can be bound to a vertex array object. 
+	
+	//glBindVertexArray(vao);
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo);	//binds vbo to GL_ARRAY_BUFFER
+	//glEnableVertexAttribArray(Shader.VERTEX_ATTRIB);	//uses whatever is currently inside GL_ARRAY_BUFFER
+	
+	//each scene will have different model mat4s for each vertex array. 
 
 	private int renderType;
 	private int vao, vbo, tbo, nbo, ntbo, nbtbo, ibo;
-	private int mbo, icido;	//TODO move to screenInstances
-	private HashMap<Integer, int[]> screenInstances;	//numInstances, mat4, colorID
+	private HashMap<Integer, int[]> scenes;	//numInstances, mat4, colorID
 	private int triCount;	//number of triangles in the mesh
 	
 	public VertexArray(float[] vertices, float[] normals, float[] uvs, int[] indices, int renderType) {
@@ -43,7 +51,7 @@ public class VertexArray {
 	private void init(float[] vertices, float[] normals, float[] tangents, float[] bitangents, float[] uvs, int[] indices, int renderType) {
 		this.renderType = renderType;
 		triCount = indices.length;
-		this.screenInstances = new HashMap<Integer, int[]>();
+		this.scenes = new HashMap<Integer, int[]>();
 
 		vao = glGenVertexArrays();
 		glBindVertexArray(vao);
@@ -77,22 +85,6 @@ public class VertexArray {
 		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(bitangents), GL_STATIC_DRAW);
 		glVertexAttribPointer(Shader.BITANGENT_ATTRIB, 3, GL_FLOAT, false, 0, 0);
 		glEnableVertexAttribArray(Shader.BITANGENT_ATTRIB);
-		
-		mbo = glGenBuffers(); // per instance model matrix
-		glBindBuffer(GL_ARRAY_BUFFER, mbo);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[0]), GL_DYNAMIC_DRAW);
-		for (int i = 0; i < 4; i++) {
-			glVertexAttribPointer(Shader.INSTANCED_MODEL_ATTRIB + i, 4, GL_FLOAT, false, 16 * 4, 16 * i);
-			glVertexAttribDivisor(Shader.INSTANCED_MODEL_ATTRIB + i, 1);
-			glEnableVertexAttribArray(Shader.INSTANCED_MODEL_ATTRIB + i);
-		}
-		
-		icido = glGenBuffers(); //per instance color id
-		glBindBuffer(GL_ARRAY_BUFFER, icido);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[0]), GL_DYNAMIC_DRAW);
-		glVertexAttribPointer(Shader.INSTANCED_COLOR_ATTRIB, 3, GL_FLOAT, false, 0, 0);
-		glVertexAttribDivisor(Shader.INSTANCED_COLOR_ATTRIB, 1);
-		glEnableVertexAttribArray(Shader.INSTANCED_COLOR_ATTRIB);
 
 		ibo = glGenBuffers();
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
@@ -103,46 +95,7 @@ public class VertexArray {
 		glBindVertexArray(0);
 	}
 	
-	//note that we can switch model mat4 buffers. Might be useful to save seperate buffers for different screens.
-	//maybe for each instanced buffer, have it be associated with a specific screen id. 
-	public void updateModelMats(Mat4[] modelMats) {
-		glBindVertexArray(vao);
-		glBindBuffer(GL_ARRAY_BUFFER, mbo);	
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW);	//TODO switch to glBufferSubData
-		glBindVertexArray(0);
-	}
-	
-	public void updateInstanceColorIDs(Vec3[] colorIDs) {
-		glBindVertexArray(vao);
-		glBindBuffer(GL_ARRAY_BUFFER, icido);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW);	//TODO switch to glBufferSubData
-		glBindVertexArray(0);
-	}
-	
-	public int createNewModelMatBuffer() {
-		int buffer = glGenBuffers(); // per instance model matrix
-		glBindBuffer(GL_ARRAY_BUFFER, buffer);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[0]), GL_DYNAMIC_DRAW);
-		for (int i = 0; i < 4; i++) {
-			glVertexAttribPointer(Shader.INSTANCED_MODEL_ATTRIB + i, 4, GL_FLOAT, false, 16 * 4, 16 * i);
-			glVertexAttribDivisor(Shader.INSTANCED_MODEL_ATTRIB + i, 1);
-			glEnableVertexAttribArray(Shader.INSTANCED_MODEL_ATTRIB + i);
-		}
-		return buffer;
-	}
-	
-	public int createNewColorIDBuffer() {
-		int buffer = glGenBuffers(); //per instance color id
-		glBindBuffer(GL_ARRAY_BUFFER, buffer);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[0]), GL_DYNAMIC_DRAW);
-		glVertexAttribPointer(Shader.INSTANCED_COLOR_ATTRIB, 3, GL_FLOAT, false, 0, 0);
-		glVertexAttribDivisor(Shader.INSTANCED_COLOR_ATTRIB, 1);
-		glEnableVertexAttribArray(Shader.INSTANCED_COLOR_ATTRIB);
-		return buffer;
-	}
-	
-	public void updateInstances(HashMap<Long, Mat4> map) {	//TODO int whichScreen
-		int whichScreen = 0;
+	public void updateInstances(HashMap<Long, Mat4> map, int whichScene) {
 		int numInstances = map.size();
 		Mat4[] modelMats = new Mat4[numInstances];
 		Vec3[] colorIDs = new Vec3[numInstances];
@@ -152,24 +105,43 @@ public class VertexArray {
 			modelMats[i] = map.get(ID);
 			i ++;
 		}
-		if(screenInstances.get(whichScreen) == null) {
+		if(scenes.get(whichScene) == null) {
 			//instanced model buffer doesn't exist yet
-			System.out.println("SCREEN " + whichScreen + " MODEL INSTANTIATED");
-			screenInstances.put(whichScreen, new int[] {numInstances, createNewModelMatBuffer(), createNewColorIDBuffer()});
+			scenes.put(whichScene, new int[] {numInstances, glGenBuffers(), glGenBuffers()});
 		}
-		int[] screenInstance = screenInstances.get(whichScreen);
-		int modelMatBuffer = screenInstance[1];
-		int colorIDBuffer = screenInstance[2];
+		int[] scene = scenes.get(whichScene);
+		int modelMatBuffer = scene[1];
+		int colorIDBuffer = scene[2];
 		
-		glBindVertexArray(vao);
 		glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);	
 		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW);	//TODO switch to glBufferSubData
 		glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
 		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW);	//TODO switch to glBufferSubData
-		glBindVertexArray(0);
+	}
+	
+	public void bindScene(int whichScene) {
+		if(scenes.get(whichScene) == null) {
+			System.err.println("SCREEN " + whichScene + " MODEL NOT INSTANTIATED");
+			return;
+		}
+		int[] scene = scenes.get(whichScene);
+		int modelMatBuffer = scene[1];
+		int colorIDBuffer = scene[2];
 		
-		//this.updateModelMats(modelMats);
-		//this.updateInstanceColorIDs(colorIDs);
+		//TODO figure out whether or not we need to configure the pointer gaps and offsets every time we want to bind a new buffer
+		glBindVertexArray(vao);
+		glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);
+		for (int i = 0; i < 4; i++) {
+			glVertexAttribPointer(Shader.INSTANCED_MODEL_ATTRIB + i, 4, GL_FLOAT, false, 16 * 4, 16 * i);
+			glVertexAttribDivisor(Shader.INSTANCED_MODEL_ATTRIB + i, 1);
+			glEnableVertexAttribArray(Shader.INSTANCED_MODEL_ATTRIB + i);
+		}
+		
+		glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
+		glVertexAttribPointer(Shader.INSTANCED_COLOR_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+		glVertexAttribDivisor(Shader.INSTANCED_COLOR_ATTRIB, 1);
+		glEnableVertexAttribArray(Shader.INSTANCED_COLOR_ATTRIB);
+		glBindVertexArray(0);
 	}
 	
 	public static void computeTB(float[] vertices, float[] normals, float[] uvs, int[] indices, float[] outTangents, float[] outBitangents) {
@@ -414,19 +386,10 @@ public class VertexArray {
 		glDrawElementsInstanced(this.renderType, this.triCount, GL_UNSIGNED_INT, 0, amt);
 	}
 
-	public void render() {	//TODO whichScreen
-		int whichScreen = 0;
-		if(screenInstances.get(whichScreen) == null) {
-			System.out.println("SCREEN INSTANCE NOT INSTANTIATED");
-			return;
-		}
-		int[] screenInstance = screenInstances.get(whichScreen);
-		int modelMatBuffer = screenInstance[1];
-		int colorIDBuffer = screenInstance[2];
-		int numInstances = screenInstance[0];
+	public void render(int whichScene) {
+		int numInstances = this.scenes.get(whichScene)[0];
+		bindScene(whichScene);
 		bind();
-		glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
 		drawInstanced(numInstances);
 		unbind();
 	}

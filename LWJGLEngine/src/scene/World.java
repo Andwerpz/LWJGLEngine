@@ -51,7 +51,7 @@ public class World {
 	public static final int UP = 4;
 	public static final int DOWN = 5;
 	
-	public static final int MAX_LIGHTS = 100;
+	public static final int WORLD_SCENE = 0;
 	
 	public static Cubemap skybox;
 	
@@ -75,7 +75,11 @@ public class World {
 		);
 		
 		dust2 = new Model("/dust2/", "dust2_blend.obj");
-		dust2.addInstance(Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)));
+		dust2.addInstance(Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), WORLD_SCENE);
+		System.out.println("DUST 2 finis");
+		
+		
+		Model.updateModels();
 	}
 
 	public World() {
@@ -93,7 +97,7 @@ public class World {
 	public void render(Shader shader, Camera camera) {
 		setShaderUniforms(shader, camera);
 		shader.enable();
-		Model.renderModels();
+		Model.renderModels(WORLD_SCENE);
 	}
 	
 	public void setShaderUniforms(Shader shader, Camera camera) {

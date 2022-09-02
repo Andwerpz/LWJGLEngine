@@ -28,7 +28,7 @@ public abstract class Entity {
 	private Model model;
 	private Mat4 modelMat4;
 	
-	public Entity(Vec3 pos, float xRot, float yRot, float zRot, Model model) {
+	public Entity(Vec3 pos, float xRot, float yRot, float zRot, Model model, int scene) {
 		this.ID = Model.generateNewID();
 		this.pos = new Vec3(pos);
 		this.vel = new Vec3(0);
@@ -37,16 +37,18 @@ public abstract class Entity {
 		this.zRot = zRot;
 		this.model = model;
 		
-		this.model.addInstance(this.getModelMat4());
+		this.model.addInstance(this.getModelMat4(), scene);
 		Entity.entities.put(this.ID, this);
 	}
 	
 	protected void switchModel(Model newModel) {
+		int scene = Model.getScene(this.ID);
+		
 		//old model
 		this.model.removeInstance(this.ID);
 		
 		//new model
-		newModel.addInstance(this.getModelMat4(), ID);
+		newModel.addInstance(this.getModelMat4(), ID, scene);
 		this.model = newModel;
 	}
 	

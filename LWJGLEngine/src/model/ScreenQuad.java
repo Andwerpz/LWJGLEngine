@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import graphics.VertexArray;
+import main.Main;
 import util.Mat4;
 
 public class ScreenQuad {
@@ -38,12 +39,12 @@ public class ScreenQuad {
 		this.mesh = new VertexArray(vertices, uvs, indices, GL_TRIANGLES);
 		HashMap<Long, Mat4> map = new HashMap<>();
 		map.put((long) 0, Mat4.identity());
-		this.mesh.updateInstances(map);
+		this.mesh.updateInstances(map, Main.FRAMEBUFFER_SCENE);
 	}
 	
 	//used in main to render framebuffers
 	public void render() {
-		this.mesh.render();
+		this.mesh.render(Main.FRAMEBUFFER_SCENE);
 	}
 
 }
