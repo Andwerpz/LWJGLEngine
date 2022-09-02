@@ -51,8 +51,6 @@ public class World {
 	public static final int UP = 4;
 	public static final int DOWN = 5;
 	
-	public static final int WORLD_SCENE = 0;
-	
 	public static Cubemap skybox;
 	
 	static Model dust2;
@@ -75,9 +73,7 @@ public class World {
 		);
 		
 		dust2 = new Model("/dust2/", "dust2_blend.obj");
-		dust2.addInstance(Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), WORLD_SCENE);
-		System.out.println("DUST 2 finis");
-		
+		dust2.addInstance(Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), Scene.WORLD_SCENE);
 		
 		Model.updateModels();
 	}
@@ -92,20 +88,6 @@ public class World {
 	public void update() {
 		Entity.updateEntities();
 		Model.updateModels();
-	}
-	
-	public void render(Shader shader, Camera camera) {
-		setShaderUniforms(shader, camera);
-		shader.enable();
-		Model.renderModels(WORLD_SCENE);
-	}
-	
-	public void setShaderUniforms(Shader shader, Camera camera) {
-		shader.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
-		shader.setUniformMat4("vw_matrix", camera.getViewMatrix());
-		shader.setUniform3f("view_pos", camera.getPos());
-		shader.setUniform1i("enableParallaxMapping", 0);
-		shader.setUniform1i("enableTexScaling", 1);
 	}
 	
 }

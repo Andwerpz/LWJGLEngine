@@ -9,6 +9,7 @@ import main.Main;
 import model.Hitbox;
 import model.Model;
 import scene.PointLight;
+import scene.Scene;
 import scene.SpotLight;
 import scene.World;
 import util.Mat4;
@@ -40,7 +41,7 @@ public class Player extends Entity {
 	int moveFlashlightToggleCounter = 0;
 
 	public Player(Vec3 pos) {
-		super(pos, 0, 0, 0, new Model(), World.WORLD_SCENE);
+		super(pos, 0, 0, 0, new Model(), Scene.WORLD_SCENE);
 		camera = new Camera(Main.FOV, (float) Main.windowWidth, (float) Main.windowHeight, Main.NEAR, Main.FAR);
 		mouse = MouseInput.getMousePos();
 		flashlight = new PointLight(this.camera.getPos(), new Vec3(1), 0f, 1.5f, 0.022f, 0.0019f);
