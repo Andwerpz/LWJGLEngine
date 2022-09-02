@@ -387,6 +387,9 @@ public class VertexArray {
 	}
 
 	public void render(int whichScene) {
+		if(this.scenes.get(whichScene) == null) {	//TODO fix this
+			return;
+		}
 		int numInstances = this.scenes.get(whichScene)[0];
 		bindScene(whichScene);
 		bind();

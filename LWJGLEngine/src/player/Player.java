@@ -8,6 +8,7 @@ import input.MouseInput;
 import main.Main;
 import model.Hitbox;
 import model.Model;
+import scene.Light;
 import scene.PointLight;
 import scene.Scene;
 import scene.SpotLight;
@@ -109,9 +110,9 @@ public class Player extends Entity {
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_E) && flashlightToggleCounter >= flashlightToggleDelay) {
 			flashlightToggleCounter = 0;
 			if (flashlightOn) {
-				World.lights.remove(flashlight);
+				Light.lights.get(Scene.WORLD_SCENE).remove(flashlight);
 			} else {
-				World.lights.add(flashlight);
+				Light.lights.get(Scene.WORLD_SCENE).add(flashlight);
 			}
 			flashlightOn = !flashlightOn;
 		}

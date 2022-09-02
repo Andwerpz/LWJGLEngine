@@ -51,7 +51,6 @@ import util.Vec3;
 
 import static org.lwjgl.opengl.GL.*;
 
-
 public class Main implements Runnable{
 	
 	//seems like the maximum size the viewport can be is equal to the dimensions of the window
@@ -117,10 +116,15 @@ public class Main implements Runnable{
 		System.out.println("OpenGL : " + glGetString(GL_VERSION));
 		
 		//INIT
-		World.init();
-		this.world = new World();
+		Scene.init();
 		
 		this.screenQuad = new ScreenQuad();
+		
+		Main.camera = new Camera(FOV, (float) windowWidth, (float) windowHeight, NEAR, FAR);
+		this.screen = new PerspectiveScreen();
+		this.screen.setCamera(Main.camera);
+		
+		this.world = new World();
 		
 		//init shaders
 		Shader.loadAll();
@@ -148,14 +152,6 @@ public class Main implements Runnable{
 		Shader.GEOM_POST_PROCESS.setUniform1i("skybox", 2);
 		
 		Shader.IMG_POST_PROCESS.setUniform1i("tex_color", 0);
-		
-		Main.camera = new Camera(FOV, (float) windowWidth, (float) windowHeight, NEAR, FAR);
-		
-		//wireframe
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		
-		this.screen = new PerspectiveScreen();
-		this.screen.setCamera(Main.camera);
 	}
 	
 	public void run() {

@@ -1,5 +1,8 @@
 package scene;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import graphics.Shader;
 import util.Vec3;
 
@@ -8,6 +11,8 @@ public abstract class Light {
 	public static final int DIR_LIGHT = 0;
 	public static final int POINT_LIGHT = 1;
 	public static final int SPOT_LIGHT = 2;
+	
+	public static HashMap<Integer, ArrayList<Light>> lights = new HashMap<>();
 	
 	public int type;
 	

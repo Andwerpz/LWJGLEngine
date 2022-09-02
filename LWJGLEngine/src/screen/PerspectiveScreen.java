@@ -160,7 +160,7 @@ public class PerspectiveScreen extends Screen {
 		glDisable(GL_CULL_FACE);
 		
 		//calculate lighting with each light seperately
-		ArrayList<Light> lights = World.lights;
+		ArrayList<Light> lights = Light.lights.get(scene);
 		for(int i = 0; i < lights.size(); i++) {
 			//generate depth map for light
 			if(lights.get(i).type == Light.DIR_LIGHT) {
@@ -315,7 +315,7 @@ public class PerspectiveScreen extends Screen {
 		glDisable(GL_CULL_FACE);
 		Shader.SKYBOX.enable();
 		Shader.SKYBOX.setUniformMat4("vw_matrix", this.camera.getViewMatrix());
-		World.skybox.bind(GL_TEXTURE0);
+		Scene.skyboxes.get(scene).bind(GL_TEXTURE0);
 		skyboxCube.render();
 				
 		// -- POST PROCESSING -- : render contents of lighting buffer onto screen sized quad
