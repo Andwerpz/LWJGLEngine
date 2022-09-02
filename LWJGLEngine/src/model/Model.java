@@ -54,13 +54,12 @@ public class Model {
 	//K : entity ID, Can be translated to a color to draw 
 	//V : model Mat4, Where to draw each instance of the model
 	private HashMap<Integer, HashMap<Long, Mat4>> modelMats;
-	private boolean modelMatrixUpdateNeeded = false;
+	private ArrayList<Integer> scenesNeedingUpdates;
 	
 	public ArrayList<VertexArray> meshes;
 	public ArrayList<Material> materials;
 
 	public Model() {
-		this.modelMats = new HashMap<Integer, HashMap<Long, Mat4>>();
 		this.meshes = new ArrayList<>();
 		this.materials = new ArrayList<>();
 		this.create();
@@ -69,13 +68,14 @@ public class Model {
 	}
 	
 	public Model(String filepath, String filename) {
-		this.modelMats = new HashMap<Integer, HashMap<Long, Mat4>>();
 		this.loadModelFile(filepath, filename);
 		
 		init();
 	}
 	
 	private void init() {
+		this.scenesNeedingUpdates = new ArrayList<Integer>();
+		this.modelMats = new HashMap<Integer, HashMap<Long, Mat4>>();
 		models.add(this);
 	}
 	
@@ -253,7 +253,7 @@ public class Model {
 		}
 		modelMats.get(scene).put(ID, model);
 		modelInstanceIDs.add(ID);
-		modelMatrixUpdateNeeded = true;
+		scenesNeedingUpdates.add(scene);
 	}
 	
 	public void removeInstance(long ID) {
@@ -264,30 +264,30 @@ public class Model {
 			modelMats.remove(scene);
 		}
 		modelInstanceIDs.remove(ID);
-		modelMatrixUpdateNeeded = true;
+		scenesNeedingUpdates.add(scene);
 	}
 	
 	public void updateInstance(Mat4 model, long ID) {
 		int scene = modelInstanceScenes.get(ID);
 		modelMats.get(scene).put(ID, model);
-		modelMatrixUpdateNeeded = true;
+		scenesNeedingUpdates.add(scene);
 	}
 	
 	public static void updateModels() {
 		for(Model m : models) {
-			if(m.modelMatrixUpdateNeeded) {
+			if(m.scenesNeedingUpdates.size() != 0) {
 				m.updateModelMats();
-				m.modelMatrixUpdateNeeded = false;
 			}
 		}
 	}
 	
 	private void updateModelMats() {
 		for(VertexArray v : meshes) {
-			for(int scene : modelMats.keySet()) {
+			for(int scene : scenesNeedingUpdates) {
 				v.updateInstances(modelMats.get(scene), scene);
 			}
 		}
+		scenesNeedingUpdates.clear();
 	}
 	
 	public static void renderModels(int scene) {
@@ -297,6 +297,9 @@ public class Model {
 	}
 	
 	protected void render(int scene) {		
+		if(modelMats.get(scene) == null) {	//check whether or not this model actually has any instances in the specified scene
+			return;
+		}
 		for(int i = 0; i < meshes.size(); i++) {
 			if(i < this.materials.size() && this.materials.get(i) != null) {
 				this.materials.get(i).bind();
