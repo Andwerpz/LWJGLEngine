@@ -18,7 +18,7 @@ public abstract class Light {
 	
 	public Vec3 pos, dir, color;
 	
-	public float ambientIntensity;
+	public float ambientIntensity;	//how bright ambient is compared to diffuse. 1.0 for the same. 
 	public float cutOff, outerCutOff;
 	public float constant, linear, quadratic;
 	

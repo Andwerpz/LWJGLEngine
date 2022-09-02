@@ -20,6 +20,7 @@ public abstract class Scene {
 	
 	public static final int FRAMEBUFFER_SCENE = 0;	//reserved for special objects that are involved in the rendering pipeline
 	public static final int WORLD_SCENE = 1;	//main 3D scene. 
+	public static final int TEST_SCENE = 2;
 	
 	public static HashMap<Integer, Cubemap> skyboxes = new HashMap<>();
 	
@@ -42,5 +43,11 @@ public abstract class Scene {
 		Light.lights.put(Scene.WORLD_SCENE, new ArrayList<>());
 		Light.lights.get(Scene.WORLD_SCENE).add(new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 		skyboxes.put(Scene.WORLD_SCENE, lakeSkybox);
+		
+		// -- TEST SCENE --
+		Scene.dust2.addInstance(Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), Scene.TEST_SCENE);
+		Light.lights.put(Scene.TEST_SCENE, new ArrayList<>());
+		Light.lights.get(Scene.TEST_SCENE).add(new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.5f), 0.8f));
+		skyboxes.put(Scene.TEST_SCENE, lakeSkybox);
 	}
 }
