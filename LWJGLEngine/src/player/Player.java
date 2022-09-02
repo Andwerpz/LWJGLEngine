@@ -12,7 +12,6 @@ import scene.Light;
 import scene.PointLight;
 import scene.Scene;
 import scene.SpotLight;
-import scene.World;
 import util.Mat4;
 import util.MathTools;
 import util.Vec2;

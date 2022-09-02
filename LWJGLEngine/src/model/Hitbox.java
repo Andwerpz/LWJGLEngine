@@ -5,7 +5,7 @@ import static org.lwjgl.opengl.GL11.*;
 import graphics.Material;
 import graphics.Texture;
 import graphics.VertexArray;
-import scene.World;
+import main.Main;
 import util.Vec3;
 
 public class Hitbox {
@@ -189,7 +189,7 @@ public class Hitbox {
 			float xInt = point.x + axisDist * ray.x;
 			float zInt = point.z + axisDist * ray.z;
 			if (xInt > min.x && xInt < max.x && zInt > min.z && zInt < max.z) {
-				return World.UP;
+				return Main.UP;
 			}
 		}
 		if (point.y < min.y && ray.y > 0) { // bottom
@@ -197,7 +197,7 @@ public class Hitbox {
 			float xInt = point.x + axisDist * ray.x;
 			float zInt = point.z + axisDist * ray.z;
 			if (xInt > min.x && xInt < max.x && zInt > min.z && zInt < max.z) {
-				return World.DOWN;
+				return Main.DOWN;
 			}
 		}
 
@@ -206,7 +206,7 @@ public class Hitbox {
 			float xInt = point.x + axisDist * ray.x;
 			float yInt = point.y + axisDist * ray.y;
 			if (xInt > min.x && xInt < max.x && yInt > min.y && yInt < max.y) {
-				return World.SOUTH;
+				return Main.SOUTH;
 			}
 		}
 		if (point.z < min.z && ray.z > 0) { // north
@@ -214,7 +214,7 @@ public class Hitbox {
 			float xInt = point.x + axisDist * ray.x;
 			float yInt = point.y + axisDist * ray.y;
 			if (xInt > min.x && xInt < max.x && yInt > min.y && yInt < max.y) {
-				return World.NORTH;
+				return Main.NORTH;
 			}
 		}
 
@@ -223,7 +223,7 @@ public class Hitbox {
 			float yInt = point.y + axisDist * ray.y;
 			float zInt = point.z + axisDist * ray.z;
 			if (yInt > min.y && yInt < max.y && zInt > min.z && zInt < max.z) {
-				return World.WEST;
+				return Main.WEST;
 			}
 		}
 		if (point.x < min.x && ray.x > 0) { // east
@@ -231,7 +231,7 @@ public class Hitbox {
 			float yInt = point.y + axisDist * ray.y;
 			float zInt = point.z + axisDist * ray.z;
 			if (yInt > min.y && yInt < max.y && zInt > min.z && zInt < max.z) {
-				return World.EAST;
+				return Main.EAST;
 			}
 		}
 

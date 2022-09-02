@@ -8,6 +8,7 @@ import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0;
 import graphics.Framebuffer;
 import graphics.Texture;
 import main.Main;
+import player.Camera;
 import scene.Scene;
 
 public abstract class Screen {
@@ -20,6 +21,8 @@ public abstract class Screen {
 	protected Framebuffer outputBuffer;
 	protected Texture outputColorMap;
 	
+	protected Camera camera;
+	
 	public Screen() {
 		this.outputBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.outputColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
@@ -28,9 +31,13 @@ public abstract class Screen {
 		this.outputBuffer.isComplete();
 	}
 	
-	public Texture getOutputTexture() {
-		return this.outputColorMap;
+	public Camera getCamera() {
+		return this.camera;
 	}
 	
-	public abstract void render(int scene);
+	public void setCamera(Camera c) {
+		this.camera = c;
+	}
+	
+	public abstract Texture render(int scene);
 }

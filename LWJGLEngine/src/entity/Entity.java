@@ -5,7 +5,6 @@ import java.util.HashMap;
 import graphics.Shader;
 import model.Hitbox;
 import model.Model;
-import scene.World;
 import util.Mat4;
 import util.Vec3;
 

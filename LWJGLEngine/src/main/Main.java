@@ -3,51 +3,19 @@ package main;
 import static org.lwjgl.glfw.GLFW.*;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL14.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL21.*;
 import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL31.*;
-import static org.lwjgl.opengl.GL32.*;
-import static org.lwjgl.opengl.GL33.*;
-import static org.lwjgl.opengl.GL42.*;
-import static org.lwjgl.opengl.GL40.*;
-import static org.lwjgl.opengl.GL41.*;
-import static org.lwjgl.opengl.GL43.*;
-import static org.lwjgl.opengl.GL44.*;
-import static org.lwjgl.opengl.GL45.*;
 import static org.lwjgl.system.MemoryUtil.*;
-
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
 
 import org.lwjgl.glfw.GLFWVidMode;
 
-import graphics.Cubemap;
-import graphics.Framebuffer;
 import graphics.Shader;
-import graphics.Texture;
-import graphics.VertexArray;
 import input.KeyboardInput;
 import input.MouseInput;
-import model.Model;
 import model.ScreenQuad;
-import model.SkyboxCube;
-import player.Camera;
-import player.Player;
-import scene.Light;
 import scene.Scene;
-import scene.World;
-import screen.PerspectiveScreen;
-import util.BufferUtils;
+import state.StateManager;
 import util.Mat4;
-import util.SystemUtils;
-import util.Vec2;
-import util.Vec3;
 
 import static org.lwjgl.opengl.GL.*;
 
@@ -69,14 +37,17 @@ public class Main implements Runnable{
 	public static final float ASPECT_RATIO = (float) Main.windowWidth / (float) Main.windowHeight;
 	public static final float FOV = (float) Math.toRadians(90f);	//vertical FOV
 	
-	public static Camera camera;
+	public static final int NORTH = 0;
+	public static final int SOUTH = 1;
+	public static final int EAST = 2;
+	public static final int WEST = 3;
+	public static final int UP = 4;
+	public static final int DOWN = 5;
 	
 	public static long selectedEntityID = 0;
 	
-	private World world;
+	private StateManager sm;
 	private ScreenQuad screenQuad;	//used to render the final product onto the screen
-	
-	private PerspectiveScreen screen;
 	
 	public void start() {
 		running = true;
@@ -117,14 +88,8 @@ public class Main implements Runnable{
 		
 		//INIT
 		Scene.init();
-		
+		this.sm = new StateManager();
 		this.screenQuad = new ScreenQuad();
-		
-		Main.camera = new Camera(FOV, (float) windowWidth, (float) windowHeight, NEAR, FAR);
-		this.screen = new PerspectiveScreen();
-		this.screen.setCamera(Main.camera);
-		
-		this.world = new World();
 		
 		//init shaders
 		Shader.loadAll();
@@ -201,29 +166,18 @@ public class Main implements Runnable{
 			running = false;
 		}
 		
-		world.update();
-		updateCamera();
-	}
-	
-	private void updateCamera() {
-		Player p = world.player;
-		
-		Main.camera.setPos(p.pos.add(Player.cameraVec));
-		Main.camera.setFacing(p.camXRot, p.camYRot);
-		Main.camera.setUp(new Vec3(0, 1, 0));
+		this.sm.update();
 	}
 	
 	private void render() {
-		this.screen.render(Scene.WORLD_SCENE);
-		
 		// -- POST PROCESSING -- : render contents of color buffer onto screen sized quad
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);	//back to default framebuffer
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
-		Shader.IMG_POST_PROCESS.enable();
-		this.screen.getOutputTexture().bind(GL_TEXTURE0);
 		
+		Shader.IMG_POST_PROCESS.enable();
+		this.sm.render().bind(GL_TEXTURE0);
 		screenQuad.render();
 		
 		glfwSwapBuffers(window);

@@ -19,7 +19,6 @@ import model.SkyboxCube;
 import player.Camera;
 import scene.Light;
 import scene.Scene;
-import scene.World;
 import util.BufferUtils;
 import util.Mat4;
 import util.Vec2;
@@ -28,13 +27,8 @@ import util.Vec3;
 public class PerspectiveScreen extends Screen {
 	//renders the scene with a perspective projection matrix. 
 	
-	public static final float NEAR = 0.1f;
-	public static final float FAR = 200.0f;
-	public static final float ASPECT_RATIO = (float) Main.windowWidth / (float) Main.windowHeight;
-	public static final float FOV = (float) Math.toRadians(90f);	//vertical FOV
-	
 	private static final int SHADOW_MAP_NR_CASCADES = 6;
-	private static float[] shadowCascades = new float[] {NEAR, 1, 3, 7, 15, 30, FAR};
+	private static float[] shadowCascades = new float[] {Main.NEAR, 1, 3, 7, 15, 30, Main.FAR};
 	
 	private Framebuffer geometryBuffer;
 	private Framebuffer lightingBuffer;
@@ -57,8 +51,6 @@ public class PerspectiveScreen extends Screen {
 	
 	private SkyboxCube skyboxCube;
 	private ScreenQuad screenQuad;
-	
-	private Camera camera;
 	
 	public PerspectiveScreen() {
 		super();
@@ -103,21 +95,13 @@ public class PerspectiveScreen extends Screen {
 		this.skyboxBuffer.isComplete();
 	}
 	
-	public Camera getCamera() {
-		return this.camera;
-	}
-	
-	public void setCamera(Camera c) {
-		this.camera = c;
-	}
-	
 	public void setShaderUniforms(Shader shader, Camera camera) {
 		shader.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
 		shader.setUniformMat4("vw_matrix", camera.getViewMatrix());
 		shader.setUniform3f("view_pos", camera.getPos());
 	}
 	
-	public void render(int scene) {
+	public Texture render(int scene) {
 		// -- GEOMETRY -- : render 3d perspective to geometry buffer
 		geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
@@ -177,10 +161,10 @@ public class PerspectiveScreen extends Screen {
 					//generate perspective frustum corners in camera space
 					float near = shadowCascades[cascade];
 					float far = shadowCascades[cascade + 1];
-					float y1 = near * (float) Math.tan(FOV / 2f);
-					float y2 = far * (float) Math.tan(FOV / 2f);
-					float x1 = y1 * ASPECT_RATIO;
-					float x2 = y2 * ASPECT_RATIO;
+					float y1 = near * (float) Math.tan(Main.FOV / 2f);
+					float y2 = far * (float) Math.tan(Main.FOV / 2f);
+					float x1 = y1 * Main.ASPECT_RATIO;
+					float x2 = y2 * Main.ASPECT_RATIO;
 					Vec3[] corners = new Vec3[] {
 						new Vec3(x1, y1, -near),
 						new Vec3(-x1, y1, -near),
@@ -330,6 +314,9 @@ public class PerspectiveScreen extends Screen {
 		this.skyboxColorMap.bind(GL_TEXTURE2);
 		
 		screenQuad.render();
+		outputBuffer.unbind();
+		
+		return this.outputColorMap;
 	}
 
 }
