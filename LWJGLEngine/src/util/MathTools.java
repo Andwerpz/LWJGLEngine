@@ -9,6 +9,11 @@ public class MathTools {
 	public static double clamp(double low, double high, double val) {
 		return val < low ? low : (val > high ? high : val);
 	}
+	
+	public static float interpolate(float x1, float t1, float x2, float t2, float t3) {
+		float v = (x2 - x1) / (t2 - t1);
+		return x1 + (t3 - t1) * v;
+	}
 
 	public static double dist(double x1, double y1, double x2, double y2) {
 		return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));

@@ -47,7 +47,7 @@ public class Main implements Runnable{
 	public static long selectedEntityID = 0;
 	
 	private StateManager sm;
-	private ScreenQuad screenQuad;	//used to render the final product onto the screen
+	private ScreenQuad screenQuad;	//used to render stuff onto screen sized framebuffers
 	
 	public void start() {
 		running = true;
@@ -117,6 +117,8 @@ public class Main implements Runnable{
 		Shader.GEOM_POST_PROCESS.setUniform1i("skybox", 2);
 		
 		Shader.IMG_POST_PROCESS.setUniform1i("tex_color", 0);
+		
+		Shader.SPLASH.setUniform1i("tex_color", 0);
 	}
 	
 	public void run() {
@@ -170,15 +172,7 @@ public class Main implements Runnable{
 	}
 	
 	private void render() {
-		// -- POST PROCESSING -- : render contents of color buffer onto screen sized quad
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);	//back to default framebuffer
-		glClear(GL_COLOR_BUFFER_BIT);
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
-		
-		Shader.IMG_POST_PROCESS.enable();
-		this.sm.render().bind(GL_TEXTURE0);
-		screenQuad.render();
+		this.sm.render();
 		
 		glfwSwapBuffers(window);
 		

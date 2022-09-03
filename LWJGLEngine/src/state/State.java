@@ -11,11 +11,15 @@ public abstract class State {
 	protected Framebuffer outputBuffer;
 	protected Texture outputColorMap;
 	
-	public State() {
-		
+	protected StateManager sm;
+	
+	public State(StateManager sm) {
+		this.sm = sm;
 	}
 	
+	public abstract void load();	//this is where all the heavy lifting should be done, not in constructor
+	
 	public abstract void update();
-	public abstract Texture render();
+	public abstract void render(Framebuffer outputBuffer);
 	
 }

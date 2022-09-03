@@ -20,7 +20,7 @@ public class Shader {
 	public static final int INSTANCED_MODEL_ATTRIB = 5;	//takes up 4 slots
 	public static final int INSTANCED_COLOR_ATTRIB = 9;	//used for quick model selection 
 	
-	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS, IMG_POST_PROCESS;
+	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS, IMG_POST_PROCESS, SPLASH;
 	
 	private boolean enabled = false;
 	
@@ -39,6 +39,7 @@ public class Shader {
 		CUBE_DEPTH = new Shader("/cubemapDepthShader.vert", "/cubemapDepthShader.frag");
 		GEOM_POST_PROCESS = new Shader("/geom_postprocessing.vert", "/geom_postprocessing.frag");	//post processing with geometry information
 		IMG_POST_PROCESS = new Shader("/img_postprocessing.vert", "/img_postprocessing.frag");	//post processing with only final color information
+		SPLASH = new Shader("/splash.vert", "/splash.frag");	//takes in a texture and alpha value.
 	}
 	
 	public int getUniform(String name) {

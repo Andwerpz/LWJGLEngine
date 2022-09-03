@@ -50,12 +50,10 @@ public class PerspectiveScreen extends Screen {
 	private Texture skyboxColorMap;			//RGB: color
 	
 	private SkyboxCube skyboxCube;
-	private ScreenQuad screenQuad;
 	
 	public PerspectiveScreen() {
 		super();
 		
-		this.screenQuad = new ScreenQuad();
 		this.skyboxCube = new SkyboxCube();
 		
 		this.geometryBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
@@ -101,11 +99,12 @@ public class PerspectiveScreen extends Screen {
 		shader.setUniform3f("view_pos", camera.getPos());
 	}
 	
-	public Texture render(int scene) {
+	public void render(Framebuffer outputBuffer, int scene) {
 		// -- GEOMETRY -- : render 3d perspective to geometry buffer
 		geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 		Shader.GEOMETRY.enable();
 		//scene.render(Shader.GEOMETRY, this.camera);
@@ -304,19 +303,16 @@ public class PerspectiveScreen extends Screen {
 				
 		// -- POST PROCESSING -- : render contents of lighting buffer onto screen sized quad
 		outputBuffer.bind();
-		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 		Shader.GEOM_POST_PROCESS.enable();
 		
 		this.lightingColorMap.bind(GL_TEXTURE0);
 		this.geometryPositionMap.bind(GL_TEXTURE1);
 		this.skyboxColorMap.bind(GL_TEXTURE2);
 		
-		screenQuad.render();
-		outputBuffer.unbind();
-		
-		return this.outputColorMap;
+		screenQuad.render();	
 	}
 
 }

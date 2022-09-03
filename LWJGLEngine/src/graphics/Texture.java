@@ -23,12 +23,20 @@ public class Texture {
 	private int width, height;
 	private int textureID;
 	
-	public Texture(String path, boolean invertColors, boolean horizontalFlip) {
+	public Texture(String path) {
 		this.textureID = this.load(path, false, false);
+	}
+	
+	public Texture(String path, boolean invertColors, boolean horizontalFlip) {
+		this.textureID = this.load(path, invertColors, horizontalFlip);
 	}
 	
 	public Texture(BufferedImage img, boolean invertColors, boolean horizontalFlip) {
 		this.textureID = this.load(img, invertColors, horizontalFlip);
+	}
+	
+	public Texture(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
+		this.textureID = this.load(path, invertColors, horizontalFlip, verticalFlip);
 	}
 	
 	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType) {
@@ -46,9 +54,9 @@ public class Texture {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 	
-	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip) {
+	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
 		int[] outWH = new int[2];
-		int[] data = getDataFromImage(img, invertColors, horizontalFlip, outWH);
+		int[] data = getDataFromImage(img, invertColors, horizontalFlip, verticalFlip, outWH);
 		this.width = outWH[0];
 		this.height = outWH[1];
 		
@@ -63,18 +71,35 @@ public class Texture {
 		return result;
 	}
 	
-	public int load(String path, boolean invertColors, boolean horizontalFlip) {
-		return this.load(GraphicsTools.loadImage(path), invertColors, horizontalFlip);
+	public int load(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
+		return this.load(GraphicsTools.loadImage(path), invertColors, horizontalFlip, verticalFlip);
 	}
 	
-	public static int[] getDataFromImage(String path, boolean invertColors, boolean horizontalFlip, int[] outWH) {
-		return Texture.getDataFromImage(GraphicsTools.loadImage(path), invertColors, horizontalFlip, outWH);
+	public int load(String path, boolean invertColors, boolean horizontalFlip) {
+		return this.load(GraphicsTools.loadImage(path), invertColors, horizontalFlip, false);
+	}
+	
+	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip) {
+		return this.load(img, invertColors, horizontalFlip, false);
 	}
 	
 	public static int[] getDataFromImage(BufferedImage img, boolean invertColors, boolean horizontalFlip, int[] outWH) {
+		return Texture.getDataFromImage(img, invertColors, horizontalFlip, false, outWH);
+	}
+	
+	public static int[] getDataFromImage(String path, boolean invertColors, boolean horizontalFlip, int[] outWH) {
+		return Texture.getDataFromImage(GraphicsTools.loadImage(path), invertColors, horizontalFlip, false, outWH);
+	}
+	
+	public static int[] getDataFromImage(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int[] outWH) {
+		return Texture.getDataFromImage(GraphicsTools.loadImage(path), invertColors, horizontalFlip, verticalFlip, outWH);
+	}
+	
+	public static int[] getDataFromImage(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int[] outWH) {
 		int[] pixels = null;
 		BufferedImage image = GraphicsTools.copyImage(img);
 		if(horizontalFlip) image = GraphicsTools.horizontalFlip(image);
+		if(verticalFlip) image = GraphicsTools.verticalFlip(image);
 		int width = image.getWidth();
 		int height = image.getHeight();
 		outWH[0] = image.getWidth();

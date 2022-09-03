@@ -1,6 +1,7 @@
 package state;
 
 import entity.Entity;
+import graphics.Framebuffer;
 import graphics.Texture;
 import main.Main;
 import model.Model;
@@ -16,9 +17,12 @@ public class GameState extends State {
 	private Screen perspectiveScreen;
 	private Camera perspectiveCamera;
 	
-	public GameState() {
-		super();
-		
+	public GameState(StateManager sm) {
+		super(sm);
+	}
+	
+	@Override
+	public void load() {
 		this.perspectiveCamera = new Camera(Main.FOV, (float) Main.windowWidth, (float) Main.windowHeight, Main.NEAR, Main.FAR);
 		this.perspectiveScreen = new PerspectiveScreen();
 		this.perspectiveScreen.setCamera(perspectiveCamera);
@@ -32,8 +36,8 @@ public class GameState extends State {
 	}
 
 	@Override
-	public Texture render() {
-		return this.perspectiveScreen.render(Scene.WORLD_SCENE);
+	public void render(Framebuffer outputBuffer) {
+		this.perspectiveScreen.render(outputBuffer, Scene.TEST_SCENE);
 	}
 	
 	private void updateCamera() {

@@ -8,27 +8,23 @@ import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0;
 import graphics.Framebuffer;
 import graphics.Texture;
 import main.Main;
+import model.ScreenQuad;
 import player.Camera;
 import scene.Scene;
 
 public abstract class Screen {
 	//the screen class is what's called on to render stuff
-	//it takes a camera view into a 3D scene, and produces a screen sized texture.
+	//it takes a camera view into a 3D scene, and a framebuffer, and layers its own view on top of the input buffer. 
 	
 	//each game state might have multiple screens that are layered on top of each other,
 	//for example: a UI might be layered on top of a 3D game scene. 
 	
-	protected Framebuffer outputBuffer;
-	protected Texture outputColorMap;
+	protected static ScreenQuad screenQuad = new ScreenQuad();
 	
 	protected Camera camera;
 	
 	public Screen() {
-		this.outputBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.outputColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-		this.outputBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.outputColorMap.getID());
-		this.outputBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
-		this.outputBuffer.isComplete();
+		
 	}
 	
 	public Camera getCamera() {
@@ -39,5 +35,5 @@ public abstract class Screen {
 		this.camera = c;
 	}
 	
-	public abstract Texture render(int scene);
+	public abstract void render(Framebuffer outputBuffer, int scene);
 }
