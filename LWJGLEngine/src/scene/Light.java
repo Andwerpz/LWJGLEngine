@@ -25,6 +25,19 @@ public abstract class Light {
 	public Light() {
 		
 	}
+	
+	public static void addLight(int scene, Light l) {
+		if(lights.get(scene) == null) {
+			lights.put(scene, new ArrayList<Light>());
+		}
+		lights.get(scene).add(l);
+	}
+	
+	public static void removeLightsFromScene(int scene) {
+		if(lights.get(scene) != null) {
+			lights.get(scene).clear();
+		}
+	}
 
 	public abstract void bind(Shader s, int index);
 	

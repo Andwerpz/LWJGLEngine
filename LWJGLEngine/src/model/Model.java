@@ -290,6 +290,18 @@ public class Model {
 		scenesNeedingUpdates.clear();
 	}
 	
+	//removes all model instances from the given scene. 
+	public static void removeInstancesFromScene(int scene) {
+		for(Model m : models) {
+			if(m.modelMats.get(scene) == null) {
+				continue;
+			}
+			for(long id : m.modelMats.get(scene).keySet()) {
+				m.removeInstance(id);
+			}
+		}
+	}
+	
 	public static void renderModels(int scene) {
 		for(Model m : models) {
 			m.render(scene);
