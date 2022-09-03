@@ -15,8 +15,12 @@ public class Cubemap {
 	private int size;
 	
 	//images have to have the same dimensions
-	public Cubemap(String right, String left, String up, String down, String back, String front) {
-		String[] sides = new String[] {right, left, up, down, front, back};	//front and back are in wrong order
+	public Cubemap(String right, String left, String up, String down, String front, String back) {
+		String[] sides = new String[] {right, left, up, down, back, front};	//front and back are in wrong order
+		cubemapID = load(sides);
+	}
+	
+	public Cubemap(String[] sides) {
 		cubemapID = load(sides);
 	}
 	

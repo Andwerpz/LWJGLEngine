@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import graphics.Cubemap;
+import model.AssetManager;
 import model.Model;
 import util.Mat4;
 import util.Vec3;
@@ -24,40 +25,7 @@ public abstract class Scene {
 	
 	public static HashMap<Integer, Cubemap> skyboxes = new HashMap<>();
 	
-	public static Model dust2;
-	public static Cubemap lakeSkybox;
-	public static Cubemap starsSkybox;
-	
 	public static void init() {
-		dust2 = new Model("/dust2/", "dust2_blend.obj");
-		lakeSkybox = new Cubemap(
-			"/skybox/lake/right.jpg",
-			"/skybox/lake/left.jpg",
-			"/skybox/lake/top.jpg",
-			"/skybox/lake/bottom.jpg",
-			"/skybox/lake/back.jpg",
-			"/skybox/lake/front.jpg"
-		);
 		
-		starsSkybox = new Cubemap(
-			"/skybox/stars/right.png", 
-			"/skybox/stars/left.png",  
-			"/skybox/stars/top.png",   
-			"/skybox/stars/bottom.png",
-			"/skybox/stars/back.png",  
-			"/skybox/stars/front.png"  
-		);
-		
-		// -- WORLD SCENE --
-		Scene.dust2.addInstance(Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), Scene.WORLD_SCENE);
-		Light.lights.put(Scene.WORLD_SCENE, new ArrayList<>());
-		Light.lights.get(Scene.WORLD_SCENE).add(new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
-		skyboxes.put(Scene.WORLD_SCENE, lakeSkybox);
-		
-		// -- TEST SCENE --
-		Scene.dust2.addInstance(Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), Scene.TEST_SCENE);
-		Light.lights.put(Scene.TEST_SCENE, new ArrayList<>());
-		Light.lights.get(Scene.TEST_SCENE).add(new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.3f), 0.8f));
-		skyboxes.put(Scene.TEST_SCENE, starsSkybox);
 	}
 }

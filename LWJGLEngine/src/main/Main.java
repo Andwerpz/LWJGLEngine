@@ -12,6 +12,7 @@ import org.lwjgl.glfw.GLFWVidMode;
 import graphics.Shader;
 import input.KeyboardInput;
 import input.MouseInput;
+import model.AssetManager;
 import model.ScreenQuad;
 import scene.Scene;
 import state.StateManager;
@@ -27,7 +28,6 @@ public class Main implements Runnable{
 	
 	private Thread thread;
 	private boolean running = false;
-	private long startTime;
 	
 	public static long window;
 	private boolean fullscreen = false;
@@ -47,11 +47,9 @@ public class Main implements Runnable{
 	public static long selectedEntityID = 0;
 	
 	private StateManager sm;
-	private ScreenQuad screenQuad;	//used to render stuff onto screen sized framebuffers
 	
 	public void start() {
 		running = true;
-		startTime = System.currentTimeMillis();
 		thread = new Thread(this, "Game");
 		thread.start();
 	}
@@ -87,9 +85,9 @@ public class Main implements Runnable{
 		System.out.println("OpenGL : " + glGetString(GL_VERSION));
 		
 		//INIT
+		AssetManager.init();
 		Scene.init();
 		this.sm = new StateManager();
-		this.screenQuad = new ScreenQuad();
 		
 		//init shaders
 		Shader.loadAll();

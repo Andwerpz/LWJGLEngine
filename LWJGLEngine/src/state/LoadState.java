@@ -74,7 +74,7 @@ public class LoadState extends State {
 			this.nextState.load();
 			this.finishedLoading = true;
 			this.state = TRANSITIONING_OUT;
-			this.startTime = curTime;
+			this.startTime = System.currentTimeMillis();
 			this.endTime = startTime + TRANSITION_OUT_DURATION * 1000L;
 		}
 		else if(this.state == TRANSITIONING_OUT) {
