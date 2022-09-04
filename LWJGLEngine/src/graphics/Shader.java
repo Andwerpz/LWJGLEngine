@@ -31,7 +31,7 @@ public class Shader {
 		ID = ShaderUtils.load(vertex, fragment);
 	}
 	
-	public static void loadAll() {
+	public static void init() {
 		GEOMETRY = new Shader("/geometry.vert", "/geometry.frag");
 		SKYBOX = new Shader("/skybox.vert", "/skybox.frag");
 		LIGHTING = new Shader("/lighting.vert", "/lighting.frag");
@@ -40,6 +40,30 @@ public class Shader {
 		GEOM_POST_PROCESS = new Shader("/geom_postprocessing.vert", "/geom_postprocessing.frag");	//post processing with geometry information
 		IMG_POST_PROCESS = new Shader("/img_postprocessing.vert", "/img_postprocessing.frag");	//post processing with only final color information
 		SPLASH = new Shader("/splash.vert", "/splash.frag");	//takes in a texture and alpha value.
+		
+		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
+		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
+		Shader.GEOMETRY.setUniform1i("tex_normal", 2);
+		Shader.GEOMETRY.setUniform1i("tex_displacement", 3);
+		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 0);
+		Shader.GEOMETRY.setUniform1i("enableTexScaling", 1);
+		
+		Shader.SKYBOX.setUniform1i("skybox", 0);
+		
+		Shader.LIGHTING.setUniform1i("tex_position", 0);
+		Shader.LIGHTING.setUniform1i("tex_normal", 1);
+		Shader.LIGHTING.setUniform1i("tex_diffuse", 2);
+		Shader.LIGHTING.setUniform1i("shadowMap", 3);
+		Shader.LIGHTING.setUniform1i("shadowBackfaceMap", 4);
+		Shader.LIGHTING.setUniform1i("shadowCubemap", 5);
+		
+		Shader.GEOM_POST_PROCESS.setUniform1i("tex_color", 0);
+		Shader.GEOM_POST_PROCESS.setUniform1i("tex_position", 1);
+		Shader.GEOM_POST_PROCESS.setUniform1i("skybox", 2);
+		
+		Shader.IMG_POST_PROCESS.setUniform1i("tex_color", 0);
+		
+		Shader.SPLASH.setUniform1i("tex_color", 0);
 	}
 	
 	public int getUniform(String name) {

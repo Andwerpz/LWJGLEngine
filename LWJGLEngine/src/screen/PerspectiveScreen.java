@@ -298,6 +298,7 @@ public class PerspectiveScreen extends Screen {
 		glDisable(GL_CULL_FACE);
 		Shader.SKYBOX.enable();
 		Shader.SKYBOX.setUniformMat4("vw_matrix", this.camera.getViewMatrix());
+		Shader.SKYBOX.setUniformMat4("pr_matrix", this.camera.getProjectionMatrix());
 		Scene.skyboxes.get(scene).bind(GL_TEXTURE0);
 		skyboxCube.render();
 				

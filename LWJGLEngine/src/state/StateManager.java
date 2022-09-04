@@ -21,8 +21,6 @@ public class StateManager {
 	public State activeState;
 	public LoadState loadState;
 	
-	public static Player player;
-	
 	public StateManager() {
 		this.screenQuad = new ScreenQuad();
 		
@@ -32,7 +30,6 @@ public class StateManager {
 		this.outputBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
 		this.outputBuffer.isComplete();
 		
-		player = new Player(new Vec3(0, 0, 0));
 		this.activeState = null;
 		this.loadState = new LoadState(this, new SplashState(this));
 	}

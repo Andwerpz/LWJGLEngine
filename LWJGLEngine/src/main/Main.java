@@ -85,38 +85,10 @@ public class Main implements Runnable{
 		System.out.println("OpenGL : " + glGetString(GL_VERSION));
 		
 		//INIT
+		Shader.init();
 		AssetManager.init();
 		Scene.init();
 		this.sm = new StateManager();
-		
-		//init shaders
-		Shader.loadAll();
-		
-		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
-		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
-		Shader.GEOMETRY.setUniform1i("tex_normal", 2);
-		Shader.GEOMETRY.setUniform1i("tex_displacement", 3);
-		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 0);
-		Shader.GEOMETRY.setUniform1i("enableTexScaling", 1);
-		
-		Mat4 pr_matrix = Mat4.perspective(FOV, (float) windowWidth, (float) windowHeight, NEAR, FAR);
-		Shader.SKYBOX.setUniformMat4("pr_matrix", pr_matrix);
-		Shader.SKYBOX.setUniform1i("skybox", 0);
-		
-		Shader.LIGHTING.setUniform1i("tex_position", 0);
-		Shader.LIGHTING.setUniform1i("tex_normal", 1);
-		Shader.LIGHTING.setUniform1i("tex_diffuse", 2);
-		Shader.LIGHTING.setUniform1i("shadowMap", 3);
-		Shader.LIGHTING.setUniform1i("shadowBackfaceMap", 4);
-		Shader.LIGHTING.setUniform1i("shadowCubemap", 5);
-		
-		Shader.GEOM_POST_PROCESS.setUniform1i("tex_color", 0);
-		Shader.GEOM_POST_PROCESS.setUniform1i("tex_position", 1);
-		Shader.GEOM_POST_PROCESS.setUniform1i("skybox", 2);
-		
-		Shader.IMG_POST_PROCESS.setUniform1i("tex_color", 0);
-		
-		Shader.SPLASH.setUniform1i("tex_color", 0);
 	}
 	
 	public void run() {

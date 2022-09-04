@@ -37,27 +37,31 @@ import util.Vec2;
 import util.Vec3;
 
 public class Model {
-	
 	//always instanced rendering
 	//in order to render with correct model matrices, you must first update the model matrices. 
 	//if model matrix updates aren't needed, then you shouldn't update them. 
 	
 	//each model will have separate instances per scene. 
 	
+	//if a model instance is bound to an entity, they will not share the same ID. 
+	//the entity is responsible for keeping track of the IDs of all the model instances it has. 
+	//the Entity class should be able to return an entity or entity ID based on a model instance ID. 
+	
 	public static final Material DEFAULT_MATERIAL = new Material(null, null, null, null);
 	
 	private static ArrayList<Model> models = new ArrayList<>();
 	private static HashSet<Long> modelInstanceIDs = new HashSet<>();
-	private static HashMap<Long, Integer> modelInstanceScenes = new HashMap<>();	//which scene each instance is in
+	private static HashMap<Long, Integer> IDtoScene = new HashMap<>();	//which scene each instance is in
+	private static HashMap<Long, Model> IDtoModel = new HashMap<>();
 	
 	//first, specify which scene
-	//K : entity ID, Can be translated to a color to draw 
+	//K : model ID, Can be translated to a color to draw 
 	//V : model Mat4, Where to draw each instance of the model
 	private HashMap<Integer, HashMap<Long, Mat4>> modelMats;
 	private ArrayList<Integer> scenesNeedingUpdates;
 	
-	public ArrayList<VertexArray> meshes;
-	public ArrayList<Material> materials;
+	private ArrayList<VertexArray> meshes;
+	private ArrayList<Material> materials;
 
 	public Model() {
 		this.meshes = new ArrayList<>();
@@ -236,41 +240,45 @@ public class Model {
 	public void create() {}
 	
 	public static int getScene(long ID) {
-		return modelInstanceScenes.get(ID);
+		return IDtoScene.get(ID);
 	}
 	
-	//adds the mat4, and returns a new id
-	public long addInstance(Mat4 model, int scene) {
+	public static Model getModel(long ID) {
+		return IDtoModel.get(ID);
+	}
+	
+	//creates a new instance, and returns the id associated with that instance
+	public static long addInstance(Model model, Mat4 mat4, int scene) {
 		long ID = generateNewID();
-		this.addInstance(model, ID, scene);
+		if(model.modelMats.get(scene) == null) {
+			model.modelMats.put(scene, new HashMap<Long, Mat4>());
+		}
+		IDtoScene.put(ID, scene);
+		IDtoModel.put(ID, model);
+		modelInstanceIDs.add(ID);
+		model.modelMats.get(scene).put(ID, mat4);
+		model.scenesNeedingUpdates.add(scene);
 		return ID;
 	}
 	
-	public void addInstance(Mat4 model, long ID, int scene) {
-		if(modelMats.get(scene) == null) {
-			modelInstanceScenes.put(ID, scene);
-			modelMats.put(scene, new HashMap<Long, Mat4>());
+	public static void removeInstance(long ID) {
+		Model model = IDtoModel.get(ID);
+		int scene = IDtoScene.get(ID);
+		model.modelMats.get(scene).remove(ID);
+		if(model.modelMats.get(scene).size() == 0) {
+			model.modelMats.remove(scene);
 		}
-		modelMats.get(scene).put(ID, model);
-		modelInstanceIDs.add(ID);
-		scenesNeedingUpdates.add(scene);
-	}
-	
-	public void removeInstance(long ID) {
-		int scene = modelInstanceScenes.get(ID);
-		modelInstanceScenes.remove(ID);
-		modelMats.get(scene).remove(ID);
-		if(modelMats.get(scene).size() == 0) {
-			modelMats.remove(scene);
-		}
+		IDtoScene.remove(ID);
+		IDtoModel.remove(ID);
 		modelInstanceIDs.remove(ID);
-		scenesNeedingUpdates.add(scene);
+		model.scenesNeedingUpdates.add(scene);
 	}
 	
-	public void updateInstance(Mat4 model, long ID) {
-		int scene = modelInstanceScenes.get(ID);
-		modelMats.get(scene).put(ID, model);
-		scenesNeedingUpdates.add(scene);
+	public static void updateInstance(long ID, Mat4 mat4) {
+		Model model = IDtoModel.get(ID);
+		int scene = IDtoScene.get(ID);
+		model.modelMats.get(scene).put(ID, mat4);
+		model.scenesNeedingUpdates.add(scene);
 	}
 	
 	public static void updateModels() {
@@ -297,7 +305,8 @@ public class Model {
 				continue;
 			}
 			for(long id : m.modelMats.get(scene).keySet()) {
-				m.removeInstance(id);
+				System.out.println("REMOVING MODEL INSTANCE " + id);
+				Model.removeInstance(id);
 			}
 		}
 	}
