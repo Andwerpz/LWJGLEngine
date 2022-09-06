@@ -12,6 +12,9 @@ import util.Vec2;
 
 public class MouseInput extends GLFWMouseButtonCallback {
 	
+	public static final int LEFT_MOUSE_BUTTON = GLFW_MOUSE_BUTTON_1;
+	public static final int RIGHT_MOUSE_BUTTON = GLFW_MOUSE_BUTTON_2;
+	
 	public static boolean[] buttons = new boolean[65536];
 	
 	@Override

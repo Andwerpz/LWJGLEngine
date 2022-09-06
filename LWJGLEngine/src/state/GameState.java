@@ -41,9 +41,7 @@ public class GameState extends State {
 		}
 		player = new Player(new Vec3(18.417412f, 0.7f, -29.812654f));
 		
-		//model and scene instance relations
-		//before we can add a model instance to a scene, we first must load that model. 
-		//load state should load all models associated with the current state, unload any others, and reset scene instancing
+		Main.lockCursor();
 		
 		// -- WORLD SCENE --
 		Model.removeInstancesFromScene(Scene.WORLD_SCENE);

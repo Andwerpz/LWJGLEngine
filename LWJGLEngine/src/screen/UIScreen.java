@@ -3,9 +3,11 @@ package screen;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
 
+import entity.Entity;
 import graphics.Framebuffer;
 import graphics.Shader;
 import graphics.Texture;
+import input.MouseInput;
 import main.Main;
 import model.Model;
 
@@ -58,6 +60,13 @@ public class UIScreen extends Screen {
 		Shader.SPLASH.setUniform1f("alpha", 1f);
 		geometryColorMap.bind(GL_TEXTURE0);
 		screenQuad.render();
+		
+		if(MouseInput.isButtonPressed(MouseInput.LEFT_MOUSE_BUTTON)) {
+			long modelInstanceID = Model.convertRGBToID(geometryBuffer.sampleColorAtPoint((int) MouseInput.getMousePos().x, (int) MouseInput.getMousePos().y));
+			long entityID = Entity.getEntityID(modelInstanceID);
+			System.out.println(entityID + " " + modelInstanceID);
+		}
+		
 	}
 
 }

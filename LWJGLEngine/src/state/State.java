@@ -17,6 +17,9 @@ public abstract class State {
 		this.sm = sm;
 	}
 	
+	//model and scene instance relations
+	//before we can add a model instance to a scene, we first must load that model. 
+	//load state should load all models associated with the current state, unload any others, and reset scene instancing
 	public abstract void load();	//this is where all the heavy lifting should be done, not in constructor
 	
 	public abstract void update();

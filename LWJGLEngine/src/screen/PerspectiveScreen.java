@@ -111,13 +111,6 @@ public class PerspectiveScreen extends Screen {
 		this.setShaderUniforms(Shader.GEOMETRY, this.camera);
 		Model.renderModels(scene);
 		
-		//find selected model ID
-		glReadBuffer(GL_COLOR_ATTACHMENT3);
-		ByteBuffer pixels = BufferUtils.createByteBuffer(4);
-		Vec2 mousePos = MouseInput.getMousePos();
-		glReadPixels((int) mousePos.x, (int) (Main.windowHeight - mousePos.y), 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-		Main.selectedEntityID = Model.convertRGBToID(new Vec3((pixels.get(0) & 0xFF), (pixels.get(1) & 0xFF), (pixels.get(2) & 0xFF)));
-		
 		// -- LIGHTING -- : using information from the geometry buffer, calculate lighting.
 		lightingBuffer.bind();
 		Shader.LIGHTING.enable();

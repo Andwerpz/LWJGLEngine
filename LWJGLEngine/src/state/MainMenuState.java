@@ -1,6 +1,9 @@
 package state;
 
+import static org.lwjgl.glfw.GLFW.GLFW_CURSOR;
+import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_P;
+import static org.lwjgl.glfw.GLFW.glfwSetInputMode;
 
 import java.util.HashSet;
 
@@ -59,6 +62,8 @@ public class MainMenuState extends State {
 			uiScreen = new UIScreen();
 			uiScreen.setCamera(uiCamera);
 		}
+		
+		Main.unlockCursor();
 		
 		// -- WORLD SCENE --
 		Model.removeInstancesFromScene(Scene.WORLD_SCENE);

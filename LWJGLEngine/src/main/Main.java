@@ -75,7 +75,7 @@ public class Main implements Runnable{
 		
 		glfwSetKeyCallback(window, new KeyboardInput());
 		glfwSetMouseButtonCallback(window, new MouseInput());
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);	//lock mouse to center
+		lockCursor();
 		
 		createCapabilities();
 		glClearColor(0f, 0f, 0f, 0f);
@@ -89,6 +89,14 @@ public class Main implements Runnable{
 		AssetManager.init();
 		Scene.init();
 		this.sm = new StateManager();
+	}
+	
+	public static void lockCursor() {
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+	
+	public static void unlockCursor() {
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 	
 	public void run() {

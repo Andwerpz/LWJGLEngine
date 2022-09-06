@@ -10,13 +10,17 @@ import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL33.*;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import input.MouseInput;
 import util.BufferUtils;
-
+import util.Vec2;
+import util.Vec3;
 import main.Main;
+import model.Model;
 
 public class Framebuffer {
 	
@@ -95,6 +99,15 @@ public class Framebuffer {
 			System.err.println("Framebuffer " + fbo + " generation unsuccessful");
 		}
 		return ans;
+	}
+	
+	public Vec3 sampleColorAtPoint(int x, int y) {
+		this.bind();
+		glReadBuffer(GL_COLOR_ATTACHMENT3);
+		ByteBuffer pixels = BufferUtils.createByteBuffer(4);
+		Vec2 mousePos = MouseInput.getMousePos();
+		glReadPixels((int) mousePos.x, (int) (Main.windowHeight - mousePos.y), 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+		return new Vec3((pixels.get(0) & 0xFF), (pixels.get(1) & 0xFF), (pixels.get(2) & 0xFF));
 	}
 	
 	public int getRenderBuffer() {
