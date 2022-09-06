@@ -55,6 +55,8 @@ public class Player extends Entity {
 		flashlight = new PointLight(this.camera.getPos(), new Vec3(1), 0f, 1.5f, 0.022f, 0.0019f);
 	}
 	
+	protected void _kill() {};
+	
 	public Hitbox getHitbox() {
 		return h;
 	}

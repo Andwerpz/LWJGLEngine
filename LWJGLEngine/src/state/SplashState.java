@@ -28,7 +28,7 @@ public class SplashState extends State {
 	public void update() {
 		long timeElapsed = System.currentTimeMillis() - this.startTime;
 		if(timeElapsed / 1000L > TIME_ON_SCREEN) {
-			this.sm.switchState(new GameState(this.sm));
+			this.sm.switchState(new MainMenuState(this.sm));
 		}
 	}
 

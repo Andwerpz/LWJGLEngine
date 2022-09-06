@@ -57,7 +57,7 @@ void main()
 	vec3 fragPos = texture(tex_position, frag_uv).rgb;
 	float fragDepth = texture(tex_position, frag_uv).a;
 	vec3 fragColor = texture(tex_diffuse, frag_uv).rgb;
-	float fragSpec = texture(tex_diffuse, frag_uv).a;
+	float fragSpec = texture(tex_normal, frag_uv).a;
 	vec3 normal = texture(tex_normal, frag_uv).rgb;
 	vec3 viewDir = normalize(view_pos - fragPos);
 	

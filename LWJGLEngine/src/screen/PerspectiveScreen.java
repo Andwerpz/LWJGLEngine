@@ -36,8 +36,8 @@ public class PerspectiveScreen extends Screen {
 	private Framebuffer skyboxBuffer;
 	
 	private Texture geometryPositionMap;	//RGB: pos, A: depth
-	private Texture geometryNormalMap;		//RGB: normal
-	private Texture geometryColorMap;		//RGB: color, A: specular
+	private Texture geometryNormalMap;		//RGB: normal, A: specular
+	private Texture geometryColorMap;		//RGB: color, A: alpha
 	private Texture geometryColorIDMap;		//RGB: colorID
 	
 	private Texture lightingColorMap;		//RGB: color
@@ -105,9 +105,9 @@ public class PerspectiveScreen extends Screen {
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
 		Shader.GEOMETRY.enable();
-		//scene.render(Shader.GEOMETRY, this.camera);
 		this.setShaderUniforms(Shader.GEOMETRY, this.camera);
 		Model.renderModels(scene);
 		

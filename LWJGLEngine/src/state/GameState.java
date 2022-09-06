@@ -34,6 +34,11 @@ public class GameState extends State {
 	
 	@Override
 	public void load() {
+		if(perspectiveScreen == null) {
+			perspectiveCamera = new Camera(Main.FOV, (float) Main.windowWidth, (float) Main.windowHeight, Main.NEAR, Main.FAR);
+			perspectiveScreen = new PerspectiveScreen();
+			perspectiveScreen.setCamera(perspectiveCamera);
+		}
 		player = new Player(new Vec3(18.417412f, 0.7f, -29.812654f));
 		
 		//model and scene instance relations
@@ -46,12 +51,6 @@ public class GameState extends State {
 		Model.addInstance(AssetManager.getModel("dust2"), Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), Scene.WORLD_SCENE);
 		Light.addLight(Scene.WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 		Scene.skyboxes.put(Scene.WORLD_SCENE, AssetManager.getSkybox("lake_skybox")); 
-		
-		if(perspectiveScreen == null) {
-			perspectiveCamera = new Camera(Main.FOV, (float) Main.windowWidth, (float) Main.windowHeight, Main.NEAR, Main.FAR);
-			perspectiveScreen = new PerspectiveScreen();
-			perspectiveScreen.setCamera(perspectiveCamera);
-		}
 	}
 
 	@Override

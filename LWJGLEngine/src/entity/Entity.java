@@ -1,10 +1,10 @@
 package entity;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 import model.Model;
-import scene.Scene;
 import util.Mat4;
 
 public abstract class Entity {
@@ -41,7 +41,9 @@ public abstract class Entity {
 	}
 	
 	protected void addModelInstance(Model model, Mat4 mat4, int scene) {
-		this.modelInstanceIDs.add(Model.addInstance(model, mat4, scene));
+		long modelInstanceID = Model.addInstance(model, mat4, scene);
+		this.modelInstanceIDs.add(modelInstanceID);
+		modelToEntityID.put(modelInstanceID, this.ID);
 	}
 	
 	protected void removeModelInstance(long modelInstanceID) {
@@ -49,6 +51,7 @@ public abstract class Entity {
 			return;
 		}
 		this.modelInstanceIDs.remove(modelInstanceID);
+		modelToEntityID.remove(modelInstanceID);
 		Model.removeInstance(modelInstanceID);
 	}
 	
@@ -58,9 +61,18 @@ public abstract class Entity {
 		}
 	}
 	
+	public static long getEntityID(long modelID) {
+		return Entity.modelToEntityID.get(modelID) == null? 0 : Entity.modelToEntityID.get(modelID);
+	}
+	
+	protected abstract void _kill();
+	
 	public void kill() {
+		this._kill();
+		
 		//remove all model instances
 		for(long id : this.modelInstanceIDs) {
+			modelToEntityID.remove(id);
 			Model.removeInstance(id);
 		}
 		
@@ -68,6 +80,14 @@ public abstract class Entity {
 		entities.remove(this.ID);
 		
 		System.out.println("REMOVE ENTITY " + this.ID);
+	}
+	
+	public static void killAll() {
+		ArrayList<Entity> arr = new ArrayList<>();
+		arr.addAll(entities.values());
+		for(Entity e : arr) {
+			e.kill();
+		}
 	}
 	
 	public abstract void update();

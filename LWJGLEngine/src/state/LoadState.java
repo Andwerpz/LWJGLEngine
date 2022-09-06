@@ -84,6 +84,9 @@ public class LoadState extends State {
 				this.state = FINISHED;
 			}
 		}
+		else if(this.state == FINISHED) {
+			//System.out.println("FIN");
+		}
 		loadScreen.setAlpha(this.alpha);
 	}
 

@@ -87,11 +87,11 @@ void main()
     	discard;
     }
 	
-    gColor.rgb = texture(tex_diffuse, texCoords).rgb;
-    gColor.a = texture(tex_specular, texCoords).r;
+    gColor.rgba = texture(tex_diffuse, texCoords).rgba;
     gPosition.rgb = frag_pos;
     gPosition.a = frag_depth;
-    gNormal = vec4(normalize(normal), 1.0);
+    gNormal.rgb = normalize(normal);
+    gNormal.a = texture(tex_specular, texCoords).r;
     gColorID = vec4(frag_colorID / 255, 1);
 } 
 

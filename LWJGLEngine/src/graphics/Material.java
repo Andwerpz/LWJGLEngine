@@ -28,6 +28,13 @@ public class Material {
 	private int width, height;
 	private Texture diffuse, specular, normal, displacement;
 	
+	public Material() {
+		this.diffuse = DIFFUSE_DEFAULT;
+		this.specular = SPECULAR_DEFAULT;
+		this.normal = NORMAL_DEFAULT;
+		this.displacement = DISPLACEMENT_DEFAULT;
+	}
+	
 	public Material(String diffusePath, String specularPath, String normalPath, String displacementPath) {
 		if(diffusePath == null) {
 			diffuse = DIFFUSE_DEFAULT;
@@ -58,8 +65,38 @@ public class Material {
 		}
 	}
 	
+	public Material(Texture diffuse, Texture specular, Texture normal, Texture displacement) {
+		if(diffuse == null) {
+			this.diffuse = DIFFUSE_DEFAULT;
+		}
+		else {
+			this.diffuse = diffuse;
+		}
+		
+		if(specular == null) {
+			this.specular = SPECULAR_DEFAULT;
+		}
+		else {
+			this.specular = specular;
+		}
+		
+		if(normal == null) {
+			this.normal = NORMAL_DEFAULT;
+		}
+		else {
+			this.normal = normal;
+		}
+		
+		if(displacement == null) {
+			this.displacement = DISPLACEMENT_DEFAULT;
+		}
+		else {
+			this.displacement = displacement;
+		}
+	}
+	
 	public static Material defaultMaterial() {
-		return new Material(null, null, null, null);
+		return new Material();
 	}
 	
 	public void setTexture(String path, int which) {

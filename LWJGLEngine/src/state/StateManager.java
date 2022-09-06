@@ -31,7 +31,7 @@ public class StateManager {
 		this.outputBuffer.isComplete();
 		
 		this.activeState = null;
-		this.loadState = new LoadState(this, new SplashState(this));
+		this.loadState = new LoadState(this, new MainMenuState(this));
 	}
 	
 	//trigger a load screen
@@ -60,6 +60,7 @@ public class StateManager {
 		}
 		this.loadState.render(outputBuffer);
 		
+		//render final product onto screen
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);

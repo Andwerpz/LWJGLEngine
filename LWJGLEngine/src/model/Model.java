@@ -12,6 +12,7 @@ import static org.lwjgl.assimp.Assimp.*;
 import java.awt.image.BufferedImage;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -47,9 +48,9 @@ public class Model {
 	//the entity is responsible for keeping track of the IDs of all the model instances it has. 
 	//the Entity class should be able to return an entity or entity ID based on a model instance ID. 
 	
-	public static final Material DEFAULT_MATERIAL = new Material(null, null, null, null);
+	public static final Material DEFAULT_MATERIAL = new Material();
 	
-	private static ArrayList<Model> models = new ArrayList<>();
+	private static HashSet<Model> models = new HashSet<>();
 	private static HashSet<Long> modelInstanceIDs = new HashSet<>();
 	private static HashMap<Long, Integer> IDtoScene = new HashMap<>();	//which scene each instance is in
 	private static HashMap<Long, Model> IDtoModel = new HashMap<>();
@@ -73,6 +74,20 @@ public class Model {
 	
 	public Model(String filepath, String filename) {
 		this.loadModelFile(filepath, filename);
+		
+		init();
+	}
+	
+	public Model(ArrayList<VertexArray> meshes, ArrayList<Material> materials) {
+		this.meshes = meshes;
+		this.materials = materials;
+		
+		init();
+	}
+	
+	public Model(VertexArray mesh, Material material) {
+		this.meshes = new ArrayList<VertexArray>(Arrays.asList(mesh));
+		this.materials = new ArrayList<Material>(Arrays.asList(material));
 		
 		init();
 	}
@@ -317,7 +332,7 @@ public class Model {
 		}
 	}
 	
-	protected void render(int scene) {		
+	private void render(int scene) {		
 		if(modelMats.get(scene) == null) {	//check whether or not this model actually has any instances in the specified scene
 			return;
 		}
@@ -331,16 +346,21 @@ public class Model {
 			this.meshes.get(i).render(scene);
 		}
 	}
-	
-	private void render(ArrayList<Material> materials, int scene) {
-		for(int i = 0; i < meshes.size(); i++) {
-			if(i < materials.size() && materials.get(i) != null) {
-				materials.get(i).bind();
+
+	public void kill() {
+		ArrayList<Long> instanceIDs = new ArrayList<>();
+		for(HashMap<Long, Mat4> i : this.modelMats.values()) {
+			for(Long id : i.keySet()) {
+				instanceIDs.add(id);
 			}
-			else {
-				DEFAULT_MATERIAL.bind();
-			}
-			this.meshes.get(i).render(scene);
 		}
+		
+		for(long id : instanceIDs) {
+			modelInstanceIDs.remove(id);
+			IDtoScene.remove(id);
+			IDtoModel.remove(id);
+		}
+		
+		models.remove(this);
 	}
 }
