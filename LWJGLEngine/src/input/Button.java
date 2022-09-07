@@ -26,7 +26,11 @@ public class Button extends Entity {
 	private Model model;
 	
 	private float x, y, width, height;	//x, y, specifies bottom left corner of button
-	private Material pressedMaterial, releasedMaterial;
+	private Material pressedMaterial, releasedMaterial, hoveredMaterial;
+	
+	private boolean pressed, hovered, clicked;
+	
+	private long modelInstanceID;
 	
 	public Button(float x, float y, float width, float height, Texture releasedTexture, Texture pressedTexture, int scene) {
 		super();
@@ -35,6 +39,9 @@ public class Button extends Entity {
 		this.y = y;
 		this.width = width;
 		this.height = height;
+		this.pressed = false;
+		this.hovered = false;
+		this.clicked = false;
 		
 		//create button model
 		float[] vertices = new float[] {
@@ -64,18 +71,44 @@ public class Button extends Entity {
 		
 		this.model = new Model(vao, releasedMaterial);
 		Mat4 modelMat = Mat4.translate(new Vec3(x, y, 0));
-		this.addModelInstance(model, modelMat, scene);
+		this.modelInstanceID = this.addModelInstance(model, modelMat, scene);
 	}
 	
 	@Override
 	protected void _kill() {
+		this.removeModelInstance(this.modelInstanceID);
 		this.model.kill();
 	}
 
 	@Override
 	public void update() {
-		// TODO Auto-generated method stub
+		if(this.clicked) {	//check for clicks happens when mouse is released. 
+			this.clicked = false;
+		}
 		
+		if(this.pressed) {
+			
+		}
+		else if(this.hovered) {
+			
+		}
+		else {
+			
+		}
 	}
-
+	
+	public void pressed() {
+		this.pressed = true;
+	}
+	
+	public void released() {
+		if(this.pressed) {
+			this.clicked = true;
+		}
+		this.pressed = false;
+	}
+	
+	public boolean isClicked() {
+		return this.clicked;
+	}
 }

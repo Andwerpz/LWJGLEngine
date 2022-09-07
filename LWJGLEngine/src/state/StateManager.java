@@ -71,4 +71,12 @@ public class StateManager {
 		screenQuad.render();
 	}
 	
+	public void mousePressed(int button) {
+		activeState.mousePressed(button);
+	}
+	
+	public void mouseReleased(int button) {
+		activeState.mouseReleased(button);
+	}
+	
 }

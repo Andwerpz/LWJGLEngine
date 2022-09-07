@@ -11,6 +11,7 @@ import entity.Entity;
 import graphics.Framebuffer;
 import graphics.Texture;
 import input.Button;
+import input.InputManager;
 import input.KeyboardInput;
 import main.Main;
 import model.AssetManager;
@@ -35,10 +36,8 @@ public class MainMenuState extends State {
 	private static Screen perspectiveScreen;	//3D background
 	private static Camera perspectiveCamera;
 	
-	private static Screen uiScreen;	//Menu UI
+	private static UIScreen uiScreen;	//Menu UI
 	private static Camera uiCamera;
-	
-	private HashSet<Button> buttons;
 	
 	private long startTime;
 	
@@ -64,6 +63,7 @@ public class MainMenuState extends State {
 		}
 		
 		Main.unlockCursor();
+		InputManager.removeAllInputs();
 		
 		// -- WORLD SCENE --
 		Model.removeInstancesFromScene(Scene.WORLD_SCENE);
@@ -75,11 +75,10 @@ public class MainMenuState extends State {
 		// -- UI SCENE --
 		Model.removeInstancesFromScene(Scene.UI_SCENE);
 		Light.removeLightsFromScene(Scene.UI_SCENE);
-		this.buttons = new HashSet<>();
-		this.buttons.add(new Button(120, Main.windowHeight / 2, 700, 150, new Texture("/cs_go_logo.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
-		this.buttons.add(new Button(120, Main.windowHeight / 2 - 50, 200, 100, new Texture("/ui/main_menu/new_game.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
-		this.buttons.add(new Button(120, Main.windowHeight / 2 - 100, 200, 100, new Texture("/ui/main_menu/settings.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
-		this.buttons.add(new Button(120, Main.windowHeight / 2 - 150, 200, 100, new Texture("/ui/main_menu/quit_game.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
+		InputManager.addInput("btn_logo", new Button(120, Main.windowHeight / 2, 700, 150, new Texture("/cs_go_logo.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
+		InputManager.addInput("btn_new_game", new Button(120, Main.windowHeight / 2 - 50, 200, 100, new Texture("/ui/main_menu/new_game.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
+		InputManager.addInput("btn_settings", new Button(120, Main.windowHeight / 2 - 100, 200, 100, new Texture("/ui/main_menu/settings.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
+		InputManager.addInput("btn_quit_game", new Button(120, Main.windowHeight / 2 - 150, 200, 100, new Texture("/ui/main_menu/quit_game.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
 	}
 
 	@Override
@@ -98,6 +97,25 @@ public class MainMenuState extends State {
 	private void updateCamera() {
 		perspectiveCamera.setFacing(0, MathTools.interpolate(0, 0, (float) Math.PI * 2f, ROTATION_TIME * 1000f, System.currentTimeMillis() - startTime));
 		perspectiveCamera.setUp(new Vec3(0, 1, 0));
+	}
+
+	@Override
+	public void mousePressed(int button) {
+		InputManager.pressed(uiScreen.getEntityIDAtMouse());
+	}
+
+	@Override
+	public void mouseReleased(int button) {
+		InputManager.released();
+		if(InputManager.isClicked("btn_logo")) {
+			this.sm.switchState(new SplashState(this.sm));
+		}
+		else if(InputManager.isClicked("btn_new_game")) {
+			this.sm.switchState(new GameState(this.sm));
+		}
+		else if(InputManager.isClicked("btn_quit_game")) {
+			Main.main.exit();
+		}
 	}
 
 }

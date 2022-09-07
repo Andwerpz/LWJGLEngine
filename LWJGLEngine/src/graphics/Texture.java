@@ -27,6 +27,10 @@ public class Texture {
 		this.textureID = this.load(path, false, false);
 	}
 	
+	public Texture(BufferedImage img) {
+		this.textureID = this.load(img, false, false);
+	}
+	
 	public Texture(String path, boolean invertColors, boolean horizontalFlip) {
 		this.textureID = this.load(path, invertColors, horizontalFlip);
 	}

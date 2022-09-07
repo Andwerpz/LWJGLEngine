@@ -75,7 +75,6 @@ public class Main implements Runnable{
 		
 		glfwSetKeyCallback(window, new KeyboardInput());
 		glfwSetMouseButtonCallback(window, new MouseInput());
-		lockCursor();
 		
 		createCapabilities();
 		glClearColor(0f, 0f, 0f, 0f);
@@ -159,9 +158,23 @@ public class Main implements Runnable{
 			System.out.println(error);
 		}
 	}
-
+	
+	public void exit() {
+		this.running = false;
+	}
+	
+	public static Main main;
 	public static void main(String[] args) {
-		new Main().start();
+		main = new Main();
+		main.start();
+	}
+	
+	public void mousePressed(int button) {
+		this.sm.mousePressed(button);
+	}
+	
+	public void mouseReleased(int button) {
+		this.sm.mouseReleased(button);
 	}
 
 }

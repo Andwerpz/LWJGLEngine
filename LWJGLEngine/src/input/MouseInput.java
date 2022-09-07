@@ -19,6 +19,12 @@ public class MouseInput extends GLFWMouseButtonCallback {
 	
 	@Override
 	public void invoke(long window, int key, int action, int mods) {
+		if(action == GLFW_PRESS) {
+			Main.main.mousePressed(key);
+		}
+		else if(action == GLFW_RELEASE) {
+			Main.main.mouseReleased(key);
+		}
 		buttons[key] = action == GLFW_PRESS;
 	}
 	

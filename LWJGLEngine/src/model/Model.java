@@ -206,7 +206,7 @@ public class Model {
 		    aiGetMaterialTexture(AIMat, aiTextureType_DIFFUSE, 0, path, (IntBuffer) null, null, null, null, null, null);
 		    String diffusePath = path.dataString();
 		    if(diffusePath != null && diffusePath.length() != 0) {
-		    	Texture diffuseTexture = new Texture(loadImage(workingDirectory + "/res" + filepath + diffusePath), false, false);
+		    	Texture diffuseTexture = new Texture(loadImage(workingDirectory + "/res" + filepath + diffusePath));
 		    	material.setTexture(diffuseTexture, Material.DIFFUSE);
 		    }
 		    
@@ -215,7 +215,7 @@ public class Model {
 		    aiGetMaterialTexture(AIMat, aiTextureType_NORMALS, 0, path, (IntBuffer) null, null, null, null, null, null);
 		    String normalsPath = path.dataString();
 		    if(normalsPath != null && normalsPath.length() != 0) {
-		    	Texture normalsTexture = new Texture(loadImage(workingDirectory + "/res" + filepath + normalsPath), false, false);
+		    	Texture normalsTexture = new Texture(loadImage(workingDirectory + "/res" + filepath + normalsPath));
 		    	material.setTexture(normalsTexture, Material.NORMAL);
 		    }
 		    
@@ -278,6 +278,10 @@ public class Model {
 	
 	public static void removeInstance(long ID) {
 		Model model = IDtoModel.get(ID);
+		if(model == null) {	//couldn't find model to remove
+			//could happen if you try to kill an entity after removing all models from a scene
+			return;
+		}
 		int scene = IDtoScene.get(ID);
 		model.modelMats.get(scene).remove(ID);
 		if(model.modelMats.get(scene).size() == 0) {
@@ -287,6 +291,8 @@ public class Model {
 		IDtoModel.remove(ID);
 		modelInstanceIDs.remove(ID);
 		model.scenesNeedingUpdates.add(scene);
+		
+		System.out.println("REMOVE MODEL INSTANCE " + ID);
 	}
 	
 	public static void updateInstance(long ID, Mat4 mat4) {
@@ -320,7 +326,6 @@ public class Model {
 				continue;
 			}
 			for(long id : m.modelMats.get(scene).keySet()) {
-				System.out.println("REMOVING MODEL INSTANCE " + id);
 				Model.removeInstance(id);
 			}
 		}

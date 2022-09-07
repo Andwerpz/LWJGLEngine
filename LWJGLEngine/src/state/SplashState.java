@@ -37,4 +37,16 @@ public class SplashState extends State {
 		this.splashScreen.render(outputBuffer, Scene.FRAMEBUFFER_SCENE);
 	}
 
+	@Override
+	public void mousePressed(int button) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(int button) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

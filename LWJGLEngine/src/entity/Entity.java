@@ -22,7 +22,7 @@ public abstract class Entity {
 	public static HashMap<Long, Long> modelToEntityID = new HashMap<>();
 	
 	//never equal to 0
-	public long ID;	
+	private long ID;	
 	
 	protected HashSet<Long> modelInstanceIDs;	//holds all model instance IDs associated with this entity
 	
@@ -40,10 +40,19 @@ public abstract class Entity {
 		return ans;
 	}
 	
-	protected void addModelInstance(Model model, Mat4 mat4, int scene) {
+	public long getID() {
+		return this.ID;
+	}
+	
+	public static Entity getEntity(long ID) {
+		return entities.get(ID);
+	}
+	
+	protected long addModelInstance(Model model, Mat4 mat4, int scene) {
 		long modelInstanceID = Model.addInstance(model, mat4, scene);
 		this.modelInstanceIDs.add(modelInstanceID);
 		modelToEntityID.put(modelInstanceID, this.ID);
+		return modelInstanceID;
 	}
 	
 	protected void removeModelInstance(long modelInstanceID) {
@@ -61,7 +70,7 @@ public abstract class Entity {
 		}
 	}
 	
-	public static long getEntityID(long modelID) {
+	public static long getEntityIDFromModelID(long modelID) {
 		return Entity.modelToEntityID.get(modelID) == null? 0 : Entity.modelToEntityID.get(modelID);
 	}
 	

@@ -36,6 +36,12 @@ public class UIScreen extends Screen {
 		this.geometryBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3});
 		this.geometryBuffer.isComplete();
 	}
+	
+	public long getEntityIDAtMouse() {
+		long modelInstanceID = Model.convertRGBToID(geometryBuffer.sampleColorAtPoint((int) MouseInput.getMousePos().x, (int) MouseInput.getMousePos().y));
+		long entityID = Entity.getEntityIDFromModelID(modelInstanceID);
+		return entityID;
+	}
 
 	@Override
 	public void render(Framebuffer outputBuffer, int scene) {
@@ -59,14 +65,7 @@ public class UIScreen extends Screen {
 		Shader.SPLASH.enable();
 		Shader.SPLASH.setUniform1f("alpha", 1f);
 		geometryColorMap.bind(GL_TEXTURE0);
-		screenQuad.render();
-		
-		if(MouseInput.isButtonPressed(MouseInput.LEFT_MOUSE_BUTTON)) {
-			long modelInstanceID = Model.convertRGBToID(geometryBuffer.sampleColorAtPoint((int) MouseInput.getMousePos().x, (int) MouseInput.getMousePos().y));
-			long entityID = Entity.getEntityID(modelInstanceID);
-			System.out.println(entityID + " " + modelInstanceID);
-		}
-		
+		screenQuad.render();		
 	}
 
 }

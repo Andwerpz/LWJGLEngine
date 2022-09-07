@@ -74,4 +74,16 @@ public class GameState extends State {
 		perspectiveCamera.setUp(new Vec3(0, 1, 0));
 	}
 
+	@Override
+	public void mousePressed(int button) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(int button) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

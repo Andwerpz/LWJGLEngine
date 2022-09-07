@@ -25,4 +25,7 @@ public abstract class State {
 	public abstract void update();
 	public abstract void render(Framebuffer outputBuffer);
 	
+	public abstract void mousePressed(int button);
+	public abstract void mouseReleased(int button);
+	
 }

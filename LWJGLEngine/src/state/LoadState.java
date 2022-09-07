@@ -95,4 +95,16 @@ public class LoadState extends State {
 		loadScreen.render(outputBuffer, Scene.FRAMEBUFFER_SCENE);
 	}
 
+	@Override
+	public void mousePressed(int button) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(int button) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
