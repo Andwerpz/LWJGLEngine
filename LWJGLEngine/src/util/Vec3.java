@@ -53,6 +53,12 @@ public class Vec3 {
 		return this;
 	}
 	
+	public Vec3 sub(Vec3 v) {
+		Vec3 result = new Vec3(this);
+		result.subi(v);
+		return result;
+	}
+	
 	public float length() {
 		return (float) Math.sqrt(x * x + y * y + z * z);
 	}
@@ -66,9 +72,7 @@ public class Vec3 {
 	
 	public Vec3 mul(float val) {
 		Vec3 result = new Vec3(this);
-		result.x *= val;
-		result.y *= val;
-		result.z *= val;
+		result.muli(val);
 		return result;
 	}
 	
@@ -78,6 +82,18 @@ public class Vec3 {
 		this.y /= mag;
 		this.z /= mag;
 		return this;
+	}
+	
+	public float dot(Vec3 a) {
+		return this.x * a.x + this.y * a.y + this.z * a.z;
+	}
+	
+	public Vec3 cross(Vec3 a) {
+		Vec3 result = new Vec3(0);
+		result.x = this.y * a.z - this.z * a.y;
+		result.y = this.z * a.x - this.x * a.z;
+		result.z = this.x * a.y - this.y * a.x;
+		return result;
 	}
 	
 	public Vec3 setLength(float mag) {

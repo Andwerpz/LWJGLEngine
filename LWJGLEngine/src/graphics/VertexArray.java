@@ -14,7 +14,6 @@ import java.util.HashSet;
 import model.Model;
 import util.BufferUtils;
 import util.Mat4;
-import util.MathTools;
 import util.Vec2;
 import util.Vec3;
 
@@ -180,9 +179,9 @@ public class VertexArray {
 			Vec3 cb = new Vec3(vc, vb);
 			cb.normalize();
 
-			float angA = (float) Math.acos(MathTools.dotProduct(ab, ac));
-			float angB = (float) Math.acos(MathTools.dotProduct(ba, bc));
-			float angC = (float) Math.acos(MathTools.dotProduct(ca, cb));
+			float angA = (float) Math.acos(ab.dot(ac));
+			float angB = (float) Math.acos(ba.dot(bc));
+			float angC = (float) Math.acos(ca.dot(cb));
 			
 			angWeights[i] = angA;
 			angWeights[i + 1] = angB;
@@ -288,11 +287,11 @@ public class VertexArray {
 			Vec3 cb = new Vec3(vc, vb);
 			cb.normalize();
 
-			Vec3 cross = MathTools.crossProduct(ab, ac);
+			Vec3 cross = ab.cross(ac);
 
-			float angA = (float) Math.acos(MathTools.dotProduct(ab, ac));
-			float angB = (float) Math.acos(MathTools.dotProduct(ba, bc));
-			float angC = (float) Math.acos(MathTools.dotProduct(ca, cb));
+			float angA = (float) Math.acos(ab.dot(ac));
+			float angB = (float) Math.acos(ba.dot(bc));
+			float angC = (float) Math.acos(ca.dot(cb));
 			
 			angWeights[i] = angA;
 			angWeights[i + 1] = angB;
@@ -371,7 +370,7 @@ public class VertexArray {
 		}
 		
 	}
-
+	
 	public void bind() {
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);

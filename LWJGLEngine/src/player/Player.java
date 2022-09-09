@@ -13,7 +13,7 @@ import scene.PointLight;
 import scene.Scene;
 import scene.SpotLight;
 import util.Mat4;
-import util.MathTools;
+import util.MathUtils;
 import util.Vec2;
 import util.Vec3;
 
@@ -83,7 +83,7 @@ public class Player extends Entity {
 		camXRot += Math.toRadians(delta.y / 10f);
 		mouse = nextMouse;
 
-		camXRot = (float) MathTools.clamp(-(Math.PI - 0.01) / 2f, (Math.PI - 0.01) / 2f, camXRot);
+		camXRot = (float) MathUtils.clamp((float) -(Math.PI - 0.01) / 2f, (float) (Math.PI - 0.01) / 2f, camXRot);
 		
 		camera.setFacing(camXRot, camYRot);
 		camera.setUp(camZRot);

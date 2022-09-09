@@ -6,7 +6,7 @@ import static org.lwjgl.opengl.GL30.*;
 import graphics.Framebuffer;
 import graphics.Shader;
 import graphics.Texture;
-import util.MathTools;
+import util.MathUtils;
 
 public class LoadScreen extends Screen {
 	
@@ -20,7 +20,7 @@ public class LoadScreen extends Screen {
 	}
 	
 	public void setAlpha(float alpha) {
-		this.alpha = (float) MathTools.clamp(0, 1, alpha);
+		this.alpha = (float) MathUtils.clamp(0, 1, alpha);
 	}
 
 	@Override

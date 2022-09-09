@@ -8,7 +8,6 @@ import org.lwjgl.BufferUtils;
 
 import main.Main;
 import util.Mat4;
-import util.MathTools;
 import util.Vec2;
 import util.Vec3;
 

@@ -137,8 +137,8 @@ public class Mat4 {
 	public static Mat4 lookAt(Vec3 eye, Vec3 center, Vec3 up) {
 		//define our 3 basis vectors for the new space
 		Vec3 z = new Vec3(center, eye).normalize();	//Z
-		Vec3 x = MathTools.crossProduct(up, z).normalize();	//X
-		Vec3 y = MathTools.crossProduct(z, x).normalize();	//Y
+		Vec3 x = up.cross(z).normalize();
+		Vec3 y = z.cross(x).normalize();
 		
 		Mat4 result = Mat4.translate(eye.mul(-1f));
 		Mat4 viewSpace = new Mat4(x, y, z);

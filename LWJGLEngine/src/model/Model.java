@@ -63,6 +63,7 @@ public class Model {
 	
 	private ArrayList<VertexArray> meshes;
 	private ArrayList<Material> materials;
+	private ArrayList<CollisionMesh> collisionMeshes;
 
 	public Model() {
 		this.meshes = new ArrayList<>();

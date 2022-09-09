@@ -25,7 +25,7 @@ import screen.PerspectiveScreen;
 import screen.Screen;
 import screen.UIScreen;
 import util.Mat4;
-import util.MathTools;
+import util.MathUtils;
 import util.Vec3;
 
 public class MainMenuState extends State {
@@ -95,7 +95,7 @@ public class MainMenuState extends State {
 	}
 	
 	private void updateCamera() {
-		perspectiveCamera.setFacing(0, MathTools.interpolate(0, 0, (float) Math.PI * 2f, ROTATION_TIME * 1000f, System.currentTimeMillis() - startTime));
+		perspectiveCamera.setFacing(0, MathUtils.interpolate(0, 0, (float) Math.PI * 2f, ROTATION_TIME * 1000f, System.currentTimeMillis() - startTime));
 		perspectiveCamera.setUp(new Vec3(0, 1, 0));
 	}
 
