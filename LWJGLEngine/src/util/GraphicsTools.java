@@ -19,7 +19,11 @@ import java.util.ArrayList;
 import javax.imageio.ImageIO;
 
 public class GraphicsTools {
-
+	
+	// -- OPENGL --
+	
+	// -- JAVA SWING --
+	
 	public static AlphaComposite makeComposite(double alpha) {
 		int type = AlphaComposite.SRC_OVER;
 		return(AlphaComposite.getInstance(type, (float) alpha));
@@ -176,7 +180,6 @@ public class GraphicsTools {
 		}
 		
 		return animation;
-		
 	}
 	
 	//loads img with filepath starting from root; C:

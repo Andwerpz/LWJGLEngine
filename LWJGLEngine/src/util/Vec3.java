@@ -54,8 +54,7 @@ public class Vec3 {
 	}
 	
 	public float length() {
-		float xyDist = (float) MathTools.dist(0, 0, x, y);
-		return (float) MathTools.dist(0, 0, xyDist, z);
+		return (float) Math.sqrt(x * x + y * y + z * z);
 	}
 	
 	public Vec3 muli(float val) {

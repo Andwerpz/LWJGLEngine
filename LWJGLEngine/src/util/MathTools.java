@@ -239,7 +239,6 @@ public class MathTools {
 	}
 
 	// calculates the intersection point between a line and a plane
-
 	public static Vec3 lineIntersectPlane(Vec3 planeVector, Vec3 planeNormal, Vec3 lineStart,
 			Vec3 lineEnd, double[] tRef) {
 		planeNormal.normalize();
@@ -447,7 +446,6 @@ public class MathTools {
 	}
 
 	// takes in a 4x4 rotation or translation matrix and returns its inverse
-
 	public static double[][] invertTransformMatrix(double[][] mat) {
 
 		/*
@@ -478,7 +476,6 @@ public class MathTools {
 	// projects point from 3d onto the 2d screen.
 	// assumes the camera is pointing in the +z direction
 	// stores the z buffer into the z dimension
-
 	public static Vec3 projectVector(Vec3 p, double[] wOut) {
 		return multiplyMatrixVector(projectionMatrix, p, wOut);
 	}
