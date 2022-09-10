@@ -55,6 +55,9 @@ public class Model {
 	private static HashMap<Long, Integer> IDtoScene = new HashMap<>();	//which scene each instance is in
 	private static HashMap<Long, Model> IDtoModel = new HashMap<>();
 	
+	//for each scene, which model instances have active collision
+	private static HashMap<Integer, HashSet<Long>> activeCollisionMeshes = new HashMap<>();	
+	
 	//first, specify which scene
 	//K : model ID, Can be translated to a color to draw 
 	//V : model Mat4, Where to draw each instance of the model
@@ -298,6 +301,7 @@ public class Model {
 		IDtoScene.remove(ID);
 		IDtoModel.remove(ID);
 		modelInstanceIDs.remove(ID);
+		deactivateCollisionMesh(ID);
 		model.scenesNeedingUpdates.add(scene);
 		
 		System.out.println("REMOVE MODEL INSTANCE " + ID);
@@ -308,6 +312,31 @@ public class Model {
 		int scene = IDtoScene.get(ID);
 		model.modelMats.get(scene).put(ID, mat4);
 		model.scenesNeedingUpdates.add(scene);
+	}
+	
+	public static void activateCollisionMesh(long ID) {
+		if(!modelInstanceIDs.contains(ID)) {
+			return;
+		}
+		int scene = IDtoScene.get(ID);
+		if(activeCollisionMeshes.get(scene) == null) {
+			activeCollisionMeshes.put(scene, new HashSet<Long>());
+		}
+		activeCollisionMeshes.get(scene).add(ID);
+	}
+	
+	public static void deactivateCollisionMesh(long ID) {
+		if(!modelInstanceIDs.contains(ID)) {
+			return;
+		}
+		int scene = IDtoScene.get(ID);
+		if(activeCollisionMeshes.get(scene) == null) {
+			return;
+		}
+		activeCollisionMeshes.get(scene).remove(ID);
+		if(activeCollisionMeshes.get(scene).size() == 0) {
+			activeCollisionMeshes.remove(scene);
+		}
 	}
 	
 	public static void updateModels() {
@@ -327,13 +356,32 @@ public class Model {
 		scenesNeedingUpdates.clear();
 	}
 	
-	public static ArrayList<Vec3> rayIntersect(long ID, Vec3 ray_origin, Vec3 ray_dir){
-		Model model = IDtoModel.get(ID);
-		int scene = IDtoScene.get(ID);
-		Mat4 transform = model.modelMats.get(scene).get(ID);
+	public static ArrayList<Vec3> rayIntersect(int scene, Vec3 ray_origin, Vec3 ray_dir){
 		ArrayList<Vec3> result = new ArrayList<>();
-		for(CollisionMesh c : model.collisionMeshes) {
-			result.addAll(c.rayIntersect(ray_origin, ray_dir, transform));
+		if(activeCollisionMeshes.get(scene) == null) {
+			return result;
+		}
+		for(long ID : activeCollisionMeshes.get(scene)) {
+			Model model = IDtoModel.get(ID);
+			Mat4 transform = model.modelMats.get(scene).get(ID);
+			for(CollisionMesh c : model.collisionMeshes) {
+				result.addAll(c.rayIntersect(ray_origin, ray_dir, transform));
+			}
+		}
+		return result;
+	}
+	
+	public static ArrayList<Vec3> sphereIntersect(int scene, Vec3 sphere_origin, float sphere_radius){
+		ArrayList<Vec3> result = new ArrayList<>();
+		if(activeCollisionMeshes.get(scene) == null) {
+			return result;
+		}
+		for(long ID : activeCollisionMeshes.get(scene)) {
+			Model model = IDtoModel.get(ID);
+			Mat4 transform = model.modelMats.get(scene).get(ID);
+			for(CollisionMesh c : model.collisionMeshes) {
+				result.addAll(c.sphereIntersect(sphere_origin, sphere_radius, transform));
+			}
 		}
 		return result;
 	}

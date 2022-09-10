@@ -104,6 +104,7 @@ public class PerspectiveScreen extends Screen {
 		geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
+		glPolygonMode(GL_FRONT, GL_FILL);
 		glDisable(GL_BLEND);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
@@ -117,6 +118,7 @@ public class PerspectiveScreen extends Screen {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
+		glPolygonMode(GL_FRONT, GL_FILL);
 		glBlendFunc(GL_ONE, GL_ONE);
 		
 		this.geometryPositionMap.bind(GL_TEXTURE0);

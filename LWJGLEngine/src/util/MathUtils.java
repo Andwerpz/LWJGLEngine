@@ -106,6 +106,66 @@ public class MathUtils {
 	}
 	
 	/**
+	 * Take in a line and a plane, and returns the intersection if it exists. 
+	 * @param ray_origin
+	 * @param ray_dir
+	 * @param plane_origin
+	 * @param plane_normal
+	 * @return
+	 */
+	public static Vec3 line_planeIntersect(Vec3 line_origin, Vec3 line_dir, Vec3 plane_origin, Vec3 plane_normal) {
+		float line_dirStepRatio = plane_normal.dot(line_dir);	//for each step in line_dir, you go line_dirStepRatio steps in plane_normal
+		if(line_dirStepRatio == 0) {
+			//line is parallel to plane, no intersection
+			return null;
+		}
+		//Conceptually, a line is equivalent to a double-sided ray. This means that it's fine if t is negative.
+		float t = plane_origin.sub(line_origin).dot(plane_normal) / line_dirStepRatio;
+		return line_origin.add(line_dir.mul(t));
+	}
+	
+	/**
+	 * Take in a point and a plane, and returns the point projected onto the plane
+	 * @param point
+	 * @param plane_origin
+	 * @param plane_normal
+	 * @return
+	 */
+	public static Vec3 point_planeProject(Vec3 point, Vec3 plane_origin, Vec3 plane_normal) {
+		return point.sub(new Vec3(plane_origin, point).projectOnto(plane_normal));
+	}
+	
+	/**
+	 * Take in a point and a line, and returns the point projected onto the line
+	 * @param point
+	 * @param line_origin
+	 * @param line_dir
+	 * @return
+	 */
+	public static Vec3 point_lineProject(Vec3 point, Vec3 line_origin, Vec3 line_dir) {
+		Vec3 lineToPoint = new Vec3(line_origin, point);
+		return line_origin.add(lineToPoint.projectOnto(line_dir));
+	}
+	
+	/**
+	 * Take in a point and a line segment, and if the projection of the point onto the line is within the segment,
+	 * returns the point projected onto the line, else returns null. 
+	 * @param point
+	 * @param line_a
+	 * @param line_b
+	 * @return
+	 */
+	public static Vec3 point_lineSegmentProject(Vec3 point, Vec3 line_a, Vec3 line_b) {
+		Vec3 line_ab = new Vec3(line_a, line_b);
+		Vec3 lineToPoint = new Vec3(line_a, point);
+		float mul = lineToPoint.dot(line_ab) / line_ab.dot(line_ab);
+		if(mul < 0 || mul > 1) {
+			return null;
+		}
+		return line_a.add(line_ab.mul(mul));
+	}
+	
+	/**
 	 * Take in a ray and a triangle, and returns the intersection if it exists. 
 	 * @param ray_origin
 	 * @param ray_dir
@@ -139,6 +199,133 @@ public class MathUtils {
 		}
 		
 		return plane_intersect;
+	}
+	
+	/**
+	 * Take in a line and a triangle, and returns the intersection if it exists. 
+	 * @param line_origin
+	 * @param line_dir
+	 * @param t0
+	 * @param t1
+	 * @param t2
+	 * @return
+	 */
+	public static Vec3 line_triangleIntersect(Vec3 line_origin, Vec3 line_dir, Vec3 t0, Vec3 t1, Vec3 t2) {
+		Vec3 d0 = new Vec3(t0, t1).normalize();
+		Vec3 d1 = new Vec3(t1, t2).normalize();
+		Vec3 d2 = new Vec3(t2, t0).normalize();
+		
+		Vec3 plane_origin = new Vec3(t0);
+		Vec3 plane_normal = d0.cross(d1).normalize();
+		
+		Vec3 plane_intersect = line_planeIntersect(line_origin, line_dir, plane_origin, plane_normal);
+		if(plane_intersect == null) {
+			//if it doesn't intersect the plane, then theres no way it intersects the triangle. 
+			return null;
+		}
+		
+		//now, we just have to make sure that the intersection point is inside the triangle. 
+		Vec3 n0 = d0.cross(plane_normal);
+		Vec3 n1 = d1.cross(plane_normal);
+		Vec3 n2 = d2.cross(plane_normal);
+		
+		if(n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
+			//intersection point is outside of the triangle. 
+			return null;
+		}
+		
+		return plane_intersect;
+	}
+	
+	/**
+	 * Take in a sphere and a triangle, and returns the point on the triangle, p, where dist(p, sphere_origin) is minimal. 
+	 * @param sphere_origin
+	 * @param sphere_radius
+	 * @param t0
+	 * @param t1
+	 * @param t2
+	 * @return
+	 */
+	public static Vec3 sphere_triangleIntersect(Vec3 sphere_origin, float sphere_radius, Vec3 t0, Vec3 t1, Vec3 t2) {
+		Vec3 d0 = new Vec3(t0, t1).normalize();
+		Vec3 d1 = new Vec3(t1, t2).normalize();
+		Vec3 d2 = new Vec3(t2, t0).normalize();
+		
+		Vec3 plane_origin = new Vec3(t0);
+		Vec3 plane_normal = d0.cross(d1).normalize();
+		
+		//first check if the sphere intersects the plane the triangle defines
+		Vec3 plane_intersect = line_planeIntersect(sphere_origin, plane_normal, plane_origin, plane_normal);
+		if(new Vec3(plane_intersect, sphere_origin).length() > sphere_radius) {
+			//sphere doesn't intersect the plane 
+			return null;
+		}
+		
+		//check if sphere_origin projects to a point in the triangle. 
+		//If true, it means that the intersection point isn't a corner or edge of the triangle. 
+		Vec3 triangle_intersect = line_triangleIntersect(sphere_origin, plane_normal, t0, t1, t2);
+		if(triangle_intersect != null) {
+			if(new Vec3(triangle_intersect, sphere_origin).length() < sphere_radius) {
+				return triangle_intersect;
+			}
+			return null;
+		}
+		
+		//else, check if sphere_origin projects onto a line segment of the triangle. 
+		Vec3 minS_p = null;
+		float minDist = -1f;
+		Vec3 s0_p = point_lineSegmentProject(sphere_origin, t0, t1);
+		Vec3 s1_p = point_lineSegmentProject(sphere_origin, t1, t2);
+		Vec3 s2_p = point_lineSegmentProject(sphere_origin, t2, t0);
+		if(s0_p != null) {
+			float dist = new Vec3(s0_p, sphere_origin).length();
+			if(minS_p == null || dist < minDist) {
+				minS_p = s0_p;
+				minDist = dist;
+			}
+		}
+		if(s1_p != null) {
+			float dist = new Vec3(s1_p, sphere_origin).length();
+			if(minS_p == null || dist < minDist) {
+				minS_p = s1_p;
+				minDist = dist;
+			}
+		}
+		if(s2_p != null) {
+			float dist = new Vec3(s2_p, sphere_origin).length();
+			if(minS_p == null || dist < minDist) {
+				minS_p = s2_p;
+				minDist = dist;
+			}
+		}
+		if(minS_p != null && minDist < sphere_radius) {
+			return minS_p;
+		}
+		
+		//else, the answer, if it exists, has to be one of the vertices 
+		Vec3 minC = null;
+		minDist = -1f;
+		float t0_d = new Vec3(t0, sphere_origin).length();
+		if(minC == null || t0_d < minDist) {
+			minC = t0;
+			minDist = t0_d;
+		}
+		float t1_d = new Vec3(t1, sphere_origin).length();
+		if(minC == null || t1_d < minDist) {
+			minC = t1;
+			minDist = t1_d;
+		}
+		float t2_d = new Vec3(t2, sphere_origin).length();
+		if(minC == null || t2_d < minDist) {
+			minC = t2;
+			minDist = t2_d;
+		}
+		if(minDist < sphere_radius) {
+			return minC;
+		}
+		
+		//else, the sphere doesn't intersect the triangle
+		return null;
 	}
 
 	/**

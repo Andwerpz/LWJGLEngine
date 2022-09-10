@@ -96,6 +96,12 @@ public class Vec3 {
 		return result;
 	}
 	
+	//returns a new vector equal to this vector projected onto a.
+	public Vec3 projectOnto(Vec3 a) {
+		Vec3 result = new Vec3(a);
+		return result.muli(this.dot(a) / a.dot(a));	//a.dot(a) is equal to a.length() * a.length(). 
+	}
+	
 	public Vec3 setLength(float mag) {
 		this.normalize();
 		this.x *= mag;

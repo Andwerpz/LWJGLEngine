@@ -38,13 +38,18 @@ public class CollisionMesh {
 		}
 	}
 	
-	public ArrayList<Vec3> rayIntersect(Vec3 ray_origin, Vec3 ray_dir, Mat4 transform){
-		ArrayList<Vec3> result = new ArrayList<>();
-		
+	private Vec3[] transformVertices(Mat4 transform) {
 		Vec3[] vTransformed = new Vec3[vertices.length];
 		for(int i = 0; i < vertices.length; i++) {
 			vTransformed[i] = transform.mul(vertices[i], 1f);
 		}
+		return vTransformed;
+	}
+	
+	public ArrayList<Vec3> rayIntersect(Vec3 ray_origin, Vec3 ray_dir, Mat4 transform){
+		ArrayList<Vec3> result = new ArrayList<>();
+		
+		Vec3[] vTransformed = this.transformVertices(transform);
 		
 		for(int t = 0; t < this.indices.length; t += 3) {
 			Vec3 t0 = new Vec3(vTransformed[indices[t + 0]]);
@@ -52,6 +57,24 @@ public class CollisionMesh {
 			Vec3 t2 = new Vec3(vTransformed[indices[t + 2]]);
 			
 			Vec3 intersect = MathUtils.ray_triangleIntersect(ray_origin, ray_dir, t0, t1, t2);
+			if(intersect != null) {
+				result.add(intersect);
+			}
+		}
+		return result;
+	}
+	
+	public ArrayList<Vec3> sphereIntersect(Vec3 sphere_origin, float sphere_radius, Mat4 transform){
+		ArrayList<Vec3> result = new ArrayList<>();
+		
+		Vec3[] vTransformed = this.transformVertices(transform);
+		
+		for(int t = 0; t < this.indices.length; t += 3) {
+			Vec3 t0 = new Vec3(vTransformed[indices[t + 0]]);
+			Vec3 t1 = new Vec3(vTransformed[indices[t + 1]]);
+			Vec3 t2 = new Vec3(vTransformed[indices[t + 2]]);
+			
+			Vec3 intersect = MathUtils.sphere_triangleIntersect(sphere_origin, sphere_radius, t0, t1, t2);
 			if(intersect != null) {
 				result.add(intersect);
 			}

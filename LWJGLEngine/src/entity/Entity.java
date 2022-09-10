@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import model.AssetManager;
 import model.Model;
 import util.Mat4;
 
@@ -53,6 +54,10 @@ public abstract class Entity {
 		this.modelInstanceIDs.add(modelInstanceID);
 		modelToEntityID.put(modelInstanceID, this.ID);
 		return modelInstanceID;
+	}
+	
+	protected void updateModelInstance(long modelInstanceID, Mat4 mat4) {
+		Model.updateInstance(modelInstanceID, mat4);
 	}
 	
 	protected void removeModelInstance(long modelInstanceID) {

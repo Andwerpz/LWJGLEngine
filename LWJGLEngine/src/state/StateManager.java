@@ -31,7 +31,7 @@ public class StateManager {
 		this.outputBuffer.isComplete();
 		
 		this.activeState = null;
-		this.loadState = new LoadState(this, new MainMenuState(this));
+		this.loadState = new LoadState(this, new GameState(this));
 	}
 	
 	//trigger a load screen
