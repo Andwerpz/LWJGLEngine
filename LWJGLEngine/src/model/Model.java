@@ -94,6 +94,10 @@ public class Model {
 	}
 	
 	private void init() {
+		this.collisionMeshes = new ArrayList<>();
+		for(VertexArray vao : meshes) {
+			this.collisionMeshes.add(new CollisionMesh(vao));
+		}
 		this.scenesNeedingUpdates = new ArrayList<Integer>();
 		this.modelMats = new HashMap<Integer, HashMap<Long, Mat4>>();
 		models.add(this);
@@ -274,6 +278,9 @@ public class Model {
 		modelInstanceIDs.add(ID);
 		model.modelMats.get(scene).put(ID, mat4);
 		model.scenesNeedingUpdates.add(scene);
+		
+		System.out.println("ADD MODEL INSTANCE " + ID);
+		
 		return ID;
 	}
 	
@@ -318,6 +325,17 @@ public class Model {
 			}
 		}
 		scenesNeedingUpdates.clear();
+	}
+	
+	public static ArrayList<Vec3> rayIntersect(long ID, Vec3 ray_origin, Vec3 ray_dir){
+		Model model = IDtoModel.get(ID);
+		int scene = IDtoScene.get(ID);
+		Mat4 transform = model.modelMats.get(scene).get(ID);
+		ArrayList<Vec3> result = new ArrayList<>();
+		for(CollisionMesh c : model.collisionMeshes) {
+			result.addAll(c.rayIntersect(ray_origin, ray_dir, transform));
+		}
+		return result;
 	}
 	
 	//removes all model instances from the given scene. 

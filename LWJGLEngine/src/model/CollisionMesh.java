@@ -25,10 +25,20 @@ public class CollisionMesh {
 	}
 	
 	public CollisionMesh(VertexArray vao) {
+		float[] vertices = vao.getVertices();
+		int[] indices = vao.getIndices();
 		
+		this.vertices = new Vec3[vertices.length / 3];
+		this.indices = new int[indices.length];
+		for(int i = 0; i < vertices.length; i += 3) {
+			this.vertices[i / 3] = new Vec3(vertices[i + 0], vertices[i + 1], vertices[i + 2]);
+		}
+		for(int i = 0; i < indices.length; i++) {
+			this.indices[i] = indices[i];
+		}
 	}
 	
-	public ArrayList<Vec3> ray_intersect(Vec3 ray_origin, Vec3 ray_dir, Mat4 transform){
+	public ArrayList<Vec3> rayIntersect(Vec3 ray_origin, Vec3 ray_dir, Mat4 transform){
 		ArrayList<Vec3> result = new ArrayList<>();
 		
 		Vec3[] vTransformed = new Vec3[vertices.length];
@@ -49,11 +59,11 @@ public class CollisionMesh {
 		return result;
 	}
 	
-	public ArrayList<Vec3> lineSegment_intersect(Vec3 p1, Vec3 p2, Mat4 transform) {
+	public ArrayList<Vec3> lineSegmentIntersect(Vec3 p1, Vec3 p2, Mat4 transform) {
 		Vec3 dir = new Vec3(p1, p2);
 		float pDist = dir.length();
 		dir.normalize();	//could divide by pDist to save another sqrt operation
-		ArrayList<Vec3> rayPoints = ray_intersect(p1, dir, transform);
+		ArrayList<Vec3> rayPoints = rayIntersect(p1, dir, transform);
 		ArrayList<Vec3> ans = new ArrayList<>();
 		for(Vec3 v : rayPoints) {
 			float vDist = new Vec3(p1, v).length();

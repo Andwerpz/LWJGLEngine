@@ -33,6 +33,10 @@ public class VertexArray {
 	private HashMap<Integer, int[]> scenes;	//numInstances, mat4, colorID
 	private int triCount;	//number of triangles in the mesh
 	
+	//don't edit these, these are just for future reference
+	private float[] vertices, normals, tangents, bitangents, uvs;
+	private int[] indices;
+	
 	public VertexArray(float[] vertices, float[] normals, float[] uvs, int[] indices, int renderType) {
 		int n = vertices.length;
 		float[] tangents = new float[n], bitangents = new float[n];
@@ -48,6 +52,13 @@ public class VertexArray {
 	}
 	
 	private void init(float[] vertices, float[] normals, float[] tangents, float[] bitangents, float[] uvs, int[] indices, int renderType) {
+		this.vertices = vertices;
+		this.normals = normals;
+		this.tangents = tangents;
+		this.bitangents = bitangents;
+		this.uvs = uvs;
+		this.indices = indices;
+		
 		this.renderType = renderType;
 		triCount = indices.length;
 		this.scenes = new HashMap<Integer, int[]>();
@@ -104,11 +115,13 @@ public class VertexArray {
 			modelMats[i] = map.get(ID);
 			i ++;
 		}
+		
 		if(scenes.get(whichScene) == null) {
 			//instanced model buffer doesn't exist yet
 			scenes.put(whichScene, new int[] {numInstances, glGenBuffers(), glGenBuffers()});
 		}
 		int[] scene = scenes.get(whichScene);
+		scene[0] = numInstances;
 		int modelMatBuffer = scene[1];
 		int colorIDBuffer = scene[2];
 		
@@ -369,6 +382,14 @@ public class VertexArray {
 			outBitangents[i * 3 + 2] = bitangent.z;
 		}
 		
+	}
+	
+	public float[] getVertices() {
+		return this.vertices;
+	}
+	
+	public int[] getIndices() {
+		return this.indices;
 	}
 	
 	public void bind() {

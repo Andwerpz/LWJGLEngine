@@ -20,6 +20,7 @@ public class AssetManager {
 	//bind all asset names to load paths
 	public static void init() {
 		paths.put("dust2", new String[] {"/dust2/", "dust2_blend.obj"});
+		paths.put("sphere", new String[] {"/sphere/", "sphere.obj"});
 		paths.put("lake_skybox", new String[] {
 			"/skybox/lake/right.jpg", 
 			"/skybox/lake/left.jpg", 

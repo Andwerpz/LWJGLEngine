@@ -28,6 +28,8 @@ public class GameState extends State {
 	
 	private Player player;
 	
+	private long mapID;
+	
 	public GameState(StateManager sm) {
 		super(sm);
 	}
@@ -43,10 +45,12 @@ public class GameState extends State {
 		
 		Main.lockCursor();
 		
+		AssetManager.loadModel("sphere");
+		
 		// -- WORLD SCENE --
 		Model.removeInstancesFromScene(Scene.WORLD_SCENE);
 		Light.removeLightsFromScene(Scene.WORLD_SCENE);
-		Model.addInstance(AssetManager.getModel("dust2"), Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), Scene.WORLD_SCENE);
+		this.mapID = Model.addInstance(AssetManager.getModel("dust2"), Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), Scene.WORLD_SCENE);
 		Light.addLight(Scene.WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 		Scene.skyboxes.put(Scene.WORLD_SCENE, AssetManager.getSkybox("lake_skybox")); 
 	}
@@ -76,8 +80,22 @@ public class GameState extends State {
 
 	@Override
 	public void mousePressed(int button) {
-		// TODO Auto-generated method stub
-		
+		//shoot ray in direction of camera
+		Vec3 ray_origin = perspectiveCamera.getPos();
+		Vec3 ray_dir = perspectiveCamera.getFacing();
+		ArrayList<Vec3> intersect = Model.rayIntersect(mapID, ray_origin, ray_dir);
+		if(intersect.size() != 0) {
+			float minDist = 0f;
+			Vec3 minVec = null;
+			for(Vec3 v : intersect) {
+				float dist = v.sub(ray_origin).length();
+				if(dist < minDist || minVec == null) {
+					minDist = dist;
+					minVec = v;
+				}
+			}
+			Model.addInstance(AssetManager.getModel("sphere"), Mat4.scale(0.1f).mul(Mat4.translate(minVec)), Scene.WORLD_SCENE);
+		}
 	}
 
 	@Override

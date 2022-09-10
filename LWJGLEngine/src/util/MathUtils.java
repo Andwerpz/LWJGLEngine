@@ -98,6 +98,10 @@ public class MathUtils {
 			return null;
 		}
 		float t = plane_origin.sub(ray_origin).dot(plane_normal) / ray_dirStepRatio;
+		if(t < 0) {
+			//the plane intersection is behind the ray origin
+			return null;
+		}
 		return ray_origin.add(ray_dir.mul(t));
 	}
 	
