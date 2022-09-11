@@ -16,6 +16,8 @@ public class Ball extends Entity {
 	private Mat4 transformMat;
 	private float radius;
 	
+	private float elasticity = 1.5f; // 2 for complete bounce, 1 for no bounce
+	
 	private long modelInstanceID;
 	
 	public Ball(Vec3 pos, Vec3 vel, float radius, int scene) {
@@ -61,10 +63,9 @@ public class Ball extends Entity {
 			Vec3 impulse = this.vel.projectOnto(normToCenter);
 			
 			if(this.vel.dot(impulse) > 0) {
-				this.vel.subi(impulse.mul(1.5f));
+				this.vel.subi(impulse.mul(elasticity));
 				this.pos.addi(toCenter.muli(1f + epsilon));
 			}
-			
 		}
 		
 		this.transformMat = Mat4.scale(radius).mul(Mat4.translate(pos));

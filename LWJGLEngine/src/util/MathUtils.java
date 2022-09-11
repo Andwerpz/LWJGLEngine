@@ -35,7 +35,6 @@ public class MathUtils {
 	
 	/**
 	 * Calculates the distance between two 2D points. 
-	 * 
 	 * You can also do this by defining a vector between the two points, and querying the length. 
 	 * @param x1
 	 * @param y1
@@ -166,6 +165,22 @@ public class MathUtils {
 	}
 	
 	/**
+	 * Take in a point and a line segment, and if the projection of the point onto the line is within the segment,
+	 * returns the point projected onto the line, else clamps the point to the line segment, and returns the clamped point. 
+	 * @param point
+	 * @param line_a
+	 * @param line_b
+	 * @return
+	 */
+	public static Vec3 point_lineSegmentProjectClamped(Vec3 point, Vec3 line_a, Vec3 line_b) {
+		Vec3 line_ab = new Vec3(line_a, line_b);
+		Vec3 lineToPoint = new Vec3(line_a, point);
+		float mul = lineToPoint.dot(line_ab) / line_ab.dot(line_ab);
+		mul = clamp(0f, 1f, mul);
+		return line_a.add(line_ab.mul(mul));
+	}
+	
+	/**
 	 * Take in a ray and a triangle, and returns the intersection if it exists. 
 	 * @param ray_origin
 	 * @param ray_dir
@@ -272,11 +287,12 @@ public class MathUtils {
 		}
 		
 		//else, check if sphere_origin projects onto a line segment of the triangle. 
+		//if we project the point clamped onto the line segment, then we don't have to check the vertices.
 		Vec3 minS_p = null;
 		float minDist = -1f;
-		Vec3 s0_p = point_lineSegmentProject(sphere_origin, t0, t1);
-		Vec3 s1_p = point_lineSegmentProject(sphere_origin, t1, t2);
-		Vec3 s2_p = point_lineSegmentProject(sphere_origin, t2, t0);
+		Vec3 s0_p = point_lineSegmentProjectClamped(sphere_origin, t0, t1);
+		Vec3 s1_p = point_lineSegmentProjectClamped(sphere_origin, t1, t2);
+		Vec3 s2_p = point_lineSegmentProjectClamped(sphere_origin, t2, t0);
 		if(s0_p != null) {
 			float dist = new Vec3(s0_p, sphere_origin).length();
 			if(minS_p == null || dist < minDist) {
@@ -302,30 +318,78 @@ public class MathUtils {
 			return minS_p;
 		}
 		
-		//else, the answer, if it exists, has to be one of the vertices 
-		Vec3 minC = null;
-		minDist = -1f;
-		float t0_d = new Vec3(t0, sphere_origin).length();
-		if(minC == null || t0_d < minDist) {
-			minC = t0;
-			minDist = t0_d;
-		}
-		float t1_d = new Vec3(t1, sphere_origin).length();
-		if(minC == null || t1_d < minDist) {
-			minC = t1;
-			minDist = t1_d;
-		}
-		float t2_d = new Vec3(t2, sphere_origin).length();
-		if(minC == null || t2_d < minDist) {
-			minC = t2;
-			minDist = t2_d;
-		}
-		if(minDist < sphere_radius) {
-			return minC;
-		}
-		
 		//else, the sphere doesn't intersect the triangle
 		return null;
+	}
+	
+	/**
+	 * Takes a capsule and a triangle, and determines the point on the triangle, p, where dist(p, c) is minimal. 
+	 * Point c is a point in the capsule bound to the line segment defined by capsule_top and capsule_bottom. 
+	 * @param capsule_top
+	 * @param capsule_bottom
+	 * @param capsule_radius
+	 * @param t0
+	 * @param t1
+	 * @param t2
+	 * @return
+	 */
+	public static Vec3 capsule_triangleIntersect(Vec3 capsule_bottom, Vec3 capsule_top, float capsule_radius, Vec3 t0, Vec3 t1, Vec3 t2) {
+		Vec3 capsule_tangent = new Vec3(capsule_bottom, capsule_top).normalize();
+		Vec3 capsule_a = capsule_bottom.add(capsule_tangent.mul(capsule_radius));
+		Vec3 capsule_b = capsule_top.sub(capsule_tangent.mul(capsule_radius));
+		
+		Vec3 d0 = new Vec3(t0, t1).normalize();
+		Vec3 d1 = new Vec3(t1, t2).normalize();
+		Vec3 d2 = new Vec3(t2, t0).normalize();
+		
+		Vec3 plane_normal = d0.cross(d1).normalize();
+		
+		Vec3 n0 = d0.cross(plane_normal);
+		Vec3 n1 = d1.cross(plane_normal);
+		Vec3 n2 = d2.cross(plane_normal);
+		
+		Vec3 referencePoint = new Vec3(0);
+		Vec3 plane_intersect = line_planeIntersect(capsule_bottom, capsule_tangent, t0, plane_normal);
+		if(plane_intersect == null) {
+			//capsule_tangent is parallel to the plane, plane_intersect doesn't exist. 
+			referencePoint = new Vec3(t0);
+		}
+		else if(n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0){
+			//plane_intersect point is outside of the triangle. 
+			//find closest point to plane_intersect that is on the triangle. 
+			Vec3 minS_p = null;
+			float minDist = -1f;
+			Vec3 s0_p = point_lineSegmentProjectClamped(plane_intersect, t0, t1);
+			Vec3 s1_p = point_lineSegmentProjectClamped(plane_intersect, t1, t2);
+			Vec3 s2_p = point_lineSegmentProjectClamped(plane_intersect, t2, t0);
+			
+			float dist = new Vec3(s0_p, plane_intersect).length();
+			if(minS_p == null || dist < minDist) {
+				minS_p = s0_p;
+				minDist = dist;
+			}
+				
+			dist = new Vec3(s1_p, plane_intersect).length();
+			if(minS_p == null || dist < minDist) {
+				minS_p = s1_p;
+				minDist = dist;
+			}
+			
+			dist = new Vec3(s2_p, plane_intersect).length();
+			if(minS_p == null || dist < minDist) {
+				minS_p = s2_p;
+				minDist = dist;
+			}
+			
+			referencePoint = minS_p;
+		}
+		else {
+			//plane intersection is inside the triangle
+			referencePoint = plane_intersect;
+		}
+		
+		Vec3 capsule_c = point_lineSegmentProjectClamped(referencePoint, capsule_a, capsule_b);
+		return sphere_triangleIntersect(capsule_c, capsule_radius, t0, t1, t2);
 	}
 
 	/**

@@ -386,6 +386,21 @@ public class Model {
 		return result;
 	}
 	
+	public static ArrayList<Vec3> capsuleIntersect(int scene, Vec3 capsule_bottom, Vec3 capsule_top, float capsule_radius){
+		ArrayList<Vec3> result = new ArrayList<>();
+		if(activeCollisionMeshes.get(scene) == null) {
+			return result;
+		}
+		for(long ID : activeCollisionMeshes.get(scene)) {
+			Model model = IDtoModel.get(ID);
+			Mat4 transform = model.modelMats.get(scene).get(ID);
+			for(CollisionMesh c : model.collisionMeshes) {
+				result.addAll(c.capsuleIntersect(capsule_bottom, capsule_top, capsule_radius, transform));
+			}
+		}
+		return result;
+	}
+	
 	//removes all model instances from the given scene. 
 	public static void removeInstancesFromScene(int scene) {
 		for(Model m : models) {

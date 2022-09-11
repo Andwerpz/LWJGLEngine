@@ -78,6 +78,9 @@ public class Vec3 {
 	
 	public Vec3 normalize() {
 		float mag = this.length();
+		if(mag == 0) {
+			return this;
+		}
 		this.x /= mag;
 		this.y /= mag;
 		this.z /= mag;

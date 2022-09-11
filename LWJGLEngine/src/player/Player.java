@@ -2,6 +2,8 @@ package player;
 
 import static org.lwjgl.glfw.GLFW.*;
 
+import java.util.ArrayList;
+
 import entity.Entity;
 import input.KeyboardInput;
 import input.MouseInput;
@@ -19,60 +21,35 @@ import util.Vec3;
 
 public class Player extends Entity {
 
-	public static Hitbox h = new Hitbox(new Vec3(0), new Vec3(0.6f, 1.8f, 0.6f));
-	public static float moveSpeed = 0.05f;
 	public static float jumpVel = 0.25f;
-	public static Vec3 cameraVec = new Vec3(0.3f, 1.6f, 0.3f);
+	public static float verticalFriction = 0.99f;
+	public static Vec3 cameraVec = new Vec3(0f, 0.9f, 0f);
 	
-	public static float friction = 0.7f;
-	public static float cushion = 0.001f;
-	public static float gravity = 0.025f;
+	public static float moveSpeed = 0.018f;
+	public static float horizontalFriction = 0.8f;
+	public static float epsilon = 0.0001f;
+	public static float gravity = 0.005f;
 	
 	public Vec3 pos, vel;
+	public float radius = 0.33f;
+	public float height = 1f;
+	public int scene;
 
 	Vec2 mouse;
-	public Camera camera;
 	
 	public float camXRot;
 	public float camYRot;
 	public float camZRot;
 
-	public PointLight flashlight;
-	public boolean flashlightOn = false;
-	int flashlightToggleDelay = 15;
-	int flashlightToggleCounter = 0;
-	
-	public boolean moveFlashlightWithPlayer = true;
-	int moveFlashlightToggleDelay = 15;
-	int moveFlashlightToggleCounter = 0;
-
-	public Player(Vec3 pos) {
+	public Player(Vec3 pos, int scene) {
 		super();
+		this.scene = scene;
 		this.pos = new Vec3(pos);
 		this.vel = new Vec3(0);
-		camera = new Camera(Main.FOV, (float) Main.windowWidth, (float) Main.windowHeight, Main.NEAR, Main.FAR);
 		mouse = MouseInput.getMousePos();
-		flashlight = new PointLight(this.camera.getPos(), new Vec3(1), 0f, 1.5f, 0.022f, 0.0019f);
 	}
 	
 	protected void _kill() {};
-	
-	public Hitbox getHitbox() {
-		return h;
-	}
-	
-	//ignores all collision
-	private void move() {
-		this.vel.x *= friction;
-		this.vel.z *= friction;
-		this.vel.y *= friction;
-		
-		this.pos = nextPos_noclip();
-	}
-	
-	private Vec3 nextPos_noclip() {
-		return this.pos.add(this.vel);
-	}
 
 	@Override
 	public void update() {
@@ -84,61 +61,73 @@ public class Player extends Entity {
 		mouse = nextMouse;
 
 		camXRot = (float) MathUtils.clamp((float) -(Math.PI - 0.01) / 2f, (float) (Math.PI - 0.01) / 2f, camXRot);
-		
-		camera.setFacing(camXRot, camYRot);
-		camera.setUp(camZRot);
 
 		// TRANSLATION
 		Vec3 forward = new Vec3(0, 0, -moveSpeed);
 		forward.rotateY(camYRot);
 		Vec3 right = new Vec3(forward);
 		right.rotateY((float) Math.toRadians(-90));
+		
+		Vec3 accel = new Vec3(0);
 
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_W)) {
-			vel.addi(forward);
+			accel.addi(forward);
 		}
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_S)) {
-			vel.subi(forward);
+			accel.subi(forward);
 		}
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_D)) {
-			vel.subi(right);
+			accel.subi(right);
 		}
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_A)) {
-			vel.addi(right);
+			accel.addi(right);
 		}
+		accel.setLength(moveSpeed);
+		vel.addi(accel);
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_SPACE)) {
-			vel.y += moveSpeed;
-		}
-		if (KeyboardInput.isKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
-			vel.y -= moveSpeed;
+			vel.y += jumpVel;
 		}
 
 		move();
-
-		camera.setPos(this.pos.add(cameraVec));
-
-		// flashlight
-		if(moveFlashlightWithPlayer) {
-			this.flashlight.pos = this.camera.getPos();
-			this.flashlight.dir = this.camera.getFacing();
-		}
+	}
+	
+	//ignores all collision
+	private void move_noclip() {
+		this.vel.x *= horizontalFriction;
+		this.vel.z *= horizontalFriction;
+		this.vel.y *= horizontalFriction;
 		
-		if (KeyboardInput.isKeyPressed(GLFW_KEY_E) && flashlightToggleCounter >= flashlightToggleDelay) {
-			flashlightToggleCounter = 0;
-			if (flashlightOn) {
-				Light.lights.get(Scene.WORLD_SCENE).remove(flashlight);
-			} else {
-				Light.lights.get(Scene.WORLD_SCENE).add(flashlight);
+		this.pos.add(this.vel);
+	}
+	
+	private void move() {
+		this.vel.x *= horizontalFriction;
+		this.vel.z *= horizontalFriction;
+		this.vel.y *= verticalFriction;
+		this.vel.addi(new Vec3(0, -gravity, 0));
+		this.pos.addi(vel);
+		
+		Vec3 capsule_bottom = pos.add(new Vec3(0, 0, 0));
+		Vec3 capsule_top = pos.add(new Vec3(0, height, 0));
+		
+		Vec3 capsule_bottomSphere = pos.add(new Vec3(0, radius, 0));
+		Vec3 capsule_topSphere = pos.add(new Vec3(0, height - radius, 0));
+		
+		//resolve intersections by applying a force to each one
+		ArrayList<Vec3> intersections = Model.capsuleIntersect(scene, capsule_bottom, capsule_top, radius);
+		for(Vec3 v : intersections) {
+			Vec3 capsule_c = MathUtils.point_lineSegmentProjectClamped(v, capsule_bottomSphere, capsule_topSphere);	//closest point on capsule midline
+			Vec3 toCenter = new Vec3(v, capsule_c);
+			
+			Vec3 normToCenter = new Vec3(toCenter).normalize();
+			toCenter.setLength(radius - toCenter.length());
+			Vec3 impulse = this.vel.projectOnto(normToCenter).mul(-1f);
+			
+			if(this.vel.dot(toCenter) < 0) {
+				this.vel.addi(impulse);
+				this.pos.addi(toCenter.mul(1f + epsilon));
 			}
-			flashlightOn = !flashlightOn;
 		}
-		flashlightToggleCounter = Math.min(flashlightToggleCounter + 1, flashlightToggleDelay);
-		
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_L) && moveFlashlightToggleCounter >= moveFlashlightToggleDelay) {
-			moveFlashlightToggleCounter = 0;
-			this.moveFlashlightWithPlayer = !moveFlashlightWithPlayer;
-		}
-		moveFlashlightToggleCounter ++;
 	}
 	
 	//WIP

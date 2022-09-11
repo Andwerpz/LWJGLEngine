@@ -82,6 +82,24 @@ public class CollisionMesh {
 		return result;
 	}
 	
+	public ArrayList<Vec3> capsuleIntersect(Vec3 capsule_bottom, Vec3 capsule_top, float capsule_radius, Mat4 transform){
+		ArrayList<Vec3> result = new ArrayList<>();
+		
+		Vec3[] vTransformed = this.transformVertices(transform);
+		
+		for(int t = 0; t < this.indices.length; t += 3) {
+			Vec3 t0 = new Vec3(vTransformed[indices[t + 0]]);
+			Vec3 t1 = new Vec3(vTransformed[indices[t + 1]]);
+			Vec3 t2 = new Vec3(vTransformed[indices[t + 2]]);
+			
+			Vec3 intersect = MathUtils.capsule_triangleIntersect(capsule_bottom, capsule_top, capsule_radius, t0, t1, t2);
+			if(intersect != null) {
+				result.add(intersect);
+			}
+		}
+		return result;
+	}
+	
 	public ArrayList<Vec3> lineSegmentIntersect(Vec3 p1, Vec3 p2, Mat4 transform) {
 		Vec3 dir = new Vec3(p1, p2);
 		float pDist = dir.length();
