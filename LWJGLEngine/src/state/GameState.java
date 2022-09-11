@@ -105,8 +105,10 @@ public class GameState extends State {
 		Vec3 cam_pos = new Vec3(perspectiveCamera.getPos());
 		Vec3 cam_dir = new Vec3(perspectiveCamera.getFacing());
 		
-		Ball b = new Ball(cam_pos, cam_dir.mul(0.6f), 0.3f, Scene.WORLD_SCENE);
+		//Ball b = new Ball(new Vec3(18.79726f, 2.3f, -30.208082f), new Vec3(-0.007221279f, -0.43450323f, -0.41370863f), 0.3f, Scene.WORLD_SCENE);
+		Ball b = new Ball(cam_pos, cam_dir.mul(0.3f), 0.3f, Scene.WORLD_SCENE);
 		System.out.println(cam_pos + " " + cam_dir.mul(0.6f));
+		System.out.println(Entity.entities.size());
 	}
 
 	@Override

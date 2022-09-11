@@ -59,8 +59,12 @@ public class Ball extends Entity {
 			Vec3 normToCenter = new Vec3(toCenter).normalize();
 			toCenter.setLength(radius - toCenter.length());
 			Vec3 impulse = this.vel.projectOnto(normToCenter);
-			this.vel.subi(impulse.mul(1.5f));
-			this.pos.addi(toCenter.muli(1f + epsilon));
+			
+			if(this.vel.dot(impulse) > 0) {
+				this.vel.subi(impulse.mul(1.5f));
+				this.pos.addi(toCenter.muli(1f + epsilon));
+			}
+			
 		}
 		
 		this.transformMat = Mat4.scale(radius).mul(Mat4.translate(pos));
