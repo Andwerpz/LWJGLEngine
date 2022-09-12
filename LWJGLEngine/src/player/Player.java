@@ -21,12 +21,13 @@ import util.Vec3;
 
 public class Player extends Entity {
 
-	public static float jumpVel = 0.25f;
-	public static float verticalFriction = 0.99f;
+	public static float jumpVel = 0.10f;
+	public static float airMoveSpeed = 0.001f;
+	public static float airFriction = 0.99f;
 	public static Vec3 cameraVec = new Vec3(0f, 0.9f, 0f);
 	
-	public static float moveSpeed = 0.012f;
-	public static float horizontalFriction = 0.8f;
+	public static float groundMoveSpeed = 0.012f;
+	public static float groundFriction = 0.8f;
 	public static float epsilon = 0.00001f;
 	public static float gravity = 0.005f;
 	
@@ -34,6 +35,7 @@ public class Player extends Entity {
 	public float radius = 0.33f;
 	public float height = 1f;
 	public int scene;
+	private boolean onGround = false;
 
 	Vec2 mouse;
 	
@@ -68,42 +70,63 @@ public class Player extends Entity {
 	
 	//ignores all collision
 	private void move_noclip() {
-		this.vel.x *= horizontalFriction;
-		this.vel.z *= horizontalFriction;
-		this.vel.y *= horizontalFriction;
+		this.vel.x *= airFriction;
+		this.vel.z *= airFriction;
+		this.vel.y *= airFriction;
 		
 		this.pos.add(this.vel);
 	}
 	
 	private void move() {
-		this.vel.x *= horizontalFriction;
-		this.vel.z *= horizontalFriction;
-		this.vel.y *= verticalFriction;
-		Vec3 forward = new Vec3(0, 0, -moveSpeed);
+		this.groundCheck();
+		
+		// -- UPDATE POSITON -- 
+		if(onGround) {
+			this.vel.x *= groundFriction;
+			this.vel.z *= groundFriction;
+			this.vel.y *= airFriction;
+		}
+		else {
+			this.vel.mul(airFriction);
+		}
+		this.pos.addi(vel);
+		
+		// -- PLAYER INPUTS --
+		Vec3 forward = new Vec3(0, 0, -1);
 		forward.rotateY(camYRot);
 		Vec3 right = new Vec3(forward);
 		right.rotateY((float) Math.toRadians(-90));
 		
-		Vec3 accel = new Vec3(0);
+		Vec3 inputAccel = new Vec3(0);
 
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_W)) {
-			accel.addi(forward);
+			inputAccel.addi(forward);
 		}
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_S)) {
-			accel.subi(forward);
+			inputAccel.subi(forward);
 		}
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_D)) {
-			accel.subi(right);
+			inputAccel.subi(right);
 		}
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_A)) {
-			accel.addi(right);
+			inputAccel.addi(right);
 		}
-		accel.setLength(moveSpeed);
-		vel.addi(accel);
+		inputAccel.setLength(onGround? groundMoveSpeed : airMoveSpeed);
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_SPACE)) {
-			vel.y += jumpVel;
+			if(onGround) {
+				this.vel.y = jumpVel;
+			}
+		}
+		this.vel.addi(inputAccel);
+		
+		// -- GRAVITY --
+		if(!onGround) {
+			System.out.println("not on ground");
+			this.vel.addi(new Vec3(0, -gravity, 0));
 		}
 		
+		// -- COLLISION RESOLUTION -- 
+		//player movement accel
 		Vec3 capsule_bottom = pos.add(new Vec3(0, 0, 0));
 		Vec3 capsule_top = pos.add(new Vec3(0, height, 0));
 		
@@ -125,29 +148,46 @@ public class Player extends Entity {
 				this.pos.addi(toCenter.mul(1f + epsilon));
 			}
 		}
-		this.pos.addi(vel);
-		
-		boolean onGround = false;
-		capsule_bottom.subi(new Vec3(0, epsilon * 10f, 0));
-		capsule_top.subi(new Vec3(0, epsilon * 10f, 0));
-		
-		capsule_bottomSphere.subi(new Vec3(0, epsilon * 10f, 0));
-		capsule_topSphere.subi(new Vec3(0, epsilon * 10f, 0));
-		intersections = Model.capsuleIntersect(scene, capsule_bottom, capsule_top, radius);
+	}
+	
+	private void groundCheck() {
+		onGround = false;
+//		Vec3 capsule_bottom = pos.add(new Vec3(0, 0, 0));
+//		Vec3 capsule_top = pos.add(new Vec3(0, height, 0));
+//		
+//		Vec3 capsule_bottomSphere = pos.add(new Vec3(0, radius, 0));
+//		Vec3 capsule_topSphere = pos.add(new Vec3(0, height - radius, 0));
+//		
+//		capsule_bottom.subi(new Vec3(0, epsilon * 100f, 0));
+//		capsule_top.subi(new Vec3(0, epsilon * 100f, 0));
+//		
+//		capsule_bottomSphere.subi(new Vec3(0, epsilon * 100f, 0));
+//		capsule_topSphere.subi(new Vec3(0, epsilon * 100f, 0));
+//		ArrayList<Vec3> intersections = Model.capsuleIntersect(scene, capsule_bottom, capsule_top, radius);
+//		for(Vec3 v : intersections) {
+//			Vec3 capsule_c = MathUtils.point_lineSegmentProjectClamped(v, capsule_bottomSphere, capsule_topSphere);	//closest point on capsule midline
+//			Vec3 toCenter = new Vec3(v, capsule_c);
+//			onGround = true;
+//			
+//			if(toCenter.dot(new Vec3(0, 1, 0)) > -1) {
+//				onGround = true;
+//			}
+//			
+//		}
+//		
+		Vec3 capsule_bottomSphere = pos.add(new Vec3(0, radius, 0));
+		ArrayList<Vec3> intersections = Model.sphereIntersect(scene, capsule_bottomSphere, this.radius + epsilon);
+		float minDist = 1f;
 		for(Vec3 v : intersections) {
-			Vec3 capsule_c = MathUtils.point_lineSegmentProjectClamped(v, capsule_bottomSphere, capsule_topSphere);	//closest point on capsule midline
-			Vec3 toCenter = new Vec3(v, capsule_c);
-			
+			Vec3 toCenter = new Vec3(v, capsule_bottomSphere);
 			if(toCenter.dot(new Vec3(0, 1, 0)) > 0) {
 				onGround = true;
 			}
-			
+			//minDist = Math.min(minDist, new Vec3(this.pos, v).length());
 		}
-		
-		if(!onGround) {
-			System.out.println("not on ground");
-			this.vel.addi(new Vec3(0, -gravity, 0));
-		}
+//		if(minDist < 0.1) {
+//			onGround = true;
+//		}
 	}
 	
 	//WIP
