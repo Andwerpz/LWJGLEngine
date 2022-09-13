@@ -96,6 +96,7 @@ public class Player extends Entity {
 		if(!onGround) {
 			this.vel.addi(new Vec3(0, -gravity, 0));
 		}
+		resolveCollisions();
 		
 		// -- PLAYER INPUTS --
 		if(onGround) {
@@ -130,9 +131,26 @@ public class Player extends Entity {
 			}
 			this.vel.addi(inputAccel);
 		}
+		resolveCollisions();
 		
-		// -- COLLISION RESOLUTION -- 
-		//player movement accel
+	}
+	
+	//check if on the ground, and if so, then compute the ground normal
+	private void groundCheck() {
+		onGround = false;
+		Vec3 capsule_bottomSphere = pos.add(new Vec3(0, radius, 0));
+		ArrayList<Vec3> intersections = Model.sphereIntersect(scene, capsule_bottomSphere, this.radius + epsilon);
+		for(Vec3 v : intersections) {
+			Vec3 toCenter = new Vec3(v, capsule_bottomSphere);
+			toCenter.normalize();
+			if(toCenter.dot(new Vec3(0, 1, 0)) > 0.5) {
+				groundNormal = toCenter;
+				onGround = true;
+			}
+		}
+	}
+	
+	private void resolveCollisions() {
 		Vec3 capsule_bottom = pos.add(new Vec3(0, 0, 0));
 		Vec3 capsule_top = pos.add(new Vec3(0, height, 0));
 		
@@ -152,21 +170,6 @@ public class Player extends Entity {
 			if(this.vel.dot(toCenter) < 0) {
 				this.vel.addi(impulse);
 				this.pos.addi(toCenter.mul(1f + epsilon));
-			}
-		}
-	}
-	
-	//check if on the ground, and if so, then compute the ground normal
-	private void groundCheck() {
-		onGround = false;
-		Vec3 capsule_bottomSphere = pos.add(new Vec3(0, radius, 0));
-		ArrayList<Vec3> intersections = Model.sphereIntersect(scene, capsule_bottomSphere, this.radius + epsilon);
-		for(Vec3 v : intersections) {
-			Vec3 toCenter = new Vec3(v, capsule_bottomSphere);
-			toCenter.normalize();
-			if(toCenter.dot(new Vec3(0, 1, 0)) > -1) {
-				groundNormal = toCenter;
-				onGround = true;
 			}
 		}
 	}
