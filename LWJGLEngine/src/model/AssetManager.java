@@ -21,6 +21,7 @@ public class AssetManager {
 	public static void init() {
 		paths.put("dust2", new String[] {"/dust2/", "dust2_blend.obj"});
 		paths.put("sphere", new String[] {"/sphere/", "sphere.obj"});
+		paths.put("cylinder", new String[] {"/cylinder/", "cylinder.obj"});
 		paths.put("lake_skybox", new String[] {
 			"/skybox/lake/right.jpg", 
 			"/skybox/lake/left.jpg", 

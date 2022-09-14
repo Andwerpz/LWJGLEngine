@@ -218,6 +218,15 @@ public class Model {
 		    	material.setTexture(diffuseTexture, Material.DIFFUSE);
 		    }
 		    
+		    //map_Ks in .mtl
+		    path = AIString.calloc();
+		    aiGetMaterialTexture(AIMat, aiTextureType_SPECULAR, 0, path, (IntBuffer) null, null, null, null, null, null);
+		    String specularPath = path.dataString();
+		    if(specularPath != null && specularPath.length() != 0) {
+		    	Texture specularTexture = new Texture(loadImage(workingDirectory + "/res" + filepath + specularPath));
+		    	material.setTexture(specularTexture, Material.SPECULAR);
+		    }
+		    
 		    //norm in .mtl
 		    path = AIString.calloc();
 		    aiGetMaterialTexture(AIMat, aiTextureType_NORMALS, 0, path, (IntBuffer) null, null, null, null, null, null);

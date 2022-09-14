@@ -225,6 +225,15 @@ public class Mat4 {
 		return result;
 	}
 	
+	public static Mat4 scale(float xAmt, float yAmt, float zAmt) {
+		Mat4 result = Mat4.identity();
+		result.mat[0][0] = xAmt;
+		result.mat[1][1] = yAmt;
+		result.mat[2][2] = zAmt;
+
+		return result;
+	}
+	
 	/**
 	 * Returns a new matrix equal to the product between itself and the input
 	 * @param matrix

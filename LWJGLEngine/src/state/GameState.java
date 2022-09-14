@@ -48,9 +48,6 @@ public class GameState extends State {
 		Main.lockCursor();
 		InputManager.removeAllInputs();
 		Entity.killAll();
-		AssetManager.loadModel("sphere");
-		
-		player = new Player(new Vec3(18.417412f, 0.7f, -29.812654f), Scene.WORLD_SCENE);
 		
 		// -- WORLD SCENE --
 		Model.removeInstancesFromScene(Scene.WORLD_SCENE);
@@ -59,6 +56,7 @@ public class GameState extends State {
 		Model.activateCollisionMesh(this.mapID);
 		Light.addLight(Scene.WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 		Scene.skyboxes.put(Scene.WORLD_SCENE, AssetManager.getSkybox("lake_skybox")); 
+		player = new Player(new Vec3(18.417412f, 0.7f, -29.812654f), Scene.WORLD_SCENE);
 	}
 
 	@Override
@@ -79,8 +77,9 @@ public class GameState extends State {
 	}
 	
 	private void updateCamera() {
-		perspectiveCamera.setPos(player.pos.add(Player.cameraVec));
 		perspectiveCamera.setFacing(player.camXRot, player.camYRot);
+		perspectiveCamera.setPos(player.pos.add(Player.cameraVec).sub(perspectiveCamera.getFacing().mul(1f)));
+		
 		perspectiveCamera.setUp(new Vec3(0, 1, 0));
 	}
 
