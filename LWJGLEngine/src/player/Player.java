@@ -23,7 +23,7 @@ import util.Vec3;
 public class Player extends Entity {
 
 	public static float jumpVel = 0.12f;
-	public static float airMoveSpeed = 0f;
+	public static float airMoveSpeed = 0.0005f;
 	public static float airFriction = 0.99f;
 	public static Vec3 cameraVec = new Vec3(0f, 0.9f, 0f);
 	
@@ -108,38 +108,38 @@ public class Player extends Entity {
 		resolveCollisions();
 		
 		// -- PLAYER INPUTS --
-		if(onGround) {
-			Vec3 forward = new Vec3(0, 0, -1);
-			forward.rotateY(camYRot);
-			Vec3 right = new Vec3(forward);
-			right.rotateY((float) Math.toRadians(-90));
-			
-			Vec3 inputAccel = new Vec3(0);
-	
-			if (KeyboardInput.isKeyPressed(GLFW_KEY_W)) {
-				inputAccel.addi(forward);
-			}
-			if (KeyboardInput.isKeyPressed(GLFW_KEY_S)) {
-				inputAccel.subi(forward);
-			}
-			if (KeyboardInput.isKeyPressed(GLFW_KEY_D)) {
-				inputAccel.subi(right);
-			}
-			if (KeyboardInput.isKeyPressed(GLFW_KEY_A)) {
-				inputAccel.addi(right);
-			}
-			Vec3 groundCorrection = inputAccel.projectOnto(groundNormal);
-			inputAccel.subi(groundCorrection);
-			inputAccel.setLength(groundMoveSpeed);
-			if (KeyboardInput.isKeyPressed(GLFW_KEY_SPACE)) {
-				if(onGround) {
-					this.vel.y = jumpVel;
-					this.vel.x *= groundFriction;
-					this.vel.y *= groundFriction;
-				}
-			}
-			this.vel.addi(inputAccel);
+		Vec3 forward = new Vec3(0, 0, -1);
+		forward.rotateY(camYRot);
+		Vec3 right = new Vec3(forward);
+		right.rotateY((float) Math.toRadians(-90));
+		
+		Vec3 inputAccel = new Vec3(0);
+
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_W)) {
+			inputAccel.addi(forward);
 		}
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_S)) {
+			inputAccel.subi(forward);
+		}
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_D)) {
+			inputAccel.subi(right);
+		}
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_A)) {
+			inputAccel.addi(right);
+		}
+		if(onGround) {
+			Vec3 groundCorrection = inputAccel.projectOnto(groundNormal);
+			inputAccel.addi(groundCorrection);
+		}
+		inputAccel.setLength(this.onGround? groundMoveSpeed : airMoveSpeed);
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_SPACE)) {
+			if(onGround) {
+				this.vel.y = jumpVel;
+				this.vel.x *= groundFriction;
+				this.vel.y *= groundFriction;
+			}
+		}
+		this.vel.addi(inputAccel);
 		resolveCollisions();
 		this.updateModelMats();
 	}
@@ -162,16 +162,18 @@ public class Player extends Entity {
 	//check if on the ground, and if so, then compute the ground normal
 	private void groundCheck() {
 		onGround = false;
+		groundNormal = new Vec3(0);
 		Vec3 capsule_bottomSphere = pos.add(new Vec3(0, radius, 0));
 		ArrayList<Vec3> intersections = Model.sphereIntersect(scene, capsule_bottomSphere, this.radius + epsilon);
 		for(Vec3 v : intersections) {
 			Vec3 toCenter = new Vec3(v, capsule_bottomSphere);
 			toCenter.normalize();
 			if(toCenter.dot(new Vec3(0, 1, 0)) > 0.5) {
-				groundNormal = toCenter;
+				groundNormal.addi(toCenter.normalize());
 				onGround = true;
 			}
 		}
+		groundNormal.normalize();
 	}
 	
 	private void resolveCollisions() {
