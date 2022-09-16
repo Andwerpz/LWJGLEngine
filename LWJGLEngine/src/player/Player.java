@@ -22,7 +22,7 @@ import util.Vec3;
 
 public class Player extends Entity {
 
-	public static float jumpVel = 0.1f;
+	public static float jumpVel = 0.12f;
 	public static float airMoveSpeed = 0f;
 	public static float airFriction = 0.99f;
 	public static Vec3 cameraVec = new Vec3(0f, 0.9f, 0f);
@@ -98,7 +98,6 @@ public class Player extends Entity {
 			this.vel.mul(airFriction);
 		}
 		this.pos.addi(vel);
-		this.updateModelMats();
 		
 		this.groundCheck();
 		
@@ -142,6 +141,7 @@ public class Player extends Entity {
 			this.vel.addi(inputAccel);
 		}
 		resolveCollisions();
+		this.updateModelMats();
 	}
 	
 	private void updateModelMats() {
