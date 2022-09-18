@@ -30,6 +30,7 @@ import org.lwjgl.assimp.AIVector3D;
 import graphics.Material;
 import graphics.Texture;
 import graphics.VertexArray;
+import util.FileUtils;
 import util.GraphicsTools;
 import util.Mat4;
 import util.SystemUtils;
@@ -214,7 +215,7 @@ public class Model {
 		    aiGetMaterialTexture(AIMat, aiTextureType_DIFFUSE, 0, path, (IntBuffer) null, null, null, null, null, null);
 		    String diffusePath = path.dataString();
 		    if(diffusePath != null && diffusePath.length() != 0) {
-		    	Texture diffuseTexture = new Texture(loadImage(workingDirectory + "/res" + filepath + diffusePath));
+		    	Texture diffuseTexture = new Texture(loadImage(filepath + diffusePath));
 		    	material.setTexture(diffuseTexture, Material.DIFFUSE);
 		    }
 		    
@@ -223,7 +224,7 @@ public class Model {
 		    aiGetMaterialTexture(AIMat, aiTextureType_SPECULAR, 0, path, (IntBuffer) null, null, null, null, null, null);
 		    String specularPath = path.dataString();
 		    if(specularPath != null && specularPath.length() != 0) {
-		    	Texture specularTexture = new Texture(loadImage(workingDirectory + "/res" + filepath + specularPath));
+		    	Texture specularTexture = new Texture(loadImage(filepath + specularPath));
 		    	material.setTexture(specularTexture, Material.SPECULAR);
 		    }
 		    
@@ -232,7 +233,7 @@ public class Model {
 		    aiGetMaterialTexture(AIMat, aiTextureType_NORMALS, 0, path, (IntBuffer) null, null, null, null, null, null);
 		    String normalsPath = path.dataString();
 		    if(normalsPath != null && normalsPath.length() != 0) {
-		    	Texture normalsTexture = new Texture(loadImage(workingDirectory + "/res" + filepath + normalsPath));
+		    	Texture normalsTexture = new Texture(loadImage(filepath + normalsPath));
 		    	material.setTexture(normalsTexture, Material.NORMAL);
 		    }
 		    
@@ -246,13 +247,13 @@ public class Model {
 		String fileExtension = getFileExtension(path);
 		switch(fileExtension) {
 		case "png": 
-			return GraphicsTools.loadImageFromRoot(path);
+			return FileUtils.loadImage(path);
 			
 		case "jpg":
-			return GraphicsTools.loadImageFromRoot(path);
+			return FileUtils.loadImage(path);
 			
 		case "tga":
-			return TargaReader.getImage(path);
+			return TargaReader.getImage(SystemUtils.getWorkingDirectory() + "\\res" + path);
 		}
 		
 		System.err.println("File extension " + fileExtension + " is not supported");

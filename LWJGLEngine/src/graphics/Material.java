@@ -20,10 +20,10 @@ public class Material {
 	public static final int NORMAL = 3;
 	public static final int DISPLACEMENT = 4;
 	
-	public static final Texture DIFFUSE_DEFAULT = new Texture("/tex_diffuse_default.png", false, false);
-	public static final Texture SPECULAR_DEFAULT = new Texture("/tex_specular_default.png", false, false);
-	public static final Texture NORMAL_DEFAULT = new Texture("/tex_normal_default.png", false, false);
-	public static final Texture DISPLACEMENT_DEFAULT = new Texture("/tex_displacement_default.png", true, false);
+	public static final Texture DIFFUSE_DEFAULT = new Texture("tex_diffuse_default.png", false, false);
+	public static final Texture SPECULAR_DEFAULT = new Texture("tex_specular_default.png", false, false);
+	public static final Texture NORMAL_DEFAULT = new Texture("tex_normal_default.png", false, false);
+	public static final Texture DISPLACEMENT_DEFAULT = new Texture("tex_displacement_default.png", true, false);
 
 	private int width, height;
 	private Texture diffuse, specular, normal, displacement;

@@ -78,8 +78,7 @@ public class GameState extends State {
 	
 	private void updateCamera() {
 		perspectiveCamera.setFacing(player.camXRot, player.camYRot);
-		perspectiveCamera.setPos(player.pos.add(Player.cameraVec).sub(perspectiveCamera.getFacing().mul(1f)));
-		
+		perspectiveCamera.setPos(player.pos.add(Player.cameraVec).sub(perspectiveCamera.getFacing().mul(0f)));
 		perspectiveCamera.setUp(new Vec3(0, 1, 0));
 	}
 

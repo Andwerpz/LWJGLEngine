@@ -181,20 +181,4 @@ public class GraphicsTools {
 		
 		return animation;
 	}
-	
-	//loads img with filepath starting from root; C:
-	public static BufferedImage loadImageFromRoot(String filepath) {
-		BufferedImage img = null;
-		
-		System.out.print("LOADING IMAGE: " + filepath);
-		
-		try {
-			img = ImageIO.read(new File(filepath));
-			System.out.println(" SUCCESS");
-		} catch(IOException e) {
-			System.out.println(" FAILED");
-		}
-		
-		return img;
-	}
 }

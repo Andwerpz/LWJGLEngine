@@ -8,6 +8,7 @@ import java.nio.FloatBuffer;
 import javax.imageio.ImageIO;
 
 import util.BufferUtils;
+import util.FileUtils;
 import util.GraphicsTools;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -76,11 +77,11 @@ public class Texture {
 	}
 	
 	public int load(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
-		return this.load(GraphicsTools.loadImage(path), invertColors, horizontalFlip, verticalFlip);
+		return this.load(FileUtils.loadImage(path), invertColors, horizontalFlip, verticalFlip);
 	}
 	
 	public int load(String path, boolean invertColors, boolean horizontalFlip) {
-		return this.load(GraphicsTools.loadImage(path), invertColors, horizontalFlip, false);
+		return this.load(FileUtils.loadImage(path), invertColors, horizontalFlip, false);
 	}
 	
 	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip) {
@@ -92,11 +93,11 @@ public class Texture {
 	}
 	
 	public static int[] getDataFromImage(String path, boolean invertColors, boolean horizontalFlip, int[] outWH) {
-		return Texture.getDataFromImage(GraphicsTools.loadImage(path), invertColors, horizontalFlip, false, outWH);
+		return Texture.getDataFromImage(FileUtils.loadImage(path), invertColors, horizontalFlip, false, outWH);
 	}
 	
 	public static int[] getDataFromImage(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int[] outWH) {
-		return Texture.getDataFromImage(GraphicsTools.loadImage(path), invertColors, horizontalFlip, verticalFlip, outWH);
+		return Texture.getDataFromImage(FileUtils.loadImage(path), invertColors, horizontalFlip, verticalFlip, outWH);
 	}
 	
 	public static int[] getDataFromImage(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int[] outWH) {
