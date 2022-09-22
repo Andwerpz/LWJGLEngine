@@ -115,6 +115,7 @@ public class Main implements Runnable{
 			if(delta >= 1.0) {
 				update();
 				delta --;
+				delta = Math.min(delta, 1);
 				updates ++;
 			}
 			
