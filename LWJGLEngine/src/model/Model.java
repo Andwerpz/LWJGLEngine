@@ -308,11 +308,14 @@ public class Model {
 		if(model.modelMats.get(scene).size() == 0) {
 			model.modelMats.remove(scene);
 		}
+		deactivateCollisionMesh(ID);
 		IDtoScene.remove(ID);
 		IDtoModel.remove(ID);
 		modelInstanceIDs.remove(ID);
-		deactivateCollisionMesh(ID);
-		model.scenesNeedingUpdates.add(scene);
+		
+		if(model.modelMats.containsKey(scene)) {
+			model.scenesNeedingUpdates.add(scene);
+		}
 		
 		System.out.println("REMOVE MODEL INSTANCE " + ID);
 	}
@@ -336,7 +339,7 @@ public class Model {
 	}
 	
 	public static void deactivateCollisionMesh(long ID) {
-		if(!modelInstanceIDs.contains(ID)) {
+		if(!IDtoScene.containsKey(ID)) {
 			return;
 		}
 		int scene = IDtoScene.get(ID);
@@ -360,6 +363,9 @@ public class Model {
 	private void updateModelMats() {
 		for(VertexArray v : meshes) {
 			for(int scene : scenesNeedingUpdates) {
+				if(modelMats.get(scene) == null) {
+					continue;
+				}
 				v.updateInstances(modelMats.get(scene), scene);
 			}
 		}
@@ -372,6 +378,10 @@ public class Model {
 			return result;
 		}
 		for(long ID : activeCollisionMeshes.get(scene)) {
+			if(!Model.modelInstanceIDs.contains(ID)) {
+				System.out.println("something is wrong " + ID);
+				continue;
+			}
 			Model model = IDtoModel.get(ID);
 			Mat4 transform = model.modelMats.get(scene).get(ID);
 			for(CollisionMesh c : model.collisionMeshes) {
@@ -387,6 +397,10 @@ public class Model {
 			return result;
 		}
 		for(long ID : activeCollisionMeshes.get(scene)) {
+			if(!Model.modelInstanceIDs.contains(ID)) {
+				System.out.println("something is wrong " + ID);
+				continue;
+			}
 			Model model = IDtoModel.get(ID);
 			Mat4 transform = model.modelMats.get(scene).get(ID);
 			for(CollisionMesh c : model.collisionMeshes) {
@@ -402,6 +416,10 @@ public class Model {
 			return result;
 		}
 		for(long ID : activeCollisionMeshes.get(scene)) {
+			if(!Model.modelInstanceIDs.contains(ID)) {
+				System.out.println("something is wrong " + ID);
+				continue;
+			}
 			Model model = IDtoModel.get(ID);
 			Mat4 transform = model.modelMats.get(scene).get(ID);
 			for(CollisionMesh c : model.collisionMeshes) {
@@ -417,7 +435,9 @@ public class Model {
 			if(m.modelMats.get(scene) == null) {
 				continue;
 			}
-			for(long id : m.modelMats.get(scene).keySet()) {
+			ArrayList<Long> instanceIDs = new ArrayList<>();
+			instanceIDs.addAll(m.modelMats.get(scene).keySet());
+			for(long id : instanceIDs) {
 				Model.removeInstance(id);
 			}
 		}

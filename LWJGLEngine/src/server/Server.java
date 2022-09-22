@@ -11,6 +11,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public abstract class Server implements Runnable {
 	private boolean isRunning = true;
@@ -25,8 +27,9 @@ public abstract class Server implements Runnable {
 	private ServerConnectionRequestListener serverConnectionRequestListener;
 	
 	private ServerSocket serverSocket;
-	private ArrayList<Socket> clientSockets;
-	private ArrayList<PacketListener> packetListeners;
+	private HashSet<Integer> clientIDs;
+	private HashMap<Integer, Socket> clientSockets;
+	private HashMap<Integer, PacketListener> packetListeners;
 	private PacketSender packetSender;
 	
 	private long noClientTimeoutMillis = 15000;
@@ -44,8 +47,9 @@ public abstract class Server implements Runnable {
 			e.printStackTrace();
 		}
 		
-		this.clientSockets = new ArrayList<>();
-		this.packetListeners = new ArrayList<>();
+		this.clientIDs = new HashSet<>();
+		this.clientSockets = new HashMap<>();
+		this.packetListeners = new HashMap<>();
 		this.serverConnectionRequestListener = new ServerConnectionRequestListener(this.serverSocket);
 		this.packetSender = new PacketSender();
 		
@@ -79,44 +83,56 @@ public abstract class Server implements Runnable {
 		}
 	}
 	
+	private int generateNewClientID() {
+		int ID = 0;
+		while(ID == 0 || this.clientIDs.contains(ID)) {
+			ID = (int) (Math.random() * 1000000d);
+		}
+		return ID;
+	}
+	
 	public void tick() {
 		if(this.serverConnectionRequestListener.hasNewClients()) {
 			ArrayList<Socket> newClients = this.serverConnectionRequestListener.getNewClients();
 			for(Socket s : newClients) {
 				PacketListener l = new PacketListener(s, "Server");
-				this.clientSockets.add(s);
-				this.packetListeners.add(l);
+				int ID = this.generateNewClientID();
+				this.clientIDs.add(ID);
+				this.clientSockets.put(ID, s);
+				this.packetListeners.put(ID, l);
+				this._clientConnect(ID);
 			}
 		}
 		
 		// -- READ --	//should open for whenever
-		for(int i = this.clientSockets.size() - 1; i >= 0; i--) {
-			if(!this.packetListeners.get(i).isConnected()) {
-				//client disconnected
+		for(int ID : this.clientIDs) {
+			if(!this.packetListeners.get(ID).isConnected()) {
+				//Client Disconnected
 				System.out.println("Client disconnected");
-				this.packetListeners.get(i).exit();
-				this.packetListeners.remove(i);
+				this.packetListeners.get(ID).exit();
+				this.packetListeners.remove(ID);
 				try {
-					this.clientSockets.get(i).close();
+					this.clientSockets.get(ID).close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				this.clientSockets.remove(i);
+				this.clientSockets.remove(ID);
+				this.clientIDs.remove(ID);
+				this._clientDisconnect(ID);
 				continue;
 			}
 			
-			while(this.packetListeners.get(i).nextPacket()) {
-				this.readPacket(this.packetListeners.get(i));
+			while(this.packetListeners.get(ID).nextPacket()) {
+				this.readPacket(this.packetListeners.get(ID), ID);
 			}
 			
 		}
 		
 		// -- WRITE --	//should run at set tickrate
-		for(int i = this.clientSockets.size() - 1; i >= 0; i--) {
-			Socket s = this.clientSockets.get(i);
+		for(int ID : this.clientIDs) {
+			Socket s = this.clientSockets.get(ID);
 			try {
-				this.writePacket(this.packetSender);
+				this.writePacket(this.packetSender, ID);
 				this.packetSender.flush(s);
 			} catch(IOException e) {
 				e.printStackTrace();
@@ -141,19 +157,33 @@ public abstract class Server implements Runnable {
 	}
 	
 	//use the packet sender to write a packet. The parent class will flush it for you
-	public abstract void writePacket(PacketSender packetSender);
+	public abstract void writePacket(PacketSender packetSender, int clientID);
 	
 	//use the packet listener to read in the packet. The parent class has already polled the next packet
-	public abstract void readPacket(PacketListener packetListener);
+	public abstract void readPacket(PacketListener packetListener, int clientID);
+	
+	//so that the child class can do whatever they need to do in the case of connection status change
+	public abstract void _clientConnect(int clientID);
+	public abstract void _clientDisconnect(int clientID);
+	
+	public abstract void _exit();
+	
+	public boolean isRunning() {
+		return this.isRunning;
+	}
 	
 	public void exit() {
 		System.out.println("Closing server at " + ip + ":" + port);
 		this.serverConnectionRequestListener.exit();
 		
-		for(int i = 0; i < this.clientSockets.size(); i++) {
+		for(int ID : this.clientIDs) {
 			try {
-				this.packetListeners.get(i).exit();
-				this.clientSockets.get(i).close();
+				if(this.packetListeners.get(ID) != null) {
+					this.packetListeners.get(ID).exit();
+				}
+				if(this.clientSockets.get(ID) != null) {
+					this.clientSockets.get(ID).close();
+				}
 			} catch(IOException e) {
 				e.printStackTrace();
 			}

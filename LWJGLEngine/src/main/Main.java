@@ -143,6 +143,7 @@ public class Main implements Runnable{
 		//esc for exit
 		if(KeyboardInput.isKeyPressed(GLFW_KEY_ESCAPE)) {
 			running = false;
+			System.exit(0);	//to close all threads
 		}
 		
 		this.sm.update();

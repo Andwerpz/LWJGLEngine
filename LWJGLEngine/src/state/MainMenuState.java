@@ -64,6 +64,7 @@ public class MainMenuState extends State {
 		
 		Main.unlockCursor();
 		InputManager.removeAllInputs();
+		Entity.killAll();
 		
 		// -- WORLD SCENE --
 		Model.removeInstancesFromScene(Scene.WORLD_SCENE);

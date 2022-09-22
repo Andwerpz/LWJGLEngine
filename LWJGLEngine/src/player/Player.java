@@ -44,9 +44,6 @@ public class Player extends Entity {
 	public float camXRot;
 	public float camYRot;
 	public float camZRot;
-	
-	private Mat4 bottomSphereMat4, topSphereMat4, cylinderMat4;
-	private long bottomSphereID, topSphereID, cylinderID;
 
 	public Player(Vec3 pos, int scene) {
 		super();
@@ -54,11 +51,6 @@ public class Player extends Entity {
 		this.pos = new Vec3(pos);
 		this.vel = new Vec3(0);
 		mouse = MouseInput.getMousePos();
-		
-		this.cylinderID = this.addModelInstance(AssetManager.getModel("cylinder"), Mat4.identity(), scene);
-		this.bottomSphereID = this.addModelInstance(AssetManager.getModel("sphere"), Mat4.identity(), scene);
-		this.topSphereID = this.addModelInstance(AssetManager.getModel("sphere"), Mat4.identity(), scene);
-		this.updateModelMats();
 	}
 	
 	protected void _kill() {};
@@ -141,22 +133,6 @@ public class Player extends Entity {
 		}
 		this.vel.addi(inputAccel);
 		resolveCollisions();
-		this.updateModelMats();
-	}
-	
-	private void updateModelMats() {
-		Vec3 capsule_bottomSphere = pos.add(new Vec3(0, radius, 0));
-		Vec3 capsule_topSphere = pos.add(new Vec3(0, height - radius, 0));
-		Vec3 capsule_center = pos.add(new Vec3(0, height / 2f, 0));
-		float cylinderHeight = height - radius * 2;
-		
-		this.cylinderMat4 = Mat4.scale(radius, cylinderHeight / 2f, radius).mul(Mat4.translate(capsule_center));
-		this.bottomSphereMat4 = Mat4.scale(radius + 0.0036f).mul(Mat4.translate(capsule_bottomSphere));
-		this.topSphereMat4 = Mat4.scale(radius + 0.0036f).mul(Mat4.translate(capsule_topSphere));
-		
-		this.updateModelInstance(this.cylinderID, cylinderMat4);
-		this.updateModelInstance(this.bottomSphereID, bottomSphereMat4);
-		this.updateModelInstance(this.topSphereID, topSphereMat4);
 	}
 	
 	//check if on the ground, and if so, then compute the ground normal

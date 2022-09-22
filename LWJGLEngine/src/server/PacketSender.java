@@ -60,4 +60,18 @@ public class PacketSender {
 			this.write(i);
 		}
 	}
+	
+	public void write(String a) {
+		char[] arr = a.toCharArray();
+		for(char c : arr) {
+			this.write((byte) c);
+		}
+	}
+	
+	//length of section name, section name, amt of elements in section
+	public void writeSectionHeader(String a, int elementAmt) {
+		this.write(a.length());
+		this.write(a);
+		this.write(elementAmt);
+	}
 }

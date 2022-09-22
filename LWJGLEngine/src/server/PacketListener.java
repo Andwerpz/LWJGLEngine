@@ -13,12 +13,16 @@ public class PacketListener implements Runnable {
 	
 	private Socket socket;	//socket on which to listen for packets
 	private Queue<byte[]> packetQueue;
-	private byte[] packet;
-	private int readPtr;
+	
 	private boolean isConnected;
 	
 	private long lastPacketTime;
 	private long timeoutMillis = 5000;
+	
+	private byte[] packet;
+	private int readPtr;
+	
+	private int sectionElementAmt;
 	
 	public PacketListener(Socket socket, String name) {
 		this.socket = socket;
@@ -55,7 +59,25 @@ public class PacketListener implements Runnable {
 		return timeFromLastPacket < timeoutMillis && isConnected;
 	}
 	
-	public int readInt() throws ArrayIndexOutOfBoundsException {
+	public boolean hasMoreBytes() {
+		return this.readPtr < this.packet.length;
+	}
+	
+	public byte readByte() {
+		byte ans = this.packet[this.readPtr];
+		this.readPtr ++;
+		return ans;
+	}
+	
+	public byte[] readNBytes(int n) {
+		byte[] ans = new byte[n];
+		for(int i = 0; i < n; i++) {
+			ans[i] = this.readByte();
+		}
+		return ans;
+	}
+	
+	public int readInt() {
 		int ans = 0;
 		for(int i = 0; i < 4; i++) {
 			ans <<= 8;
@@ -64,18 +86,51 @@ public class PacketListener implements Runnable {
 		return ans;
 	}
 	
-	public byte readByte() throws ArrayIndexOutOfBoundsException {
-		byte ans = this.packet[this.readPtr];
-		this.readPtr ++;
-		return ans;
-	}
-	
-	public int[] readNInts(int n) throws ArrayIndexOutOfBoundsException {
+	public int[] readNInts(int n) {
 		int[] ans = new int[n];
 		for(int i = 0; i < n; i++) {
 			ans[i] = this.readInt();
 		}
 		return ans;
+	}
+	
+	public float readFloat() {
+		return Float.intBitsToFloat(this.readInt());
+	}
+	
+	public float[] readNFloats(int n) {
+		float[] ans = new float[n];
+		for(int i = 0; i < n; i++) {
+			ans[i] = this.readFloat();
+		}
+		return ans;
+	}
+	
+	public char readChar() {
+		return (char) this.readByte();
+	}
+	
+	public char[] readNChars(int n) {
+		char[] ans = new char[n];
+		for(int i = 0; i < n; i++) {
+			ans[i] = this.readChar();
+		}
+		return ans;
+	}
+	
+	public String readString(int len) {
+		return new String(this.readNChars(len));
+	}
+	
+	public String readSectionHeader() {
+		int len = this.readInt();
+		String sectionName = this.readString(len);
+		this.sectionElementAmt = this.readInt();
+		return sectionName;
+	}
+	
+	public int getSectionElementAmt() {
+		return this.sectionElementAmt;
 	}
 	
 	private void listenForPackets() {

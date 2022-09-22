@@ -3,6 +3,8 @@ package state;
 import static org.lwjgl.glfw.GLFW.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import entity.Ball;
 import entity.Capsule;
@@ -21,7 +23,10 @@ import scene.Light;
 import scene.Scene;
 import screen.PerspectiveScreen;
 import screen.Screen;
+import server.GameClient;
+import server.GameServer;
 import util.Mat4;
+import util.NetworkingUtils;
 import util.Vec3;
 
 public class GameState extends State {
@@ -30,6 +35,12 @@ public class GameState extends State {
 	private static Camera perspectiveCamera;
 	
 	private Player player;
+	
+	// -- NETWORKING --
+	private GameClient client;
+	private GameServer server;
+	
+	private HashMap<Integer, Capsule> otherPlayers;
 	
 	private long mapID;
 	
@@ -57,13 +68,58 @@ public class GameState extends State {
 		Light.addLight(Scene.WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 		Scene.skyboxes.put(Scene.WORLD_SCENE, AssetManager.getSkybox("lake_skybox")); 
 		player = new Player(new Vec3(18.417412f, 0.7f, -29.812654f), Scene.WORLD_SCENE);
+		
+		// -- NETWORKING --
+		this.client = new GameClient();
+		this.otherPlayers = new HashMap<>();
+		
+		if(!this.client.connect(NetworkingUtils.getLocalIP(), 1)) {
+			//start a server
+			this.server = new GameServer(NetworkingUtils.getLocalIP(), 1);
+			this.client.connect(NetworkingUtils.getLocalIP(), 1);
+		}
 	}
 
 	@Override
 	public void update() {
+		// -- NETWORKING --
+		
+		//check for disconnected host
+		if(!this.client.isConnected() || KeyboardInput.isKeyPressed(GLFW_KEY_M)) {
+			if(this.server != null && this.server.isRunning()) {
+				this.server.exit();
+			}
+			if(this.client.isRunning()) {
+				this.client.exit();
+			}
+			
+			this.sm.switchState(new MainMenuState(this.sm));
+		}
+		
+		//update player information
+		HashMap<Integer, Vec3> otherPlayerPositions = this.client.getOtherPlayerPositions();
+		for(int ID : otherPlayerPositions.keySet()) {
+			Vec3 pos = otherPlayerPositions.get(ID);
+			if(!this.otherPlayers.keySet().contains(ID)) {
+				this.otherPlayers.put(ID, new Capsule(pos, new Vec3(0), 0.33f, 1f, Scene.WORLD_SCENE));
+			}
+			Capsule c = this.otherPlayers.get(ID);
+			c.setPos(pos);
+			c.updateModelMats();
+		}
+		
+		ArrayList<Integer> disconnectedPlayers = this.client.getDisconnectedPlayers();
+		for(int ID : disconnectedPlayers) {
+			this.otherPlayers.get(ID).kill();
+			this.otherPlayers.remove(ID);
+		}
+		
+		// -- UPDATES --
 		Entity.updateEntities();
 		Model.updateModels();
 		updateCamera();
+		
+		this.client.setPos(this.player.pos);
 		
 		//input
 		if(KeyboardInput.isKeyPressed(GLFW_KEY_P)) {

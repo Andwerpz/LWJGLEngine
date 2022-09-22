@@ -22,6 +22,8 @@ public class SplashState extends State {
 	public void load() {
 		this.splashScreen = new SplashScreen();
 		this.startTime = System.currentTimeMillis();
+		
+		
 	}
 
 	@Override
