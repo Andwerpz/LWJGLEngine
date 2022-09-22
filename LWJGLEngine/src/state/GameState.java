@@ -85,7 +85,7 @@ public class GameState extends State {
 		// -- NETWORKING --
 		
 		//check for disconnected host
-		if(!this.client.isConnected() || KeyboardInput.isKeyPressed(GLFW_KEY_M)) {
+		if(!this.client.isConnected()) {
 			if(this.server != null && this.server.isRunning()) {
 				this.server.exit();
 			}
@@ -122,8 +122,8 @@ public class GameState extends State {
 		this.client.setPos(this.player.pos);
 		
 		//input
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_P)) {
-			this.sm.switchState(new SplashState(this.sm));
+		if(KeyboardInput.isKeyPressed(GLFW_KEY_M)) {
+			this.sm.switchState(new MainMenuState(this.sm));
 		}
 	}
 

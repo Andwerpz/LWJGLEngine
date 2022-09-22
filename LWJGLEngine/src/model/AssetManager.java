@@ -4,6 +4,8 @@ import java.util.HashMap;
 
 import graphics.Cubemap;
 import graphics.Texture;
+import ui.Line;
+import ui.Rectangle;
 
 public class AssetManager {
 	//manages all of our assets

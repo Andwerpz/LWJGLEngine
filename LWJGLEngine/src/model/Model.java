@@ -65,8 +65,8 @@ public class Model {
 	private HashMap<Integer, HashMap<Long, Mat4>> modelMats;
 	private ArrayList<Integer> scenesNeedingUpdates;
 	
-	private ArrayList<VertexArray> meshes;
-	private ArrayList<Material> materials;
+	protected ArrayList<VertexArray> meshes;
+	protected ArrayList<Material> materials;
 	private ArrayList<CollisionMesh> collisionMeshes;
 
 	public Model() {
