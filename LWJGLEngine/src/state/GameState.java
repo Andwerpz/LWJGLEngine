@@ -157,12 +157,12 @@ public class GameState extends State {
 //			Model.addInstance(AssetManager.getModel("sphere"), Mat4.scale(0.1f).mul(Mat4.translate(minVec)), Scene.WORLD_SCENE);
 //		}
 		
-		Vec3 cam_pos = new Vec3(perspectiveCamera.getPos());
-		Vec3 cam_dir = new Vec3(perspectiveCamera.getFacing());
-		
-		//Capsule c = new Capsule(cam_pos, cam_dir.mul(0.3f), 0.25f, 1f, Scene.WORLD_SCENE);
-		Ball b = new Ball(cam_pos, cam_dir.mul(0.3f), 0.3f, Scene.WORLD_SCENE);
-		System.out.println(cam_pos + " " + cam_dir.mul(0.6f));
+//		Vec3 cam_pos = new Vec3(perspectiveCamera.getPos());
+//		Vec3 cam_dir = new Vec3(perspectiveCamera.getFacing());
+//		
+//		//Capsule c = new Capsule(cam_pos, cam_dir.mul(0.3f), 0.25f, 1f, Scene.WORLD_SCENE);
+//		Ball b = new Ball(cam_pos, cam_dir.mul(0.3f), 0.3f, Scene.WORLD_SCENE);
+//		System.out.println(cam_pos + " " + cam_dir.mul(0.6f));
 	}
 
 	@Override

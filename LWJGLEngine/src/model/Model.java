@@ -363,10 +363,10 @@ public class Model {
 	private void updateModelMats() {
 		for(VertexArray v : meshes) {
 			for(int scene : scenesNeedingUpdates) {
-				if(modelMats.get(scene) == null) {
+				if(this.modelMats.get(scene) == null) {
 					continue;
 				}
-				v.updateInstances(modelMats.get(scene), scene);
+				v.updateInstances(this.modelMats.get(scene), scene);
 			}
 		}
 		scenesNeedingUpdates.clear();
