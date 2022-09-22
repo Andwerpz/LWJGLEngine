@@ -2,7 +2,7 @@ package ui;
 
 import static org.lwjgl.opengl.GL11.*;
 
-import graphics.Material;
+import graphics.TextureMaterial;
 import graphics.VertexArray;
 import model.AssetManager;
 import model.Model;
@@ -35,7 +35,7 @@ public class Line extends Model {
 		};
 		
 		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_LINES));
-		this.materials.add(Material.defaultMaterial());
+		this.textureMaterials.add(TextureMaterial.defaultMaterial());
 	}
 	
 	public static long addLine(float x1, float y1, float z1, float x2, float y2, float z2, int scene) {

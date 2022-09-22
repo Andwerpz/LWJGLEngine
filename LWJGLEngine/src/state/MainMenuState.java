@@ -24,6 +24,7 @@ import scene.Scene;
 import screen.PerspectiveScreen;
 import screen.Screen;
 import screen.UIScreen;
+import ui.Rectangle;
 import util.Mat4;
 import util.MathUtils;
 import util.Vec3;

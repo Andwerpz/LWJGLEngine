@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import org.lwjgl.PointerBuffer;
+import org.lwjgl.assimp.AIColor4D;
 import org.lwjgl.assimp.AIFace;
 import org.lwjgl.assimp.AIMaterial;
 import org.lwjgl.assimp.AIMaterialProperty;
@@ -27,6 +28,7 @@ import org.lwjgl.assimp.AITexture;
 import org.lwjgl.assimp.AIVector2D;
 import org.lwjgl.assimp.AIVector3D;
 
+import graphics.TextureMaterial;
 import graphics.Material;
 import graphics.Texture;
 import graphics.VertexArray;
@@ -49,7 +51,8 @@ public class Model {
 	//the entity is responsible for keeping track of the IDs of all the model instances it has. 
 	//the Entity class should be able to return an entity or entity ID based on a model instance ID. 
 	
-	public static final Material DEFAULT_MATERIAL = new Material();
+	public static final Material DEFAULT_MATERIAL = Material.defaultMaterial();
+	public static final TextureMaterial DEFAULT_TEXTURE_MATERIAL = TextureMaterial.defaultMaterial();
 	
 	private static HashSet<Model> models = new HashSet<>();
 	private static HashSet<Long> modelInstanceIDs = new HashSet<>();
@@ -65,13 +68,22 @@ public class Model {
 	private HashMap<Integer, HashMap<Long, Mat4>> modelMats;
 	private ArrayList<Integer> scenesNeedingUpdates;
 	
+	//per model 3D vertex information
 	protected ArrayList<VertexArray> meshes;
-	protected ArrayList<Material> materials;
-	private ArrayList<CollisionMesh> collisionMeshes;
+	
+	//default per instance traditional blinn-phong Ka, Ks, Kd
+	protected ArrayList<Material> materials;	
+	
+	//like material, but uses a texture2D sampler instead. Is multiplied by the instanced material to get the final result.
+	protected ArrayList<TextureMaterial> textureMaterials;	
+	
+	//created in init(), stores the same data that meshes stores, just all in triangles. 
+	private ArrayList<CollisionMesh> collisionMeshes;	
 
 	public Model() {
 		this.meshes = new ArrayList<>();
 		this.materials = new ArrayList<>();
+		this.textureMaterials = new ArrayList<>();
 		this.create();
 		
 		init();
@@ -83,16 +95,16 @@ public class Model {
 		init();
 	}
 	
-	public Model(ArrayList<VertexArray> meshes, ArrayList<Material> materials) {
+	public Model(ArrayList<VertexArray> meshes, ArrayList<TextureMaterial> materials) {
 		this.meshes = meshes;
-		this.materials = materials;
+		this.textureMaterials = materials;
 		
 		init();
 	}
 	
-	public Model(VertexArray mesh, Material material) {
+	public Model(VertexArray mesh, TextureMaterial material) {
 		this.meshes = new ArrayList<VertexArray>(Arrays.asList(mesh));
-		this.materials = new ArrayList<Material>(Arrays.asList(material));
+		this.textureMaterials = new ArrayList<TextureMaterial>(Arrays.asList(material));
 		
 		init();
 	}
@@ -123,12 +135,18 @@ public class Model {
 		return new Vec3((ID / 1000000) % 1000, (ID / 1000) % 1000, ID % 1000);
 	}
 	
+	public void setTextureMaterial(TextureMaterial m, int index) {
+		this.textureMaterials.set(index, m);
+	}
+	
+	public void create() {}
+	
 	//must have .mtl file to be able to load materials
 	private void loadModelFile(String filepath, String filename) {
 		System.out.println("LOADING MESH: " + filename);
 		
 		this.meshes = new ArrayList<>();
-		this.materials = new ArrayList<>();
+		this.textureMaterials = new ArrayList<>();
 		
 		String workingDirectory = SystemUtils.getWorkingDirectory();
 		
@@ -207,16 +225,33 @@ public class Model {
 			
 			//load material data
 			AIMaterial AIMat = AIMaterial.create(materials.get(i)); // wrap raw pointer in AIMaterial instance
-			Material material = Material.defaultMaterial();
+			TextureMaterial material = TextureMaterial.defaultMaterial();
 		    AIString path;
 		    
+		    //traditional phong-blinn Material
+		    AIColor4D diffuseColor = AIColor4D.create();
+            if (aiGetMaterialColor(AIMat, AI_MATKEY_COLOR_DIFFUSE, aiTextureType_NONE, 0, diffuseColor) != 0) {
+                throw new IllegalStateException(aiGetErrorString());
+            }
+            
+            AIColor4D specularColor = AIColor4D.create();
+            if (aiGetMaterialColor(AIMat, AI_MATKEY_COLOR_SPECULAR, aiTextureType_NONE, 0, specularColor) != 0) {
+                throw new IllegalStateException(aiGetErrorString());
+            }
+            
+            AIColor4D shininessColor = AIColor4D.create();
+            if (aiGetMaterialColor(AIMat, AI_MATKEY_SHININESS, aiTextureType_NONE, 0, shininessColor) != 0) {
+                throw new IllegalStateException(aiGetErrorString());
+            }
+		    
+            //TextureMaterial
 		    //map_Kd in .mtl
 		    path = AIString.calloc();
 		    aiGetMaterialTexture(AIMat, aiTextureType_DIFFUSE, 0, path, (IntBuffer) null, null, null, null, null, null);
 		    String diffusePath = path.dataString();
 		    if(diffusePath != null && diffusePath.length() != 0) {
 		    	Texture diffuseTexture = new Texture(loadImage(filepath + diffusePath));
-		    	material.setTexture(diffuseTexture, Material.DIFFUSE);
+		    	material.setTexture(diffuseTexture, TextureMaterial.DIFFUSE);
 		    }
 		    
 		    //map_Ks in .mtl
@@ -225,7 +260,7 @@ public class Model {
 		    String specularPath = path.dataString();
 		    if(specularPath != null && specularPath.length() != 0) {
 		    	Texture specularTexture = new Texture(loadImage(filepath + specularPath));
-		    	material.setTexture(specularTexture, Material.SPECULAR);
+		    	material.setTexture(specularTexture, TextureMaterial.SPECULAR);
 		    }
 		    
 		    //norm in .mtl
@@ -234,10 +269,10 @@ public class Model {
 		    String normalsPath = path.dataString();
 		    if(normalsPath != null && normalsPath.length() != 0) {
 		    	Texture normalsTexture = new Texture(loadImage(filepath + normalsPath));
-		    	material.setTexture(normalsTexture, Material.NORMAL);
+		    	material.setTexture(normalsTexture, TextureMaterial.NORMAL);
 		    }
 		    
-		    this.materials.add(material);
+		    this.textureMaterials.add(material);
 		}
 		
 		System.out.println("SUCCESS");
@@ -269,8 +304,6 @@ public class Model {
 		int lastPeriod = path.lastIndexOf('.');
 		return path.substring(0, lastPeriod);
 	}
-	
-	public void create() {}
 	
 	public static int getScene(long ID) {
 		return IDtoScene.get(ID);
@@ -454,11 +487,11 @@ public class Model {
 			return;
 		}
 		for(int i = 0; i < meshes.size(); i++) {
-			if(i < this.materials.size() && this.materials.get(i) != null) {
-				this.materials.get(i).bind();
+			if(i < this.textureMaterials.size() && this.textureMaterials.get(i) != null) {
+				this.textureMaterials.get(i).bind();
 			}
 			else {
-				DEFAULT_MATERIAL.bind();
+				DEFAULT_TEXTURE_MATERIAL.bind();
 			}
 			this.meshes.get(i).render(scene);
 		}

@@ -8,13 +8,13 @@ import model.Model;
 import util.Mat4;
 import util.Vec3;
 
-public class Rectangle extends Model {
-	//this rectangle is not filled, it's just a wireframe.
+public class FilledRectangle extends Model {
+	//as the name suggests, this rectangle is indeed filled
 	//you can render any rectangle with the transformation of the rectangle (0, 0) to (1, 1). 
 	
-	private static Rectangle rectangle = new Rectangle();
+	private static FilledRectangle rectangle = new FilledRectangle();
 	
-	public Rectangle() {
+	public FilledRectangle() {
 		super();
 	}
 	
@@ -35,10 +35,8 @@ public class Rectangle extends Model {
 		};
 		
 		int[] indices = new int[] {
-			0, 1, 1,
-			1, 2, 2,
-			2, 3, 3,
-			3, 0, 0,
+			0, 1, 2,
+			0, 2, 3,
 		};
 		
 		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_LINES));
@@ -47,7 +45,7 @@ public class Rectangle extends Model {
 	
 	public static long addRectangle(float x, float y, float width, float height, int scene) {
 		Mat4 modelMat4 = Mat4.scale(width, height, 1).mul(Mat4.translate(new Vec3(x, y, 0)));
-		return Model.addInstance(Rectangle.rectangle, modelMat4, scene);
+		return Model.addInstance(FilledRectangle.rectangle, modelMat4, scene);
 	}
 	
 }

@@ -2,7 +2,7 @@ package model;
 
 import static org.lwjgl.opengl.GL11.*;
 
-import graphics.Material;
+import graphics.TextureMaterial;
 import graphics.Texture;
 import graphics.VertexArray;
 import main.Main;
@@ -11,7 +11,7 @@ import util.Vec3;
 public class Hitbox {
 	// just an axis aligned bounding box.
 
-	public static Material texture = new Material("/hitbox.png", null, null, null);
+	public static TextureMaterial texture = new TextureMaterial("/hitbox.png", null, null, null);
 
 	VertexArray model;
 	public Vec3 min, max;

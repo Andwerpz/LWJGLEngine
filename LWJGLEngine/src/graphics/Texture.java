@@ -10,6 +10,8 @@ import javax.imageio.ImageIO;
 import util.BufferUtils;
 import util.FileUtils;
 import util.GraphicsTools;
+import util.MathUtils;
+import util.Vec3;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
@@ -26,6 +28,20 @@ public class Texture {
 	
 	public Texture(String path) {
 		this.textureID = this.load(path, false, false);
+	}
+	
+	public Texture(int r, int g, int b, float a) {
+		BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+		int alpha = (int) MathUtils.clamp(0, 255, (int) (a * 255f));
+		int rgb = alpha;
+		rgb <<= 8;
+		rgb |= (int) MathUtils.clamp(0, 255, r);
+		rgb <<= 8;
+		rgb |= (int) MathUtils.clamp(0, 255, g);
+		rgb <<= 8;
+		rgb |= (int) MathUtils.clamp(0, 255, b);
+		img.setRGB(0, 0, rgb);
+		this.textureID = this.load(img, false, false);
 	}
 	
 	public Texture(BufferedImage img) {

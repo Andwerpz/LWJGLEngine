@@ -8,7 +8,7 @@ import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.opengl.GL33.*;
 
 import entity.Entity;
-import graphics.Material;
+import graphics.TextureMaterial;
 import graphics.Texture;
 import graphics.VertexArray;
 import model.Model;
@@ -26,7 +26,7 @@ public class Button extends Entity {
 	private Model model;
 	
 	private float x, y, width, height;	//x, y, specifies bottom left corner of button
-	private Material pressedMaterial, releasedMaterial, hoveredMaterial;
+	private TextureMaterial pressedMaterial, releasedMaterial, hoveredMaterial;
 	
 	private boolean pressed, hovered, clicked;
 	
@@ -66,8 +66,8 @@ public class Button extends Entity {
 		VertexArray vao = new VertexArray(vertices, uvs, indices, GL_TRIANGLES);
 		
 		//create button materials
-		this.releasedMaterial = new Material(releasedTexture, null, null, null);
-		this.pressedMaterial = new Material(pressedTexture, null, null, null);
+		this.releasedMaterial = new TextureMaterial(releasedTexture, null, null, null);
+		this.pressedMaterial = new TextureMaterial(pressedTexture, null, null, null);
 		
 		this.model = new Model(vao, releasedMaterial);
 		Mat4 modelMat = Mat4.translate(new Vec3(x, y, 0));
