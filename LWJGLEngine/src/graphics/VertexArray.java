@@ -30,7 +30,7 @@ public class VertexArray {
 
 	private int renderType;
 	private int vao, vbo, tbo, nbo, ntbo, nbtbo, ibo;
-	private HashMap<Integer, int[]> scenes;	//numInstances, mat4, colorID
+	private HashMap<Integer, int[]> scenes;	//numInstances, mat4, colorID, material
 	private int triCount;	//number of triangles in the mesh
 	
 	//don't edit these, these are just for future reference
@@ -105,30 +105,41 @@ public class VertexArray {
 		glBindVertexArray(0);
 	}
 	
-	public void updateInstances(HashMap<Long, Mat4> map, int whichScene) {
-		int numInstances = map.size();
+	//seperate methods for updating materials and updating model mats??
+	//but updating instances is the way that we can get rid of them...
+	//there has to be one method for updating both, no other way around it. 
+	
+	//orr, we can have a seperate method for removing a model instance. 
+	//but then, we'd have to modify the entire buffer data anyways. 
+	public void updateInstances(HashMap<Long, Mat4> mat4Map, HashMap<Long, Material> materialMap, int whichScene) {
+		int numInstances = mat4Map.size();
 		Mat4[] modelMats = new Mat4[numInstances];
 		Vec3[] colorIDs = new Vec3[numInstances];
+		Material[] materials = new Material[numInstances];
 		int i = 0;
-		for(long ID : map.keySet()) {
+		for(long ID : mat4Map.keySet()) {
 			colorIDs[i] = Model.convertIDToRGB(ID);
-			modelMats[i] = map.get(ID);
+			modelMats[i] = mat4Map.get(ID);
+			materials[i] = materialMap.get(ID);
 			i ++;
 		}
 		
 		if(scenes.get(whichScene) == null) {
 			//instanced model buffer doesn't exist yet
-			scenes.put(whichScene, new int[] {numInstances, glGenBuffers(), glGenBuffers()});
+			scenes.put(whichScene, new int[] {numInstances, glGenBuffers(), glGenBuffers(), glGenBuffers()});
 		}
 		int[] scene = scenes.get(whichScene);
 		scene[0] = numInstances;
 		int modelMatBuffer = scene[1];
 		int colorIDBuffer = scene[2];
+		int materialBuffer = scene[3];
 		
 		glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);	
 		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW);	//TODO switch to glBufferSubData
 		glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
 		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW);	//TODO switch to glBufferSubData
+		glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(materials), GL_DYNAMIC_DRAW);	//TODO switch to glBufferSubData
 	}
 	
 	public void bindScene(int whichScene) {
@@ -139,6 +150,7 @@ public class VertexArray {
 		int[] scene = scenes.get(whichScene);
 		int modelMatBuffer = scene[1];
 		int colorIDBuffer = scene[2];
+		int materialBuffer = scene[3];
 		
 		//TODO figure out whether or not we need to configure the pointer gaps and offsets every time we want to bind a new buffer
 		glBindVertexArray(vao);
@@ -153,6 +165,18 @@ public class VertexArray {
 		glVertexAttribPointer(Shader.INSTANCED_COLOR_ATTRIB, 3, GL_FLOAT, false, 0, 0);
 		glVertexAttribDivisor(Shader.INSTANCED_COLOR_ATTRIB, 1);
 		glEnableVertexAttribArray(Shader.INSTANCED_COLOR_ATTRIB);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
+		glVertexAttribPointer(Shader.INSTANCED_MATERIAL_ATTRIB + 0, 4, GL_FLOAT, false, 9 * 4, 0);	//diffuse : 4 floats
+		glVertexAttribPointer(Shader.INSTANCED_MATERIAL_ATTRIB + 1, 4, GL_FLOAT, false, 9 * 4, 16);	//specular : 4 floats
+		glVertexAttribPointer(Shader.INSTANCED_MATERIAL_ATTRIB + 2, 1, GL_FLOAT, false, 9 * 4, 32);	//shininess : 1 float
+		glVertexAttribDivisor(Shader.INSTANCED_MATERIAL_ATTRIB + 0, 1);
+		glVertexAttribDivisor(Shader.INSTANCED_MATERIAL_ATTRIB + 1, 1);
+		glVertexAttribDivisor(Shader.INSTANCED_MATERIAL_ATTRIB + 2, 1);
+		glEnableVertexAttribArray(Shader.INSTANCED_MATERIAL_ATTRIB + 0);
+		glEnableVertexAttribArray(Shader.INSTANCED_MATERIAL_ATTRIB + 1);
+		glEnableVertexAttribArray(Shader.INSTANCED_MATERIAL_ATTRIB + 2);
+		
 		glBindVertexArray(0);
 	}
 	

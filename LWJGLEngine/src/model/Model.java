@@ -63,16 +63,18 @@ public class Model {
 	private static HashMap<Integer, HashSet<Long>> activeCollisionMeshes = new HashMap<>();	
 	
 	//first, specify which scene
-	//K : model ID, Can be translated to a color to draw 
-	//V : model Mat4, Where to draw each instance of the model
+	//K : model instance ID, Can be translated to a color to draw 
+	//V : info for that model instance. 
 	private HashMap<Integer, HashMap<Long, Mat4>> modelMats;
+	private HashMap<Integer, HashMap<Long, ArrayList<Material>>> materials;
+	
 	private ArrayList<Integer> scenesNeedingUpdates;
 	
 	//per model 3D vertex information
 	protected ArrayList<VertexArray> meshes;
 	
 	//default per instance traditional blinn-phong Ka, Ks, Kd
-	protected ArrayList<Material> materials;	
+	protected ArrayList<Material> defaultMaterials;	
 	
 	//like material, but uses a texture2D sampler instead. Is multiplied by the instanced material to get the final result.
 	protected ArrayList<TextureMaterial> textureMaterials;	
@@ -82,7 +84,7 @@ public class Model {
 
 	public Model() {
 		this.meshes = new ArrayList<>();
-		this.materials = new ArrayList<>();
+		this.defaultMaterials = new ArrayList<>();
 		this.textureMaterials = new ArrayList<>();
 		this.create();
 		
@@ -95,15 +97,9 @@ public class Model {
 		init();
 	}
 	
-	public Model(ArrayList<VertexArray> meshes, ArrayList<TextureMaterial> materials) {
-		this.meshes = meshes;
-		this.textureMaterials = materials;
-		
-		init();
-	}
-	
 	public Model(VertexArray mesh, TextureMaterial material) {
 		this.meshes = new ArrayList<VertexArray>(Arrays.asList(mesh));
+		this.defaultMaterials = new ArrayList<Material>(Arrays.asList(DEFAULT_MATERIAL));
 		this.textureMaterials = new ArrayList<TextureMaterial>(Arrays.asList(material));
 		
 		init();
@@ -116,6 +112,7 @@ public class Model {
 		}
 		this.scenesNeedingUpdates = new ArrayList<Integer>();
 		this.modelMats = new HashMap<Integer, HashMap<Long, Mat4>>();
+		this.materials = new HashMap<Integer, HashMap<Long, ArrayList<Material>>>();
 		models.add(this);
 	}
 	
@@ -146,6 +143,7 @@ public class Model {
 		System.out.println("LOADING MESH: " + filename);
 		
 		this.meshes = new ArrayList<>();
+		this.defaultMaterials = new ArrayList<>();
 		this.textureMaterials = new ArrayList<>();
 		
 		String workingDirectory = SystemUtils.getWorkingDirectory();
@@ -229,20 +227,28 @@ public class Model {
 		    AIString path;
 		    
 		    //traditional phong-blinn Material
+		    boolean errorExtractingMaterial = false;
 		    AIColor4D diffuseColor = AIColor4D.create();
             if (aiGetMaterialColor(AIMat, AI_MATKEY_COLOR_DIFFUSE, aiTextureType_NONE, 0, diffuseColor) != 0) {
-                throw new IllegalStateException(aiGetErrorString());
+            	errorExtractingMaterial = true;
             }
             
             AIColor4D specularColor = AIColor4D.create();
             if (aiGetMaterialColor(AIMat, AI_MATKEY_COLOR_SPECULAR, aiTextureType_NONE, 0, specularColor) != 0) {
-                throw new IllegalStateException(aiGetErrorString());
+            	errorExtractingMaterial = true;
             }
             
             AIColor4D shininessColor = AIColor4D.create();
             if (aiGetMaterialColor(AIMat, AI_MATKEY_SHININESS, aiTextureType_NONE, 0, shininessColor) != 0) {
-                throw new IllegalStateException(aiGetErrorString());
+            	errorExtractingMaterial = true;
             }
+            
+            Material mat = Material.defaultMaterial();
+            if(!errorExtractingMaterial) {
+            	mat = new Material(diffuseColor, specularColor, shininessColor);
+            }
+            this.defaultMaterials.add(mat);
+            System.out.println(mat);
 		    
             //TextureMaterial
 		    //map_Kd in .mtl
@@ -319,10 +325,14 @@ public class Model {
 		if(model.modelMats.get(scene) == null) {
 			model.modelMats.put(scene, new HashMap<Long, Mat4>());
 		}
+		if(model.materials.get(scene) == null) {
+			model.materials.put(scene, new HashMap<Long, ArrayList<Material>>());
+		}
 		IDtoScene.put(ID, scene);
 		IDtoModel.put(ID, model);
 		modelInstanceIDs.add(ID);
 		model.modelMats.get(scene).put(ID, mat4);
+		model.materials.get(scene).put(ID, model.defaultMaterials);
 		model.scenesNeedingUpdates.add(scene);
 		
 		System.out.println("ADD MODEL INSTANCE " + ID);
@@ -337,10 +347,17 @@ public class Model {
 			return;
 		}
 		int scene = IDtoScene.get(ID);
+		
 		model.modelMats.get(scene).remove(ID);
 		if(model.modelMats.get(scene).size() == 0) {
 			model.modelMats.remove(scene);
 		}
+		
+		model.materials.get(scene).remove(ID);
+		if(model.materials.get(scene).size() == 0) {
+			model.materials.remove(scene);
+		}
+		
 		deactivateCollisionMesh(ID);
 		IDtoScene.remove(ID);
 		IDtoModel.remove(ID);
@@ -358,6 +375,21 @@ public class Model {
 		int scene = IDtoScene.get(ID);
 		model.modelMats.get(scene).put(ID, mat4);
 		model.scenesNeedingUpdates.add(scene);
+	}
+	
+	public static void updateInstance(long ID, Material material, int index) {
+		Model model = IDtoModel.get(ID);
+		int scene = IDtoScene.get(ID);
+		if(model.materials.get(scene).get(ID).size() <= index) {
+			System.err.println("Material index " + index + " out of bounds");
+			return;
+		}
+		model.materials.get(scene).get(ID).set(index, material);
+		model.scenesNeedingUpdates.add(scene);
+	}
+	
+	public static void updateInstance(long ID, Material material) {
+		Model.updateInstance(ID, material, 0);
 	}
 	
 	public static void activateCollisionMesh(long ID) {
@@ -394,14 +426,39 @@ public class Model {
 	}
 	
 	private void updateModelMats() {
-		for(VertexArray v : meshes) {
-			for(int scene : scenesNeedingUpdates) {
-				if(this.modelMats.get(scene) == null) {
-					continue;
+		if(this.scenesNeedingUpdates.size() == 0) {
+			return;
+		}
+		
+		for(int scene : scenesNeedingUpdates) {
+			if(this.modelMats.get(scene) == null) {
+				continue;
+			}
+			
+			//which vertex array, model instance ID, material for the model instance ID for that vertex array.
+			ArrayList<HashMap<Long, Material>> instancedMaterials = new ArrayList<>();
+			int vertexArrayAmt = this.meshes.size();
+			for(int i = 0; i < vertexArrayAmt; i++) {
+				instancedMaterials.add(new HashMap<Long, Material>());
+			}
+			
+			for(long ID : this.modelMats.get(scene).keySet()) {
+				ArrayList<Material> matArr = this.materials.get(scene).get(ID);
+				if(matArr == null) {
+					System.out.println("DIDNT SET MATERIALS " + ID);
+					matArr = this.defaultMaterials;
 				}
-				v.updateInstances(this.modelMats.get(scene), scene);
+				for(int i = 0; i < matArr.size(); i++) {
+					instancedMaterials.get(i).put(ID, matArr.get(i));
+				}
+			}
+			
+			for(int i = 0; i < this.meshes.size(); i++) {
+				VertexArray v = this.meshes.get(i);
+				v.updateInstances(this.modelMats.get(scene), instancedMaterials.get(i), scene);
 			}
 		}
+		
 		scenesNeedingUpdates.clear();
 	}
 	

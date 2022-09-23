@@ -4,6 +4,9 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+
+import graphics.Material;
+
 import java.nio.ByteOrder;
 
 public class BufferUtils {
@@ -52,6 +55,22 @@ public class BufferUtils {
 			elements[i * 3 + 0] = array[i].x;
 			elements[i * 3 + 1] = array[i].y;
 			elements[i * 3 + 2] = array[i].z;
+		}
+		return createFloatBuffer(elements);
+	}
+	
+	public static FloatBuffer createFloatBuffer(Material[] array) {
+		float[] elements = new float[array.length * (4 + 4 + 1)];	//diffuse, specular, shininess
+		for(int i = 0; i < array.length; i++) {
+			elements[i * 9 + 0] = array[i].getDiffuse().x;
+			elements[i * 9 + 1] = array[i].getDiffuse().y;
+			elements[i * 9 + 2] = array[i].getDiffuse().z;
+			elements[i * 9 + 3] = array[i].getDiffuse().w;
+			elements[i * 9 + 4] = array[i].getSpecular().x;
+			elements[i * 9 + 5] = array[i].getSpecular().y;
+			elements[i * 9 + 6] = array[i].getSpecular().z;
+			elements[i * 9 + 7] = array[i].getSpecular().w;
+			elements[i * 9 + 8] = array[i].getShininess();
 		}
 		return createFloatBuffer(elements);
 	}

@@ -19,6 +19,7 @@ public class Shader {
 	public static final int BITANGENT_ATTRIB = 4;
 	public static final int INSTANCED_MODEL_ATTRIB = 5;	//takes up 4 slots
 	public static final int INSTANCED_COLOR_ATTRIB = 9;	//used for quick model selection 
+	public static final int INSTANCED_MATERIAL_ATTRIB = 10;	//takes up 3 slots
 	
 	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS, IMG_POST_PROCESS, SPLASH;
 	

@@ -10,6 +10,10 @@ in vec2 frag_uv;
 in vec3 frag_colorID;
 in mat3 TBN;
 
+in vec4 frag_material_diffuse;
+in vec4 frag_material_specular;
+in float frag_material_shininess;
+
 uniform vec3 view_pos;
 uniform sampler2D tex_diffuse;
 uniform sampler2D tex_specular;
@@ -62,6 +66,15 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 	return finalTexCoords; 
 } 
 
+vec4 scaleWithMaterial(vec4 color, vec4 material) {
+	vec4 ans = vec4(0);
+	ans.x = color.r * material.r;
+	ans.y = color.g * material.g;
+	ans.z = color.b * material.b;
+	ans.w = color.a * material.a;
+	return ans;
+}
+
 void main()
 {
 	mat3 invTBN = transpose(TBN);
@@ -87,11 +100,11 @@ void main()
     	discard;
     }
 	
-    gColor.rgba = texture(tex_diffuse, texCoords).rgba;
+    gColor.rgba = scaleWithMaterial(texture(tex_diffuse, texCoords).rgba, frag_material_diffuse.rgba).rgba;
     gPosition.rgb = frag_pos;
     gPosition.a = frag_depth;
     gNormal.rgb = normalize(normal);
-    gNormal.a = texture(tex_specular, texCoords).r;
+    gNormal.a = texture(tex_specular, texCoords).r * frag_material_specular.r;
     gColorID = vec4(frag_colorID / 255, 1);
 } 
 

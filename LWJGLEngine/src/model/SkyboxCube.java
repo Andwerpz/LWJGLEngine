@@ -5,6 +5,7 @@ import static org.lwjgl.opengl.GL11.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import graphics.Material;
 import graphics.VertexArray;
 import main.Main;
 import scene.Scene;
@@ -85,9 +86,11 @@ public class SkyboxCube {
 		};
 		
 		this.mesh = new VertexArray(vertices, tex, indices, GL_TRIANGLES);
-		HashMap<Long, Mat4> map = new HashMap<>();
-		map.put((long) 0, Mat4.identity());
-		this.mesh.updateInstances(map, Scene.FRAMEBUFFER_SCENE);
+		HashMap<Long, Mat4> mat4Map = new HashMap<>();
+		mat4Map.put((long) 0, Mat4.identity());
+		HashMap<Long, Material> materialMap = new HashMap<>();
+		materialMap.put((long) 0, Material.defaultMaterial());
+		this.mesh.updateInstances(mat4Map, materialMap, Scene.FRAMEBUFFER_SCENE);
 	}
 	
 	public void render() {

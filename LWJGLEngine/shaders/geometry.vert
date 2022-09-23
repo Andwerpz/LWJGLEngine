@@ -6,6 +6,9 @@ layout (location = 3) in vec3 tangent;
 layout (location = 4) in vec3 bitangent;
 layout (location = 5) in mat4 md_matrix;
 layout (location = 9) in vec3 colorID;
+layout (location = 10) in vec4 material_diffuse;
+layout (location = 11) in vec4 material_specular;
+layout (location = 12) in float material_shininess;
 
 uniform mat4 pr_matrix;	//projection
 uniform mat4 vw_matrix;	//view
@@ -17,6 +20,10 @@ out vec3 frag_pos;
 out float frag_depth;
 out vec2 frag_uv;
 out mat3 TBN;
+
+out vec4 frag_material_diffuse;
+out vec4 frag_material_specular;
+out float frag_material_shininess;
 
 out vec3 frag_colorID;
 
@@ -30,6 +37,10 @@ void main()
     if(!enableTexScaling){
     	frag_uv = uv * texScaleFactor;
     }
+    
+    frag_material_diffuse = material_diffuse;
+    frag_material_specular = material_specular;
+    frag_material_shininess = material_shininess;
     
     mat3 normalMatrix = transpose(inverse(mat3(md_matrix)));
     vec3 T = normalize(normalMatrix * tangent);
