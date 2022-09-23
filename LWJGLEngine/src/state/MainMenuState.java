@@ -24,6 +24,7 @@ import scene.Scene;
 import screen.PerspectiveScreen;
 import screen.Screen;
 import screen.UIScreen;
+import ui.FilledRectangle;
 import ui.Rectangle;
 import util.Mat4;
 import util.MathUtils;
@@ -81,6 +82,9 @@ public class MainMenuState extends State {
 		InputManager.addInput("btn_new_game", new Button(120, Main.windowHeight / 2 - 50, 200, 100, new Texture("/ui/main_menu/new_game.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
 		InputManager.addInput("btn_settings", new Button(120, Main.windowHeight / 2 - 100, 200, 100, new Texture("/ui/main_menu/settings.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
 		InputManager.addInput("btn_quit_game", new Button(120, Main.windowHeight / 2 - 150, 200, 100, new Texture("/ui/main_menu/quit_game.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
+		
+		Rectangle.addRectangle(100, 100, 100, 100, Scene.UI_SCENE);
+		FilledRectangle.addRectangle(200, 200, 100, 100, Scene.UI_SCENE);
 	}
 
 	@Override

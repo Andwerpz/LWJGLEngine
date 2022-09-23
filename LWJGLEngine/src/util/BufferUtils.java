@@ -61,16 +61,17 @@ public class BufferUtils {
 	
 	public static FloatBuffer createFloatBuffer(Material[] array) {
 		float[] elements = new float[array.length * (4 + 4 + 1)];	//diffuse, specular, shininess
+		int eSize = 9;
 		for(int i = 0; i < array.length; i++) {
-			elements[i * 9 + 0] = array[i].getDiffuse().x;
-			elements[i * 9 + 1] = array[i].getDiffuse().y;
-			elements[i * 9 + 2] = array[i].getDiffuse().z;
-			elements[i * 9 + 3] = array[i].getDiffuse().w;
-			elements[i * 9 + 4] = array[i].getSpecular().x;
-			elements[i * 9 + 5] = array[i].getSpecular().y;
-			elements[i * 9 + 6] = array[i].getSpecular().z;
-			elements[i * 9 + 7] = array[i].getSpecular().w;
-			elements[i * 9 + 8] = array[i].getShininess();
+			elements[i * eSize + 0] = array[i].getDiffuse().x;
+			elements[i * eSize + 1] = array[i].getDiffuse().y;
+			elements[i * eSize + 2] = array[i].getDiffuse().z;
+			elements[i * eSize + 3] = array[i].getDiffuse().w;
+			elements[i * eSize + 4] = array[i].getSpecular().x;
+			elements[i * eSize + 5] = array[i].getSpecular().y;
+			elements[i * eSize + 6] = array[i].getSpecular().z;
+			elements[i * eSize + 7] = array[i].getSpecular().w;
+			elements[i * eSize + 8] = array[i].getShininess();
 		}
 		return createFloatBuffer(elements);
 	}

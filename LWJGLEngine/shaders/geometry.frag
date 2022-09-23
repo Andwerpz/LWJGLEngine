@@ -1,8 +1,9 @@
 #version 330 core
 layout (location = 0) out vec4 gPosition;
 layout (location = 1) out vec4 gNormal;
-layout (location = 2) out vec4 gColor;
-layout (location = 3) out vec4 gColorID;
+layout (location = 2) out vec4 gSpecular;
+layout (location = 3) out vec4 gColor;
+layout (location = 4) out vec4 gColorID;
 
 in vec3 frag_pos;
 in float frag_depth;
@@ -103,8 +104,9 @@ void main()
     gColor.rgba = scaleWithMaterial(texture(tex_diffuse, texCoords).rgba, frag_material_diffuse.rgba).rgba;
     gPosition.rgb = frag_pos;
     gPosition.a = frag_depth;
+    gSpecular.rgb = scaleWithMaterial(texture(tex_specular, texCoords).rgba, frag_material_specular.rgba).rgb;
+    gSpecular.a = frag_material_shininess;
     gNormal.rgb = normalize(normal);
-    gNormal.a = texture(tex_specular, texCoords).r * frag_material_specular.r;
     gColorID = vec4(frag_colorID / 255, 1);
 } 
 

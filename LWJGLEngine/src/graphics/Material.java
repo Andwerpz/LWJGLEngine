@@ -14,7 +14,7 @@ public class Material {
 	private float shininess;	//also known as specular exponent
 	
 	public static Material defaultMaterial() {
-		return new Material(new Vec3(1), new Vec3(1), 32f);
+		return new Material(new Vec3(1f), new Vec3(1), 64f);
 	}
 	
 	public Material(Vec3 diffuse, Vec3 specular, float shininess) {
@@ -40,8 +40,6 @@ public class Material {
 	public float getShininess() {
 		return this.shininess;
 	}
-	
-	
 	
 	public String toString() {
 		String ans = "Diffuse : " + this.diffuse + "\n";

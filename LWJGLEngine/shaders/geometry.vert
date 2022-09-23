@@ -8,7 +8,7 @@ layout (location = 5) in mat4 md_matrix;
 layout (location = 9) in vec3 colorID;
 layout (location = 10) in vec4 material_diffuse;
 layout (location = 11) in vec4 material_specular;
-layout (location = 12) in float material_shininess;
+layout (location = 12) in vec4 material_shininess;
 
 uniform mat4 pr_matrix;	//projection
 uniform mat4 vw_matrix;	//view
@@ -40,7 +40,7 @@ void main()
     
     frag_material_diffuse = material_diffuse;
     frag_material_specular = material_specular;
-    frag_material_shininess = material_shininess;
+    frag_material_shininess = material_shininess.r;
     
     mat3 normalMatrix = transpose(inverse(mat3(md_matrix)));
     vec3 T = normalize(normalMatrix * tangent);

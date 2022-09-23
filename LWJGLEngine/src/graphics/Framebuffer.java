@@ -101,9 +101,9 @@ public class Framebuffer {
 		return ans;
 	}
 	
-	public Vec3 sampleColorAtPoint(int x, int y) {
+	public Vec3 sampleColorAtPoint(int x, int y, int attachmentID) {
 		this.bind();
-		glReadBuffer(GL_COLOR_ATTACHMENT3);
+		glReadBuffer(attachmentID);
 		ByteBuffer pixels = BufferUtils.createByteBuffer(4);
 		Vec2 mousePos = MouseInput.getMousePos();
 		glReadPixels((int) mousePos.x, (int) (Main.windowHeight - mousePos.y), 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixels);

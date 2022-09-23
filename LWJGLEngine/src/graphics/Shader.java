@@ -54,9 +54,10 @@ public class Shader {
 		Shader.LIGHTING.setUniform1i("tex_position", 0);
 		Shader.LIGHTING.setUniform1i("tex_normal", 1);
 		Shader.LIGHTING.setUniform1i("tex_diffuse", 2);
-		Shader.LIGHTING.setUniform1i("shadowMap", 3);
-		Shader.LIGHTING.setUniform1i("shadowBackfaceMap", 4);
-		Shader.LIGHTING.setUniform1i("shadowCubemap", 5);
+		Shader.LIGHTING.setUniform1i("tex_specular", 3);
+		Shader.LIGHTING.setUniform1i("shadowMap", 4);
+		Shader.LIGHTING.setUniform1i("shadowBackfaceMap", 5);
+		Shader.LIGHTING.setUniform1i("shadowCubemap", 6);
 		
 		Shader.GEOM_POST_PROCESS.setUniform1i("tex_color", 0);
 		Shader.GEOM_POST_PROCESS.setUniform1i("tex_position", 1);

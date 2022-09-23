@@ -2,6 +2,7 @@ package ui;
 
 import static org.lwjgl.opengl.GL11.*;
 
+import graphics.Material;
 import graphics.TextureMaterial;
 import graphics.VertexArray;
 import model.Model;
@@ -42,6 +43,7 @@ public class Rectangle extends Model {
 		};
 		
 		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_LINES));
+		this.defaultMaterials.add(Material.defaultMaterial());
 		this.textureMaterials.add(TextureMaterial.defaultMaterial());
 	}
 	

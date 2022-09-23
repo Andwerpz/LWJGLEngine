@@ -12,6 +12,7 @@ uniform vec3 view_pos;
 uniform sampler2D tex_position;
 uniform sampler2D tex_normal;
 uniform sampler2D tex_diffuse;
+uniform sampler2D tex_specular;
 
 //directional shadows
 uniform float shadowMapNear;	// >= near
@@ -57,9 +58,14 @@ void main()
 	vec3 fragPos = texture(tex_position, frag_uv).rgb;
 	float fragDepth = texture(tex_position, frag_uv).a;
 	vec3 fragColor = texture(tex_diffuse, frag_uv).rgb;
-	float fragSpec = texture(tex_normal, frag_uv).a;
+	float fragShininess = texture(tex_specular, frag_uv).a;
+	vec3 fragSpec = texture(tex_specular, frag_uv).rgb;
 	vec3 normal = texture(tex_normal, frag_uv).rgb;
 	vec3 viewDir = normalize(view_pos - fragPos);
+	
+	if(fragShininess == 0){
+		fragShininess = 1;
+	}
 	
 	//we do cascaded shadows in multiple passes to render the whole scene
 	if(light.type == DIR_LIGHT && (fragDepth < shadowMapNear || fragDepth >= shadowMapFar)){
@@ -92,13 +98,12 @@ void main()
 	float diff = max(dot(normal, lightDir), 0.0);
 	//specular shading
 	vec3 halfwayDir = normalize(lightDir + viewDir); 
-	float specularStrength = 64; 
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), specularStrength);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), fragShininess);	//specular strength
     
     //combine results
     float ambient  = light.ambientIntensity;
     float diffuse  = diff * (1 - light.ambientIntensity);
-    float specular = spec * fragSpec;
+    vec3 specular = spec * fragSpec;
     
     if(light.type == SPOT_LIGHT){
     	//calculate cutoff
@@ -180,6 +185,7 @@ void main()
     vec3 specularColor = light.color * specular;
     
 	lColor = vec4(ambientColor + (diffuseColor + specularColor) * (1 - shadow), 1.0);
+	//lColor = vec4(vec3(fragShininess), 1);
 	lBrightness = vec4(vec3(ambient + diffuse + specular), 1);
     
 } 

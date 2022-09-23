@@ -39,7 +39,8 @@ public class FilledRectangle extends Model {
 			0, 2, 3,
 		};
 		
-		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_LINES));
+		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_TRIANGLES));
+		this.defaultMaterials.add(DEFAULT_MATERIAL);
 		this.textureMaterials.add(TextureMaterial.defaultMaterial());
 	}
 	
