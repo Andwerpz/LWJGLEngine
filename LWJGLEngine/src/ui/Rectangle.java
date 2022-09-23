@@ -36,10 +36,10 @@ public class Rectangle extends Model {
 		};
 		
 		int[] indices = new int[] {
-			0, 1, 1,
-			1, 2, 2,
-			2, 3, 3,
-			3, 0, 0,
+			1, 0, 1,
+			2, 1, 2,
+			3, 2, 3,
+			0, 3, 0,
 		};
 		
 		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_LINES));

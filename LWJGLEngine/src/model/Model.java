@@ -133,7 +133,15 @@ public class Model {
 	}
 	
 	public void setTextureMaterial(TextureMaterial m, int index) {
+		if(index >= this.textureMaterials.size()) {
+			System.err.println("Texture material index out of bounds");
+			return;
+		}
 		this.textureMaterials.set(index, m);
+	}
+	
+	public void setTextureMaterial(TextureMaterial m) {
+		this.setTextureMaterial(m, 0);
 	}
 	
 	public void create() {}

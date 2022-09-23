@@ -34,8 +34,8 @@ public class TextureMaterial {
 	public static final int NORMAL = 3;
 	public static final int DISPLACEMENT = 4;
 	
-	public static final Texture DIFFUSE_DEFAULT = new Texture("tex_diffuse_default.png", false, false);
-	public static final Texture SPECULAR_DEFAULT = new Texture("tex_specular_default.png", false, false);
+	public static final Texture DIFFUSE_DEFAULT = new Texture(255, 255, 255, 1);
+	public static final Texture SPECULAR_DEFAULT = new Texture(255, 255, 255, 1);
 	public static final Texture NORMAL_DEFAULT = new Texture("tex_normal_default.png", false, false);
 	public static final Texture DISPLACEMENT_DEFAULT = new Texture("tex_displacement_default.png", true, false);
 
@@ -58,6 +58,20 @@ public class TextureMaterial {
 		this.specular = new Texture((int) (specular * 255), (int) (specular * 255), (int) (specular * 255), 1f);
 		normal = NORMAL_DEFAULT;
 		displacement  = DISPLACEMENT_DEFAULT;
+	}
+	
+	public TextureMaterial(BufferedImage diffuse) {
+		this.diffuse = new Texture(diffuse, false, false);
+		this.specular = SPECULAR_DEFAULT;
+		this.normal = NORMAL_DEFAULT;
+		this.displacement = DISPLACEMENT_DEFAULT;
+	}
+	
+	public TextureMaterial(Texture diffuse) {
+		this.diffuse = diffuse;
+		this.specular = SPECULAR_DEFAULT;
+		this.normal = NORMAL_DEFAULT;
+		this.displacement = DISPLACEMENT_DEFAULT;
 	}
 	
 	public TextureMaterial(String diffusePath, String specularPath, String normalPath, String displacementPath) {

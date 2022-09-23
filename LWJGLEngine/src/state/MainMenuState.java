@@ -5,6 +5,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_P;
 import static org.lwjgl.glfw.GLFW.glfwSetInputMode;
 
+import java.awt.Color;
 import java.util.HashSet;
 
 import entity.Entity;
@@ -25,7 +26,9 @@ import screen.PerspectiveScreen;
 import screen.Screen;
 import screen.UIScreen;
 import ui.FilledRectangle;
+import ui.Line;
 import ui.Rectangle;
+import ui.Text;
 import util.Mat4;
 import util.MathUtils;
 import util.Vec3;
@@ -85,6 +88,9 @@ public class MainMenuState extends State {
 		
 		Rectangle.addRectangle(100, 100, 100, 100, Scene.UI_SCENE);
 		FilledRectangle.addRectangle(200, 200, 100, 100, Scene.UI_SCENE);
+		Line.addLine(300, 100, 300, 200, Scene.UI_SCENE);
+		
+		Text text = new Text("Test text", 36, Color.WHITE, 1000, 500, Scene.UI_SCENE);
 	}
 
 	@Override

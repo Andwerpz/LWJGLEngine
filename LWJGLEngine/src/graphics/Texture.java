@@ -60,6 +60,10 @@ public class Texture {
 		this.textureID = this.load(path, invertColors, horizontalFlip, verticalFlip);
 	}
 	
+	public Texture(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
+		this.textureID = this.load(img, invertColors, horizontalFlip, verticalFlip);
+	}
+	
 	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType) {
 		this.textureID = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, textureID);

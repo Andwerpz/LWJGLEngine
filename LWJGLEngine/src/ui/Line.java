@@ -31,10 +31,11 @@ public class Line extends Model {
 		};
 		
 		int[] indices = new int[] {
-			0, 1, 1,	//3 points since everything has to be a triangle 	
+			0, 1, 0,	//3 points since everything has to be a triangle 	
 		};
 		
 		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_LINES));
+		this.defaultMaterials.add(DEFAULT_MATERIAL);
 		this.textureMaterials.add(TextureMaterial.defaultMaterial());
 	}
 	
