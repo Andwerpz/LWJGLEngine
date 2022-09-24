@@ -12,6 +12,7 @@ import java.util.HashSet;
 import entity.Entity;
 import graphics.Framebuffer;
 import graphics.Texture;
+import graphics.TextureMaterial;
 import input.Button;
 import input.InputManager;
 import input.KeyboardInput;
@@ -43,8 +44,8 @@ public class MainMenuState extends State {
 	private static Screen perspectiveScreen;	//3D background
 	private static Camera perspectiveCamera;
 	
-	private static UIScreen uiScreen;	//Menu UI
-	private static Camera uiCamera;
+	private static UIScreen uiScreen, uiScreenSelector;	//Menu UI
+	private static Camera uiScreenCamera;
 	
 	private long startTime;
 	
@@ -64,9 +65,9 @@ public class MainMenuState extends State {
 		perspectiveCamera.setPos(new Vec3(18.417412f, 1.7f, -29.812654f));
 		
 		if(uiScreen == null) {
-			uiCamera = new Camera(Mat4.orthographic(0, (float) Main.windowWidth, 0, (float) Main.windowHeight, 10, -10));
+			uiScreenCamera = new Camera(Mat4.orthographic(0, (float) Main.windowWidth, 0, (float) Main.windowHeight, -10, 10));
 			uiScreen = new UIScreen();
-			uiScreen.setCamera(uiCamera);
+			uiScreen.setCamera(uiScreenCamera);
 		}
 		
 		Main.unlockCursor();
@@ -83,18 +84,21 @@ public class MainMenuState extends State {
 		// -- UI SCENE --
 		Model.removeInstancesFromScene(Scene.UI_SCENE);
 		Light.removeLightsFromScene(Scene.UI_SCENE);
-		//InputManager.addInput("btn_logo", new Button(120, Main.windowHeight / 2, 700, 150, new Texture("/cs_go_logo.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
-		//InputManager.addInput("btn_new_game", new Button(120, Main.windowHeight / 2 - 50, 200, 100, new Texture("/ui/main_menu/new_game.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
-		//InputManager.addInput("btn_settings", new Button(120, Main.windowHeight / 2 - 100, 200, 100, new Texture("/ui/main_menu/settings.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
-		//InputManager.addInput("btn_quit_game", new Button(120, Main.windowHeight / 2 - 150, 200, 100, new Texture("/ui/main_menu/quit_game.png", false, false, true), new Texture("/hitbox.png"), Scene.UI_SCENE));
 		
-		InputManager.addInput("btn_new_game", new Button(150, Main.windowHeight / 2 - 50, 250, 42, "NEW GAME", FontUtils.CSGOFont, 42, Scene.UI_SCENE));
-		InputManager.addInput("btn_settings", new Button(150, Main.windowHeight / 2 - 100, 250, 42, "SETTINGS", FontUtils.CSGOFont, 42, Scene.UI_SCENE));
-		InputManager.addInput("btn_quit_game", new Button(150, Main.windowHeight / 2 - 150, 250, 42, "QUIT GAME", FontUtils.CSGOFont, 42, Scene.UI_SCENE));
+		InputManager.addInput("btn_new_game", new Button(150, Main.windowHeight / 2 - 20, 250, 42, "New Game", FontUtils.CSGOFont, 42, Scene.UI_SCENE));
+		InputManager.addInput("btn_settings", new Button(150, Main.windowHeight / 2 - 70, 250, 42, "Settings", FontUtils.CSGOFont, 42, Scene.UI_SCENE));
+		InputManager.addInput("btn_quit_game", new Button(150, Main.windowHeight / 2 - 120, 250, 42, "Quit Game", FontUtils.CSGOFont, 42, Scene.UI_SCENE));
+		
+		FilledRectangle csgoLogo = new FilledRectangle();
+		csgoLogo.setTextureMaterial(new TextureMaterial(new Texture("/cs_go_logo.png", false, false, true)));
+		Mat4 logoMat4 = Mat4.scale(700, 150, 1).mul(Mat4.translate(new Vec3(120, Main.windowHeight / 2, 0)));
+		Model.addInstance(csgoLogo, logoMat4, Scene.UI_SCENE);
 	}
 
 	@Override
 	public void update() {
+		InputManager.hovered(uiScreen.getEntityIDAtMouse());
+		
 		Entity.updateEntities();
 		Model.updateModels();
 		updateCamera();
@@ -119,10 +123,7 @@ public class MainMenuState extends State {
 	@Override
 	public void mouseReleased(int button) {
 		InputManager.released(uiScreen.getEntityIDAtMouse());
-		if(InputManager.isClicked("btn_logo")) {
-			this.sm.switchState(new SplashState(this.sm));
-		}
-		else if(InputManager.isClicked("btn_new_game")) {
+		if(InputManager.isClicked("btn_new_game")) {
 			this.sm.switchState(new GameState(this.sm));
 		}
 		else if(InputManager.isClicked("btn_quit_game")) {

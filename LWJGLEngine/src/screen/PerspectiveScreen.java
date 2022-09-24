@@ -106,9 +106,11 @@ public class PerspectiveScreen extends Screen {
 		// -- GEOMETRY -- : render 3d perspective to geometry buffer
 		geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
 		glPolygonMode(GL_FRONT, GL_FILL);
 		glDisable(GL_BLEND);
+		glClearDepth(1);	//maximum value
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		Shader.GEOMETRY.enable();

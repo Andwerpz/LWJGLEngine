@@ -67,11 +67,11 @@ public class Material {
 		return this.shininess;
 	}
 	
-//	public String toString() {
-//		String ans = "Diffuse : " + this.diffuse + "\n";
-//		ans += "Specular : " + this.specular + "\n";
-//		ans += "Shininess : " + this.shininess;
-//		return ans;
-//	}
+	public String toString() {
+		String ans = "Diffuse : " + this.diffuse + "\n";
+		ans += "Specular : " + this.specular + "\n";
+		ans += "Shininess : " + this.shininess;
+		return ans;
+	}
 	
 }

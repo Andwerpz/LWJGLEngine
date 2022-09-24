@@ -39,6 +39,12 @@ public class InputManager {
 		inputs.clear();
 	}
 	
+	public static void hovered(long entityID) {
+		for(Button b : inputs.values()) {
+			b.hovered(entityID);
+		}
+	}
+	
 	public static void pressed(long entityID) {
 		String id = entityToStringID.get(entityID);
 		if(id == null) {

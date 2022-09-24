@@ -41,6 +41,7 @@ public class Button extends Entity {
 	
 	private Material pressedMaterial, releasedMaterial, hoveredMaterial;
 	private Material pressedTextMaterial, releasedTextMaterial, hoveredTextMaterial;
+	private Material currentMaterial;
 	
 	private boolean pressed, hovered, clicked;
 	
@@ -66,16 +67,18 @@ public class Button extends Entity {
 		//calculate where to put the text in order to center it in the button
 		int centerX = this.x + this.width / 2;
 		int centerY = this.y + this.height / 2;
-		this.buttonText = new Text(0, 0, this.z - 1, text, font, this.releasedTextMaterial, scene);
+		this.buttonText = new Text(0, 0, this.z + 1, text, font, this.releasedTextMaterial, scene);
 		this.buttonText.center(centerX, centerY);
 		
 		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
 		this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
 		this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.0f));
 		
-		this.buttonInnerID = FilledRectangle.addRectangle(this.x, this.y, this.width, this.height, this.scene);
+		this.buttonInnerID = FilledRectangle.addRectangle(this.x, this.y, this.z, this.width, this.height, this.scene);
 		this.registerModelInstance(this.buttonInnerID);
 		this.updateModelInstance(this.buttonInnerID, releasedMaterial);
+		
+		this.currentMaterial = this.releasedMaterial;
 	}
 	
 	@Override
@@ -85,13 +88,33 @@ public class Button extends Entity {
 
 	@Override
 	public void update() {
+		Material nextMaterial = null;
 		if(this.clicked) {	//check for clicks happens when mouse is released. 
 			this.clicked = false;
+			nextMaterial = this.pressedMaterial;
+		}
+		else if(this.pressed) {
+			nextMaterial = this.pressedMaterial;
+		}
+		else if(this.hovered) {
+			nextMaterial = this.hoveredMaterial;
+		}
+		else {
+			nextMaterial = this.releasedMaterial;
+		}
+		if(this.currentMaterial != nextMaterial) {
+			this.currentMaterial = nextMaterial;
+			this.updateModelInstance(this.buttonInnerID, this.currentMaterial);
 		}
 	}
 	
-	public void hovered() {
-		this.hovered = true;
+	public void hovered(long entityID) {
+		if(this.getID() != entityID) {
+			this.hovered = false;
+		}
+		else {
+			this.hovered = true;
+		}
 	}
 	
 	public void pressed(long entityID) {
@@ -99,11 +122,9 @@ public class Button extends Entity {
 			return;
 		}
 		this.pressed = true;
-		this.updateModelInstance(this.buttonInnerID, this.pressedMaterial);
 	}
 	
 	public void released(long entityID) {
-		this.updateModelInstance(this.buttonInnerID, this.releasedMaterial);
 		if(this.pressed && entityID == this.getID()) {
 			this.clicked = true;
 		}

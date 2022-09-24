@@ -48,10 +48,13 @@ public class UIScreen extends Screen {
 
 	@Override
 	public void render(Framebuffer outputBuffer, int scene) {
+		// -- RENDER UI --
 		this.geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
+		glClearDepth(1);	//maximum value
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 		
 		Shader.GEOMETRY.enable();
@@ -60,6 +63,7 @@ public class UIScreen extends Screen {
 		Shader.GEOMETRY.setUniform3f("view_pos", camera.getPos());
 		Model.renderModels(scene);
 		
+		// -- RENDER TO OUTPUT --
 		outputBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
@@ -69,7 +73,24 @@ public class UIScreen extends Screen {
 		Shader.SPLASH.setUniform1f("alpha", 1f);
 		geometryColorMap.bind(GL_TEXTURE0);
 		//geometryColorIDMap.bind(GL_TEXTURE0);
-		screenQuad.render();		
+		screenQuad.render();
+		
+		// -- RENDER PROPER UI HITBOXES --
+		//we just reverse the depth det. 
+		this.geometryBuffer.bind();
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_GREATER);
+		glEnable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glClearDepth(0);	//minimum value
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+		
+		Shader.GEOMETRY.enable();
+		Shader.GEOMETRY.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
+		Shader.GEOMETRY.setUniformMat4("vw_matrix", camera.getViewMatrix());
+		Shader.GEOMETRY.setUniform3f("view_pos", camera.getPos());
+		Model.renderModels(scene);
+		
 	}
 
 }

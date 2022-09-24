@@ -49,4 +49,9 @@ public class FilledRectangle extends Model {
 		return Model.addInstance(FilledRectangle.rectangle, modelMat4, scene);
 	}
 	
+	public static long addRectangle(float x, float y, float z, float width, float height, int scene) {
+		Mat4 modelMat4 = Mat4.scale(width, height, 1).mul(Mat4.translate(new Vec3(x, y, z)));
+		return Model.addInstance(FilledRectangle.rectangle, modelMat4, scene);
+	}
+	
 }
