@@ -68,6 +68,7 @@ public class UIScreen extends Screen {
 		Shader.SPLASH.enable();
 		Shader.SPLASH.setUniform1f("alpha", 1f);
 		geometryColorMap.bind(GL_TEXTURE0);
+		//geometryColorIDMap.bind(GL_TEXTURE0);
 		screenQuad.render();		
 	}
 

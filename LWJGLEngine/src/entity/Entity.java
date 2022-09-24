@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import graphics.Material;
 import model.AssetManager;
 import model.Model;
 import util.Mat4;
@@ -56,8 +57,17 @@ public abstract class Entity {
 		return modelInstanceID;
 	}
 	
+	protected void registerModelInstance(long modelInstanceID) {
+		this.modelInstanceIDs.add(modelInstanceID);
+		modelToEntityID.put(modelInstanceID, this.ID);
+	}
+	
 	protected void updateModelInstance(long modelInstanceID, Mat4 mat4) {
 		Model.updateInstance(modelInstanceID, mat4);
+	}
+	
+	protected void updateModelInstance(long modelInstanceID, Material material) {
+		Model.updateInstance(modelInstanceID, material);
 	}
 	
 	protected void removeModelInstance(long modelInstanceID) {
@@ -79,11 +89,10 @@ public abstract class Entity {
 		return Entity.modelToEntityID.get(modelID) == null? 0 : Entity.modelToEntityID.get(modelID);
 	}
 	
+	//_kill() is ran at the end, so if you have any models you can kill them here. 
 	protected abstract void _kill();
 	
 	public void kill() {
-		this._kill();
-		
 		//remove all model instances
 		for(long id : this.modelInstanceIDs) {
 			modelToEntityID.remove(id);
@@ -94,6 +103,8 @@ public abstract class Entity {
 		entities.remove(this.ID);
 		
 		System.out.println("REMOVE ENTITY " + this.ID);
+		
+		this._kill();
 	}
 	
 	public static void killAll() {

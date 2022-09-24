@@ -7,13 +7,23 @@ import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.opengl.GL33.*;
 
+import java.awt.Color;
+import java.awt.Font;
+
 import entity.Entity;
 import graphics.TextureMaterial;
+import graphics.Material;
 import graphics.Texture;
 import graphics.VertexArray;
 import model.Model;
+import scene.Scene;
+import ui.FilledRectangle;
+import ui.Text;
+import util.FontUtils;
+import util.GraphicsTools;
 import util.Mat4;
 import util.Vec3;
+import util.Vec4;
 
 public class Button extends Entity {
 	
@@ -23,61 +33,54 @@ public class Button extends Entity {
 	//the button isn't responsible for checking if it is pressed, another class, probably ButtonManager
 	//or InputManager should do that, and swap textures. 
 	
-	private Model model;
+	private long buttonInnerID;
+	private Text buttonText;
 	
-	private float x, y, width, height;	//x, y, specifies bottom left corner of button
-	private TextureMaterial pressedMaterial, releasedMaterial, hoveredMaterial;
+	private int x, y, z, width, height;	//x, y, specifies bottom left corner of button
+	private int scene;
+	
+	private Material pressedMaterial, releasedMaterial, hoveredMaterial;
+	private Material pressedTextMaterial, releasedTextMaterial, hoveredTextMaterial;
 	
 	private boolean pressed, hovered, clicked;
 	
 	private long modelInstanceID;
 	
-	public Button(float x, float y, float width, float height, Texture releasedTexture, Texture pressedTexture, int scene) {
+	public Button(int x, int y, int width, int height, String text, Font font, int fontSize, int scene) {
 		super();
-		
+		this.init(x, y, 0, width, height, text, FontUtils.deriveSize(fontSize, font), scene);
+	}
+	
+	//text size should already be included in the font
+	private void init(int x, int y, int z, int width, int height, String text, Font font, int scene) {
 		this.x = x;
 		this.y = y;
+		this.z = z;
 		this.width = width;
 		this.height = height;
-		this.pressed = false;
-		this.hovered = false;
-		this.clicked = false;
+		this.scene = scene;
 		
-		//create button model
-		float[] vertices = new float[] {
-			0, 0, 0,
-			width, 0, 0,
-			width, height, 0,
-			0, height, 0,
-		};
+		this.pressedTextMaterial = new Material(Color.YELLOW);
+		this.releasedTextMaterial = new Material(Color.WHITE);
 		
-		float[] uvs = new float[] {
-			0, 0,
-			1, 0,
-			1, 1,
-			0, 1,
-		};
+		//calculate where to put the text in order to center it in the button
+		int centerX = this.x + this.width / 2;
+		int centerY = this.y + this.height / 2;
+		this.buttonText = new Text(0, 0, this.z - 1, text, font, this.releasedTextMaterial, scene);
+		this.buttonText.center(centerX, centerY);
 		
-		int[] indices = new int[] {
-			0, 1, 2,
-			0, 2, 3,
-		};
+		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
+		this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
+		this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.0f));
 		
-		VertexArray vao = new VertexArray(vertices, uvs, indices, GL_TRIANGLES);
-		
-		//create button materials
-		this.releasedMaterial = new TextureMaterial(releasedTexture, null, null, null);
-		this.pressedMaterial = new TextureMaterial(pressedTexture, null, null, null);
-		
-		this.model = new Model(vao, releasedMaterial);
-		Mat4 modelMat = Mat4.translate(new Vec3(x, y, 0));
-		this.modelInstanceID = this.addModelInstance(model, modelMat, scene);
+		this.buttonInnerID = FilledRectangle.addRectangle(this.x, this.y, this.width, this.height, this.scene);
+		this.registerModelInstance(this.buttonInnerID);
+		this.updateModelInstance(this.buttonInnerID, releasedMaterial);
 	}
 	
 	@Override
 	protected void _kill() {
-		this.removeModelInstance(this.modelInstanceID);
-		this.model.kill();
+		this.buttonText.kill();
 	}
 
 	@Override
@@ -85,24 +88,23 @@ public class Button extends Entity {
 		if(this.clicked) {	//check for clicks happens when mouse is released. 
 			this.clicked = false;
 		}
-		
-		if(this.pressed) {
-			
-		}
-		else if(this.hovered) {
-			
-		}
-		else {
-			
-		}
 	}
 	
-	public void pressed() {
+	public void hovered() {
+		this.hovered = true;
+	}
+	
+	public void pressed(long entityID) {
+		if(this.getID() != entityID) {
+			return;
+		}
 		this.pressed = true;
+		this.updateModelInstance(this.buttonInnerID, this.pressedMaterial);
 	}
 	
-	public void released() {
-		if(this.pressed) {
+	public void released(long entityID) {
+		this.updateModelInstance(this.buttonInnerID, this.releasedMaterial);
+		if(this.pressed && entityID == this.getID()) {
 			this.clicked = true;
 		}
 		this.pressed = false;

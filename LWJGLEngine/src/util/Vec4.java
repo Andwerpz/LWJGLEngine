@@ -13,11 +13,25 @@ public class Vec4 {
 		this.w = w;
 	}
 	
+	public Vec4(Vec4 v) {
+		this.x = v.x;
+		this.y = v.y;
+		this.z = v.z;
+		this.w = v.w;
+	}
+	
 	public Vec4(Vec3 v, float w) {
 		this.x = v.x;
 		this.y = v.y;
 		this.z = v.z;
 		this.w = w;
+	}
+	
+	public Vec4(float a) {
+		this.x = a;
+		this.y = a;
+		this.z = a;
+		this.w = a;
 	}
 	
 	public FloatBuffer toFloatBuffer() {

@@ -340,7 +340,7 @@ public class Model {
 		IDtoModel.put(ID, model);
 		modelInstanceIDs.add(ID);
 		model.modelMats.get(scene).put(ID, mat4);
-		model.materials.get(scene).put(ID, model.defaultMaterials);
+		model.materials.get(scene).put(ID, new ArrayList<Material>(model.defaultMaterials));
 		model.scenesNeedingUpdates.add(scene);
 		
 		System.out.println("ADD MODEL INSTANCE " + ID);
@@ -392,7 +392,7 @@ public class Model {
 			System.err.println("Material index " + index + " out of bounds");
 			return;
 		}
-		model.materials.get(scene).get(ID).set(index, material);
+		model.materials.get(scene).get(ID).set(index, new Material(material));
 		model.scenesNeedingUpdates.add(scene);
 	}
 	
@@ -456,7 +456,7 @@ public class Model {
 					System.out.println("DIDNT SET MATERIALS " + ID);
 					matArr = this.defaultMaterials;
 				}
-				for(int i = 0; i < matArr.size(); i++) {
+				for(int i = 0; i < vertexArrayAmt; i++) {
 					instancedMaterials.get(i).put(ID, matArr.get(i));
 				}
 			}

@@ -2,6 +2,8 @@ package graphics;
 
 import static org.lwjgl.assimp.Assimp.*;
 
+import java.awt.Color;
+
 import org.lwjgl.assimp.AIColor4D;
 
 import util.Vec3;
@@ -15,6 +17,30 @@ public class Material {
 	
 	public static Material defaultMaterial() {
 		return new Material(new Vec3(1f), new Vec3(1), 64f);
+	}
+	
+	public Material(Material m) {
+		this.diffuse = new Vec4(m.diffuse);
+		this.specular = new Vec4(m.specular);
+		this.shininess = m.shininess;
+	}
+	
+	public Material(Vec3 diffuse) {
+		this.diffuse = new Vec4(diffuse, 1);
+		this.specular = new Vec4(1);
+		this.shininess = 64f;
+	}
+	
+	public Material(Vec4 diffuse) {
+		this.diffuse = new Vec4(diffuse);
+		this.specular = new Vec4(1);
+		this.shininess = 64f;
+	}
+	
+	public Material(Color diffuse) {
+		this.diffuse = new Vec4((float) diffuse.getRed() / 255f, (float) diffuse.getGreen() / 255f, (float) diffuse.getBlue() / 255f, 1);
+		this.specular = new Vec4(1);
+		this.shininess = 64f;
 	}
 	
 	public Material(Vec3 diffuse, Vec3 specular, float shininess) {
@@ -41,11 +67,11 @@ public class Material {
 		return this.shininess;
 	}
 	
-	public String toString() {
-		String ans = "Diffuse : " + this.diffuse + "\n";
-		ans += "Specular : " + this.specular + "\n";
-		ans += "Shininess : " + this.shininess;
-		return ans;
-	}
+//	public String toString() {
+//		String ans = "Diffuse : " + this.diffuse + "\n";
+//		ans += "Specular : " + this.specular + "\n";
+//		ans += "Shininess : " + this.shininess;
+//		return ans;
+//	}
 	
 }

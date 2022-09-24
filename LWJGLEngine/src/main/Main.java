@@ -16,6 +16,7 @@ import model.AssetManager;
 import model.ScreenQuad;
 import scene.Scene;
 import state.StateManager;
+import util.FontUtils;
 import util.Mat4;
 
 import static org.lwjgl.opengl.GL.*;
@@ -84,6 +85,7 @@ public class Main implements Runnable{
 		System.out.println("OpenGL : " + glGetString(GL_VERSION));
 		
 		//INIT
+		FontUtils.loadFonts();
 		Shader.init();
 		AssetManager.init();
 		Scene.init();

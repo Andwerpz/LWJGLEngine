@@ -44,12 +44,12 @@ public class InputManager {
 		if(id == null) {
 			return;
 		}
-		inputs.get(id).pressed();
+		inputs.get(id).pressed(entityID);
 	}
 	
-	public static void released() {
+	public static void released(long entityID) {
 		for(Button b : inputs.values()) {
-			b.released();
+			b.released(entityID);
 		}
 	}
 	
