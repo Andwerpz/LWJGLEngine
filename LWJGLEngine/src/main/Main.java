@@ -180,5 +180,13 @@ public class Main implements Runnable{
 	public void mouseReleased(int button) {
 		this.sm.mouseReleased(button);
 	}
+	
+	public void keyPressed(int key) {
+		this.sm.keyPressed(key);
+	}
+	
+	public void keyReleased(int key) {
+		this.sm.keyReleased(key);
+	}
 
 }

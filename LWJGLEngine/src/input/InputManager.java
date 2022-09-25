@@ -7,17 +7,17 @@ import entity.Entity;
 
 public class InputManager {
 	
-	private static HashMap<String, Button> inputs = new HashMap<>();
+	private static HashMap<String, Input> inputs = new HashMap<>();
 	private static HashMap<Long, String> entityToStringID = new HashMap<>();
 	private static HashMap<String, Long> stringToEntityID = new HashMap<>();
 	
-	public static void addInput(String id, Button input) {
+	public static void addInput(String id, Input input) {
 		inputs.put(id, input);
 		entityToStringID.put(input.getID(), id);
 		stringToEntityID.put(id, input.getID());
 	}
 	
-	public static Button getInput(String id) {
+	public static Input getInput(String id) {
 		return inputs.get(id);
 	}
 	
@@ -33,14 +33,19 @@ public class InputManager {
 	}
 	
 	public static void removeAllInputs() {
-		for(Button b : inputs.values()) {
+		for(Input b : inputs.values()) {
 			b.kill();
 		}
 		inputs.clear();
 	}
 	
+	public static boolean isClicked(String id) {
+		Input b = inputs.get(id);
+		return b == null? false : b.isClicked();
+	}
+	
 	public static void hovered(long entityID) {
-		for(Button b : inputs.values()) {
+		for(Input b : inputs.values()) {
 			b.hovered(entityID);
 		}
 	}
@@ -54,14 +59,24 @@ public class InputManager {
 	}
 	
 	public static void released(long entityID) {
-		for(Button b : inputs.values()) {
+		for(Input b : inputs.values()) {
 			b.released(entityID);
 		}
 	}
 	
-	public static boolean isClicked(String id) {
-		Button b = inputs.get(id);
-		return b == null? false : b.isClicked();
+	public static void keyPressed(int key) {
+		for(Input b : inputs.values()) {
+			if(b instanceof TextField) {
+				((TextField) b).keyPressed(key);
+			}
+		}
 	}
 	
+	public static void keyReleased(int key) {
+		for(Input b : inputs.values()) {
+			if(b instanceof TextField) {
+				((TextField) b).keyReleased(key);
+			}
+		}
+	}
 }

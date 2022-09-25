@@ -68,6 +68,56 @@ public class GraphicsTools {
 		FontMetrics fm = img.getGraphics().getFontMetrics(font);
 		return fm.getMaxDescent();
 	}
+	
+	public static BufferedImage generateTextImage(String text, Font font, Color c, int widthCutoff) {
+		if(widthCutoff <= 0) {
+			System.err.println("Width cutoff has to be greater than 0");
+			return null;
+		}
+		
+		int textMaxDescent = GraphicsTools.getFontMaxDescent(font);
+		int textMaxAscent = GraphicsTools.getFontMaxAscent(font);
+		
+		int textSampleAscent = GraphicsTools.getFontSampleAscent(font);
+		int textSampleDescent = GraphicsTools.getFontSampleDescent(font);
+		
+		textMaxAscent = Math.max(textSampleAscent, textMaxAscent);
+		textMaxDescent = Math.max(textSampleDescent, textMaxDescent);
+		
+		BufferedImage img = new BufferedImage(widthCutoff, textMaxDescent + textMaxAscent, BufferedImage.TYPE_INT_ARGB);
+		Graphics g = img.getGraphics();
+		enableAntialiasing(g);
+		g.setFont(font);
+		g.setColor(c);
+		g.drawString(text, 0, textMaxAscent);
+		
+		return img;
+	}
+	
+	public static Rectangle getStringBounds(Graphics g, String str, float x, float y) {
+		Graphics2D g2 = (Graphics2D) g;
+		FontRenderContext frc = g2.getFontRenderContext();
+		GlyphVector gv = g2.getFont().createGlyphVector(frc, str);
+		return gv.getPixelBounds(null, x, y);
+	}
+	
+	public static int getFontSampleDescent(Font font) {
+		BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+		Graphics g = img.getGraphics();
+		g.setFont(font);
+		String sampleText = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
+		Rectangle textBounds = getStringBounds(g, sampleText, 0, 0);
+		return (int) (textBounds.getMaxY());
+	}
+	
+	public static int getFontSampleAscent(Font font) {
+		BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+		Graphics g = img.getGraphics();
+		g.setFont(font);
+		String sampleText = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
+		Rectangle textBounds = getStringBounds(g, sampleText, 0, 0);
+		return (int) (textBounds.getHeight() - textBounds.getMaxY());
+	}
 
 	public static void enableTextAntialiasing(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g;

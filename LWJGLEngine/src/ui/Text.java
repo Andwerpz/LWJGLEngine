@@ -19,103 +19,155 @@ import util.Vec3;
 public class Text extends Entity {
 	//utilizes java.fx to draw text onto a texture, which it then draws onto the screen using a filled rectangle
 	
-	private Model rectangle;
-	private long rectangleID;
-	private TextureMaterial textureMaterial;
+	//width of text is fixed, text will be cut off if it grows too wide. 
 	
-	private int x, y, z, textHeight, textWidth;
-	private int textMaxHeight, textAscent, textMaxDescent;
+	private long rectangleID;
+	
+	private int x, y, z, width, height;	
+	private int textWidth, textMaxHeight, textMaxDescent, textMaxAscent, textSampleAscent, textSampleDescent;
 	private int scene;
 	
 	private Material material;
+	
+	private Model textRectangle;
+	private TextureMaterial textTextureMaterial;
+	private String text;
 	private Font font;
 	private int fontSize;
 	
 	public Text(int x, int y, String text, int fontSize, Material material, int scene) {
 		super();
-		this.init(text, new Font("Dialogue", Font.PLAIN, fontSize), material, x, y, 0, scene);
+		Font derivedFont = new Font("Dialogue", Font.PLAIN, fontSize);
+		this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material, scene);
 	}
 	
 	public Text(int x, int y, String text, Font font, int fontSize, Material material, int scene) {
 		super();
-		this.init(text, FontUtils.deriveSize(fontSize, font), material, x, y, 0, scene);
+		Font derivedFont = FontUtils.deriveSize(fontSize, font);
+		this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material, scene);
 	}
 	
 	public Text(int x, int y, String text, Font font, Color color, int scene) {
 		super();
-		this.init(text, font, new Material(color), x, y, 0, scene);
+		this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, font), text, font, new Material(color), scene);
 	}
 	
 	public Text(int x, int y, String text, Font font, int fontSize, Color color, int scene) {
 		super();
-		this.init(text, FontUtils.deriveSize(fontSize, font), new Material(color), x, y, 0, scene);
+		Font derivedFont = FontUtils.deriveSize(fontSize, font);
+		this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, new Material(color), scene);
 	}
 	
 	public Text(int x, int y, int z, String text, Font font, Material material, int scene) {
 		super();
-		this.init(text, font, material, x, y, z, scene);
+		this.init(x, y, z, GraphicsTools.calculateTextWidth(text, font), text, font, material, scene);
+	}
+	
+	public Text(int x, int y, int z, int width, String text, Font font, Material material, int scene) {
+		super();
+		this.init(x, y, z, width, text, font, material, scene);
 	}
 	
 	public Text(int x, int y, String text, Font font, Material material, int scene) {
 		super();
-		this.init(text, font, material, x, y, 0, scene);
+		this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, font), text, font, material, scene);
 	}
 	
-	private void init(String text, Font font, Material material, int x, int y, int z, int scene) {
+	private void init(int x, int y, int z, int width, String text, Font font, Material material, int scene) {
+		this.text = text;
 		this.font = font;
 		this.fontSize = font.getSize();
 		this.x = x;
 		this.y = y;
 		this.z = z;
+		this.width = width;	//text will get cut off after this
 		this.material = material;
 		this.textWidth = GraphicsTools.calculateTextWidth(text, font);
-		this.textHeight = GraphicsTools.getFontHeight(font);
 		
-		int textMaxAscent = GraphicsTools.getFontMaxAscent(font);
-		this.textMaxDescent = GraphicsTools.getFontMaxDescent(font);
+		this.textSampleAscent = GraphicsTools.getFontSampleAscent(font);
+		this.textSampleDescent = GraphicsTools.getFontSampleDescent(font);
+		
+		this.textMaxAscent = Math.max(GraphicsTools.getFontMaxAscent(font), this.textSampleAscent);
+		this.textMaxDescent = Math.max(GraphicsTools.getFontMaxDescent(font), this.textSampleDescent);
 		this.textMaxHeight = textMaxAscent + textMaxDescent;
 		
-		this.textAscent = GraphicsTools.getFontAscent(font);
+		this.height = textMaxHeight;
 		
-		BufferedImage img = new BufferedImage(textWidth, textMaxHeight, BufferedImage.TYPE_INT_ARGB);
-		Graphics gImg = img.getGraphics();
-		gImg.setFont(font);
-		gImg.setColor(Color.WHITE);	//adjusting the material can get you any color
-		GraphicsTools.enableAntialiasing(gImg);
-		gImg.drawString(text, 0, textMaxHeight);
-		
+		BufferedImage img = GraphicsTools.generateTextImage(text, font, Color.WHITE, this.width);
 		Texture texture = new Texture(img, false, false, true);
+		this.textTextureMaterial = new TextureMaterial(texture);
 		
-		this.textureMaterial = new TextureMaterial(texture);
+		Mat4 modelMat4 = Mat4.scale(this.width, textMaxHeight, 1).mul(Mat4.translate(new Vec3(x, y - this.textMaxDescent, z)));
 		
-		Mat4 modelMat4 = Mat4.scale(textWidth, textMaxHeight, 1).mul(Mat4.translate(new Vec3(x, y, z)));
-		
-		this.rectangle = new FilledRectangle();
-		this.rectangle.setTextureMaterial(textureMaterial);
-		this.rectangleID = this.addModelInstance(this.rectangle, modelMat4, scene);
-		this.updateModelInstance(this.rectangleID, material);
+		this.textRectangle = new FilledRectangle();
+		this.textRectangle.setTextureMaterial(textTextureMaterial);
+		this.rectangleID = this.addModelInstance(this.textRectangle, modelMat4, scene);
+		this.updateModelInstance(this.rectangleID, this.material);
+	}
+	
+	public int getHeight() {
+		return this.height;
+	}
+	
+	public int getWidth() {
+		return this.width;
 	}
 	
 	//center the text around a point
 	public void center(int x, int y) {
-		int newX = x - textWidth / 2;
-		int newY = y - this.textMaxDescent - this.textAscent / 2;
+		int newX = x - this.textWidth / 2;
+		int newY = y - this.textMaxDescent - this.textSampleAscent / 2;
 		this.x = newX;
 		this.y = newY;
 		
-		Mat4 modelMat4 = Mat4.scale(textWidth, textMaxHeight, 1).mul(Mat4.translate(new Vec3(this.x, this.y, this.z)));
-		
+		Mat4 modelMat4 = Mat4.scale(this.width, textMaxHeight, 1).mul(Mat4.translate(new Vec3(this.x, this.y, this.z)));
 		this.updateModelInstance(this.rectangleID, modelMat4);
 	}
 	
+	public void verticalCenter(int x, int y) {
+		int newX = x;
+		int newY = y - this.textMaxDescent - this.textSampleAscent / 2;
+		this.x = newX;
+		this.y = newY;
+		
+		Mat4 modelMat4 = Mat4.scale(this.width, textMaxHeight, 1).mul(Mat4.translate(new Vec3(this.x, this.y, this.z)));
+		this.updateModelInstance(this.rectangleID, modelMat4);
+	}
+	
+	public void setPos(int x, int y) {
+		int newX = x;
+		int newY = y - this.textMaxDescent;
+		this.x = newX;
+		this.y = newY;
+		
+		Mat4 modelMat4 = Mat4.scale(this.width, textMaxHeight, 1).mul(Mat4.translate(new Vec3(this.x, this.y, this.z)));
+		this.updateModelInstance(this.rectangleID, modelMat4);
+	}
+	
+	public void setText(String text) {
+		if(this.text.equals(text)) {
+			return;
+		}
+		this.text = text;
+		this.textWidth = GraphicsTools.calculateTextWidth(this.text, font);
+		
+		BufferedImage img = GraphicsTools.generateTextImage(text, font, Color.WHITE, this.width);
+		Texture texture = new Texture(img, false, false, true);
+		this.textTextureMaterial.setTexture(texture, TextureMaterial.DIFFUSE);
+		this.textRectangle.setTextureMaterial(this.textTextureMaterial);
+	}
+	
 	public void setMaterial(Material material) {
+		if(material == this.material) {
+			return;
+		}
 		this.material = material;
 		this.updateModelInstance(this.rectangleID, this.material);
 	}
 
 	@Override
 	protected void _kill() {
-		this.rectangle.kill();
+		this.textRectangle.kill();
 	}
 
 	@Override

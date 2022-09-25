@@ -16,6 +16,7 @@ import graphics.TextureMaterial;
 import input.Button;
 import input.InputManager;
 import input.KeyboardInput;
+import input.TextField;
 import main.Main;
 import model.AssetManager;
 import model.Model;
@@ -93,6 +94,8 @@ public class MainMenuState extends State {
 		csgoLogo.setTextureMaterial(new TextureMaterial(new Texture("/cs_go_logo.png", false, false, true)));
 		Mat4 logoMat4 = Mat4.scale(700, 150, 1).mul(Mat4.translate(new Vec3(120, Main.windowHeight / 2, 0)));
 		Model.addInstance(csgoLogo, logoMat4, Scene.UI_SCENE);
+		
+		InputManager.addInput("tf_test", new TextField(100, 100, 200, 50, "Test Text aaaaaaaaaaaaa", new Font("Arial", Font.PLAIN, 1), 24, Scene.UI_SCENE));
 	}
 
 	@Override

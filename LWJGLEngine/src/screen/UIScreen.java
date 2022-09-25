@@ -12,6 +12,8 @@ import main.Main;
 import model.Model;
 
 public class UIScreen extends Screen {
+	//higher values of z will go over lower values. 
+	//colorID will go in reverse values. 
 	
 	private Framebuffer geometryBuffer;
 	

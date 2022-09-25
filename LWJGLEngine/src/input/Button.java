@@ -25,7 +25,7 @@ import util.Mat4;
 import util.Vec3;
 import util.Vec4;
 
-public class Button extends Entity {
+public class Button extends Input {
 	
 	//for now, each button has it's own button model. Later, i would like it so that all buttons
 	//of the same shape and size can share one model, or something like that. 
@@ -42,8 +42,6 @@ public class Button extends Entity {
 	private Material pressedMaterial, releasedMaterial, hoveredMaterial;
 	private Material pressedTextMaterial, releasedTextMaterial, hoveredTextMaterial;
 	private Material currentMaterial;
-	
-	private boolean pressed, hovered, clicked;
 	
 	private long modelInstanceID;
 	
@@ -80,11 +78,6 @@ public class Button extends Entity {
 		
 		this.currentMaterial = this.releasedMaterial;
 	}
-	
-	@Override
-	protected void _kill() {
-		this.buttonText.kill();
-	}
 
 	@Override
 	public void update() {
@@ -108,30 +101,8 @@ public class Button extends Entity {
 		}
 	}
 	
-	public void hovered(long entityID) {
-		if(this.getID() != entityID) {
-			this.hovered = false;
-		}
-		else {
-			this.hovered = true;
-		}
-	}
-	
-	public void pressed(long entityID) {
-		if(this.getID() != entityID) {
-			return;
-		}
-		this.pressed = true;
-	}
-	
-	public void released(long entityID) {
-		if(this.pressed && entityID == this.getID()) {
-			this.clicked = true;
-		}
-		this.pressed = false;
-	}
-	
-	public boolean isClicked() {
-		return this.clicked;
+	@Override
+	protected void _kill() {
+		this.buttonText.kill();
 	}
 }
