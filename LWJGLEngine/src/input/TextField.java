@@ -29,8 +29,9 @@ import util.Vec3;
 import util.Vec4;
 
 public class TextField extends Input {
-	
-	private static HashMap<Character, Character> shiftMap  = new HashMap<Character, Character>() {{
+
+    private static HashMap<Character, Character> shiftMap = new HashMap<Character, Character>() {
+	{
 	    put('`', '~');
 	    put('1', '!');
 	    put('2', '@');
@@ -78,141 +79,135 @@ public class TextField extends Input {
 	    put(',', '<');
 	    put('.', '>');
 	    put('/', '?');
-	}};
-	
-	private long fieldInnerID;
-	private Text fieldText;
-	
-	private int x, y, z, width, height, scene;
-	
-	private String text, hintText;
-	private int textLeftMargin = 5;
-	private int textRightMargin = 5;
-	private Font font;
-	
-	private HashSet<Integer> pressedKeys;	//stores key codes, not chars
-	
-	private Material textMaterial, hintTextMaterial;
-	private Material releasedMaterial, pressedMaterial, hoveredMaterial, selectedMaterial;
-	private Material currentMaterial;
-	
-	public TextField(int x, int y, int width, int height, String hintText, Font font, int fontSize, int scene) {
-		super();
-		this.init(x, y, 0, width, height, hintText, FontUtils.deriveSize(fontSize, font), scene);
 	}
-	
-	private void init(int x, int y, int z, int width, int height, String hintText, Font font, int scene) {
-		this.font = font;
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.width = width;
-		this.height = height;
-		this.scene = scene;
-		
-		this.text = "";
-		this.hintText = hintText;
-		this.pressedKeys = new HashSet<>();
-		
-		this.textMaterial = new Material(Color.WHITE);
-		this.hintTextMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
-		this.fieldText = new Text(0, 0, z + 1, width - (textLeftMargin + textRightMargin), hintText, font, this.hintTextMaterial, scene);
-		
-		int centerY = y + height / 2;
-		this.fieldText.verticalCenter(x + this.textLeftMargin, centerY);
-		
-		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
-		this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
-		this.selectedMaterial = new Material(new Vec4(0, 0, 0, 0.4f));
-		this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.15f));
-		
-		this.fieldInnerID = FilledRectangle.addRectangle(x, y, z, width, height, scene);
-		this.registerModelInstance(this.fieldInnerID);
-		this.updateModelInstance(this.fieldInnerID, this.releasedMaterial);
+    };
+
+    private long fieldInnerID;
+    private Text fieldText;
+
+    private int x, y, z, width, height, scene;
+
+    private String text, hintText;
+    private int textLeftMargin = 5;
+    private int textRightMargin = 5;
+    private Font font;
+
+    private HashSet<Integer> pressedKeys; // stores key codes, not chars
+
+    private Material textMaterial, hintTextMaterial;
+    private Material releasedMaterial, pressedMaterial, hoveredMaterial, selectedMaterial;
+    private Material currentMaterial;
+
+    public TextField(int x, int y, int width, int height, String hintText, Font font, int fontSize, int scene) {
+	super();
+	this.init(x, y, 0, width, height, hintText, FontUtils.deriveSize(fontSize, font), scene);
+    }
+
+    private void init(int x, int y, int z, int width, int height, String hintText, Font font, int scene) {
+	this.font = font;
+	this.x = x;
+	this.y = y;
+	this.z = z;
+	this.width = width;
+	this.height = height;
+	this.scene = scene;
+
+	this.text = "";
+	this.hintText = hintText;
+	this.pressedKeys = new HashSet<>();
+
+	this.textMaterial = new Material(Color.WHITE);
+	this.hintTextMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
+	this.fieldText = new Text(0, 0, z + 1, width - (textLeftMargin + textRightMargin), hintText, font, this.hintTextMaterial, scene);
+
+	int centerY = y + height / 2;
+	this.fieldText.verticalCenter(x + this.textLeftMargin, centerY);
+
+	this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
+	this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
+	this.selectedMaterial = new Material(new Vec4(0, 0, 0, 0.4f));
+	this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.15f));
+
+	this.fieldInnerID = FilledRectangle.addRectangle(x, y, z, width, height, scene);
+	this.registerModelInstance(this.fieldInnerID);
+	this.updateModelInstance(this.fieldInnerID, this.releasedMaterial);
+    }
+
+    @Override
+    public void update() {
+	// -- FIELD INNER --
+	Material nextMaterial = null;
+	if (this.clicked) { // check for clicks happens when mouse is released.
+	    nextMaterial = this.selectedMaterial;
+	} else if (this.pressed) {
+	    nextMaterial = this.pressedMaterial;
+	} else if (this.hovered) {
+	    nextMaterial = this.hoveredMaterial;
+	} else {
+	    nextMaterial = this.releasedMaterial;
+	}
+	if (this.currentMaterial != nextMaterial) {
+	    this.currentMaterial = nextMaterial;
+	    this.updateModelInstance(this.fieldInnerID, this.currentMaterial);
 	}
 
-	@Override
-	public void update() {
-		// -- FIELD INNER --
-		Material nextMaterial = null;
-		if(this.clicked) {	//check for clicks happens when mouse is released. 
-			nextMaterial = this.selectedMaterial;
-		}
-		else if(this.pressed) {
-			nextMaterial = this.pressedMaterial;
-		}
-		else if(this.hovered) {
-			nextMaterial = this.hoveredMaterial;
-		}
-		else {
-			nextMaterial = this.releasedMaterial;
-		}
-		if(this.currentMaterial != nextMaterial) {
-			this.currentMaterial = nextMaterial;
-			this.updateModelInstance(this.fieldInnerID, this.currentMaterial);
-		}
-		
-		// -- TEXT --
-		if(this.text.length() == 0) {
-			this.fieldText.setMaterial(this.hintTextMaterial);
-			this.fieldText.setText(this.hintText);
-		}
-		else {
-			this.fieldText.setMaterial(this.textMaterial);
-			this.fieldText.setText(this.text);
-		}
+	// -- TEXT --
+	if (this.text.length() == 0) {
+	    this.fieldText.setMaterial(this.hintTextMaterial);
+	    this.fieldText.setText(this.hintText);
+	} else {
+	    this.fieldText.setMaterial(this.textMaterial);
+	    this.fieldText.setText(this.text);
 	}
-	
-	@Override
-	protected void _kill() {
-		this.fieldText.kill();
-	}
-	
-	public void keyPressed(int key) {
-		if (this.clicked) {
-			pressedKeys.add(key);
+    }
 
-			// looking for ctrl + v
-			if ((pressedKeys.contains(GLFW_KEY_LEFT_CONTROL) || pressedKeys.contains(GLFW_KEY_RIGHT_CONTROL)) && pressedKeys.contains(GLFW_KEY_V)) {
-				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-				String result = "";
-				try {
-					result = (String) clipboard.getData(DataFlavor.stringFlavor);
-				} catch (UnsupportedFlavorException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				this.text += result;
-				return;
-			}
-			else if (key == GLFW_KEY_BACKSPACE) {
-				if(this.text.length() != 0) {
-					this.text = this.text.substring(0, this.text.length() - 1);
-				}
-			}
-			else if (key == GLFW_KEY_SPACE) {
-				this.text += " ";
-			}
-			else {
-				String keyName = glfwGetKeyName(key, 0);
-				if(keyName == null) {
-					return;
-				}
-				char k = keyName.charAt(0);
-				if(pressedKeys.contains(GLFW_KEY_LEFT_SHIFT) || pressedKeys.contains(GLFW_KEY_RIGHT_SHIFT)) {
-					k = shiftMap.get(k);
-				}
-				this.text += k;
-			}
-		}
-	}
+    @Override
+    protected void _kill() {
+	this.fieldText.kill();
+    }
 
-	public void keyReleased(int key) {
-		if (this.clicked) {
-			if (pressedKeys.contains(key)) {
-				pressedKeys.remove(key);
-			}
+    public void keyPressed(int key) {
+	if (this.clicked) {
+	    pressedKeys.add(key);
+
+	    // looking for ctrl + v
+	    if ((pressedKeys.contains(GLFW_KEY_LEFT_CONTROL) || pressedKeys.contains(GLFW_KEY_RIGHT_CONTROL)) && pressedKeys.contains(GLFW_KEY_V)) {
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		String result = "";
+		try {
+		    result = (String) clipboard.getData(DataFlavor.stringFlavor);
+		} catch (UnsupportedFlavorException e) {
+		    e.printStackTrace();
+		} catch (IOException e) {
+		    e.printStackTrace();
 		}
+		this.text += result;
+		return;
+	    } else if (key == GLFW_KEY_BACKSPACE) {
+		if (this.text.length() != 0) {
+		    this.text = this.text.substring(0, this.text.length() - 1);
+		}
+	    } else if (key == GLFW_KEY_SPACE) {
+		this.text += " ";
+	    } else {
+		String keyName = glfwGetKeyName(key, 0);
+		if (keyName == null) {
+		    return;
+		}
+		char k = keyName.charAt(0);
+		if (pressedKeys.contains(GLFW_KEY_LEFT_SHIFT) || pressedKeys.contains(GLFW_KEY_RIGHT_SHIFT)) {
+		    k = shiftMap.get(k);
+		}
+		this.text += k;
+	    }
 	}
+    }
+
+    public void keyReleased(int key) {
+	if (this.clicked) {
+	    if (pressedKeys.contains(key)) {
+		pressedKeys.remove(key);
+	    }
+	}
+    }
 }
