@@ -25,11 +25,10 @@ public class AssetManager {
 	paths.put("dust2", new String[] { "/dust2/", "dust2_blend.obj" });
 	paths.put("sphere", new String[] { "/sphere/", "sphere.obj" });
 	paths.put("cylinder", new String[] { "/cylinder/", "cylinder.obj" });
-	paths.put("lake_skybox", new String[] { "/skybox/lake/right.jpg", "/skybox/lake/left.jpg",
-		"/skybox/lake/top.jpg", "/skybox/lake/bottom.jpg", "/skybox/lake/front.jpg", "/skybox/lake/back.jpg" });
+	paths.put("lake_skybox",
+		new String[] { "/skybox/lake/right.jpg", "/skybox/lake/left.jpg", "/skybox/lake/top.jpg", "/skybox/lake/bottom.jpg", "/skybox/lake/front.jpg", "/skybox/lake/back.jpg" });
 	paths.put("stars_skybox",
-		new String[] { "/skybox/stars/right.png", "/skybox/stars/left.png", "/skybox/stars/top.png",
-			"/skybox/stars/bottom.png", "/skybox/stars/front.png", "/skybox/stars/back.png" });
+		new String[] { "/skybox/stars/right.png", "/skybox/stars/left.png", "/skybox/stars/top.png", "/skybox/stars/bottom.png", "/skybox/stars/front.png", "/skybox/stars/back.png" });
     }
 
     public static void loadModel(String name) {

@@ -52,8 +52,7 @@ public class VertexArray {
 	this.init(vertices, normals, tangents, bitangents, uvs, indices, renderType);
     }
 
-    private void init(float[] vertices, float[] normals, float[] tangents, float[] bitangents, float[] uvs,
-	    int[] indices, int renderType) {
+    private void init(float[] vertices, float[] normals, float[] tangents, float[] bitangents, float[] uvs, int[] indices, int renderType) {
 	this.vertices = vertices;
 	this.normals = normals;
 	this.tangents = tangents;
@@ -188,8 +187,7 @@ public class VertexArray {
 	glBindVertexArray(0);
     }
 
-    public static void computeTB(float[] vertices, float[] normals, float[] uvs, int[] indices, float[] outTangents,
-	    float[] outBitangents) {
+    public static void computeTB(float[] vertices, float[] normals, float[] uvs, int[] indices, float[] outTangents, float[] outBitangents) {
 	int n = vertices.length / 3;
 	Vec3[] tangents = new Vec3[n];
 	Vec3[] bitangents = new Vec3[n];
@@ -293,8 +291,7 @@ public class VertexArray {
     // for each vertex, it's normal is the weighted average of all the normals of
     // the planes it touches.
     // weights are based on the angle
-    public static void computeTBN(float[] vertices, float[] uvs, int[] indices, float[] outNormals, float[] outTangents,
-	    float[] outBitangents) {
+    public static void computeTBN(float[] vertices, float[] uvs, int[] indices, float[] outNormals, float[] outTangents, float[] outBitangents) {
 	int n = vertices.length / 3;
 	Vec3[] normals = new Vec3[n];
 	Vec3[] tangents = new Vec3[n];

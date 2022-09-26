@@ -25,8 +25,7 @@ public class Cubemap {
     }
 
     public Cubemap(int internalFormat, int dataFormat, int dataType) {
-	String[] sides = new String[] { "/cubemap_default.png", "/cubemap_default.png", "/cubemap_default.png",
-		"/cubemap_default.png", "/cubemap_default.png", "/cubemap_default.png" };
+	String[] sides = new String[] { "/cubemap_default.png", "/cubemap_default.png", "/cubemap_default.png", "/cubemap_default.png", "/cubemap_default.png", "/cubemap_default.png" };
 	cubemapID = load(sides, internalFormat, dataFormat, dataType);
     }
 
@@ -37,8 +36,7 @@ public class Cubemap {
 	for (int i = 0; i < 6; i++) {
 	    int[] outWH = new int[2];
 	    int[] data = Texture.getDataFromImage(sides[i], false, false, outWH);
-	    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, outWH[0], outWH[1], 0, dataFormat,
-		    dataType, data);
+	    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, outWH[0], outWH[1], 0, dataFormat, dataType, data);
 	    this.size = outWH[0];
 	}
 
@@ -59,8 +57,7 @@ public class Cubemap {
 	for (int i = 0; i < 6; i++) {
 	    int[] outWH = new int[2];
 	    int[] data = Texture.getDataFromImage(sides[i], false, false, outWH);
-	    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, outWH[0], outWH[1], 0, GL_RGBA,
-		    GL_UNSIGNED_BYTE, data);
+	    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, outWH[0], outWH[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	    this.size = outWH[0];
 	}
 

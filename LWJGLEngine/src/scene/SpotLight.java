@@ -5,8 +5,7 @@ import util.Vec3;
 
 public class SpotLight extends Light {
 
-    public SpotLight(Vec3 pos, Vec3 dir, Vec3 color, float ambientIntensity, float cutOff, float outerCutOff,
-	    float constant, float linear, float quadratic) {
+    public SpotLight(Vec3 pos, Vec3 dir, Vec3 color, float ambientIntensity, float cutOff, float outerCutOff, float constant, float linear, float quadratic) {
 	this.type = Light.SPOT_LIGHT;
 	this.pos = new Vec3(pos);
 	this.dir = new Vec3(dir);

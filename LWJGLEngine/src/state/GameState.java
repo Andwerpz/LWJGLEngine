@@ -1,16 +1,13 @@
 package state;
 
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_M;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
-import entity.Ball;
 import entity.Capsule;
 import entity.Entity;
 import graphics.Framebuffer;
-import graphics.Texture;
 import input.InputManager;
 import input.KeyboardInput;
 import main.Main;
@@ -30,6 +27,8 @@ import util.NetworkingUtils;
 import util.Vec3;
 
 public class GameState extends State {
+
+    private static int WORLD_SCENE = 0;
 
     private String ip;
     private int port;
@@ -63,8 +62,7 @@ public class GameState extends State {
     @Override
     public void load() {
 	if (perspectiveScreen == null) {
-	    perspectiveCamera = new Camera(Main.FOV, (float) Main.windowWidth, (float) Main.windowHeight, Main.NEAR,
-		    Main.FAR);
+	    perspectiveCamera = new Camera(Main.FOV, Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
 	    perspectiveScreen = new PerspectiveScreen();
 	    perspectiveScreen.setCamera(perspectiveCamera);
 	}
@@ -74,14 +72,13 @@ public class GameState extends State {
 	Entity.killAll();
 
 	// -- WORLD SCENE --
-	Model.removeInstancesFromScene(Scene.WORLD_SCENE);
-	Light.removeLightsFromScene(Scene.WORLD_SCENE);
-	this.mapID = Model.addInstance(AssetManager.getModel("dust2"),
-		Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), Scene.WORLD_SCENE);
+	Model.removeInstancesFromScene(WORLD_SCENE);
+	Light.removeLightsFromScene(WORLD_SCENE);
+	this.mapID = Model.addInstance(AssetManager.getModel("dust2"), Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), WORLD_SCENE);
 	Model.activateCollisionMesh(this.mapID);
-	Light.addLight(Scene.WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
-	Scene.skyboxes.put(Scene.WORLD_SCENE, AssetManager.getSkybox("lake_skybox"));
-	player = new Player(new Vec3(18.417412f, 0.7f, -29.812654f), Scene.WORLD_SCENE);
+	Light.addLight(WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
+	Scene.skyboxes.put(WORLD_SCENE, AssetManager.getSkybox("lake_skybox"));
+	player = new Player(new Vec3(18.417412f, 0.7f, -29.812654f), WORLD_SCENE);
 
 	// -- NETWORKING --
 	this.client = new GameClient();
@@ -119,7 +116,7 @@ public class GameState extends State {
 	for (int ID : otherPlayerPositions.keySet()) {
 	    Vec3 pos = otherPlayerPositions.get(ID);
 	    if (!this.otherPlayers.keySet().contains(ID)) {
-		this.otherPlayers.put(ID, new Capsule(pos, new Vec3(0), 0.33f, 1f, Scene.WORLD_SCENE));
+		this.otherPlayers.put(ID, new Capsule(pos, new Vec3(0), 0.33f, 1f, WORLD_SCENE));
 	    }
 	    Capsule c = this.otherPlayers.get(ID);
 	    c.setPos(pos);
@@ -147,7 +144,7 @@ public class GameState extends State {
 
     @Override
     public void render(Framebuffer outputBuffer) {
-	perspectiveScreen.render(outputBuffer, Scene.WORLD_SCENE);
+	perspectiveScreen.render(outputBuffer, WORLD_SCENE);
     }
 
     private void updateCamera() {
@@ -161,7 +158,7 @@ public class GameState extends State {
 	// shoot ray in direction of camera
 //		Vec3 ray_origin = perspectiveCamera.getPos();
 //		Vec3 ray_dir = perspectiveCamera.getFacing();
-//		ArrayList<Vec3> intersect = Model.rayIntersect(Scene.WORLD_SCENE, ray_origin, ray_dir);
+//		ArrayList<Vec3> intersect = Model.rayIntersect(WORLD_SCENE, ray_origin, ray_dir);
 //		if(intersect.size() != 0) {
 //			float minDist = 0f;
 //			Vec3 minVec = null;
@@ -172,14 +169,14 @@ public class GameState extends State {
 //					minVec = v;
 //				}
 //			}
-//			Model.addInstance(AssetManager.getModel("sphere"), Mat4.scale(0.1f).mul(Mat4.translate(minVec)), Scene.WORLD_SCENE);
+//			Model.addInstance(AssetManager.getModel("sphere"), Mat4.scale(0.1f).mul(Mat4.translate(minVec)), WORLD_SCENE);
 //		}
 
 //		Vec3 cam_pos = new Vec3(perspectiveCamera.getPos());
 //		Vec3 cam_dir = new Vec3(perspectiveCamera.getFacing());
 //		
-//		//Capsule c = new Capsule(cam_pos, cam_dir.mul(0.3f), 0.25f, 1f, Scene.WORLD_SCENE);
-//		Ball b = new Ball(cam_pos, cam_dir.mul(0.3f), 0.3f, Scene.WORLD_SCENE);
+//		//Capsule c = new Capsule(cam_pos, cam_dir.mul(0.3f), 0.25f, 1f, WORLD_SCENE);
+//		Ball b = new Ball(cam_pos, cam_dir.mul(0.3f), 0.3f, WORLD_SCENE);
 //		System.out.println(cam_pos + " " + cam_dir.mul(0.6f));
     }
 

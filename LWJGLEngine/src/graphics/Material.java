@@ -38,8 +38,7 @@ public class Material {
     }
 
     public Material(Color diffuse) {
-	this.diffuse = new Vec4((float) diffuse.getRed() / 255f, (float) diffuse.getGreen() / 255f,
-		(float) diffuse.getBlue() / 255f, 1);
+	this.diffuse = new Vec4((float) diffuse.getRed() / 255f, (float) diffuse.getGreen() / 255f, (float) diffuse.getBlue() / 255f, 1);
 	this.specular = new Vec4(1);
 	this.shininess = 64f;
     }

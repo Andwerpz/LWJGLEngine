@@ -91,8 +91,7 @@ public class Texture {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // magnification filter
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-		BufferUtils.createIntBuffer(data));
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
 	glBindTexture(GL_TEXTURE_2D, 0);
 	return result;
     }
@@ -117,13 +116,11 @@ public class Texture {
 	return Texture.getDataFromImage(FileUtils.loadImage(path), invertColors, horizontalFlip, false, outWH);
     }
 
-    public static int[] getDataFromImage(String path, boolean invertColors, boolean horizontalFlip,
-	    boolean verticalFlip, int[] outWH) {
+    public static int[] getDataFromImage(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int[] outWH) {
 	return Texture.getDataFromImage(FileUtils.loadImage(path), invertColors, horizontalFlip, verticalFlip, outWH);
     }
 
-    public static int[] getDataFromImage(BufferedImage img, boolean invertColors, boolean horizontalFlip,
-	    boolean verticalFlip, int[] outWH) {
+    public static int[] getDataFromImage(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int[] outWH) {
 	int[] pixels = null;
 	BufferedImage image = GraphicsTools.copyImage(img);
 	if (horizontalFlip)

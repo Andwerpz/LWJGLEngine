@@ -227,8 +227,7 @@ public class MathUtils {
 	Vec3 n1 = d1.cross(plane_normal);
 	Vec3 n2 = d2.cross(plane_normal);
 
-	if (n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0
-		|| n2.dot(t2.sub(plane_intersect)) < 0) {
+	if (n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
 	    // intersection point is outside of the triangle.
 	    return null;
 	}
@@ -267,8 +266,7 @@ public class MathUtils {
 	Vec3 n1 = d1.cross(plane_normal);
 	Vec3 n2 = d2.cross(plane_normal);
 
-	if (n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0
-		|| n2.dot(t2.sub(plane_intersect)) < 0) {
+	if (n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
 	    // intersection point is outside of the triangle.
 	    return null;
 	}
@@ -363,8 +361,7 @@ public class MathUtils {
      * @param t2
      * @return
      */
-    public static Vec3 capsule_triangleIntersect(Vec3 capsule_bottom, Vec3 capsule_top, float capsule_radius, Vec3 t0,
-	    Vec3 t1, Vec3 t2) {
+    public static Vec3 capsule_triangleIntersect(Vec3 capsule_bottom, Vec3 capsule_top, float capsule_radius, Vec3 t0, Vec3 t1, Vec3 t2) {
 	Vec3 capsule_tangent = new Vec3(capsule_bottom, capsule_top).normalize();
 	Vec3 capsule_a = capsule_bottom.add(capsule_tangent.mul(capsule_radius));
 	Vec3 capsule_b = capsule_top.sub(capsule_tangent.mul(capsule_radius));
@@ -384,8 +381,7 @@ public class MathUtils {
 	if (plane_intersect == null) {
 	    // capsule_tangent is parallel to the plane, plane_intersect doesn't exist.
 	    referencePoint = new Vec3(t0);
-	} else if (n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0
-		|| n2.dot(t2.sub(plane_intersect)) < 0) {
+	} else if (n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
 	    // plane_intersect point is outside of the triangle.
 	    // find closest point to plane_intersect that is on the triangle.
 	    Vec3 minS_p = null;

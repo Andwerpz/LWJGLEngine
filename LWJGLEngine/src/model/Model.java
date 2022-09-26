@@ -124,8 +124,7 @@ public class Model {
     public static long generateNewID() {
 	long ans = 0;
 	while (ans == 0 || modelInstanceIDs.contains(ans)) {
-	    ans = (long) (Math.random() * 256) + (long) (Math.random() * 256) * 1000l
-		    + (long) (Math.random() * 256) * 1000000l;
+	    ans = (long) (Math.random() * 256) + (long) (Math.random() * 256) * 1000l + (long) (Math.random() * 256) * 1000000l;
 	}
 	return ans;
     }
@@ -163,8 +162,7 @@ public class Model {
 
 	String workingDirectory = SystemUtils.getWorkingDirectory();
 
-	AIScene scene = aiImportFile(workingDirectory + "/res" + filepath + filename,
-		aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+	AIScene scene = aiImportFile(workingDirectory + "/res" + filepath + filename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
 
 	// group meshes with the same material
 	ArrayList<ArrayList<Vec3>> vertices = new ArrayList<>();
@@ -278,8 +276,7 @@ public class Model {
 
 	    // map_Ks in .mtl
 	    path = AIString.calloc();
-	    aiGetMaterialTexture(AIMat, aiTextureType_SPECULAR, 0, path, (IntBuffer) null, null, null, null, null,
-		    null);
+	    aiGetMaterialTexture(AIMat, aiTextureType_SPECULAR, 0, path, (IntBuffer) null, null, null, null, null, null);
 	    String specularPath = path.dataString();
 	    if (specularPath != null && specularPath.length() != 0) {
 		Texture specularTexture = new Texture(loadImage(filepath + specularPath));
@@ -519,8 +516,7 @@ public class Model {
 	return result;
     }
 
-    public static ArrayList<Vec3> capsuleIntersect(int scene, Vec3 capsule_bottom, Vec3 capsule_top,
-	    float capsule_radius) {
+    public static ArrayList<Vec3> capsuleIntersect(int scene, Vec3 capsule_bottom, Vec3 capsule_top, float capsule_radius) {
 	ArrayList<Vec3> result = new ArrayList<>();
 	if (activeCollisionMeshes.get(scene) == null) {
 	    return result;

@@ -56,8 +56,7 @@ public class Text extends Entity {
     public Text(int x, int y, String text, Font font, int fontSize, Color color, int scene) {
 	super();
 	Font derivedFont = FontUtils.deriveSize(fontSize, font);
-	this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, new Material(color),
-		scene);
+	this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, new Material(color), scene);
     }
 
     public Text(int x, int y, int z, String text, Font font, Material material, int scene) {
@@ -99,8 +98,7 @@ public class Text extends Entity {
 	Texture texture = new Texture(img, false, false, true);
 	this.textTextureMaterial = new TextureMaterial(texture);
 
-	Mat4 modelMat4 = Mat4.scale(this.width, textMaxHeight, 1)
-		.mul(Mat4.translate(new Vec3(x, y - this.textMaxDescent, z)));
+	Mat4 modelMat4 = Mat4.scale(this.width, textMaxHeight, 1).mul(Mat4.translate(new Vec3(x, y - this.textMaxDescent, z)));
 
 	this.textRectangle = new FilledRectangle();
 	this.textRectangle.setTextureMaterial(textTextureMaterial);

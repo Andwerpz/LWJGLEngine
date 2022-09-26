@@ -35,8 +35,7 @@ public class Hitbox {
 
 		0, 4, 1, 5, 2, 6, 3, 7, };
 
-	float[] vertices = new float[] { min.x, min.y, min.z, min.x, min.y, max.z, max.x, min.y, max.z, max.x, min.y,
-		min.z,
+	float[] vertices = new float[] { min.x, min.y, min.z, min.x, min.y, max.z, max.x, min.y, max.z, max.x, min.y, min.z,
 
 		min.x, max.y, min.z, min.x, max.y, max.z, max.x, max.y, max.z, max.x, max.y, min.z };
 
@@ -98,8 +97,7 @@ public class Hitbox {
 //		boolean zInt = !(this.min.z > h.max.z || this.max.z < h.min.z);
 //		return xInt && yInt && zInt;
 
-	return (min.x <= h.max.x && max.x >= h.min.x) && (min.y <= h.max.y && max.y >= h.min.y)
-		&& (min.z <= h.max.z && max.z >= h.min.z);
+	return (min.x <= h.max.x && max.x >= h.min.x) && (min.y <= h.max.y && max.y >= h.min.y) && (min.z <= h.max.z && max.z >= h.min.z);
     }
 
     // returns the result to ray collision after the hitbox was translated

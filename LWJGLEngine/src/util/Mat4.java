@@ -91,16 +91,14 @@ public class Mat4 {
      * @return
      */
 
-    public static Mat4 perspective(float viewAngleRad, float width, float height, float nearClippingPlaneDistance,
-	    float farClippingPlaneDistance) {
+    public static Mat4 perspective(float viewAngleRad, float width, float height, float nearClippingPlaneDistance, float farClippingPlaneDistance) {
 	final float radians = viewAngleRad;
 
 	float halfHeight = (float) (Math.tan(radians / 2) * nearClippingPlaneDistance);
 
 	float halfScaledAspectRatio = halfHeight * (width / height);
 
-	Mat4 projection = perspectiveFrustum(-halfScaledAspectRatio, halfScaledAspectRatio, -halfHeight, halfHeight,
-		nearClippingPlaneDistance, farClippingPlaneDistance);
+	Mat4 projection = perspectiveFrustum(-halfScaledAspectRatio, halfScaledAspectRatio, -halfHeight, halfHeight, nearClippingPlaneDistance, farClippingPlaneDistance);
 
 	return projection;
     }
@@ -279,8 +277,7 @@ public class Mat4 {
 //			vec.x * mat[0][2] + vec.y * mat[1][2] + vec.z * mat[2][2] + w * mat[3][2]
 //		);
 
-	return new Vec3(vec.x * mat[0][0] + vec.y * mat[0][1] + vec.z * mat[0][2] + w * mat[0][3],
-		vec.x * mat[1][0] + vec.y * mat[1][1] + vec.z * mat[1][2] + w * mat[1][3],
+	return new Vec3(vec.x * mat[0][0] + vec.y * mat[0][1] + vec.z * mat[0][2] + w * mat[0][3], vec.x * mat[1][0] + vec.y * mat[1][1] + vec.z * mat[1][2] + w * mat[1][3],
 		vec.x * mat[2][0] + vec.y * mat[2][1] + vec.z * mat[2][2] + w * mat[2][3]);
     }
 

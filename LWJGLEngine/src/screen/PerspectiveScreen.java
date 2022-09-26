@@ -69,22 +69,19 @@ public class PerspectiveScreen extends Screen {
 	this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, this.geometryColorMap.getID());
 	this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, this.geometryColorIDMap.getID());
 	this.geometryBuffer.addDepthBuffer();
-	this.geometryBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
-		GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
+	this.geometryBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
 	this.geometryBuffer.isComplete();
 
 	this.lightingBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 	this.lightingColorMap = new Texture(GL_RGB, Main.windowWidth, Main.windowHeight, GL_RGB, GL_UNSIGNED_BYTE);
 	this.lightingBrightnessMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
 	this.lightingBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.lightingColorMap.getID());
-	this.lightingBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D,
-		this.lightingBrightnessMap.getID());
+	this.lightingBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this.lightingBrightnessMap.getID());
 	this.lightingBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 });
 	this.lightingBuffer.isComplete();
 
 	this.shadowBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-	this.shadowDepthMap = new Texture(GL_DEPTH_COMPONENT, Main.windowWidth, Main.windowHeight, GL_DEPTH_COMPONENT,
-		GL_FLOAT);
+	this.shadowDepthMap = new Texture(GL_DEPTH_COMPONENT, Main.windowWidth, Main.windowHeight, GL_DEPTH_COMPONENT, GL_FLOAT);
 	this.shadowBackfaceMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
 	this.shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.shadowDepthMap.getID());
 	this.shadowBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.shadowBackfaceMap.getID());
@@ -170,11 +167,9 @@ public class PerspectiveScreen extends Screen {
 		    float y2 = far * (float) Math.tan(Main.FOV / 2f);
 		    float x1 = y1 * Main.ASPECT_RATIO;
 		    float x2 = y2 * Main.ASPECT_RATIO;
-		    Vec3[] corners = new Vec3[] { new Vec3(x1, y1, -near), new Vec3(-x1, y1, -near),
-			    new Vec3(-x1, -y1, -near), new Vec3(x1, -y1, -near),
+		    Vec3[] corners = new Vec3[] { new Vec3(x1, y1, -near), new Vec3(-x1, y1, -near), new Vec3(-x1, -y1, -near), new Vec3(x1, -y1, -near),
 
-			    new Vec3(x2, y2, -far), new Vec3(-x2, y2, -far), new Vec3(-x2, -y2, -far),
-			    new Vec3(x2, -y2, -far), };
+			    new Vec3(x2, y2, -far), new Vec3(-x2, y2, -far), new Vec3(-x2, -y2, -far), new Vec3(x2, -y2, -far), };
 
 		    Shader.LIGHTING.setUniform1f("shadowMapNear", near);
 		    Shader.LIGHTING.setUniform1f("shadowMapFar", far);
@@ -216,8 +211,7 @@ public class PerspectiveScreen extends Screen {
 		    glEnable(GL_CULL_FACE);
 		    glCullFace(GL_FRONT);
 
-		    Shader.LIGHTING.setUniformMat4("lightSpace_matrix",
-			    lightMat.mul(lightCamera.getProjectionMatrix()));
+		    Shader.LIGHTING.setUniformMat4("lightSpace_matrix", lightMat.mul(lightCamera.getProjectionMatrix()));
 		    Shader.DEPTH.enable();
 		    // world.render(Shader.DEPTH, lightCamera);
 		    this.setShaderUniforms(Shader.DEPTH, lightCamera);
