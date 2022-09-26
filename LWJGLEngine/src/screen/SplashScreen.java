@@ -15,29 +15,29 @@ import graphics.Texture;
 import model.ScreenQuad;
 
 public class SplashScreen extends Screen {
-	
-	private ScreenQuad screenQuad;
-	
-	private Texture splashTexture;
-	
-	public SplashScreen() {
-		super();
-		
-		this.screenQuad = new ScreenQuad();
-		this.splashTexture = new Texture("/splash_screen/astolfo_plush.png", false, true, true);
-	}
 
-	@Override
-	public void render(Framebuffer outputBuffer, int scene) {
-		outputBuffer.bind();
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
-		
-		Shader.SPLASH.enable();
-		Shader.SPLASH.setUniform1f("alpha", 1);
-		this.splashTexture.bind(GL_TEXTURE0);
-		screenQuad.render();
-	}
+    private ScreenQuad screenQuad;
+
+    private Texture splashTexture;
+
+    public SplashScreen() {
+	super();
+
+	this.screenQuad = new ScreenQuad();
+	this.splashTexture = new Texture("/splash_screen/astolfo_plush.png", false, true, true);
+    }
+
+    @Override
+    public void render(Framebuffer outputBuffer, int scene) {
+	outputBuffer.bind();
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	Shader.SPLASH.enable();
+	Shader.SPLASH.setUniform1f("alpha", 1);
+	this.splashTexture.bind(GL_TEXTURE0);
+	screenQuad.render();
+    }
 
 }

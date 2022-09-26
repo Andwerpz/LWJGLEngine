@@ -12,128 +12,130 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public abstract class Client implements Runnable {
-	private boolean isRunning = true;
-	private Thread thread;
-	
-	private int FPS = 60;
-	private long targetTime = 1000 / FPS;
-	
-	private String ip;
-	private int port;
-	
-	private boolean connectedToServer = false;
-	private boolean connectionAttemptFailed = false;
-	private Socket socket;
-	private PacketListener packetListener;
-	private PacketSender packetSender;
-	
-	public Client() {
-		this.packetSender = new PacketSender();
-		this.start();
-	}
-	
-	private void start() {
-		this.thread = new Thread(this);
-		this.thread.start();
-	}
+    private boolean isRunning = true;
+    private Thread thread;
 
-	public void run() {
-		long start, elapsed, wait;
-		while(isRunning) {
-			start = System.nanoTime();
-			
-			tick();
-			
-			elapsed = System.nanoTime() - start;
-			wait = targetTime - elapsed / 1000000;
-			
-			if(wait < 0) {
-				wait = 5;
-			}
-			
-			try {
-				this.thread.sleep(wait);
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
-		}
+    private int FPS = 60;
+    private long targetTime = 1000 / FPS;
+
+    private String ip;
+    private int port;
+
+    private boolean connectedToServer = false;
+    private boolean connectionAttemptFailed = false;
+    private Socket socket;
+    private PacketListener packetListener;
+    private PacketSender packetSender;
+
+    public Client() {
+	this.packetSender = new PacketSender();
+	this.start();
+    }
+
+    private void start() {
+	this.thread = new Thread(this);
+	this.thread.start();
+    }
+
+    public void run() {
+	long start, elapsed, wait;
+	while (isRunning) {
+	    start = System.nanoTime();
+
+	    tick();
+
+	    elapsed = System.nanoTime() - start;
+	    wait = targetTime - elapsed / 1000000;
+
+	    if (wait < 0) {
+		wait = 5;
+	    }
+
+	    try {
+		this.thread.sleep(wait);
+	    } catch (Exception e) {
+		e.printStackTrace();
+	    }
 	}
-	
-	public void tick() {
-		if(this.connectedToServer) {
-			// -- READ --
-			if(this.packetListener == null || !this.packetListener.isConnected()) {	//lost connection to server
-				this.disconnect();
-			}
-			
-			while(this.packetListener.nextPacket()) {
-				this.readPacket(this.packetListener);
-			}
-			
-			// -- WRITE --
-			try {
-				this.writePacket(this.packetSender);
-				this.packetSender.flush(this.socket);
-			} catch(IOException e) {
-				e.printStackTrace();
-			} 
-		}
-	}
-	
-	//use the packet sender to write a packet. The parent class will flush it for you
-	public abstract void writePacket(PacketSender packetSender);
-	
-	//use the packet listener to read in the packet. The parent class has already polled the next packet
-	public abstract void readPacket(PacketListener packetListener);
-	
-	public boolean connect(String ip, int port) {
-		this.ip = ip;
-		this.port = port;
-		this.connectionAttemptFailed = false;
-		try {
-			this.socket = new Socket(this.ip, this.port);
-		} catch (IOException e) {
-			this.connectionAttemptFailed = true;
-			System.out.println("Unable to connect to the address: " + ip + ":" + port);
-			return false;
-		}
-		System.out.println("Successfully connected to the address: " + ip + ":" + port);
-		this.connectedToServer = true;
-		this.packetListener = new PacketListener(this.socket, "Client");
-		return true;
-	}
-	
-	public void disconnect() {
-		this.connectedToServer = false;
-		this.connectionAttemptFailed = false;
-		
-		try {
-			if(this.socket != null) {
-				this.socket.close();
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		if(this.packetListener != null) {
-			this.packetListener.exit();
-		}
-	}
-	
-	public boolean isConnected() {
-		return this.connectedToServer;
-	}
-	
-	public boolean isRunning() {
-		return this.isRunning;
-	}
-	
-	public void exit() {
-		if(this.packetListener != null) {
-			this.packetListener.exit();
-		}
+    }
+
+    public void tick() {
+	if (this.connectedToServer) {
+	    // -- READ --
+	    if (this.packetListener == null || !this.packetListener.isConnected()) { // lost connection to server
 		this.disconnect();
-		this.isRunning = false;
+	    }
+
+	    while (this.packetListener.nextPacket()) {
+		this.readPacket(this.packetListener);
+	    }
+
+	    // -- WRITE --
+	    try {
+		this.writePacket(this.packetSender);
+		this.packetSender.flush(this.socket);
+	    } catch (IOException e) {
+		e.printStackTrace();
+	    }
 	}
-	
+    }
+
+    // use the packet sender to write a packet. The parent class will flush it for
+    // you
+    public abstract void writePacket(PacketSender packetSender);
+
+    // use the packet listener to read in the packet. The parent class has already
+    // polled the next packet
+    public abstract void readPacket(PacketListener packetListener);
+
+    public boolean connect(String ip, int port) {
+	this.ip = ip;
+	this.port = port;
+	this.connectionAttemptFailed = false;
+	try {
+	    this.socket = new Socket(this.ip, this.port);
+	} catch (IOException e) {
+	    this.connectionAttemptFailed = true;
+	    System.out.println("Unable to connect to the address: " + ip + ":" + port);
+	    return false;
+	}
+	System.out.println("Successfully connected to the address: " + ip + ":" + port);
+	this.connectedToServer = true;
+	this.packetListener = new PacketListener(this.socket, "Client");
+	return true;
+    }
+
+    public void disconnect() {
+	this.connectedToServer = false;
+	this.connectionAttemptFailed = false;
+
+	try {
+	    if (this.socket != null) {
+		this.socket.close();
+	    }
+	} catch (IOException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	}
+	if (this.packetListener != null) {
+	    this.packetListener.exit();
+	}
+    }
+
+    public boolean isConnected() {
+	return this.connectedToServer;
+    }
+
+    public boolean isRunning() {
+	return this.isRunning;
+    }
+
+    public void exit() {
+	if (this.packetListener != null) {
+	    this.packetListener.exit();
+	}
+	this.disconnect();
+	this.isRunning = false;
+    }
+
 }

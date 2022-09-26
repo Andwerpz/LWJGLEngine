@@ -33,7 +33,7 @@ public class GameState extends State {
 
     private String ip;
     private int port;
-    
+
     private boolean hosting;
 
     private static Screen perspectiveScreen;
@@ -54,8 +54,8 @@ public class GameState extends State {
 	this.ip = ip;
 	this.port = port;
 	this.hosting = hosting;
-	
-	if(this.hosting) {
+
+	if (this.hosting) {
 	    this.ip = NetworkingUtils.getLocalIP();
 	}
     }
@@ -63,7 +63,8 @@ public class GameState extends State {
     @Override
     public void load() {
 	if (perspectiveScreen == null) {
-	    perspectiveCamera = new Camera(Main.FOV, (float) Main.windowWidth, (float) Main.windowHeight, Main.NEAR, Main.FAR);
+	    perspectiveCamera = new Camera(Main.FOV, (float) Main.windowWidth, (float) Main.windowHeight, Main.NEAR,
+		    Main.FAR);
 	    perspectiveScreen = new PerspectiveScreen();
 	    perspectiveScreen.setCamera(perspectiveCamera);
 	}
@@ -75,7 +76,8 @@ public class GameState extends State {
 	// -- WORLD SCENE --
 	Model.removeInstancesFromScene(Scene.WORLD_SCENE);
 	Light.removeLightsFromScene(Scene.WORLD_SCENE);
-	this.mapID = Model.addInstance(AssetManager.getModel("dust2"), Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), Scene.WORLD_SCENE);
+	this.mapID = Model.addInstance(AssetManager.getModel("dust2"),
+		Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), Scene.WORLD_SCENE);
 	Model.activateCollisionMesh(this.mapID);
 	Light.addLight(Scene.WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 	Scene.skyboxes.put(Scene.WORLD_SCENE, AssetManager.getSkybox("lake_skybox"));
@@ -84,13 +86,13 @@ public class GameState extends State {
 	// -- NETWORKING --
 	this.client = new GameClient();
 	this.otherPlayers = new HashMap<>();
-	
-	if(this.hosting) {
+
+	if (this.hosting) {
 	    this.server = new GameServer(this.ip, this.port);
 	}
-	
-	for(int i = 0; i < 3; i++) {
-	    if(this.client.connect(this.ip, this.port)) {
+
+	for (int i = 0; i < 3; i++) {
+	    if (this.client.connect(this.ip, this.port)) {
 		break;
 	    }
 	}

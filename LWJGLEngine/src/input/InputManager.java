@@ -43,10 +43,10 @@ public class InputManager {
 	Input b = inputs.get(id);
 	return b == null ? false : b.isClicked();
     }
-    
+
     public static String getText(String id) {
 	Input b = inputs.get(id);
-	if(!(b instanceof TextField)) {
+	if (!(b instanceof TextField)) {
 	    return null;
 	}
 	TextField tf = (TextField) b;

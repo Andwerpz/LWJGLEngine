@@ -118,7 +118,8 @@ public class TextField extends Input {
 
 	this.textMaterial = new Material(Color.WHITE);
 	this.hintTextMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
-	this.fieldText = new Text(0, 0, z + 1, width - (textLeftMargin + textRightMargin), hintText, font, this.hintTextMaterial, scene);
+	this.fieldText = new Text(0, 0, z + 1, width - (textLeftMargin + textRightMargin), hintText, font,
+		this.hintTextMaterial, scene);
 
 	int centerY = y + height / 2;
 	this.fieldText.verticalCenter(x + this.textLeftMargin, centerY);
@@ -160,7 +161,7 @@ public class TextField extends Input {
 	    this.fieldText.setText(this.text);
 	}
     }
-    
+
     public String getText() {
 	return this.text;
     }
@@ -175,7 +176,8 @@ public class TextField extends Input {
 	    pressedKeys.add(key);
 
 	    // looking for ctrl + v
-	    if ((pressedKeys.contains(GLFW_KEY_LEFT_CONTROL) || pressedKeys.contains(GLFW_KEY_RIGHT_CONTROL)) && pressedKeys.contains(GLFW_KEY_V)) {
+	    if ((pressedKeys.contains(GLFW_KEY_LEFT_CONTROL) || pressedKeys.contains(GLFW_KEY_RIGHT_CONTROL))
+		    && pressedKeys.contains(GLFW_KEY_V)) {
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		String result = "";
 		try {
