@@ -160,6 +160,10 @@ public class TextField extends Input {
 	    this.fieldText.setText(this.text);
 	}
     }
+    
+    public String getText() {
+	return this.text;
+    }
 
     @Override
     protected void _kill() {
