@@ -74,8 +74,7 @@ public class GameState extends State {
 		// -- WORLD SCENE --
 		Model.removeInstancesFromScene(WORLD_SCENE);
 		Light.removeLightsFromScene(WORLD_SCENE);
-		this.mapID = Model.addInstance(AssetManager.getModel("dust2"),
-				Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), WORLD_SCENE);
+		this.mapID = Model.addInstance(AssetManager.getModel("dust2"), Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), WORLD_SCENE);
 		Model.activateCollisionMesh(this.mapID);
 		Light.addLight(WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 		Scene.skyboxes.put(WORLD_SCENE, AssetManager.getSkybox("lake_skybox"));
@@ -95,22 +94,22 @@ public class GameState extends State {
 			}
 		}
 	}
-	
+
 	private void startHosting() {
 		this.server = new GameServer(this.ip, this.port);
 	}
-	
+
 	private void stopHosting() {
 		if(this.server == null) {
 			return;
 		}
 		this.server.exit();
 	}
-	
+
 	private boolean connect() {
 		return this.client.connect(this.ip, this.port);
 	}
-	
+
 	private void disconnect() {
 		this.client.disconnect();
 	}

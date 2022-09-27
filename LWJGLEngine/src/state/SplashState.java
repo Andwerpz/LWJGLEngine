@@ -9,45 +9,45 @@ import screen.SplashScreen;
 
 public class SplashState extends State {
 
-    private SplashScreen splashScreen;
+	private SplashScreen splashScreen;
 
-    private static final long TIME_ON_SCREEN = 2; // in seconds
-    private long startTime;
+	private static final long TIME_ON_SCREEN = 2; // in seconds
+	private long startTime;
 
-    public SplashState(StateManager sm) {
-	super(sm);
-    }
-
-    @Override
-    public void load() {
-	this.splashScreen = new SplashScreen();
-	this.startTime = System.currentTimeMillis();
-
-    }
-
-    @Override
-    public void update() {
-	long timeElapsed = System.currentTimeMillis() - this.startTime;
-	if (timeElapsed / 1000L > TIME_ON_SCREEN) {
-	    this.sm.switchState(new MainMenuState(this.sm));
+	public SplashState(StateManager sm) {
+		super(sm);
 	}
-    }
 
-    @Override
-    public void render(Framebuffer outputBuffer) {
-	this.splashScreen.render(outputBuffer, Scene.FRAMEBUFFER_SCENE);
-    }
+	@Override
+	public void load() {
+		this.splashScreen = new SplashScreen();
+		this.startTime = System.currentTimeMillis();
 
-    @Override
-    public void mousePressed(int button) {
-	// TODO Auto-generated method stub
+	}
 
-    }
+	@Override
+	public void update() {
+		long timeElapsed = System.currentTimeMillis() - this.startTime;
+		if(timeElapsed / 1000L > TIME_ON_SCREEN) {
+			this.sm.switchState(new MainMenuState(this.sm));
+		}
+	}
 
-    @Override
-    public void mouseReleased(int button) {
-	// TODO Auto-generated method stub
+	@Override
+	public void render(Framebuffer outputBuffer) {
+		this.splashScreen.render(outputBuffer, Scene.FRAMEBUFFER_SCENE);
+	}
 
-    }
+	@Override
+	public void mousePressed(int button) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseReleased(int button) {
+		// TODO Auto-generated method stub
+
+	}
 
 }

@@ -21,20 +21,21 @@ import util.Vec2;
 
 public class KeyboardInput extends GLFWKeyCallback {
 
-    public static boolean[] keys = new boolean[65536];
+	public static boolean[] keys = new boolean[65536];
 
-    @Override
-    public void invoke(long window, int key, int scancode, int action, int mods) {
-	if (action == GLFW_PRESS) {
-	    Main.main.keyPressed(key);
-	} else if (action == GLFW_RELEASE) {
-	    Main.main.keyReleased(key);
+	@Override
+	public void invoke(long window, int key, int scancode, int action, int mods) {
+		if(action == GLFW_PRESS) {
+			Main.main.keyPressed(key);
+		}
+		else if(action == GLFW_RELEASE) {
+			Main.main.keyReleased(key);
+		}
+		keys[key] = action != GLFW.GLFW_RELEASE;
 	}
-	keys[key] = action != GLFW.GLFW_RELEASE;
-    }
 
-    public static boolean isKeyPressed(int code) {
-	return keys[code];
-    }
+	public static boolean isKeyPressed(int code) {
+		return keys[code];
+	}
 
 }

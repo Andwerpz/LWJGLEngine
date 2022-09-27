@@ -11,118 +11,118 @@ import util.Vec3;
 
 public class Shader {
 
-    // location when passed into shaders
-    public static final int VERTEX_ATTRIB = 0;
-    public static final int TCOORD_ATTRIB = 1;
-    public static final int NORMAL_ATTRIB = 2;
-    public static final int TANGENT_ATTRIB = 3;
-    public static final int BITANGENT_ATTRIB = 4;
-    public static final int INSTANCED_MODEL_ATTRIB = 5; // takes up 4 slots
-    public static final int INSTANCED_COLOR_ATTRIB = 9; // used for quick model selection
-    public static final int INSTANCED_MATERIAL_ATTRIB = 10; // takes up 3 slots
+	// location when passed into shaders
+	public static final int VERTEX_ATTRIB = 0;
+	public static final int TCOORD_ATTRIB = 1;
+	public static final int NORMAL_ATTRIB = 2;
+	public static final int TANGENT_ATTRIB = 3;
+	public static final int BITANGENT_ATTRIB = 4;
+	public static final int INSTANCED_MODEL_ATTRIB = 5; // takes up 4 slots
+	public static final int INSTANCED_COLOR_ATTRIB = 9; // used for quick model selection
+	public static final int INSTANCED_MATERIAL_ATTRIB = 10; // takes up 3 slots
 
-    public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS, IMG_POST_PROCESS, SPLASH;
+	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS, IMG_POST_PROCESS, SPLASH;
 
-    private boolean enabled = false;
+	private boolean enabled = false;
 
-    private final int ID;
-    private Map<String, Integer> locationCache = new HashMap<>();
+	private final int ID;
+	private Map<String, Integer> locationCache = new HashMap<>();
 
-    public Shader(String vertex, String fragment) {
-	ID = ShaderUtils.load(vertex, fragment);
-    }
-
-    public static void init() {
-	GEOMETRY = new Shader("/geometry.vert", "/geometry.frag");
-	SKYBOX = new Shader("/skybox.vert", "/skybox.frag");
-	LIGHTING = new Shader("/lighting.vert", "/lighting.frag");
-	DEPTH = new Shader("/simpleDepthShader.vert", "/simpleDepthShader.frag");
-	CUBE_DEPTH = new Shader("/cubemapDepthShader.vert", "/cubemapDepthShader.frag");
-	GEOM_POST_PROCESS = new Shader("/geom_postprocessing.vert", "/geom_postprocessing.frag"); // post processing
-												  // with geometry
-												  // information
-	IMG_POST_PROCESS = new Shader("/img_postprocessing.vert", "/img_postprocessing.frag"); // post processing with
-											       // only final color
-											       // information
-	SPLASH = new Shader("/splash.vert", "/splash.frag"); // takes in a texture and alpha value.
-
-	Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
-	Shader.GEOMETRY.setUniform1i("tex_specular", 1);
-	Shader.GEOMETRY.setUniform1i("tex_normal", 2);
-	Shader.GEOMETRY.setUniform1i("tex_displacement", 3);
-	Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 0);
-	Shader.GEOMETRY.setUniform1i("enableTexScaling", 1);
-
-	Shader.SKYBOX.setUniform1i("skybox", 0);
-
-	Shader.LIGHTING.setUniform1i("tex_position", 0);
-	Shader.LIGHTING.setUniform1i("tex_normal", 1);
-	Shader.LIGHTING.setUniform1i("tex_diffuse", 2);
-	Shader.LIGHTING.setUniform1i("tex_specular", 3);
-	Shader.LIGHTING.setUniform1i("shadowMap", 4);
-	Shader.LIGHTING.setUniform1i("shadowBackfaceMap", 5);
-	Shader.LIGHTING.setUniform1i("shadowCubemap", 6);
-
-	Shader.GEOM_POST_PROCESS.setUniform1i("tex_color", 0);
-	Shader.GEOM_POST_PROCESS.setUniform1i("tex_position", 1);
-	Shader.GEOM_POST_PROCESS.setUniform1i("skybox", 2);
-
-	Shader.IMG_POST_PROCESS.setUniform1i("tex_color", 0);
-
-	Shader.SPLASH.setUniform1i("tex_color", 0);
-    }
-
-    public int getUniform(String name) {
-	if (locationCache.containsKey(name)) {
-	    return locationCache.get(name);
+	public Shader(String vertex, String fragment) {
+		ID = ShaderUtils.load(vertex, fragment);
 	}
 
-	int result = glGetUniformLocation(ID, name);
-	if (result == -1) {
-	    System.err.println("Could not find uniform variable " + name);
+	public static void init() {
+		GEOMETRY = new Shader("/geometry.vert", "/geometry.frag");
+		SKYBOX = new Shader("/skybox.vert", "/skybox.frag");
+		LIGHTING = new Shader("/lighting.vert", "/lighting.frag");
+		DEPTH = new Shader("/simpleDepthShader.vert", "/simpleDepthShader.frag");
+		CUBE_DEPTH = new Shader("/cubemapDepthShader.vert", "/cubemapDepthShader.frag");
+		GEOM_POST_PROCESS = new Shader("/geom_postprocessing.vert", "/geom_postprocessing.frag"); // post processing
+		// with geometry
+		// information
+		IMG_POST_PROCESS = new Shader("/img_postprocessing.vert", "/img_postprocessing.frag"); // post processing with
+		// only final color
+		// information
+		SPLASH = new Shader("/splash.vert", "/splash.frag"); // takes in a texture and alpha value.
+
+		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
+		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
+		Shader.GEOMETRY.setUniform1i("tex_normal", 2);
+		Shader.GEOMETRY.setUniform1i("tex_displacement", 3);
+		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 0);
+		Shader.GEOMETRY.setUniform1i("enableTexScaling", 1);
+
+		Shader.SKYBOX.setUniform1i("skybox", 0);
+
+		Shader.LIGHTING.setUniform1i("tex_position", 0);
+		Shader.LIGHTING.setUniform1i("tex_normal", 1);
+		Shader.LIGHTING.setUniform1i("tex_diffuse", 2);
+		Shader.LIGHTING.setUniform1i("tex_specular", 3);
+		Shader.LIGHTING.setUniform1i("shadowMap", 4);
+		Shader.LIGHTING.setUniform1i("shadowBackfaceMap", 5);
+		Shader.LIGHTING.setUniform1i("shadowCubemap", 6);
+
+		Shader.GEOM_POST_PROCESS.setUniform1i("tex_color", 0);
+		Shader.GEOM_POST_PROCESS.setUniform1i("tex_position", 1);
+		Shader.GEOM_POST_PROCESS.setUniform1i("skybox", 2);
+
+		Shader.IMG_POST_PROCESS.setUniform1i("tex_color", 0);
+
+		Shader.SPLASH.setUniform1i("tex_color", 0);
 	}
-	locationCache.put(name, result);
-	return result;
-    }
 
-    public void setUniform1i(String name, int value) {
-	if (!enabled)
-	    enable();
-	glUniform1i(getUniform(name), value);
-    }
+	public int getUniform(String name) {
+		if(locationCache.containsKey(name)) {
+			return locationCache.get(name);
+		}
 
-    public void setUniform1f(String name, float value) {
-	if (!enabled)
-	    enable();
-	glUniform1f(getUniform(name), value);
-    }
+		int result = glGetUniformLocation(ID, name);
+		if(result == -1) {
+			System.err.println("Could not find uniform variable " + name);
+		}
+		locationCache.put(name, result);
+		return result;
+	}
 
-    public void setUniform2f(String name, float x, float y) {
-	if (!enabled)
-	    enable();
-	glUniform2f(getUniform(name), x, y);
-    }
+	public void setUniform1i(String name, int value) {
+		if(!enabled)
+			enable();
+		glUniform1i(getUniform(name), value);
+	}
 
-    public void setUniform3f(String name, Vec3 v) {
-	if (!enabled)
-	    enable();
-	glUniform3f(getUniform(name), v.x, v.y, v.z);
-    }
+	public void setUniform1f(String name, float value) {
+		if(!enabled)
+			enable();
+		glUniform1f(getUniform(name), value);
+	}
 
-    public void setUniformMat4(String name, Mat4 mat) {
-	if (!enabled)
-	    enable();
-	glUniformMatrix4fv(getUniform(name), false, mat.toFloatBuffer());
-    }
+	public void setUniform2f(String name, float x, float y) {
+		if(!enabled)
+			enable();
+		glUniform2f(getUniform(name), x, y);
+	}
 
-    public void enable() {
-	glUseProgram(ID);
-	enabled = true;
-    }
+	public void setUniform3f(String name, Vec3 v) {
+		if(!enabled)
+			enable();
+		glUniform3f(getUniform(name), v.x, v.y, v.z);
+	}
 
-    public void disable() {
-	glUseProgram(0);
-	enabled = false;
-    }
+	public void setUniformMat4(String name, Mat4 mat) {
+		if(!enabled)
+			enable();
+		glUniformMatrix4fv(getUniform(name), false, mat.toFloatBuffer());
+	}
+
+	public void enable() {
+		glUseProgram(ID);
+		enabled = true;
+	}
+
+	public void disable() {
+		glUseProgram(0);
+		enabled = false;
+	}
 
 }

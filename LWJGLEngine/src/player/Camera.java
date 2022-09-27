@@ -13,89 +13,89 @@ import util.Vec3;
 
 public class Camera {
 
-    private Vec3 pos, facing, up;
+	private Vec3 pos, facing, up;
 
-    public Mat4 projectionMatrix;
+	public Mat4 projectionMatrix;
 
-    public Camera(float verticalFOV, float width, float height, float near, float far) {
-	init();
-	this.projectionMatrix = Mat4.perspective(verticalFOV, width, height, near, far);
-    }
+	public Camera(float verticalFOV, float width, float height, float near, float far) {
+		init();
+		this.projectionMatrix = Mat4.perspective(verticalFOV, width, height, near, far);
+	}
 
-    public Camera(float left, float right, float bottom, float top, float near, float far) {
-	init();
-	this.projectionMatrix = Mat4.orthographic(left, right, bottom, top, near, far);
-    }
+	public Camera(float left, float right, float bottom, float top, float near, float far) {
+		init();
+		this.projectionMatrix = Mat4.orthographic(left, right, bottom, top, near, far);
+	}
 
-    public Camera(Mat4 projectionMatrix) {
-	init();
-	this.projectionMatrix = new Mat4(projectionMatrix);
-    }
+	public Camera(Mat4 projectionMatrix) {
+		init();
+		this.projectionMatrix = new Mat4(projectionMatrix);
+	}
 
-    public void init() {
-	facing = new Vec3(0, 0, -1);
-	up = new Vec3(0, 1, 0);
-	pos = new Vec3(0, 0, 0);
-    }
+	public void init() {
+		facing = new Vec3(0, 0, -1);
+		up = new Vec3(0, 1, 0);
+		pos = new Vec3(0, 0, 0);
+	}
 
-    public Mat4 getProjectionMatrix() {
-	return this.projectionMatrix;
-    }
+	public Mat4 getProjectionMatrix() {
+		return this.projectionMatrix;
+	}
 
-    // convert from real space to camera space
-    public Mat4 getViewMatrix() {
-	return Mat4.lookAt(this.pos, this.pos.add(this.getFacing()), up);
-    }
+	// convert from real space to camera space
+	public Mat4 getViewMatrix() {
+		return Mat4.lookAt(this.pos, this.pos.add(this.getFacing()), up);
+	}
 
-    // convert from camera space to real space
-    public Mat4 getInvViewMatrix() {
-	Mat4 ans = Mat4.lookAt(new Vec3(0, 0, 0), this.getFacing(), up).transpose();
-	ans.muli(Mat4.translate(pos.mul(1f)));
-	return ans;
-    }
+	// convert from camera space to real space
+	public Mat4 getInvViewMatrix() {
+		Mat4 ans = Mat4.lookAt(new Vec3(0, 0, 0), this.getFacing(), up).transpose();
+		ans.muli(Mat4.translate(pos.mul(1f)));
+		return ans;
+	}
 
-    public Mat4 getInvRotMatrix() {
-	Mat4 ans = this.getInvViewMatrix();
+	public Mat4 getInvRotMatrix() {
+		Mat4 ans = this.getInvViewMatrix();
 
-	ans.mat[0][3] = 0;
-	ans.mat[1][3] = 0;
-	ans.mat[2][3] = 0;
+		ans.mat[0][3] = 0;
+		ans.mat[1][3] = 0;
+		ans.mat[2][3] = 0;
 
-	return ans;
-    }
+		return ans;
+	}
 
-    public Vec3 getPos() {
-	return this.pos;
-    }
+	public Vec3 getPos() {
+		return this.pos;
+	}
 
-    public void setPos(Vec3 pos) {
-	this.pos = new Vec3(pos);
-    }
+	public void setPos(Vec3 pos) {
+		this.pos = new Vec3(pos);
+	}
 
-    public void setUp(Vec3 up) {
-	this.up = new Vec3(up).normalize();
-    }
+	public void setUp(Vec3 up) {
+		this.up = new Vec3(up).normalize();
+	}
 
-    public void setUp(float zRot) {
-	this.up = new Vec3(0, 1, 0).rotateZ(zRot);
-    }
+	public void setUp(float zRot) {
+		this.up = new Vec3(0, 1, 0).rotateZ(zRot);
+	}
 
-    public Vec3 getUp() {
-	return this.up;
-    }
+	public Vec3 getUp() {
+		return this.up;
+	}
 
-    public void setFacing(float xRot, float yRot) {
-	this.facing = new Vec3(0, 0, -1);
-	this.facing.rotateX(xRot);
-	this.facing.rotateY(yRot);
-    }
+	public void setFacing(float xRot, float yRot) {
+		this.facing = new Vec3(0, 0, -1);
+		this.facing.rotateX(xRot);
+		this.facing.rotateY(yRot);
+	}
 
-    public void setFacing(Vec3 facing) {
-	this.facing = new Vec3(facing).normalize();
-    }
+	public void setFacing(Vec3 facing) {
+		this.facing = new Vec3(facing).normalize();
+	}
 
-    public Vec3 getFacing() {
-	return this.facing;
-    }
+	public Vec3 getFacing() {
+		return this.facing;
+	}
 
 }

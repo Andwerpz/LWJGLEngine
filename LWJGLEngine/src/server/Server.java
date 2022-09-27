@@ -15,245 +15,247 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public abstract class Server implements Runnable {
-    private boolean isRunning = true;
-    private Thread thread;
+	private boolean isRunning = true;
+	private Thread thread;
 
-    private int FPS = 60;
-    private long targetTime = 1000 / FPS;
+	private int FPS = 60;
+	private long targetTime = 1000 / FPS;
 
-    private String ip;
-    private int port;
+	private String ip;
+	private int port;
 
-    private ServerConnectionRequestListener serverConnectionRequestListener;
+	private ServerConnectionRequestListener serverConnectionRequestListener;
 
-    private ServerSocket serverSocket;
-    private HashSet<Integer> clientIDs;
-    private HashMap<Integer, Socket> clientSockets;
-    private HashMap<Integer, PacketListener> packetListeners;
-    private PacketSender packetSender;
+	private ServerSocket serverSocket;
+	private HashSet<Integer> clientIDs;
+	private HashMap<Integer, Socket> clientSockets;
+	private HashMap<Integer, PacketListener> packetListeners;
+	private PacketSender packetSender;
 
-    private long noClientTimeoutMillis = 15000;
-    private long firstNoClientTime = 0;
-    private boolean prevTickNoClients = false;
+	private long noClientTimeoutMillis = 15000;
+	private long firstNoClientTime = 0;
+	private boolean prevTickNoClients = false;
 
-    public Server(String ip, int port) {
-	this.ip = ip;
-	this.port = port;
+	public Server(String ip, int port) {
+		this.ip = ip;
+		this.port = port;
 
-	this.serverSocket = null;
-	try {
-	    this.serverSocket = new ServerSocket(this.port, 8, InetAddress.getByName(this.ip));
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
-
-	this.clientIDs = new HashSet<>();
-	this.clientSockets = new HashMap<>();
-	this.packetListeners = new HashMap<>();
-	this.serverConnectionRequestListener = new ServerConnectionRequestListener(this.serverSocket);
-	this.packetSender = new PacketSender();
-
-	this.start();
-    }
-
-    private void start() {
-	this.thread = new Thread(this);
-	this.thread.start();
-    }
-
-    public void run() {
-	long start, elapsed, wait;
-	while (isRunning) {
-	    start = System.nanoTime();
-
-	    tick();
-
-	    elapsed = System.nanoTime() - start;
-	    wait = targetTime - elapsed / 1000000;
-
-	    if (wait < 0) {
-		wait = 5;
-	    }
-
-	    try {
-		this.thread.sleep(wait);
-	    } catch (Exception e) {
-		e.printStackTrace();
-	    }
-	}
-    }
-
-    private int generateNewClientID() {
-	int ID = 0;
-	while (ID == 0 || this.clientIDs.contains(ID)) {
-	    ID = (int) (Math.random() * 1000000d);
-	}
-	return ID;
-    }
-
-    public void tick() {
-	if (this.serverConnectionRequestListener.hasNewClients()) {
-	    ArrayList<Socket> newClients = this.serverConnectionRequestListener.getNewClients();
-	    for (Socket s : newClients) {
-		PacketListener l = new PacketListener(s, "Server");
-		int ID = this.generateNewClientID();
-		this.clientIDs.add(ID);
-		this.clientSockets.put(ID, s);
-		this.packetListeners.put(ID, l);
-		this._clientConnect(ID);
-	    }
-	}
-
-	// -- READ -- //should open for whenever
-	for (int ID : this.clientIDs) {
-	    if (!this.packetListeners.get(ID).isConnected()) {
-		// Client Disconnected
-		System.out.println("Client disconnected");
-		this.packetListeners.get(ID).exit();
-		this.packetListeners.remove(ID);
+		this.serverSocket = null;
 		try {
-		    this.clientSockets.get(ID).close();
+			this.serverSocket = new ServerSocket(this.port, 8, InetAddress.getByName(this.ip));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		this.clientIDs = new HashSet<>();
+		this.clientSockets = new HashMap<>();
+		this.packetListeners = new HashMap<>();
+		this.serverConnectionRequestListener = new ServerConnectionRequestListener(this.serverSocket);
+		this.packetSender = new PacketSender();
+
+		this.start();
+	}
+
+	private void start() {
+		this.thread = new Thread(this);
+		this.thread.start();
+	}
+
+	public void run() {
+		long start, elapsed, wait;
+		while (isRunning) {
+			start = System.nanoTime();
+
+			tick();
+
+			elapsed = System.nanoTime() - start;
+			wait = targetTime - elapsed / 1000000;
+
+			if(wait < 0) {
+				wait = 5;
+			}
+
+			try {
+				this.thread.sleep(wait);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private int generateNewClientID() {
+		int ID = 0;
+		while (ID == 0 || this.clientIDs.contains(ID)) {
+			ID = (int) (Math.random() * 1000000d);
+		}
+		return ID;
+	}
+
+	public void tick() {
+		if(this.serverConnectionRequestListener.hasNewClients()) {
+			ArrayList<Socket> newClients = this.serverConnectionRequestListener.getNewClients();
+			for (Socket s : newClients) {
+				PacketListener l = new PacketListener(s, "Server");
+				int ID = this.generateNewClientID();
+				this.clientIDs.add(ID);
+				this.clientSockets.put(ID, s);
+				this.packetListeners.put(ID, l);
+				this._clientConnect(ID);
+			}
+		}
+
+		// -- READ -- //should open for whenever
+		for (int ID : this.clientIDs) {
+			if(!this.packetListeners.get(ID).isConnected()) {
+				// Client Disconnected
+				System.out.println("Client disconnected");
+				this.packetListeners.get(ID).exit();
+				this.packetListeners.remove(ID);
+				try {
+					this.clientSockets.get(ID).close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				this.clientSockets.remove(ID);
+				this.clientIDs.remove(ID);
+				this._clientDisconnect(ID);
+				continue;
+			}
+
+			while (this.packetListeners.get(ID).nextPacket()) {
+				this.readPacket(this.packetListeners.get(ID), ID);
+			}
+
+		}
+
+		// -- WRITE -- //should run at set tickrate
+		for (int ID : this.clientIDs) {
+			Socket s = this.clientSockets.get(ID);
+			try {
+				this.writePacket(this.packetSender, ID);
+				this.packetSender.flush(s);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if(this.clientSockets.size() == 0) { // no more clients :((
+			if(this.prevTickNoClients) {
+				if(System.currentTimeMillis() - this.firstNoClientTime > this.noClientTimeoutMillis) {
+					System.out.println("No clients, shutting down server");
+					this.exit();
+				}
+			}
+			else {
+				this.firstNoClientTime = System.currentTimeMillis();
+				this.prevTickNoClients = true;
+			}
+		}
+		else {
+			this.prevTickNoClients = false;
+		}
+	}
+
+	// use the packet sender to write a packet. The parent class will flush it for
+	// you
+	public abstract void writePacket(PacketSender packetSender, int clientID);
+
+	// use the packet listener to read in the packet. The parent class has already
+	// polled the next packet
+	public abstract void readPacket(PacketListener packetListener, int clientID);
+
+	// so that the child class can do whatever they need to do in the case of
+	// connection status change
+	public abstract void _clientConnect(int clientID);
+
+	public abstract void _clientDisconnect(int clientID);
+
+	public abstract void _exit();
+
+	public boolean isRunning() {
+		return this.isRunning;
+	}
+
+	public void exit() {
+		System.out.println("Closing server at " + ip + ":" + port);
+		this.serverConnectionRequestListener.exit();
+
+		for (int ID : this.clientIDs) {
+			try {
+				if(this.packetListeners.get(ID) != null) {
+					this.packetListeners.get(ID).exit();
+				}
+				if(this.clientSockets.get(ID) != null) {
+					this.clientSockets.get(ID).close();
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		try {
+			this.serverSocket.close();
 		} catch (IOException e) {
-		    e.printStackTrace();
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		this.clientSockets.remove(ID);
-		this.clientIDs.remove(ID);
-		this._clientDisconnect(ID);
-		continue;
-	    }
 
-	    while (this.packetListeners.get(ID).nextPacket()) {
-		this.readPacket(this.packetListeners.get(ID), ID);
-	    }
-
+		this.isRunning = false;
 	}
-
-	// -- WRITE -- //should run at set tickrate
-	for (int ID : this.clientIDs) {
-	    Socket s = this.clientSockets.get(ID);
-	    try {
-		this.writePacket(this.packetSender, ID);
-		this.packetSender.flush(s);
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
-	}
-
-	if (this.clientSockets.size() == 0) { // no more clients :((
-	    if (this.prevTickNoClients) {
-		if (System.currentTimeMillis() - this.firstNoClientTime > this.noClientTimeoutMillis) {
-		    System.out.println("No clients, shutting down server");
-		    this.exit();
-		}
-	    } else {
-		this.firstNoClientTime = System.currentTimeMillis();
-		this.prevTickNoClients = true;
-	    }
-	} else {
-	    this.prevTickNoClients = false;
-	}
-    }
-
-    // use the packet sender to write a packet. The parent class will flush it for
-    // you
-    public abstract void writePacket(PacketSender packetSender, int clientID);
-
-    // use the packet listener to read in the packet. The parent class has already
-    // polled the next packet
-    public abstract void readPacket(PacketListener packetListener, int clientID);
-
-    // so that the child class can do whatever they need to do in the case of
-    // connection status change
-    public abstract void _clientConnect(int clientID);
-
-    public abstract void _clientDisconnect(int clientID);
-
-    public abstract void _exit();
-
-    public boolean isRunning() {
-	return this.isRunning;
-    }
-
-    public void exit() {
-	System.out.println("Closing server at " + ip + ":" + port);
-	this.serverConnectionRequestListener.exit();
-
-	for (int ID : this.clientIDs) {
-	    try {
-		if (this.packetListeners.get(ID) != null) {
-		    this.packetListeners.get(ID).exit();
-		}
-		if (this.clientSockets.get(ID) != null) {
-		    this.clientSockets.get(ID).close();
-		}
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
-	}
-
-	try {
-	    this.serverSocket.close();
-	} catch (IOException e) {
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
-
-	this.isRunning = false;
-    }
 
 }
 
 class ServerConnectionRequestListener implements Runnable {
-    private boolean isRunning = true;
-    private Thread thread;
+	private boolean isRunning = true;
+	private Thread thread;
 
-    private ServerSocket serverSocket; // socket on which to listen for connection requests
-    private ArrayList<Socket> newClients;
+	private ServerSocket serverSocket; // socket on which to listen for connection requests
+	private ArrayList<Socket> newClients;
 
-    public ServerConnectionRequestListener(ServerSocket serverSocket) {
-	this.serverSocket = serverSocket;
-	this.newClients = new ArrayList<>();
-	this.start();
-    }
-
-    private void start() {
-	this.thread = new Thread(this);
-	this.thread.start();
-    }
-
-    public void run() {
-	while (this.isRunning) {
-	    Socket s = listenForServerRequest();
-	    if (s != null) {
-		this.newClients.add(s);
-	    }
+	public ServerConnectionRequestListener(ServerSocket serverSocket) {
+		this.serverSocket = serverSocket;
+		this.newClients = new ArrayList<>();
+		this.start();
 	}
-    }
 
-    public boolean hasNewClients() {
-	return this.newClients.size() != 0;
-    }
-
-    public ArrayList<Socket> getNewClients() {
-	ArrayList<Socket> out = new ArrayList<>();
-	out.addAll(this.newClients);
-	this.newClients = new ArrayList<>();
-	return out;
-    }
-
-    private Socket listenForServerRequest() {
-	try {
-	    System.out.println("Listening for connection requests");
-	    Socket socket = this.serverSocket.accept();
-	    System.out.println("Client has joined");
-	    return socket;
-	} catch (IOException e) {
-	    System.out.println("No connection requests");
+	private void start() {
+		this.thread = new Thread(this);
+		this.thread.start();
 	}
-	return null;
-    }
 
-    public void exit() {
-	this.isRunning = false;
-    }
+	public void run() {
+		while (this.isRunning) {
+			Socket s = listenForServerRequest();
+			if(s != null) {
+				this.newClients.add(s);
+			}
+		}
+	}
+
+	public boolean hasNewClients() {
+		return this.newClients.size() != 0;
+	}
+
+	public ArrayList<Socket> getNewClients() {
+		ArrayList<Socket> out = new ArrayList<>();
+		out.addAll(this.newClients);
+		this.newClients = new ArrayList<>();
+		return out;
+	}
+
+	private Socket listenForServerRequest() {
+		try {
+			System.out.println("Listening for connection requests");
+			Socket socket = this.serverSocket.accept();
+			System.out.println("Client has joined");
+			return socket;
+		} catch (IOException e) {
+			System.out.println("No connection requests");
+		}
+		return null;
+	}
+
+	public void exit() {
+		this.isRunning = false;
+	}
 }

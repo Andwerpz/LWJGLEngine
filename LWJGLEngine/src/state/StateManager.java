@@ -14,78 +14,78 @@ import util.Vec3;
 
 public class StateManager {
 
-    protected Framebuffer outputBuffer;
-    protected Texture outputColorMap;
+	protected Framebuffer outputBuffer;
+	protected Texture outputColorMap;
 
-    private ScreenQuad screenQuad;
+	private ScreenQuad screenQuad;
 
-    public State activeState;
-    public LoadState loadState;
+	public State activeState;
+	public LoadState loadState;
 
-    public StateManager() {
-	this.screenQuad = new ScreenQuad();
+	public StateManager() {
+		this.screenQuad = new ScreenQuad();
 
-	this.outputBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-	this.outputColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-	this.outputBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.outputColorMap.getID());
-	this.outputBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
-	this.outputBuffer.isComplete();
+		this.outputBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
+		this.outputColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.outputBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.outputColorMap.getID());
+		this.outputBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
+		this.outputBuffer.isComplete();
 
-	this.activeState = null;
-	this.loadState = new LoadState(this, new MainMenuState(this));
-    }
-
-    // trigger a load screen
-    public void switchState(State nextState) {
-	if (!this.loadState.isFinishedLoading()) {
-	    return;
+		this.activeState = null;
+		this.loadState = new LoadState(this, new MainMenuState(this));
 	}
-	this.loadState = new LoadState(this, nextState);
-    }
 
-    public void update() {
-	if (this.activeState != null) {
-	    this.activeState.update();
+	// trigger a load screen
+	public void switchState(State nextState) {
+		if(!this.loadState.isFinishedLoading()) {
+			return;
+		}
+		this.loadState = new LoadState(this, nextState);
 	}
-	this.loadState.update();
-	if (this.loadState.isFinishedLoading() && this.activeState != this.loadState.getNextState()) {
-	    this.activeState = this.loadState.getNextState();
+
+	public void update() {
+		if(this.activeState != null) {
+			this.activeState.update();
+		}
+		this.loadState.update();
+		if(this.loadState.isFinishedLoading() && this.activeState != this.loadState.getNextState()) {
+			this.activeState = this.loadState.getNextState();
+		}
 	}
-    }
 
-    public void render() {
-	outputBuffer.bind();
-	glClear(GL_COLOR_BUFFER_BIT);
-	if (this.activeState != null) {
-	    this.activeState.render(outputBuffer);
+	public void render() {
+		outputBuffer.bind();
+		glClear(GL_COLOR_BUFFER_BIT);
+		if(this.activeState != null) {
+			this.activeState.render(outputBuffer);
+		}
+		this.loadState.render(outputBuffer);
+
+		// render final product onto screen
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
+
+		Shader.IMG_POST_PROCESS.enable();
+		this.outputColorMap.bind(GL_TEXTURE0);
+		screenQuad.render();
 	}
-	this.loadState.render(outputBuffer);
 
-	// render final product onto screen
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
+	public void mousePressed(int button) {
+		activeState.mousePressed(button);
+	}
 
-	Shader.IMG_POST_PROCESS.enable();
-	this.outputColorMap.bind(GL_TEXTURE0);
-	screenQuad.render();
-    }
+	public void mouseReleased(int button) {
+		activeState.mouseReleased(button);
+	}
 
-    public void mousePressed(int button) {
-	activeState.mousePressed(button);
-    }
+	public void keyPressed(int key) {
+		InputManager.keyPressed(key);
+	}
 
-    public void mouseReleased(int button) {
-	activeState.mouseReleased(button);
-    }
-
-    public void keyPressed(int key) {
-	InputManager.keyPressed(key);
-    }
-
-    public void keyReleased(int key) {
-	InputManager.keyReleased(key);
-    }
+	public void keyReleased(int key) {
+		InputManager.keyReleased(key);
+	}
 
 }
