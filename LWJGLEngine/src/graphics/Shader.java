@@ -43,7 +43,7 @@ public class Shader {
 		SPLASH = new Shader("/splash.vert", "/splash.frag"); // takes in a texture and alpha value.
 		OVERWRITE_ALPHA = new Shader("/splash.vert", "/overwrite_alpha.frag"); // uses the first textures color, and the second textures alpha.
 		DECAL = new Shader("/decal.vert", "/decal.frag");
-		
+
 		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
 		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
 		Shader.GEOMETRY.setUniform1i("tex_normal", 2);
@@ -72,7 +72,7 @@ public class Shader {
 		Shader.OVERWRITE_ALPHA.setUniform1i("tex_color", 0);
 		Shader.OVERWRITE_ALPHA.setUniform1i("tex_alpha", 1);
 		Shader.OVERWRITE_ALPHA.setUniform1f("alpha", 1f);
-		
+
 		Shader.DECAL.setUniform1i("tex_diffuse", 0);
 		Shader.DECAL.setUniform1i("tex_specular", 1);
 		Shader.DECAL.setUniform1i("tex_normal", 2);

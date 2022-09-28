@@ -13,9 +13,14 @@ layout (location = 12) in vec4 material_shininess;
 uniform mat4 pr_matrix;	//projection
 uniform mat4 vw_matrix;	//view
 
-out mat4 inv_md_matrix;
+flat out mat4 inv_md_matrix;
 
 out vec2 frag_uv;
+noperspective out vec2 frag_screen_uv;
+
+out vec4 frag_material_diffuse;
+out vec4 frag_material_specular;
+out float frag_material_shininess;
 
 void main()
 {
@@ -23,5 +28,9 @@ void main()
     inv_md_matrix = inverse(md_matrix);
     
     frag_uv = uv;
+    frag_screen_uv = ((gl_Position.xy / gl_Position.w) + vec2(1)) / 2;
     
+    frag_material_diffuse = material_diffuse;
+    frag_material_specular = material_specular;
+    frag_material_shininess = material_shininess.r;
 }

@@ -33,8 +33,8 @@ import util.Vec4;
 public class GameState extends State {
 
 	private static final int WORLD_SCENE = 0;
-	
-	private static final int DECAL_SCENE = 1;	//screen space decals
+
+	private static final int DECAL_SCENE = 1; // screen space decals
 
 	private String ip;
 	private int port;
@@ -53,7 +53,7 @@ public class GameState extends State {
 
 	private long mapID;
 
-	private ArrayList<Vec3[]> bulletRays;	//point, direction
+	private ArrayList<Vec3[]> bulletRays; // point, direction
 	private Model bloodDecal, bulletHoleDecal;
 
 	public GameState(StateManager sm, String ip, int port, boolean hosting) {
@@ -80,7 +80,7 @@ public class GameState extends State {
 
 		this.bulletHoleDecal = new Decal();
 		this.bulletHoleDecal.setTextureMaterial(new TextureMaterial(AssetManager.getTexture("bullet_hole_texture")));
-		
+
 		this.bulletRays = new ArrayList<>();
 
 		Main.lockCursor();
@@ -95,7 +95,7 @@ public class GameState extends State {
 		Light.addLight(WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 		Scene.skyboxes.put(WORLD_SCENE, AssetManager.getSkybox("lake_skybox"));
 		player = new Player(new Vec3(18.417412f, 0.7f, -29.812654f), WORLD_SCENE);
-		
+
 		// -- DECAL SCENE --
 		Model.removeInstancesFromScene(DECAL_SCENE);
 		Light.removeLightsFromScene(DECAL_SCENE);
@@ -167,9 +167,9 @@ public class GameState extends State {
 			this.otherPlayers.get(ID).kill();
 			this.otherPlayers.remove(ID);
 		}
-		
-		//process decals from bullets
-		for(Vec3[] b : this.bulletRays) {
+
+		// process decals from bullets
+		for (Vec3[] b : this.bulletRays) {
 			Vec3 ray_origin = b[0];
 			Vec3 ray_dir = b[1];
 			ArrayList<Vec3[]> intersect = Model.rayIntersect(WORLD_SCENE, ray_origin, ray_dir);
@@ -193,13 +193,13 @@ public class GameState extends State {
 				normal.rotateX(-xRot);
 
 				System.out.println(normal);
-				
-				Mat4 modelMat4 = Mat4.translate(new Vec3(-0.5f, -0.5f, -0.9f));
-				modelMat4.muli(Mat4.scale((float) (Math.random() * 1f + 0.5f)));
+
+				Mat4 modelMat4 = Mat4.translate(new Vec3(-0.5f, -0.5f, -0.8f));
+				modelMat4.muli(Mat4.scale((float) (Math.random() * 1f + 0.8f)));
 				modelMat4.muli(Mat4.translate(new Vec3(0, 0, 0.0001f)));
 				modelMat4.muli(Mat4.rotateZ((float) (Math.random() * Math.PI * 2f)));
-				modelMat4.muli(Mat4.rotateX(xRot));
-				modelMat4.muli(Mat4.rotateY(yRot));
+				modelMat4.muli(Mat4.rotateX(xRot + (float) (Math.random() * Math.PI / 6f)));
+				modelMat4.muli(Mat4.rotateY(yRot + (float) (Math.random() * Math.PI / 6f)));
 				modelMat4.muli(Mat4.translate(minVec));
 				long id = Model.addInstance(this.bloodDecal, modelMat4, DECAL_SCENE);
 				Model.updateInstance(id, new Material(new Vec4(1), new Vec4(0.7f), 64f));
@@ -241,8 +241,8 @@ public class GameState extends State {
 		// shoot ray in direction of camera
 		Vec3 ray_origin = perspectiveCamera.getPos();
 		Vec3 ray_dir = perspectiveCamera.getFacing();
-		this.bulletRays.add(new Vec3[] {ray_origin, ray_dir});
-		
+		this.bulletRays.add(new Vec3[] { ray_origin, ray_dir });
+
 //		ArrayList<Vec3[]> intersect = Model.rayIntersect(WORLD_SCENE, ray_origin, ray_dir);
 //		if (intersect.size() != 0) {
 //			float minDist = 0f;

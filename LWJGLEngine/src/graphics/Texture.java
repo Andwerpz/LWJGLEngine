@@ -87,6 +87,21 @@ public class Texture {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType, int sampleType) {
+		this.textureID = glGenTextures();
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, dataType, (FloatBuffer) null);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, sampleType);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, sampleType);
+		if (internalFormat == GL_DEPTH_COMPONENT) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+			float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+		}
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
 	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int sampleType) {
 		int[] outWH = new int[2];
 		int[] data = getDataFromImage(img, invertColors, horizontalFlip, verticalFlip, outWH);
