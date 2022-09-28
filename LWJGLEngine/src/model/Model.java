@@ -138,7 +138,7 @@ public class Model {
 	}
 
 	public void setTextureMaterial(TextureMaterial m, int index) {
-		if(index >= this.textureMaterials.size()) {
+		if (index >= this.textureMaterials.size()) {
 			System.err.println("Texture material index out of bounds");
 			return;
 		}
@@ -208,7 +208,7 @@ public class Model {
 
 		PointerBuffer materials = scene.mMaterials(); // array of pointers to AIMaterial structs
 		for (int i = 0; i < scene.mNumMaterials(); i++) {
-			if(vertices.get(i).size() == 0) { // empty mesh, don't load
+			if (vertices.get(i).size() == 0) { // empty mesh, don't load
 				continue;
 			}
 
@@ -243,22 +243,22 @@ public class Model {
 			// traditional phong-blinn Material
 			boolean errorExtractingMaterial = false;
 			AIColor4D diffuseColor = AIColor4D.create();
-			if(aiGetMaterialColor(AIMat, AI_MATKEY_COLOR_DIFFUSE, aiTextureType_NONE, 0, diffuseColor) != 0) {
+			if (aiGetMaterialColor(AIMat, AI_MATKEY_COLOR_DIFFUSE, aiTextureType_NONE, 0, diffuseColor) != 0) {
 				errorExtractingMaterial = true;
 			}
 
 			AIColor4D specularColor = AIColor4D.create();
-			if(aiGetMaterialColor(AIMat, AI_MATKEY_COLOR_SPECULAR, aiTextureType_NONE, 0, specularColor) != 0) {
+			if (aiGetMaterialColor(AIMat, AI_MATKEY_COLOR_SPECULAR, aiTextureType_NONE, 0, specularColor) != 0) {
 				errorExtractingMaterial = true;
 			}
 
 			AIColor4D shininessColor = AIColor4D.create();
-			if(aiGetMaterialColor(AIMat, AI_MATKEY_SHININESS, aiTextureType_NONE, 0, shininessColor) != 0) {
+			if (aiGetMaterialColor(AIMat, AI_MATKEY_SHININESS, aiTextureType_NONE, 0, shininessColor) != 0) {
 				errorExtractingMaterial = true;
 			}
 
 			Material mat = Material.defaultMaterial();
-			if(!errorExtractingMaterial) {
+			if (!errorExtractingMaterial) {
 				mat = new Material(diffuseColor, specularColor, shininessColor);
 			}
 			this.defaultMaterials.add(mat);
@@ -269,7 +269,7 @@ public class Model {
 			path = AIString.calloc();
 			aiGetMaterialTexture(AIMat, aiTextureType_DIFFUSE, 0, path, (IntBuffer) null, null, null, null, null, null);
 			String diffusePath = path.dataString();
-			if(diffusePath != null && diffusePath.length() != 0) {
+			if (diffusePath != null && diffusePath.length() != 0) {
 				Texture diffuseTexture = new Texture(loadImage(filepath + diffusePath));
 				material.setTexture(diffuseTexture, TextureMaterial.DIFFUSE);
 			}
@@ -278,7 +278,7 @@ public class Model {
 			path = AIString.calloc();
 			aiGetMaterialTexture(AIMat, aiTextureType_SPECULAR, 0, path, (IntBuffer) null, null, null, null, null, null);
 			String specularPath = path.dataString();
-			if(specularPath != null && specularPath.length() != 0) {
+			if (specularPath != null && specularPath.length() != 0) {
 				Texture specularTexture = new Texture(loadImage(filepath + specularPath));
 				material.setTexture(specularTexture, TextureMaterial.SPECULAR);
 			}
@@ -287,7 +287,7 @@ public class Model {
 			path = AIString.calloc();
 			aiGetMaterialTexture(AIMat, aiTextureType_NORMALS, 0, path, (IntBuffer) null, null, null, null, null, null);
 			String normalsPath = path.dataString();
-			if(normalsPath != null && normalsPath.length() != 0) {
+			if (normalsPath != null && normalsPath.length() != 0) {
 				Texture normalsTexture = new Texture(loadImage(filepath + normalsPath));
 				material.setTexture(normalsTexture, TextureMaterial.NORMAL);
 			}
@@ -336,10 +336,10 @@ public class Model {
 	// creates a new instance, and returns the id associated with that instance
 	public static long addInstance(Model model, Mat4 mat4, int scene) {
 		long ID = generateNewID();
-		if(model.modelMats.get(scene) == null) {
+		if (model.modelMats.get(scene) == null) {
 			model.modelMats.put(scene, new HashMap<Long, Mat4>());
 		}
-		if(model.materials.get(scene) == null) {
+		if (model.materials.get(scene) == null) {
 			model.materials.put(scene, new HashMap<Long, ArrayList<Material>>());
 		}
 		IDtoScene.put(ID, scene);
@@ -356,7 +356,7 @@ public class Model {
 
 	public static void removeInstance(long ID) {
 		Model model = IDtoModel.get(ID);
-		if(model == null) { // couldn't find model to remove
+		if (model == null) { // couldn't find model to remove
 			// could happen if you try to kill an entity after removing all models from a
 			// scene
 			return;
@@ -364,12 +364,12 @@ public class Model {
 		int scene = IDtoScene.get(ID);
 
 		model.modelMats.get(scene).remove(ID);
-		if(model.modelMats.get(scene).size() == 0) {
+		if (model.modelMats.get(scene).size() == 0) {
 			model.modelMats.remove(scene);
 		}
 
 		model.materials.get(scene).remove(ID);
-		if(model.materials.get(scene).size() == 0) {
+		if (model.materials.get(scene).size() == 0) {
 			model.materials.remove(scene);
 		}
 
@@ -378,7 +378,7 @@ public class Model {
 		IDtoModel.remove(ID);
 		modelInstanceIDs.remove(ID);
 
-		if(model.modelMats.containsKey(scene)) {
+		if (model.modelMats.containsKey(scene)) {
 			model.scenesNeedingUpdates.add(scene);
 		}
 
@@ -395,7 +395,7 @@ public class Model {
 	public static void updateInstance(long ID, Material material, int index) {
 		Model model = IDtoModel.get(ID);
 		int scene = IDtoScene.get(ID);
-		if(model.materials.get(scene).get(ID).size() <= index) {
+		if (model.materials.get(scene).get(ID).size() <= index) {
 			System.err.println("Material index " + index + " out of bounds");
 			return;
 		}
@@ -408,45 +408,45 @@ public class Model {
 	}
 
 	public static void activateCollisionMesh(long ID) {
-		if(!modelInstanceIDs.contains(ID)) {
+		if (!modelInstanceIDs.contains(ID)) {
 			return;
 		}
 		int scene = IDtoScene.get(ID);
-		if(activeCollisionMeshes.get(scene) == null) {
+		if (activeCollisionMeshes.get(scene) == null) {
 			activeCollisionMeshes.put(scene, new HashSet<Long>());
 		}
 		activeCollisionMeshes.get(scene).add(ID);
 	}
 
 	public static void deactivateCollisionMesh(long ID) {
-		if(!IDtoScene.containsKey(ID)) {
+		if (!IDtoScene.containsKey(ID)) {
 			return;
 		}
 		int scene = IDtoScene.get(ID);
-		if(activeCollisionMeshes.get(scene) == null) {
+		if (activeCollisionMeshes.get(scene) == null) {
 			return;
 		}
 		activeCollisionMeshes.get(scene).remove(ID);
-		if(activeCollisionMeshes.get(scene).size() == 0) {
+		if (activeCollisionMeshes.get(scene).size() == 0) {
 			activeCollisionMeshes.remove(scene);
 		}
 	}
 
 	public static void updateModels() {
 		for (Model m : models) {
-			if(m.scenesNeedingUpdates.size() != 0) {
+			if (m.scenesNeedingUpdates.size() != 0) {
 				m.updateModelMats();
 			}
 		}
 	}
 
 	private void updateModelMats() {
-		if(this.scenesNeedingUpdates.size() == 0) {
+		if (this.scenesNeedingUpdates.size() == 0) {
 			return;
 		}
 
 		for (int scene : scenesNeedingUpdates) {
-			if(this.modelMats.get(scene) == null) {
+			if (this.modelMats.get(scene) == null) {
 				continue;
 			}
 
@@ -460,7 +460,7 @@ public class Model {
 
 			for (long ID : this.modelMats.get(scene).keySet()) {
 				ArrayList<Material> matArr = this.materials.get(scene).get(ID);
-				if(matArr == null) {
+				if (matArr == null) {
 					System.out.println("DIDNT SET MATERIALS " + ID);
 					matArr = this.defaultMaterials;
 				}
@@ -478,13 +478,13 @@ public class Model {
 		scenesNeedingUpdates.clear();
 	}
 
-	public static ArrayList<Vec3> rayIntersect(int scene, Vec3 ray_origin, Vec3 ray_dir) {
-		ArrayList<Vec3> result = new ArrayList<>();
-		if(activeCollisionMeshes.get(scene) == null) {
+	public static ArrayList<Vec3[]> rayIntersect(int scene, Vec3 ray_origin, Vec3 ray_dir) {
+		ArrayList<Vec3[]> result = new ArrayList<>();
+		if (activeCollisionMeshes.get(scene) == null) {
 			return result;
 		}
 		for (long ID : activeCollisionMeshes.get(scene)) {
-			if(!Model.modelInstanceIDs.contains(ID)) {
+			if (!Model.modelInstanceIDs.contains(ID)) {
 				System.out.println("something is wrong " + ID);
 				continue;
 			}
@@ -497,13 +497,13 @@ public class Model {
 		return result;
 	}
 
-	public static ArrayList<Vec3> sphereIntersect(int scene, Vec3 sphere_origin, float sphere_radius) {
-		ArrayList<Vec3> result = new ArrayList<>();
-		if(activeCollisionMeshes.get(scene) == null) {
+	public static ArrayList<Vec3[]> sphereIntersect(int scene, Vec3 sphere_origin, float sphere_radius) {
+		ArrayList<Vec3[]> result = new ArrayList<>();
+		if (activeCollisionMeshes.get(scene) == null) {
 			return result;
 		}
 		for (long ID : activeCollisionMeshes.get(scene)) {
-			if(!Model.modelInstanceIDs.contains(ID)) {
+			if (!Model.modelInstanceIDs.contains(ID)) {
 				System.out.println("something is wrong " + ID);
 				continue;
 			}
@@ -516,13 +516,13 @@ public class Model {
 		return result;
 	}
 
-	public static ArrayList<Vec3> capsuleIntersect(int scene, Vec3 capsule_bottom, Vec3 capsule_top, float capsule_radius) {
-		ArrayList<Vec3> result = new ArrayList<>();
-		if(activeCollisionMeshes.get(scene) == null) {
+	public static ArrayList<Vec3[]> capsuleIntersect(int scene, Vec3 capsule_bottom, Vec3 capsule_top, float capsule_radius) {
+		ArrayList<Vec3[]> result = new ArrayList<>();
+		if (activeCollisionMeshes.get(scene) == null) {
 			return result;
 		}
 		for (long ID : activeCollisionMeshes.get(scene)) {
-			if(!Model.modelInstanceIDs.contains(ID)) {
+			if (!Model.modelInstanceIDs.contains(ID)) {
 				System.out.println("something is wrong " + ID);
 				continue;
 			}
@@ -538,7 +538,7 @@ public class Model {
 	// removes all model instances from the given scene.
 	public static void removeInstancesFromScene(int scene) {
 		for (Model m : models) {
-			if(m.modelMats.get(scene) == null) {
+			if (m.modelMats.get(scene) == null) {
 				continue;
 			}
 			ArrayList<Long> instanceIDs = new ArrayList<>();
@@ -556,15 +556,14 @@ public class Model {
 	}
 
 	private void render(int scene) {
-		if(modelMats.get(scene) == null) { // check whether or not this model actually has any instances in the
+		if (modelMats.get(scene) == null) { // check whether or not this model actually has any instances in the
 			// specified scene
 			return;
 		}
 		for (int i = 0; i < meshes.size(); i++) {
-			if(i < this.textureMaterials.size() && this.textureMaterials.get(i) != null) {
+			if (i < this.textureMaterials.size() && this.textureMaterials.get(i) != null) {
 				this.textureMaterials.get(i).bind();
-			}
-			else {
+			} else {
 				DEFAULT_TEXTURE_MATERIAL.bind();
 			}
 			this.meshes.get(i).render(scene);

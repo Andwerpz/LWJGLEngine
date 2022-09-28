@@ -47,8 +47,8 @@ public class CollisionMesh {
 		return vTransformed;
 	}
 
-	public ArrayList<Vec3> rayIntersect(Vec3 ray_origin, Vec3 ray_dir, Mat4 transform) {
-		ArrayList<Vec3> result = new ArrayList<>();
+	public ArrayList<Vec3[]> rayIntersect(Vec3 ray_origin, Vec3 ray_dir, Mat4 transform) {
+		ArrayList<Vec3[]> result = new ArrayList<>();
 
 		Vec3[] vTransformed = this.transformVertices(transform);
 
@@ -58,15 +58,16 @@ public class CollisionMesh {
 			Vec3 t2 = new Vec3(vTransformed[indices[t + 2]]);
 
 			Vec3 intersect = MathUtils.ray_triangleIntersect(ray_origin, ray_dir, t0, t1, t2);
-			if(intersect != null) {
-				result.add(intersect);
+			if (intersect != null) {
+				Vec3 normal = MathUtils.computeTriangleNormal(t0, t1, t2);
+				result.add(new Vec3[] { intersect, normal, t0, t1, t2 });
 			}
 		}
 		return result;
 	}
 
-	public ArrayList<Vec3> sphereIntersect(Vec3 sphere_origin, float sphere_radius, Mat4 transform) {
-		ArrayList<Vec3> result = new ArrayList<>();
+	public ArrayList<Vec3[]> sphereIntersect(Vec3 sphere_origin, float sphere_radius, Mat4 transform) {
+		ArrayList<Vec3[]> result = new ArrayList<>();
 
 		Vec3[] vTransformed = this.transformVertices(transform);
 
@@ -76,15 +77,16 @@ public class CollisionMesh {
 			Vec3 t2 = new Vec3(vTransformed[indices[t + 2]]);
 
 			Vec3 intersect = MathUtils.sphere_triangleIntersect(sphere_origin, sphere_radius, t0, t1, t2);
-			if(intersect != null) {
-				result.add(intersect);
+			if (intersect != null) {
+				Vec3 normal = MathUtils.computeTriangleNormal(t0, t1, t2);
+				result.add(new Vec3[] { intersect, normal, t0, t1, t2 });
 			}
 		}
 		return result;
 	}
 
-	public ArrayList<Vec3> capsuleIntersect(Vec3 capsule_bottom, Vec3 capsule_top, float capsule_radius, Mat4 transform) {
-		ArrayList<Vec3> result = new ArrayList<>();
+	public ArrayList<Vec3[]> capsuleIntersect(Vec3 capsule_bottom, Vec3 capsule_top, float capsule_radius, Mat4 transform) {
+		ArrayList<Vec3[]> result = new ArrayList<>();
 
 		Vec3[] vTransformed = this.transformVertices(transform);
 
@@ -94,23 +96,25 @@ public class CollisionMesh {
 			Vec3 t2 = new Vec3(vTransformed[indices[t + 2]]);
 
 			Vec3 intersect = MathUtils.capsule_triangleIntersect(capsule_bottom, capsule_top, capsule_radius, t0, t1, t2);
-			if(intersect != null) {
-				result.add(intersect);
+			if (intersect != null) {
+				Vec3 normal = MathUtils.computeTriangleNormal(t0, t1, t2);
+				result.add(new Vec3[] { intersect, normal, t0, t1, t2 });
 			}
 		}
 		return result;
 	}
 
-	public ArrayList<Vec3> lineSegmentIntersect(Vec3 p1, Vec3 p2, Mat4 transform) {
+	public ArrayList<Vec3[]> lineSegmentIntersect(Vec3 p1, Vec3 p2, Mat4 transform) {
 		Vec3 dir = new Vec3(p1, p2);
 		float pDist = dir.length();
 		dir.normalize(); // could divide by pDist to save another sqrt operation
-		ArrayList<Vec3> rayPoints = rayIntersect(p1, dir, transform);
-		ArrayList<Vec3> ans = new ArrayList<>();
-		for (Vec3 v : rayPoints) {
+		ArrayList<Vec3[]> rayPoints = rayIntersect(p1, dir, transform);
+		ArrayList<Vec3[]> ans = new ArrayList<>();
+		for (Vec3[] a : rayPoints) {
+			Vec3 v = a[0];
 			float vDist = new Vec3(p1, v).length();
-			if(vDist < pDist) {
-				ans.add(v);
+			if (vDist < pDist) {
+				ans.add(a);
 			}
 		}
 		return ans;

@@ -1,11 +1,13 @@
 package model;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL13.*;
+
 import java.util.HashMap;
 
 import graphics.Cubemap;
 import graphics.Texture;
-import ui.Line;
-import ui.Rectangle;
 
 public class AssetManager {
 	// manages all of our assets
@@ -25,10 +27,12 @@ public class AssetManager {
 		paths.put("dust2", new String[] { "/dust2/", "dust2_blend.obj" });
 		paths.put("sphere", new String[] { "/sphere/", "sphere.obj" });
 		paths.put("cylinder", new String[] { "/cylinder/", "cylinder.obj" });
-		paths.put("lake_skybox",
-				new String[] { "/skybox/lake/right.jpg", "/skybox/lake/left.jpg", "/skybox/lake/top.jpg", "/skybox/lake/bottom.jpg", "/skybox/lake/front.jpg", "/skybox/lake/back.jpg" });
-		paths.put("stars_skybox",
-				new String[] { "/skybox/stars/right.png", "/skybox/stars/left.png", "/skybox/stars/top.png", "/skybox/stars/bottom.png", "/skybox/stars/front.png", "/skybox/stars/back.png" });
+
+		paths.put("blood_splatter_texture", new String[] { "decal/blood_splatter.png", GL_NEAREST + "" });
+		paths.put("bullet_hole_texture", new String[] { "decal/bullet_hole.png", GL_NEAREST + "" });
+
+		paths.put("lake_skybox", new String[] { "/skybox/lake/right.jpg", "/skybox/lake/left.jpg", "/skybox/lake/top.jpg", "/skybox/lake/bottom.jpg", "/skybox/lake/front.jpg", "/skybox/lake/back.jpg" });
+		paths.put("stars_skybox", new String[] { "/skybox/stars/right.png", "/skybox/stars/left.png", "/skybox/stars/top.png", "/skybox/stars/bottom.png", "/skybox/stars/front.png", "/skybox/stars/back.png" });
 	}
 
 	public static void loadModel(String name) {
@@ -38,7 +42,7 @@ public class AssetManager {
 
 	public static void loadTexture(String name) {
 		String[] p = paths.get(name);
-		textures.put(name, new Texture(p[0]));
+		textures.put(name, new Texture(p[0], false, false, false, Integer.parseInt(p[1])));
 	}
 
 	public static void loadSkybox(String name) {
@@ -47,30 +51,30 @@ public class AssetManager {
 	}
 
 	public static Model getModel(String name) {
-		if(paths.get(name) == null) {
+		if (paths.get(name) == null) {
 			return null;
 		}
-		if(models.get(name) == null) {
+		if (models.get(name) == null) {
 			loadModel(name);
 		}
 		return models.get(name);
 	}
 
 	public static Texture getTexture(String name) {
-		if(paths.get(name) == null) {
+		if (paths.get(name) == null) {
 			return null;
 		}
-		if(textures.get(name) == null) {
+		if (textures.get(name) == null) {
 			loadTexture(name);
 		}
 		return textures.get(name);
 	}
 
 	public static Cubemap getSkybox(String name) {
-		if(paths.get(name) == null) {
+		if (paths.get(name) == null) {
 			return null;
 		}
-		if(skyboxes.get(name) == null) {
+		if (skyboxes.get(name) == null) {
 			loadSkybox(name);
 		}
 		return skyboxes.get(name);

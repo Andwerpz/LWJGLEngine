@@ -50,14 +50,14 @@ public class MainMenuState extends State {
 
 	@Override
 	public void load() {
-		if(perspectiveScreen == null) {
+		if (perspectiveScreen == null) {
 			perspectiveCamera = new Camera(PERSPECTIVE_FOV, Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
 			perspectiveScreen = new PerspectiveScreen();
 			perspectiveScreen.setCamera(perspectiveCamera);
 		}
 		perspectiveCamera.setPos(new Vec3(18.417412f, 1.7f, -29.812654f));
 
-		if(uiScreen == null) {
+		if (uiScreen == null) {
 			uiScreenCamera = new Camera(Mat4.orthographic(0, Main.windowWidth, 0, Main.windowHeight, -10, 10));
 			uiScreen = new UIScreen();
 			uiScreen.setCamera(uiScreenCamera);
@@ -126,7 +126,7 @@ public class MainMenuState extends State {
 	@Override
 	public void mouseReleased(int button) {
 		InputManager.released(uiScreen.getEntityIDAtMouse());
-		if(InputManager.isClicked("btn_host_game")) {
+		if (InputManager.isClicked("btn_host_game")) {
 			try {
 				int ip = Integer.parseInt(InputManager.getText("tf_host_port"));
 				this.sm.switchState(new GameState(this.sm, null, ip, true));
@@ -134,8 +134,7 @@ public class MainMenuState extends State {
 				System.err.println("BAD PORT");
 			}
 
-		}
-		else if(InputManager.isClicked("btn_join_game")) {
+		} else if (InputManager.isClicked("btn_join_game")) {
 			try {
 				int ip = Integer.parseInt(InputManager.getText("tf_join_port"));
 				String port = InputManager.getText("tf_join_ip");
@@ -143,8 +142,7 @@ public class MainMenuState extends State {
 			} catch (NumberFormatException e) {
 				System.err.println("BAD PORT");
 			}
-		}
-		else if(InputManager.isClicked("btn_quit_game")) {
+		} else if (InputManager.isClicked("btn_quit_game")) {
 			Main.main.exit();
 		}
 	}

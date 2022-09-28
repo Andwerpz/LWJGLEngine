@@ -1,27 +1,24 @@
 package screen;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL30.*;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import graphics.Cubemap;
 import graphics.Framebuffer;
 import graphics.Shader;
 import graphics.Texture;
-import input.MouseInput;
 import main.Main;
 import model.Model;
-import model.ScreenQuad;
 import model.SkyboxCube;
 import player.Camera;
 import scene.Light;
 import scene.Scene;
-import util.BufferUtils;
 import util.Mat4;
-import util.Vec2;
 import util.Vec3;
 
 public class PerspectiveScreen extends Screen {
@@ -51,6 +48,7 @@ public class PerspectiveScreen extends Screen {
 	private Texture skyboxColorMap; // RGB: color
 
 	private SkyboxCube skyboxCube;
+	private boolean renderSkybox = true;
 
 	public PerspectiveScreen() {
 		super();
@@ -102,6 +100,11 @@ public class PerspectiveScreen extends Screen {
 		shader.setUniform3f("view_pos", camera.getPos());
 	}
 
+	public void renderSkybox(boolean b) {
+		this.renderSkybox = b;
+	}
+
+	@Override
 	public void render(Framebuffer outputBuffer, int scene) {
 		// -- GEOMETRY -- : render 3d perspective to geometry buffer
 		geometryBuffer.bind();
@@ -117,8 +120,7 @@ public class PerspectiveScreen extends Screen {
 		this.setShaderUniforms(Shader.GEOMETRY, this.camera);
 		Model.renderModels(scene);
 
-		// -- LIGHTING -- : using information from the geometry buffer, calculate
-		// lighting.
+		// -- LIGHTING -- : using information from the geometry buffer, calculate lighting.
 		lightingBuffer.bind();
 		Shader.LIGHTING.enable();
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -149,7 +151,7 @@ public class PerspectiveScreen extends Screen {
 		ArrayList<Light> lights = Light.lights.get(scene);
 		for (int i = 0; i < lights.size(); i++) {
 			// generate depth map for light
-			if(lights.get(i).type == Light.DIR_LIGHT) {
+			if (lights.get(i).type == Light.DIR_LIGHT) {
 
 				Vec3 lightDir = new Vec3(lights.get(i).dir).normalize();
 				Mat4 lightMat = Mat4.lookAt(new Vec3(0), lightDir, new Vec3(0, 1, 0));
@@ -169,7 +171,7 @@ public class PerspectiveScreen extends Screen {
 					float x2 = y2 * Main.ASPECT_RATIO;
 					Vec3[] corners = new Vec3[] { new Vec3(x1, y1, -near), new Vec3(-x1, y1, -near), new Vec3(-x1, -y1, -near), new Vec3(x1, -y1, -near),
 
-						new Vec3(x2, y2, -far), new Vec3(-x2, y2, -far), new Vec3(-x2, -y2, -far), new Vec3(x2, -y2, -far), };
+							new Vec3(x2, y2, -far), new Vec3(-x2, y2, -far), new Vec3(-x2, -y2, -far), new Vec3(x2, -y2, -far), };
 
 					Shader.LIGHTING.setUniform1f("shadowMapNear", near);
 					Shader.LIGHTING.setUniform1f("shadowMapFar", far);
@@ -213,7 +215,7 @@ public class PerspectiveScreen extends Screen {
 
 					Shader.LIGHTING.setUniformMat4("lightSpace_matrix", lightMat.mul(lightCamera.getProjectionMatrix()));
 					Shader.DEPTH.enable();
-					// world.render(Shader.DEPTH, lightCamera);
+
 					this.setShaderUniforms(Shader.DEPTH, lightCamera);
 					Model.renderModels(scene);
 
@@ -227,8 +229,7 @@ public class PerspectiveScreen extends Screen {
 					lights.get(i).bind(Shader.LIGHTING, i);
 					screenQuad.render();
 				}
-			}
-			else {
+			} else {
 				Light light = lights.get(i);
 
 				// generate cubemap
@@ -240,11 +241,11 @@ public class PerspectiveScreen extends Screen {
 				Shader.CUBE_DEPTH.setUniform1f("far", far);
 
 				Vec3[][] camVectors = new Vec3[][] { { new Vec3(1, 0, 0), new Vec3(0, -1, 0) }, // -x
-					{ new Vec3(-1, 0, 0), new Vec3(0, -1, 0) }, // +x
-					{ new Vec3(0, 1, 0), new Vec3(0, 0, 1) }, // -y
-					{ new Vec3(0, -1, 0), new Vec3(0, 0, -1) }, // +y
-					{ new Vec3(0, 0, 1), new Vec3(0, -1, 0) }, // -z
-					{ new Vec3(0, 0, -1), new Vec3(0, -1, 0) }, // +z
+						{ new Vec3(-1, 0, 0), new Vec3(0, -1, 0) }, // +x
+						{ new Vec3(0, 1, 0), new Vec3(0, 0, 1) }, // -y
+						{ new Vec3(0, -1, 0), new Vec3(0, 0, -1) }, // +y
+						{ new Vec3(0, 0, 1), new Vec3(0, -1, 0) }, // -z
+						{ new Vec3(0, 0, -1), new Vec3(0, -1, 0) }, // +z
 				};
 
 				Camera cubemapCamera = new Camera((float) Math.toRadians(90), 1f, 1f, near, far); // aspect ratio of 1
@@ -296,18 +297,23 @@ public class PerspectiveScreen extends Screen {
 		Scene.skyboxes.get(scene).bind(GL_TEXTURE0);
 		skyboxCube.render();
 
-		// -- POST PROCESSING -- : render contents of lighting buffer onto screen sized
-		// quad
 		outputBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		Shader.GEOM_POST_PROCESS.enable();
+		// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
+		if (this.renderSkybox) {
+			Shader.SPLASH.enable();
+			Shader.SPLASH.setUniform1f("alpha", 1f);
+			this.skyboxColorMap.bind(GL_TEXTURE0);
+			screenQuad.render();
+		}
+
+		Shader.OVERWRITE_ALPHA.enable();
+		Shader.OVERWRITE_ALPHA.setUniform1f("alpha", 1f);
 		this.lightingColorMap.bind(GL_TEXTURE0);
-		this.geometryPositionMap.bind(GL_TEXTURE1);
-		this.skyboxColorMap.bind(GL_TEXTURE2);
-
+		this.geometryColorMap.bind(GL_TEXTURE1);
 		screenQuad.render();
 	}
 

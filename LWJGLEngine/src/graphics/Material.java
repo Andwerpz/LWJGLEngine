@@ -38,7 +38,7 @@ public class Material {
 	}
 
 	public Material(Color diffuse) {
-		this.diffuse = new Vec4((float) diffuse.getRed() / 255f, (float) diffuse.getGreen() / 255f, (float) diffuse.getBlue() / 255f, 1);
+		this.diffuse = new Vec4(diffuse.getRed() / 255f, diffuse.getGreen() / 255f, diffuse.getBlue() / 255f, 1);
 		this.specular = new Vec4(1);
 		this.shininess = 64f;
 	}
@@ -46,6 +46,12 @@ public class Material {
 	public Material(Vec3 diffuse, Vec3 specular, float shininess) {
 		this.diffuse = new Vec4(diffuse, 1);
 		this.specular = new Vec4(specular, 1);
+		this.shininess = shininess;
+	}
+
+	public Material(Vec4 diffuse, Vec4 specular, float shininess) {
+		this.diffuse = new Vec4(diffuse);
+		this.specular = new Vec4(specular);
 		this.shininess = shininess;
 	}
 
@@ -67,6 +73,7 @@ public class Material {
 		return this.shininess;
 	}
 
+	@Override
 	public String toString() {
 		String ans = "Diffuse : " + this.diffuse + "\n";
 		ans += "Specular : " + this.specular + "\n";

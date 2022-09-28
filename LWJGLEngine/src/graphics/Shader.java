@@ -21,7 +21,7 @@ public class Shader {
 	public static final int INSTANCED_COLOR_ATTRIB = 9; // used for quick model selection
 	public static final int INSTANCED_MATERIAL_ATTRIB = 10; // takes up 3 slots
 
-	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS, IMG_POST_PROCESS, SPLASH;
+	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS, IMG_POST_PROCESS, SPLASH, OVERWRITE_ALPHA;
 
 	private boolean enabled = false;
 
@@ -38,13 +38,10 @@ public class Shader {
 		LIGHTING = new Shader("/lighting.vert", "/lighting.frag");
 		DEPTH = new Shader("/simpleDepthShader.vert", "/simpleDepthShader.frag");
 		CUBE_DEPTH = new Shader("/cubemapDepthShader.vert", "/cubemapDepthShader.frag");
-		GEOM_POST_PROCESS = new Shader("/geom_postprocessing.vert", "/geom_postprocessing.frag"); // post processing
-		// with geometry
-		// information
-		IMG_POST_PROCESS = new Shader("/img_postprocessing.vert", "/img_postprocessing.frag"); // post processing with
-		// only final color
-		// information
+		GEOM_POST_PROCESS = new Shader("/geom_postprocessing.vert", "/geom_postprocessing.frag"); // post processing with geometry information
+		IMG_POST_PROCESS = new Shader("/img_postprocessing.vert", "/img_postprocessing.frag"); // post processing with only final color information
 		SPLASH = new Shader("/splash.vert", "/splash.frag"); // takes in a texture and alpha value.
+		OVERWRITE_ALPHA = new Shader("/splash.vert", "/overwrite_alpha.frag"); // uses the first textures color, and the second textures alpha.
 
 		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
 		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
@@ -70,15 +67,19 @@ public class Shader {
 		Shader.IMG_POST_PROCESS.setUniform1i("tex_color", 0);
 
 		Shader.SPLASH.setUniform1i("tex_color", 0);
+
+		Shader.OVERWRITE_ALPHA.setUniform1i("tex_color", 0);
+		Shader.OVERWRITE_ALPHA.setUniform1i("tex_alpha", 1);
+		Shader.OVERWRITE_ALPHA.setUniform1f("alpha", 1f);
 	}
 
 	public int getUniform(String name) {
-		if(locationCache.containsKey(name)) {
+		if (locationCache.containsKey(name)) {
 			return locationCache.get(name);
 		}
 
 		int result = glGetUniformLocation(ID, name);
-		if(result == -1) {
+		if (result == -1) {
 			System.err.println("Could not find uniform variable " + name);
 		}
 		locationCache.put(name, result);
@@ -86,31 +87,31 @@ public class Shader {
 	}
 
 	public void setUniform1i(String name, int value) {
-		if(!enabled)
+		if (!enabled)
 			enable();
 		glUniform1i(getUniform(name), value);
 	}
 
 	public void setUniform1f(String name, float value) {
-		if(!enabled)
+		if (!enabled)
 			enable();
 		glUniform1f(getUniform(name), value);
 	}
 
 	public void setUniform2f(String name, float x, float y) {
-		if(!enabled)
+		if (!enabled)
 			enable();
 		glUniform2f(getUniform(name), x, y);
 	}
 
 	public void setUniform3f(String name, Vec3 v) {
-		if(!enabled)
+		if (!enabled)
 			enable();
 		glUniform3f(getUniform(name), v.x, v.y, v.z);
 	}
 
 	public void setUniformMat4(String name, Mat4 mat) {
-		if(!enabled)
+		if (!enabled)
 			enable();
 		glUniformMatrix4fv(getUniform(name), false, mat.toFloatBuffer());
 	}

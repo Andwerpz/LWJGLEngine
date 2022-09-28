@@ -64,13 +64,21 @@ public class Texture {
 		this.textureID = this.load(img, invertColors, horizontalFlip, verticalFlip);
 	}
 
+	public Texture(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int sampleType) {
+		this.textureID = this.load(img, invertColors, horizontalFlip, verticalFlip, sampleType);
+	}
+
+	public Texture(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int sampleType) {
+		this.textureID = this.load(path, invertColors, horizontalFlip, verticalFlip, sampleType);
+	}
+
 	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType) {
 		this.textureID = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, dataType, (FloatBuffer) null);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		if(internalFormat == GL_DEPTH_COMPONENT) {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		if (internalFormat == GL_DEPTH_COMPONENT) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 			float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -79,7 +87,7 @@ public class Texture {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
+	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int sampleType) {
 		int[] outWH = new int[2];
 		int[] data = getDataFromImage(img, invertColors, horizontalFlip, verticalFlip, outWH);
 		this.width = outWH[0];
@@ -87,8 +95,8 @@ public class Texture {
 
 		int result = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, result);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // magnification filter
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, sampleType);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, sampleType); // magnification filter
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
@@ -96,16 +104,24 @@ public class Texture {
 		return result;
 	}
 
+	public int load(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int sampleType) {
+		return this.load(FileUtils.loadImage(path), invertColors, horizontalFlip, verticalFlip, sampleType);
+	}
+
 	public int load(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
-		return this.load(FileUtils.loadImage(path), invertColors, horizontalFlip, verticalFlip);
+		return this.load(FileUtils.loadImage(path), invertColors, horizontalFlip, verticalFlip, GL_LINEAR);
 	}
 
 	public int load(String path, boolean invertColors, boolean horizontalFlip) {
-		return this.load(FileUtils.loadImage(path), invertColors, horizontalFlip, false);
+		return this.load(FileUtils.loadImage(path), invertColors, horizontalFlip, false, GL_LINEAR);
+	}
+
+	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
+		return this.load(img, invertColors, horizontalFlip, verticalFlip, GL_LINEAR);
 	}
 
 	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip) {
-		return this.load(img, invertColors, horizontalFlip, false);
+		return this.load(img, invertColors, horizontalFlip, false, GL_LINEAR);
 	}
 
 	public static int[] getDataFromImage(BufferedImage img, boolean invertColors, boolean horizontalFlip, int[] outWH) {
@@ -123,9 +139,9 @@ public class Texture {
 	public static int[] getDataFromImage(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int[] outWH) {
 		int[] pixels = null;
 		BufferedImage image = GraphicsTools.copyImage(img);
-		if(horizontalFlip)
+		if (horizontalFlip)
 			image = GraphicsTools.horizontalFlip(image);
-		if(verticalFlip)
+		if (verticalFlip)
 			image = GraphicsTools.verticalFlip(image);
 		int width = image.getWidth();
 		int height = image.getHeight();
@@ -141,7 +157,7 @@ public class Texture {
 			int g = (pixels[i] & 0xff00) >> 8;
 			int b = (pixels[i] & 0xff);
 
-			if(invertColors) {
+			if (invertColors) {
 				a = 255 - a;
 				r = 255 - r;
 				g = 255 - g;
@@ -159,14 +175,14 @@ public class Texture {
 	}
 
 	public void bind(int glTextureLocation) {
-		if(!bindingEnabled)
+		if (!bindingEnabled)
 			return;
 		glActiveTexture(glTextureLocation);
 		glBindTexture(GL_TEXTURE_2D, this.textureID);
 	}
 
 	public void unbind(int glTextureLocation) {
-		if(!bindingEnabled)
+		if (!bindingEnabled)
 			return;
 		glActiveTexture(glTextureLocation);
 		glBindTexture(GL_TEXTURE_2D, 0);

@@ -45,24 +45,25 @@ public class Ball extends Entity {
 		this.pos.addi(vel);
 
 		// resolve intersections by applying a force
-		ArrayList<Vec3> intersections = Model.sphereIntersect(this.scene, this.pos, this.radius);
+		ArrayList<Vec3[]> intersections = Model.sphereIntersect(this.scene, this.pos, this.radius);
 		Vec3 closestPoint = null;
 		float minDist = -1f;
-		for (Vec3 v : intersections) {
+		for (Vec3[] a : intersections) {
+			Vec3 v = a[0];
 			float dist = new Vec3(v, this.pos).length();
-			if(closestPoint == null || dist < minDist) {
+			if (closestPoint == null || dist < minDist) {
 				minDist = dist;
 				closestPoint = v;
 			}
 		}
 
-		if(closestPoint != null) {
+		if (closestPoint != null) {
 			Vec3 toCenter = new Vec3(closestPoint, pos);
 			Vec3 normToCenter = new Vec3(toCenter).normalize();
 			toCenter.setLength(radius - toCenter.length());
 			Vec3 impulse = this.vel.projectOnto(normToCenter);
 
-			if(this.vel.dot(impulse) > 0) {
+			if (this.vel.dot(impulse) > 0) {
 				this.vel.subi(impulse.mul(elasticity));
 				this.pos.addi(toCenter.muli(1f + epsilon));
 			}

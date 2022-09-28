@@ -8,10 +8,13 @@ import java.util.HashMap;
 import entity.Capsule;
 import entity.Entity;
 import graphics.Framebuffer;
+import graphics.Material;
+import graphics.TextureMaterial;
 import input.InputManager;
 import input.KeyboardInput;
 import main.Main;
 import model.AssetManager;
+import model.Decal;
 import model.Model;
 import player.Camera;
 import player.Player;
@@ -25,17 +28,18 @@ import server.GameServer;
 import util.Mat4;
 import util.NetworkingUtils;
 import util.Vec3;
+import util.Vec4;
 
 public class GameState extends State {
 
-	private static int WORLD_SCENE = 0;
+	private static final int WORLD_SCENE = 0;
 
 	private String ip;
 	private int port;
 
 	private boolean hosting;
 
-	private static Screen perspectiveScreen;
+	private static PerspectiveScreen perspectiveScreen;
 	private static Camera perspectiveCamera;
 
 	private Player player;
@@ -48,24 +52,32 @@ public class GameState extends State {
 
 	private long mapID;
 
+	private Model bloodDecal, bulletHoleDecal;
+
 	public GameState(StateManager sm, String ip, int port, boolean hosting) {
 		super(sm);
 		this.ip = ip;
 		this.port = port;
 		this.hosting = hosting;
 
-		if(this.hosting) {
+		if (this.hosting) {
 			this.ip = NetworkingUtils.getLocalIP();
 		}
 	}
 
 	@Override
 	public void load() {
-		if(perspectiveScreen == null) {
+		if (perspectiveScreen == null) {
 			perspectiveCamera = new Camera(Main.FOV, Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
 			perspectiveScreen = new PerspectiveScreen();
 			perspectiveScreen.setCamera(perspectiveCamera);
 		}
+
+		this.bloodDecal = new Decal();
+		this.bloodDecal.setTextureMaterial(new TextureMaterial(AssetManager.getTexture("blood_splatter_texture")));
+
+		this.bulletHoleDecal = new Decal();
+		this.bulletHoleDecal.setTextureMaterial(new TextureMaterial(AssetManager.getTexture("bullet_hole_texture")));
 
 		Main.lockCursor();
 		InputManager.removeAllInputs();
@@ -84,12 +96,12 @@ public class GameState extends State {
 		this.client = new GameClient();
 		this.otherPlayers = new HashMap<>();
 
-		if(this.hosting) {
+		if (this.hosting) {
 			this.startHosting();
 		}
 
 		for (int i = 0; i < 3; i++) {
-			if(this.connect()) {
+			if (this.connect()) {
 				break;
 			}
 		}
@@ -100,7 +112,7 @@ public class GameState extends State {
 	}
 
 	private void stopHosting() {
-		if(this.server == null) {
+		if (this.server == null) {
 			return;
 		}
 		this.server.exit();
@@ -119,11 +131,11 @@ public class GameState extends State {
 		// -- NETWORKING --
 
 		// check for disconnected host
-		if(!this.client.isConnected()) {
-			if(this.server != null && this.server.isRunning()) {
+		if (!this.client.isConnected()) {
+			if (this.server != null && this.server.isRunning()) {
 				this.server.exit();
 			}
-			if(this.client.isRunning()) {
+			if (this.client.isRunning()) {
 				this.client.exit();
 			}
 
@@ -134,7 +146,7 @@ public class GameState extends State {
 		HashMap<Integer, Vec3> otherPlayerPositions = this.client.getOtherPlayerPositions();
 		for (int ID : otherPlayerPositions.keySet()) {
 			Vec3 pos = otherPlayerPositions.get(ID);
-			if(!this.otherPlayers.keySet().contains(ID)) {
+			if (!this.otherPlayers.keySet().contains(ID)) {
 				this.otherPlayers.put(ID, new Capsule(pos, new Vec3(0), 0.33f, 1f, WORLD_SCENE));
 			}
 			Capsule c = this.otherPlayers.get(ID);
@@ -156,7 +168,7 @@ public class GameState extends State {
 		this.client.setPos(this.player.pos);
 
 		// input
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_M)) {
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_M)) {
 			this.disconnect();
 			this.stopHosting();
 			this.sm.switchState(new MainMenuState(this.sm));
@@ -165,6 +177,7 @@ public class GameState extends State {
 
 	@Override
 	public void render(Framebuffer outputBuffer) {
+		perspectiveScreen.renderSkybox(true);
 		perspectiveScreen.render(outputBuffer, WORLD_SCENE);
 	}
 
@@ -177,21 +190,41 @@ public class GameState extends State {
 	@Override
 	public void mousePressed(int button) {
 		// shoot ray in direction of camera
-//		Vec3 ray_origin = perspectiveCamera.getPos();
-//		Vec3 ray_dir = perspectiveCamera.getFacing();
-//		ArrayList<Vec3> intersect = Model.rayIntersect(WORLD_SCENE, ray_origin, ray_dir);
-//		if(intersect.size() != 0) {
-//			float minDist = 0f;
-//			Vec3 minVec = null;
-//			for(Vec3 v : intersect) {
-//				float dist = v.sub(ray_origin).length();
-//				if(dist < minDist || minVec == null) {
-//					minDist = dist;
-//					minVec = v;
-//				}
-//			}
-//			Model.addInstance(AssetManager.getModel("sphere"), Mat4.scale(0.1f).mul(Mat4.translate(minVec)), WORLD_SCENE);
-//		}
+		Vec3 ray_origin = perspectiveCamera.getPos();
+		Vec3 ray_dir = perspectiveCamera.getFacing();
+		ArrayList<Vec3[]> intersect = Model.rayIntersect(WORLD_SCENE, ray_origin, ray_dir);
+		if (intersect.size() != 0) {
+			float minDist = 0f;
+			Vec3 minVec = null;
+			Vec3 normal = null;
+			Vec3 t0 = null;
+			for (Vec3[] a : intersect) {
+				Vec3 v = a[0];
+				float dist = v.sub(ray_origin).length();
+				if (dist < minDist || minVec == null) {
+					minDist = dist;
+					minVec = v;
+					normal = a[1];
+					t0 = a[2];
+				}
+			}
+
+			float yRot = (float) (Math.atan2(normal.z, normal.x) - Math.PI / 2f);
+			normal.rotateY(-yRot);
+			float xRot = (float) (Math.atan2(normal.y, normal.z));
+			normal.rotateX(-xRot);
+
+			System.out.println(normal);
+
+			Mat4 modelMat4 = Mat4.scale((float) (Math.random() * 1f + 0.5f));
+			modelMat4.muli(Mat4.translate(new Vec3(0, 0, 0.001f)));
+			modelMat4.muli(Mat4.rotateZ((float) (Math.random() * Math.PI * 2f)));
+			modelMat4.muli(Mat4.rotateX(xRot));
+			modelMat4.muli(Mat4.rotateY(yRot));
+			modelMat4.muli(Mat4.translate(minVec));
+			long id = Model.addInstance(this.bloodDecal, modelMat4, WORLD_SCENE);
+			Model.updateInstance(id, new Material(new Vec4(1), new Vec4(0.7f), 64f));
+		}
 
 //		Vec3 cam_pos = new Vec3(perspectiveCamera.getPos());
 //		Vec3 cam_dir = new Vec3(perspectiveCamera.getFacing());

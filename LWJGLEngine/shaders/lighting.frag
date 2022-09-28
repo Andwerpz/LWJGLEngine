@@ -58,6 +58,7 @@ void main()
 	vec3 fragPos = texture(tex_position, frag_uv).rgb;
 	float fragDepth = texture(tex_position, frag_uv).a;
 	vec3 fragColor = texture(tex_diffuse, frag_uv).rgb;
+	float fragAlpha = texture(tex_diffuse, frag_uv).a;
 	float fragShininess = texture(tex_specular, frag_uv).a;
 	vec3 fragSpec = texture(tex_specular, frag_uv).rgb;
 	vec3 normal = texture(tex_normal, frag_uv).rgb;
@@ -185,7 +186,7 @@ void main()
     vec3 diffuseColor  = light.color * fragColor * diffuse;
     vec3 specularColor = light.color * specular;
     
-	lColor = vec4(ambientColor + (diffuseColor + specularColor) * (1 - shadow), 1.0);
+	lColor = vec4(ambientColor + (diffuseColor + specularColor) * (1 - shadow), fragAlpha);
 	//lColor = vec4(vec3(fragShininess), 1);
 	lBrightness = vec4(vec3(ambient + diffuse + specular), 1);
     

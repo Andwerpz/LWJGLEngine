@@ -36,8 +36,7 @@ public class MathUtils {
 	}
 
 	/**
-	 * Calculates the distance between two 2D points. You can also do this by
-	 * defining a vector between the two points, and querying the length.
+	 * Calculates the distance between two 2D points. You can also do this by defining a vector between the two points, and querying the length.
 	 * 
 	 * @param x1
 	 * @param y1
@@ -52,8 +51,21 @@ public class MathUtils {
 	// -- LINEAR ALGEBRA --
 
 	/**
-	 * Takes in two line segments, and returns the point of intersection, if it
-	 * exists. Null otherwise.
+	 * Calculates the normal of a triangle given the three points.
+	 * 
+	 * @param t0
+	 * @param t1
+	 * @param t2
+	 * @return
+	 */
+	public static Vec3 computeTriangleNormal(Vec3 t0, Vec3 t1, Vec3 t2) {
+		Vec3 d0 = new Vec3(t0, t1);
+		Vec3 d1 = new Vec3(t0, t2);
+		return d0.cross(d1).normalize();
+	}
+
+	/**
+	 * Takes in two line segments, and returns the point of intersection, if it exists. Null otherwise.
 	 * 
 	 * @param a0
 	 * @param a1
@@ -77,7 +89,7 @@ public class MathUtils {
 		float uB = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
 
 		// if uA and uB are between 0-1, lines are colliding
-		if(uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1) {
+		if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1) {
 			// calculate the intersection point
 			float intersectionX = x1 + (uA * (x2 - x1));
 			float intersectionY = y1 + (uA * (y2 - y1));
@@ -99,12 +111,12 @@ public class MathUtils {
 	public static Vec3 ray_planeIntersect(Vec3 ray_origin, Vec3 ray_dir, Vec3 plane_origin, Vec3 plane_normal) {
 		float ray_dirStepRatio = plane_normal.dot(ray_dir); // for each step in ray_dir, you go ray_dirStepRatio steps
 		// in plane_normal
-		if(ray_dirStepRatio == 0) {
+		if (ray_dirStepRatio == 0) {
 			// ray is parallel to plane, no intersection
 			return null;
 		}
 		float t = plane_origin.sub(ray_origin).dot(plane_normal) / ray_dirStepRatio;
-		if(t < 0) {
+		if (t < 0) {
 			// the plane intersection is behind the ray origin
 			return null;
 		}
@@ -123,7 +135,7 @@ public class MathUtils {
 	public static Vec3 line_planeIntersect(Vec3 line_origin, Vec3 line_dir, Vec3 plane_origin, Vec3 plane_normal) {
 		float line_dirStepRatio = plane_normal.dot(line_dir); // for each step in line_dir, you go line_dirStepRatio
 		// steps in plane_normal
-		if(line_dirStepRatio == 0) {
+		if (line_dirStepRatio == 0) {
 			// line is parallel to plane, no intersection
 			return null;
 		}
@@ -159,9 +171,7 @@ public class MathUtils {
 	}
 
 	/**
-	 * Take in a point and a line segment, and if the projection of the point onto
-	 * the line is within the segment, returns the point projected onto the line,
-	 * else returns null.
+	 * Take in a point and a line segment, and if the projection of the point onto the line is within the segment, returns the point projected onto the line, else returns null.
 	 * 
 	 * @param point
 	 * @param line_a
@@ -172,16 +182,14 @@ public class MathUtils {
 		Vec3 line_ab = new Vec3(line_a, line_b);
 		Vec3 lineToPoint = new Vec3(line_a, point);
 		float mul = lineToPoint.dot(line_ab) / line_ab.dot(line_ab);
-		if(mul < 0 || mul > 1) {
+		if (mul < 0 || mul > 1) {
 			return null;
 		}
 		return line_a.add(line_ab.mul(mul));
 	}
 
 	/**
-	 * Take in a point and a line segment, and if the projection of the point onto
-	 * the line is within the segment, returns the point projected onto the line,
-	 * else clamps the point to the line segment, and returns the clamped point.
+	 * Take in a point and a line segment, and if the projection of the point onto the line is within the segment, returns the point projected onto the line, else clamps the point to the line segment, and returns the clamped point.
 	 * 
 	 * @param point
 	 * @param line_a
@@ -215,7 +223,7 @@ public class MathUtils {
 		Vec3 plane_normal = d0.cross(d1).normalize();
 
 		Vec3 plane_intersect = ray_planeIntersect(ray_origin, ray_dir, plane_origin, plane_normal);
-		if(plane_intersect == null) {
+		if (plane_intersect == null) {
 			// if it doesn't intersect the plane, then theres no way it intersects the
 			// triangle.
 			return null;
@@ -227,7 +235,7 @@ public class MathUtils {
 		Vec3 n1 = d1.cross(plane_normal);
 		Vec3 n2 = d2.cross(plane_normal);
 
-		if(n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
+		if (n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
 			// intersection point is outside of the triangle.
 			return null;
 		}
@@ -254,7 +262,7 @@ public class MathUtils {
 		Vec3 plane_normal = d0.cross(d1).normalize();
 
 		Vec3 plane_intersect = line_planeIntersect(line_origin, line_dir, plane_origin, plane_normal);
-		if(plane_intersect == null) {
+		if (plane_intersect == null) {
 			// if it doesn't intersect the plane, then theres no way it intersects the
 			// triangle.
 			return null;
@@ -266,7 +274,7 @@ public class MathUtils {
 		Vec3 n1 = d1.cross(plane_normal);
 		Vec3 n2 = d2.cross(plane_normal);
 
-		if(n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
+		if (n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
 			// intersection point is outside of the triangle.
 			return null;
 		}
@@ -275,8 +283,7 @@ public class MathUtils {
 	}
 
 	/**
-	 * Take in a sphere and a triangle, and returns the point on the triangle, p,
-	 * where dist(p, sphere_origin) is minimal.
+	 * Take in a sphere and a triangle, and returns the point on the triangle, p, where dist(p, sphere_origin) is minimal.
 	 * 
 	 * @param sphere_origin
 	 * @param sphere_radius
@@ -295,7 +302,7 @@ public class MathUtils {
 
 		// first check if the sphere intersects the plane the triangle defines
 		Vec3 plane_intersect = line_planeIntersect(sphere_origin, plane_normal, plane_origin, plane_normal);
-		if(new Vec3(plane_intersect, sphere_origin).length() > sphere_radius) {
+		if (new Vec3(plane_intersect, sphere_origin).length() > sphere_radius) {
 			// sphere doesn't intersect the plane
 			return null;
 		}
@@ -304,8 +311,8 @@ public class MathUtils {
 		// If true, it means that the intersection point isn't a corner or edge of the
 		// triangle.
 		Vec3 triangle_intersect = line_triangleIntersect(sphere_origin, plane_normal, t0, t1, t2);
-		if(triangle_intersect != null) {
-			if(new Vec3(triangle_intersect, sphere_origin).length() < sphere_radius) {
+		if (triangle_intersect != null) {
+			if (new Vec3(triangle_intersect, sphere_origin).length() < sphere_radius) {
 				return triangle_intersect;
 			}
 			return null;
@@ -319,28 +326,28 @@ public class MathUtils {
 		Vec3 s0_p = point_lineSegmentProjectClamped(sphere_origin, t0, t1);
 		Vec3 s1_p = point_lineSegmentProjectClamped(sphere_origin, t1, t2);
 		Vec3 s2_p = point_lineSegmentProjectClamped(sphere_origin, t2, t0);
-		if(s0_p != null) {
+		if (s0_p != null) {
 			float dist = new Vec3(s0_p, sphere_origin).length();
-			if(minS_p == null || dist < minDist) {
+			if (minS_p == null || dist < minDist) {
 				minS_p = s0_p;
 				minDist = dist;
 			}
 		}
-		if(s1_p != null) {
+		if (s1_p != null) {
 			float dist = new Vec3(s1_p, sphere_origin).length();
-			if(minS_p == null || dist < minDist) {
+			if (minS_p == null || dist < minDist) {
 				minS_p = s1_p;
 				minDist = dist;
 			}
 		}
-		if(s2_p != null) {
+		if (s2_p != null) {
 			float dist = new Vec3(s2_p, sphere_origin).length();
-			if(minS_p == null || dist < minDist) {
+			if (minS_p == null || dist < minDist) {
 				minS_p = s2_p;
 				minDist = dist;
 			}
 		}
-		if(minS_p != null && minDist < sphere_radius) {
+		if (minS_p != null && minDist < sphere_radius) {
 			return minS_p;
 		}
 
@@ -349,9 +356,7 @@ public class MathUtils {
 	}
 
 	/**
-	 * Takes a capsule and a triangle, and determines the point on the triangle, p,
-	 * where dist(p, c) is minimal. Point c is a point in the capsule bound to the
-	 * line segment defined by capsule_top and capsule_bottom.
+	 * Takes a capsule and a triangle, and determines the point on the triangle, p, where dist(p, c) is minimal. Point c is a point in the capsule bound to the line segment defined by capsule_top and capsule_bottom.
 	 * 
 	 * @param capsule_top
 	 * @param capsule_bottom
@@ -378,11 +383,10 @@ public class MathUtils {
 
 		Vec3 referencePoint = new Vec3(0);
 		Vec3 plane_intersect = line_planeIntersect(capsule_bottom, capsule_tangent, t0, plane_normal);
-		if(plane_intersect == null) {
+		if (plane_intersect == null) {
 			// capsule_tangent is parallel to the plane, plane_intersect doesn't exist.
 			referencePoint = new Vec3(t0);
-		}
-		else if(n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
+		} else if (n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
 			// plane_intersect point is outside of the triangle.
 			// find closest point to plane_intersect that is on the triangle.
 			Vec3 minS_p = null;
@@ -392,26 +396,25 @@ public class MathUtils {
 			Vec3 s2_p = point_lineSegmentProjectClamped(plane_intersect, t2, t0);
 
 			float dist = new Vec3(s0_p, plane_intersect).length();
-			if(minS_p == null || dist < minDist) {
+			if (minS_p == null || dist < minDist) {
 				minS_p = s0_p;
 				minDist = dist;
 			}
 
 			dist = new Vec3(s1_p, plane_intersect).length();
-			if(minS_p == null || dist < minDist) {
+			if (minS_p == null || dist < minDist) {
 				minS_p = s1_p;
 				minDist = dist;
 			}
 
 			dist = new Vec3(s2_p, plane_intersect).length();
-			if(minS_p == null || dist < minDist) {
+			if (minS_p == null || dist < minDist) {
 				minS_p = s2_p;
 				minDist = dist;
 			}
 
 			referencePoint = minS_p;
-		}
-		else {
+		} else {
 			// plane intersection is inside the triangle
 			referencePoint = plane_intersect;
 		}
@@ -421,8 +424,7 @@ public class MathUtils {
 	}
 
 	/**
-	 * Takes a line and two points, and returns true if the two points are on the
-	 * same side of the line.
+	 * Takes a line and two points, and returns true if the two points are on the same side of the line.
 	 * 
 	 * @param lineP
 	 * @param lineVec
@@ -448,10 +450,10 @@ public class MathUtils {
 		// same side of the line
 		Vec2 v1 = new Vec2(p1);
 		Vec2 v2 = new Vec2(p2);
-		float d1 = (float) perpendicular.dot(v1);
-		float d2 = (float) perpendicular.dot(v2);
+		float d1 = perpendicular.dot(v1);
+		float d2 = perpendicular.dot(v2);
 
-		if(d1 * d2 >= 0) {
+		if (d1 * d2 >= 0) {
 			return true;
 		}
 
@@ -460,8 +462,7 @@ public class MathUtils {
 	}
 
 	/**
-	 * Assuming that the points are arranged in a convex hull, it calculates the
-	 * centroid of the points.
+	 * Assuming that the points are arranged in a convex hull, it calculates the centroid of the points.
 	 * 
 	 * @param points
 	 * @return
@@ -478,7 +479,7 @@ public class MathUtils {
 			centerY += (points.get(i).y + points.get(j).y) * temp;
 		}
 
-		if(Math.abs(accumulatedArea) < 1E-7f) {
+		if (Math.abs(accumulatedArea) < 1E-7f) {
 			return new Vec2(0, 0);
 		}
 
@@ -547,13 +548,13 @@ public class MathUtils {
 	 * @return
 	 */
 	public static double irwinHallDistribution(double x) {
-		if(-2 < x && x < -1) {
+		if (-2 < x && x < -1) {
 			return 0.25 * Math.pow(x + 2, 3);
 		}
-		if(-1 < x && x < 1) {
+		if (-1 < x && x < 1) {
 			return 0.25 * (Math.pow(Math.abs(x), 3) * 3 - Math.pow(x, 2) * 6 + 4);
 		}
-		if(1 < x && x < 2) {
+		if (1 < x && x < 2) {
 			return 0.25 * Math.pow(2 - x, 3);
 		}
 		return 0;

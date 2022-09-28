@@ -81,7 +81,7 @@ void main()
 	mat3 invTBN = transpose(TBN);
 
 	//parallax mapping done in tangent space
-	vec3 tangentViewPos = TBN * view_pos;
+	vec3 tangentViewPos = TBN * view_pos;	
 	vec3 tangentFragPos = TBN * frag_pos;
 
 	//offset texture coordinates with parallax mapping
@@ -97,7 +97,7 @@ void main()
 	normal = normal * 2.0 - 1.0;
 	normal = normalize(invTBN * normal);	//transform normal into world space
 	
-	if(fragColor.w == 0){	//alpha = 0
+	if(fragColor.w < 0.1){	//alpha = 0
     	discard;
     }
 	

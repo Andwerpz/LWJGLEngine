@@ -68,7 +68,7 @@ public class Capsule extends Entity {
 
 	@Override
 	public void update() {
-		if(this.noUpdate) {
+		if (this.noUpdate) {
 			return;
 		}
 
@@ -83,8 +83,9 @@ public class Capsule extends Entity {
 		Vec3 capsule_topSphere = pos.add(new Vec3(0, height - radius, 0));
 
 		// resolve intersections by applying a force to each one
-		ArrayList<Vec3> intersections = Model.capsuleIntersect(scene, capsule_bottom, capsule_top, radius);
-		for (Vec3 v : intersections) {
+		ArrayList<Vec3[]> intersections = Model.capsuleIntersect(scene, capsule_bottom, capsule_top, radius);
+		for (Vec3[] a : intersections) {
+			Vec3 v = a[0];
 			Vec3 capsule_c = MathUtils.point_lineSegmentProjectClamped(v, capsule_bottomSphere, capsule_topSphere); // closest
 			// point
 			// on
@@ -96,7 +97,7 @@ public class Capsule extends Entity {
 			toCenter.setLength(radius - toCenter.length());
 			Vec3 impulse = this.vel.projectOnto(normToCenter).mul(-1f);
 
-			if(this.vel.dot(toCenter) < 0) {
+			if (this.vel.dot(toCenter) < 0) {
 				this.vel.addi(impulse);
 				this.pos.addi(toCenter.mul(1f + epsilon));
 			}

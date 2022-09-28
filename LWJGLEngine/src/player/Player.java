@@ -53,6 +53,7 @@ public class Player extends Entity {
 		mouse = MouseInput.getMousePos();
 	}
 
+	@Override
 	protected void _kill() {
 	};
 
@@ -65,7 +66,7 @@ public class Player extends Entity {
 		camXRot += Math.toRadians(delta.y / 10f);
 		mouse = nextMouse;
 
-		camXRot = (float) MathUtils.clamp((float) -(Math.PI - 0.01) / 2f, (float) (Math.PI - 0.01) / 2f, camXRot);
+		camXRot = MathUtils.clamp((float) -(Math.PI - 0.01) / 2f, (float) (Math.PI - 0.01) / 2f, camXRot);
 
 		// TRANSLATION
 		move();
@@ -82,12 +83,11 @@ public class Player extends Entity {
 
 	private void move() {
 		// -- UPDATE POSITON --
-		if(onGround) {
+		if (onGround) {
 			this.vel.x *= groundFriction;
 			this.vel.z *= groundFriction;
 			this.vel.y *= airFriction;
-		}
-		else {
+		} else {
 			this.vel.mul(airFriction);
 		}
 		this.pos.addi(vel);
@@ -95,7 +95,7 @@ public class Player extends Entity {
 		this.groundCheck();
 
 		// -- GRAVITY --
-		if(!onGround) {
+		if (!onGround) {
 			this.vel.addi(new Vec3(0, -gravity, 0));
 		}
 		resolveCollisions();
@@ -108,25 +108,25 @@ public class Player extends Entity {
 
 		Vec3 inputAccel = new Vec3(0);
 
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_W)) {
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_W)) {
 			inputAccel.addi(forward);
 		}
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_S)) {
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_S)) {
 			inputAccel.subi(forward);
 		}
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_D)) {
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_D)) {
 			inputAccel.subi(right);
 		}
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_A)) {
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_A)) {
 			inputAccel.addi(right);
 		}
-		if(onGround) {
+		if (onGround) {
 			Vec3 groundCorrection = inputAccel.projectOnto(groundNormal);
 			inputAccel.addi(groundCorrection);
 		}
 		inputAccel.setLength(this.onGround ? groundMoveSpeed : airMoveSpeed);
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_SPACE)) {
-			if(onGround) {
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_SPACE)) {
+			if (onGround) {
 				this.vel.y = jumpVel;
 				this.vel.x *= groundFriction;
 				this.vel.y *= groundFriction;
@@ -141,11 +141,12 @@ public class Player extends Entity {
 		onGround = false;
 		groundNormal = new Vec3(0);
 		Vec3 capsule_bottomSphere = pos.add(new Vec3(0, radius, 0));
-		ArrayList<Vec3> intersections = Model.sphereIntersect(scene, capsule_bottomSphere, this.radius + epsilon);
-		for (Vec3 v : intersections) {
+		ArrayList<Vec3[]> intersections = Model.sphereIntersect(scene, capsule_bottomSphere, this.radius + epsilon);
+		for (Vec3[] a : intersections) {
+			Vec3 v = a[0];
 			Vec3 toCenter = new Vec3(v, capsule_bottomSphere);
 			toCenter.normalize();
-			if(toCenter.dot(new Vec3(0, 1, 0)) > 0.5) {
+			if (toCenter.dot(new Vec3(0, 1, 0)) > 0.5) {
 				groundNormal.addi(toCenter.normalize());
 				onGround = true;
 			}
@@ -161,8 +162,9 @@ public class Player extends Entity {
 		Vec3 capsule_topSphere = pos.add(new Vec3(0, height - radius, 0));
 
 		// resolve intersections by applying a force to each one
-		ArrayList<Vec3> intersections = Model.capsuleIntersect(scene, capsule_bottom, capsule_top, radius - 0.01f);
-		for (Vec3 v : intersections) {
+		ArrayList<Vec3[]> intersections = Model.capsuleIntersect(scene, capsule_bottom, capsule_top, radius - 0.01f);
+		for (Vec3[] a : intersections) {
+			Vec3 v = a[0];
 			Vec3 capsule_c = MathUtils.point_lineSegmentProjectClamped(v, capsule_bottomSphere, capsule_topSphere); // closest
 			// point
 			// on
@@ -174,7 +176,7 @@ public class Player extends Entity {
 			toCenter.setLength(radius - toCenter.length());
 			Vec3 impulse = this.vel.projectOnto(normToCenter).mul(-1f);
 
-			if(this.vel.dot(toCenter) < 0) {
+			if (this.vel.dot(toCenter) < 0) {
 				this.vel.addi(impulse);
 				this.pos.addi(toCenter.mul(1f + epsilon));
 			}
@@ -184,65 +186,26 @@ public class Player extends Entity {
 	// WIP
 	// assumes that objects in the world are arranged in a gridlike fashion
 	/*
-	 * public void move_grid() { this.vel.x *= friction; this.vel.z *= friction;
-	 * this.vel.y -= gravity;
+	 * public void move_grid() { this.vel.x *= friction; this.vel.z *= friction; this.vel.y -= gravity;
 	 * 
 	 * this.pos = nextPos_grid(); }
 	 * 
-	 * public Vec3 nextPos_grid() { Hitbox h = this.getHitbox(); Vec3 nextPos = new
-	 * Vec3(this.pos);
+	 * public Vec3 nextPos_grid() { Hitbox h = this.getHitbox(); Vec3 nextPos = new Vec3(this.pos);
 	 * 
-	 * //north / south movement nextPos.z += vel.z; if(vel.z < 0) { boolean
-	 * collision = false; for(int x = (int) Math.floor(nextPos.x); x <= (int)
-	 * Math.floor(nextPos.x + h.getWidth()); x++) { for(int y = (int)
-	 * Math.floor(nextPos.y); y <= (int) Math.floor(nextPos.y + h.getHeight()); y++)
-	 * { for(int z = (int) Math.floor(nextPos.z); z <= (int) Math.floor(nextPos.z +
-	 * h.getDepth()); z++) { Block b = World.getBlock(x, y, z);
-	 * if(b.collision(nextPos, h)) { collision = true; nextPos.z =
-	 * Math.max(nextPos.z, b.getHitbox().max.z + z + cushion); } } } } if(collision)
-	 * { vel.z = 0; } } else if(vel.z > 0) { boolean collision = false; for(int x =
-	 * (int) Math.floor(nextPos.x); x <= (int) Math.floor(nextPos.x + h.getWidth());
-	 * x++) { for(int y = (int) Math.floor(nextPos.y); y <= (int)
-	 * Math.floor(nextPos.y + h.getHeight()); y++) { for(int z = (int)
-	 * Math.floor(nextPos.z); z <= (int) Math.floor(nextPos.z + h.getDepth()); z++)
-	 * { Block b = World.getBlock(x, y, z); if(b.collision(nextPos, h)) { collision
-	 * = true; nextPos.z = Math.min(nextPos.z, b.getHitbox().min.z + z -
-	 * h.getDepth() - cushion); } } } } if(collision) { vel.z = 0; } }
+	 * //north / south movement nextPos.z += vel.z; if(vel.z < 0) { boolean collision = false; for(int x = (int) Math.floor(nextPos.x); x <= (int) Math.floor(nextPos.x + h.getWidth()); x++) { for(int y = (int) Math.floor(nextPos.y); y <= (int) Math.floor(nextPos.y + h.getHeight()); y++) { for(int z
+	 * = (int) Math.floor(nextPos.z); z <= (int) Math.floor(nextPos.z + h.getDepth()); z++) { Block b = World.getBlock(x, y, z); if(b.collision(nextPos, h)) { collision = true; nextPos.z = Math.max(nextPos.z, b.getHitbox().max.z + z + cushion); } } } } if(collision) { vel.z = 0; } } else if(vel.z >
+	 * 0) { boolean collision = false; for(int x = (int) Math.floor(nextPos.x); x <= (int) Math.floor(nextPos.x + h.getWidth()); x++) { for(int y = (int) Math.floor(nextPos.y); y <= (int) Math.floor(nextPos.y + h.getHeight()); y++) { for(int z = (int) Math.floor(nextPos.z); z <= (int)
+	 * Math.floor(nextPos.z + h.getDepth()); z++) { Block b = World.getBlock(x, y, z); if(b.collision(nextPos, h)) { collision = true; nextPos.z = Math.min(nextPos.z, b.getHitbox().min.z + z - h.getDepth() - cushion); } } } } if(collision) { vel.z = 0; } }
 	 * 
-	 * //east / west movement nextPos.x += vel.x; if(vel.x < 0) { boolean collision
-	 * = false; for(int x = (int) Math.floor(nextPos.x); x <= (int)
-	 * Math.floor(nextPos.x + h.getWidth()); x++) { for(int y = (int)
-	 * Math.floor(nextPos.y); y <= (int) Math.floor(nextPos.y + h.getHeight()); y++)
-	 * { for(int z = (int) Math.floor(nextPos.z); z <= (int) Math.floor(nextPos.z +
-	 * h.getDepth()); z++) { Block b = World.getBlock(x, y, z);
-	 * if(b.collision(nextPos, h)) { collision = true; nextPos.x =
-	 * Math.max(nextPos.x, b.getHitbox().max.x + x + cushion); } } } } if(collision)
-	 * { vel.x = 0; } } else if(vel.x > 0) { boolean collision = false; for(int x =
-	 * (int) Math.floor(nextPos.x); x <= (int) Math.floor(nextPos.x + h.getWidth());
-	 * x++) { for(int y = (int) Math.floor(nextPos.y); y <= (int)
-	 * Math.floor(nextPos.y + h.getHeight()); y++) { for(int z = (int)
-	 * Math.floor(nextPos.z); z <= (int) Math.floor(nextPos.z + h.getDepth()); z++)
-	 * { Block b = World.getBlock(x, y, z); if(b.collision(nextPos, h)) { collision
-	 * = true; nextPos.x = Math.min(nextPos.x, b.getHitbox().min.x + x -
-	 * h.getWidth() - cushion); } } } } if(collision) { vel.x = 0; } }
+	 * //east / west movement nextPos.x += vel.x; if(vel.x < 0) { boolean collision = false; for(int x = (int) Math.floor(nextPos.x); x <= (int) Math.floor(nextPos.x + h.getWidth()); x++) { for(int y = (int) Math.floor(nextPos.y); y <= (int) Math.floor(nextPos.y + h.getHeight()); y++) { for(int z =
+	 * (int) Math.floor(nextPos.z); z <= (int) Math.floor(nextPos.z + h.getDepth()); z++) { Block b = World.getBlock(x, y, z); if(b.collision(nextPos, h)) { collision = true; nextPos.x = Math.max(nextPos.x, b.getHitbox().max.x + x + cushion); } } } } if(collision) { vel.x = 0; } } else if(vel.x > 0)
+	 * { boolean collision = false; for(int x = (int) Math.floor(nextPos.x); x <= (int) Math.floor(nextPos.x + h.getWidth()); x++) { for(int y = (int) Math.floor(nextPos.y); y <= (int) Math.floor(nextPos.y + h.getHeight()); y++) { for(int z = (int) Math.floor(nextPos.z); z <= (int)
+	 * Math.floor(nextPos.z + h.getDepth()); z++) { Block b = World.getBlock(x, y, z); if(b.collision(nextPos, h)) { collision = true; nextPos.x = Math.min(nextPos.x, b.getHitbox().min.x + x - h.getWidth() - cushion); } } } } if(collision) { vel.x = 0; } }
 	 * 
-	 * //up / down movement nextPos.y += vel.y; if(vel.y < 0) { boolean collision =
-	 * false; for(int x = (int) Math.floor(nextPos.x); x <= (int)
-	 * Math.floor(nextPos.x + h.getWidth()); x++) { for(int y = (int)
-	 * Math.floor(nextPos.y); y <= (int) Math.floor(nextPos.y + h.getHeight()); y++)
-	 * { for(int z = (int) Math.floor(nextPos.z); z <= (int) Math.floor(nextPos.z +
-	 * h.getDepth()); z++) { Block b = World.getBlock(x, y, z);
-	 * if(b.collision(nextPos, h)) { collision = true; nextPos.y =
-	 * Math.max(nextPos.y, b.getHitbox().max.y + y + cushion); } } } } if(collision)
-	 * { onGround = true; vel.y = 0; } } else if(vel.y > 0) { onGround = false;
-	 * boolean collision = false; for(int x = (int) Math.floor(nextPos.x); x <=
-	 * (int) Math.floor(nextPos.x + h.getWidth()); x++) { for(int y = (int)
-	 * Math.floor(nextPos.y); y <= (int) Math.floor(nextPos.y + h.getHeight()); y++)
-	 * { for(int z = (int) Math.floor(nextPos.z); z <= (int) Math.floor(nextPos.z +
-	 * h.getDepth()); z++) { Block b = World.getBlock(x, y, z);
-	 * if(b.collision(nextPos, h)) { collision = true; nextPos.y =
-	 * Math.min(nextPos.y, b.getHitbox().min.y + y - h.getHeight() - cushion); } } }
-	 * } if(collision) { vel.y = 0; } } }
+	 * //up / down movement nextPos.y += vel.y; if(vel.y < 0) { boolean collision = false; for(int x = (int) Math.floor(nextPos.x); x <= (int) Math.floor(nextPos.x + h.getWidth()); x++) { for(int y = (int) Math.floor(nextPos.y); y <= (int) Math.floor(nextPos.y + h.getHeight()); y++) { for(int z =
+	 * (int) Math.floor(nextPos.z); z <= (int) Math.floor(nextPos.z + h.getDepth()); z++) { Block b = World.getBlock(x, y, z); if(b.collision(nextPos, h)) { collision = true; nextPos.y = Math.max(nextPos.y, b.getHitbox().max.y + y + cushion); } } } } if(collision) { onGround = true; vel.y = 0; } }
+	 * else if(vel.y > 0) { onGround = false; boolean collision = false; for(int x = (int) Math.floor(nextPos.x); x <= (int) Math.floor(nextPos.x + h.getWidth()); x++) { for(int y = (int) Math.floor(nextPos.y); y <= (int) Math.floor(nextPos.y + h.getHeight()); y++) { for(int z = (int)
+	 * Math.floor(nextPos.z); z <= (int) Math.floor(nextPos.z + h.getDepth()); z++) { Block b = World.getBlock(x, y, z); if(b.collision(nextPos, h)) { collision = true; nextPos.y = Math.min(nextPos.y, b.getHitbox().min.y + y - h.getHeight() - cushion); } } } } if(collision) { vel.y = 0; } } }
 	 */
 
 }
