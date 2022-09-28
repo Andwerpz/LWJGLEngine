@@ -14,6 +14,8 @@ import model.Model;
 public class UIScreen extends Screen {
 	// higher values of z will go over lower values.
 	// colorID will go in reverse values.
+	
+	private int ui_scene;
 
 	private Framebuffer geometryBuffer;
 
@@ -41,6 +43,10 @@ public class UIScreen extends Screen {
 		this.geometryBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
 		this.geometryBuffer.isComplete();
 	}
+	
+	public void setUIScene(int scene) {
+		this.ui_scene = scene;
+	}
 
 	public long getEntityIDAtMouse() {
 		long modelInstanceID = Model.convertRGBToID(geometryBuffer.sampleColorAtPoint((int) MouseInput.getMousePos().x, (int) MouseInput.getMousePos().y, GL_COLOR_ATTACHMENT4));
@@ -49,7 +55,7 @@ public class UIScreen extends Screen {
 	}
 
 	@Override
-	public void render(Framebuffer outputBuffer, int scene) {
+	public void render(Framebuffer outputBuffer) {
 		// -- RENDER UI --
 		this.geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
@@ -63,7 +69,7 @@ public class UIScreen extends Screen {
 		Shader.GEOMETRY.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
 		Shader.GEOMETRY.setUniformMat4("vw_matrix", camera.getViewMatrix());
 		Shader.GEOMETRY.setUniform3f("view_pos", camera.getPos());
-		Model.renderModels(scene);
+		Model.renderModels(this.ui_scene);
 
 		// -- RENDER TO OUTPUT --
 		outputBuffer.bind();
@@ -91,7 +97,7 @@ public class UIScreen extends Screen {
 		Shader.GEOMETRY.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
 		Shader.GEOMETRY.setUniformMat4("vw_matrix", camera.getViewMatrix());
 		Shader.GEOMETRY.setUniform3f("view_pos", camera.getPos());
-		Model.renderModels(scene);
+		Model.renderModels(this.ui_scene);
 
 	}
 

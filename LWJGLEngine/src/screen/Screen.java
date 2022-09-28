@@ -15,10 +15,9 @@ import scene.Scene;
 public abstract class Screen {
 	// the screen class is what's called on to render stuff
 	// it takes a camera view into a 3D scene, and a framebuffer, and layers its own
-	// view on top of the input buffer.
+	// view on top of the input buffer. **should it?? 
 
-	// each game state might have multiple screens that are layered on top of each
-	// other,
+	// each game state might have multiple screens that are layered on top of each other,
 	// for example: a UI might be layered on top of a 3D game scene.
 
 	protected static ScreenQuad screenQuad = new ScreenQuad();
@@ -37,5 +36,5 @@ public abstract class Screen {
 		this.camera = c;
 	}
 
-	public abstract void render(Framebuffer outputBuffer, int scene);
+	public abstract void render(Framebuffer outputBuffer);
 }

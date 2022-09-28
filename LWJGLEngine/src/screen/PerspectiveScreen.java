@@ -23,11 +23,15 @@ import util.Vec3;
 
 public class PerspectiveScreen extends Screen {
 	// renders the scene with a perspective projection matrix.
+	
+	private int world_scene;
+	private int decal_scene;
 
 	private static final int SHADOW_MAP_NR_CASCADES = 6;
 	private static float[] shadowCascades = new float[] { Main.NEAR, 1, 3, 7, 15, 30, Main.FAR };
 
 	private Framebuffer geometryBuffer;
+	private Framebuffer decalBuffer;
 	private Framebuffer lightingBuffer;
 	private Framebuffer shadowBuffer;
 	private Framebuffer skyboxBuffer;
@@ -37,6 +41,8 @@ public class PerspectiveScreen extends Screen {
 	private Texture geometrySpecularMap; // RGB: specular, A: shininess
 	private Texture geometryColorMap; // RGB: color, A: alpha
 	private Texture geometryColorIDMap; // RGB: colorID
+	
+	private Texture decalColorMap; 	//RGB: color, A: alpha
 
 	private Texture lightingColorMap; // RGB: color
 	private Texture lightingBrightnessMap; // R: brightness
@@ -69,6 +75,12 @@ public class PerspectiveScreen extends Screen {
 		this.geometryBuffer.addDepthBuffer();
 		this.geometryBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
 		this.geometryBuffer.isComplete();
+		
+		this.decalBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
+		this.decalColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.decalBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.decalColorMap.getID());
+		this.decalBuffer.setDrawBuffers(new int[] {GL_COLOR_ATTACHMENT0});
+		this.decalBuffer.isComplete();
 
 		this.lightingBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.lightingColorMap = new Texture(GL_RGB, Main.windowWidth, Main.windowHeight, GL_RGB, GL_UNSIGNED_BYTE);
@@ -93,8 +105,16 @@ public class PerspectiveScreen extends Screen {
 		this.skyboxBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.skyboxBuffer.isComplete();
 	}
+	
+	public void setWorldScene(int scene) {
+		this.world_scene = scene;
+	}
+	
+	public void setDecalScene(int scene) {
+		this.decal_scene = scene;
+	}
 
-	public void setShaderUniforms(Shader shader, Camera camera) {
+	public void setShaderCameraUniforms(Shader shader, Camera camera) {
 		shader.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
 		shader.setUniformMat4("vw_matrix", camera.getViewMatrix());
 		shader.setUniform3f("view_pos", camera.getPos());
@@ -105,26 +125,47 @@ public class PerspectiveScreen extends Screen {
 	}
 
 	@Override
-	public void render(Framebuffer outputBuffer, int scene) {
+	public void render(Framebuffer outputBuffer) {
 		// -- GEOMETRY -- : render 3d perspective to geometry buffer
 		geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
 		glPolygonMode(GL_FRONT, GL_FILL);
 		glDisable(GL_BLEND);
 		glClearDepth(1); // maximum value
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		Texture.bindingEnabled = true;
 
 		Shader.GEOMETRY.enable();
-		this.setShaderUniforms(Shader.GEOMETRY, this.camera);
-		Model.renderModels(scene);
+		this.setShaderCameraUniforms(Shader.GEOMETRY, this.camera);
+		Model.renderModels(this.world_scene);
+		
+		// -- DECALS -- : screen space decals
+		geometryBuffer.bind();
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		glDepthMask(false);
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+		glPolygonMode(GL_FRONT, GL_FILL);
+		glDisable(GL_BLEND);
+		
+		Shader.DECAL.enable();
+		Shader.DECAL.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
+		Shader.DECAL.setUniformMat4("vw_matrix", camera.getViewMatrix());
+		this.geometryPositionMap.bind(GL_TEXTURE4);
+		//this.geometryNormalMap.bind(GL_TEXTURE4);
+		
+		Model.renderModels(this.decal_scene);
 
 		// -- LIGHTING -- : using information from the geometry buffer, calculate lighting.
 		lightingBuffer.bind();
 		Shader.LIGHTING.enable();
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
+		glDepthMask(true);
 		glEnable(GL_BLEND);
 		glPolygonMode(GL_FRONT, GL_FILL);
 		glBlendFunc(GL_ONE, GL_ONE);
@@ -148,7 +189,7 @@ public class PerspectiveScreen extends Screen {
 		glDisable(GL_CULL_FACE);
 
 		// calculate lighting with each light seperately
-		ArrayList<Light> lights = Light.lights.get(scene);
+		ArrayList<Light> lights = Light.lights.get(this.world_scene);
 		for (int i = 0; i < lights.size(); i++) {
 			// generate depth map for light
 			if (lights.get(i).type == Light.DIR_LIGHT) {
@@ -216,8 +257,8 @@ public class PerspectiveScreen extends Screen {
 					Shader.LIGHTING.setUniformMat4("lightSpace_matrix", lightMat.mul(lightCamera.getProjectionMatrix()));
 					Shader.DEPTH.enable();
 
-					this.setShaderUniforms(Shader.DEPTH, lightCamera);
-					Model.renderModels(scene);
+					this.setShaderCameraUniforms(Shader.DEPTH, lightCamera);
+					Model.renderModels(this.world_scene);
 
 					// render portion of lit scene
 					lightingBuffer.bind();
@@ -266,9 +307,9 @@ public class PerspectiveScreen extends Screen {
 					shadowBuffer.bind();
 					glClear(GL_DEPTH_BUFFER_BIT);
 					// world.render(Shader.CUBE_DEPTH, cubemapCamera);
-					this.setShaderUniforms(Shader.CUBE_DEPTH, cubemapCamera);
+					this.setShaderCameraUniforms(Shader.CUBE_DEPTH, cubemapCamera);
 					Shader.CUBE_DEPTH.enable();
-					Model.renderModels(scene);
+					Model.renderModels(this.world_scene);
 				}
 
 				// render lit scene
@@ -294,7 +335,7 @@ public class PerspectiveScreen extends Screen {
 		Shader.SKYBOX.enable();
 		Shader.SKYBOX.setUniformMat4("vw_matrix", this.camera.getViewMatrix());
 		Shader.SKYBOX.setUniformMat4("pr_matrix", this.camera.getProjectionMatrix());
-		Scene.skyboxes.get(scene).bind(GL_TEXTURE0);
+		Scene.skyboxes.get(this.world_scene).bind(GL_TEXTURE0);
 		skyboxCube.render();
 
 		outputBuffer.bind();
@@ -313,6 +354,7 @@ public class PerspectiveScreen extends Screen {
 		Shader.OVERWRITE_ALPHA.enable();
 		Shader.OVERWRITE_ALPHA.setUniform1f("alpha", 1f);
 		this.lightingColorMap.bind(GL_TEXTURE0);
+		//this.geometryColorMap.bind(GL_TEXTURE0);
 		this.geometryColorMap.bind(GL_TEXTURE1);
 		screenQuad.render();
 	}

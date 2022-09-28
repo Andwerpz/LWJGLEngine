@@ -21,7 +21,7 @@ public class Shader {
 	public static final int INSTANCED_COLOR_ATTRIB = 9; // used for quick model selection
 	public static final int INSTANCED_MATERIAL_ATTRIB = 10; // takes up 3 slots
 
-	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS, IMG_POST_PROCESS, SPLASH, OVERWRITE_ALPHA;
+	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS, IMG_POST_PROCESS, SPLASH, OVERWRITE_ALPHA, DECAL;
 
 	private boolean enabled = false;
 
@@ -42,7 +42,8 @@ public class Shader {
 		IMG_POST_PROCESS = new Shader("/img_postprocessing.vert", "/img_postprocessing.frag"); // post processing with only final color information
 		SPLASH = new Shader("/splash.vert", "/splash.frag"); // takes in a texture and alpha value.
 		OVERWRITE_ALPHA = new Shader("/splash.vert", "/overwrite_alpha.frag"); // uses the first textures color, and the second textures alpha.
-
+		DECAL = new Shader("/decal.vert", "/decal.frag");
+		
 		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
 		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
 		Shader.GEOMETRY.setUniform1i("tex_normal", 2);
@@ -71,6 +72,12 @@ public class Shader {
 		Shader.OVERWRITE_ALPHA.setUniform1i("tex_color", 0);
 		Shader.OVERWRITE_ALPHA.setUniform1i("tex_alpha", 1);
 		Shader.OVERWRITE_ALPHA.setUniform1f("alpha", 1f);
+		
+		Shader.DECAL.setUniform1i("tex_diffuse", 0);
+		Shader.DECAL.setUniform1i("tex_specular", 1);
+		Shader.DECAL.setUniform1i("tex_normal", 2);
+		Shader.DECAL.setUniform1i("tex_displacement", 3);
+		Shader.DECAL.setUniform1i("tex_position", 4);
 	}
 
 	public int getUniform(String name) {

@@ -34,7 +34,7 @@ public class MainMenuState extends State {
 	private static final int STATIC_UI_SCENE = 1; // for unchanging parts of the ui like the logo
 	private static final int DYNAMIC_UI_SCENE = 2; // inputs and stuff
 
-	private static Screen perspectiveScreen; // 3D background
+	private static PerspectiveScreen perspectiveScreen; // 3D background
 	private static Camera perspectiveCamera;
 
 	private static UIScreen uiScreen, uiScreenSelector; // Menu UI
@@ -108,9 +108,13 @@ public class MainMenuState extends State {
 
 	@Override
 	public void render(Framebuffer outputBuffer) {
-		perspectiveScreen.render(outputBuffer, BACKGROUND_SCENE);
-		uiScreen.render(outputBuffer, STATIC_UI_SCENE);
-		uiScreen.render(outputBuffer, DYNAMIC_UI_SCENE);
+		perspectiveScreen.setDecalScene(-2);
+		perspectiveScreen.setWorldScene(BACKGROUND_SCENE);
+		perspectiveScreen.render(outputBuffer);
+		uiScreen.setUIScene(STATIC_UI_SCENE);
+		uiScreen.render(outputBuffer);
+		uiScreen.setUIScene(DYNAMIC_UI_SCENE);
+		uiScreen.render(outputBuffer);
 	}
 
 	private void updateCamera() {

@@ -35,7 +35,7 @@ public class SplashState extends State {
 
 	@Override
 	public void render(Framebuffer outputBuffer) {
-		this.splashScreen.render(outputBuffer, Scene.FRAMEBUFFER_SCENE);
+		this.splashScreen.render(outputBuffer);
 	}
 
 	@Override

@@ -28,7 +28,7 @@ public class SplashScreen extends Screen {
 	}
 
 	@Override
-	public void render(Framebuffer outputBuffer, int scene) {
+	public void render(Framebuffer outputBuffer) {
 		outputBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);

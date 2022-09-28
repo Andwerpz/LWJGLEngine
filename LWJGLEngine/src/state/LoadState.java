@@ -92,7 +92,7 @@ public class LoadState extends State {
 
 	@Override
 	public void render(Framebuffer outputBuffer) {
-		loadScreen.render(outputBuffer, Scene.FRAMEBUFFER_SCENE);
+		loadScreen.render(outputBuffer);
 	}
 
 	@Override

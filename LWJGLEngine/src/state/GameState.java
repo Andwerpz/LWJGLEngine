@@ -33,6 +33,8 @@ import util.Vec4;
 public class GameState extends State {
 
 	private static final int WORLD_SCENE = 0;
+	
+	private static final int DECAL_SCENE = 1;	//screen space decals
 
 	private String ip;
 	private int port;
@@ -47,11 +49,11 @@ public class GameState extends State {
 	// -- NETWORKING --
 	private GameClient client;
 	private GameServer server;
-
 	private HashMap<Integer, Capsule> otherPlayers;
 
 	private long mapID;
 
+	private ArrayList<Vec3[]> bulletRays;	//point, direction
 	private Model bloodDecal, bulletHoleDecal;
 
 	public GameState(StateManager sm, String ip, int port, boolean hosting) {
@@ -78,6 +80,8 @@ public class GameState extends State {
 
 		this.bulletHoleDecal = new Decal();
 		this.bulletHoleDecal.setTextureMaterial(new TextureMaterial(AssetManager.getTexture("bullet_hole_texture")));
+		
+		this.bulletRays = new ArrayList<>();
 
 		Main.lockCursor();
 		InputManager.removeAllInputs();
@@ -91,6 +95,10 @@ public class GameState extends State {
 		Light.addLight(WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 		Scene.skyboxes.put(WORLD_SCENE, AssetManager.getSkybox("lake_skybox"));
 		player = new Player(new Vec3(18.417412f, 0.7f, -29.812654f), WORLD_SCENE);
+		
+		// -- DECAL SCENE --
+		Model.removeInstancesFromScene(DECAL_SCENE);
+		Light.removeLightsFromScene(DECAL_SCENE);
 
 		// -- NETWORKING --
 		this.client = new GameClient();
@@ -159,6 +167,45 @@ public class GameState extends State {
 			this.otherPlayers.get(ID).kill();
 			this.otherPlayers.remove(ID);
 		}
+		
+		//process decals from bullets
+		for(Vec3[] b : this.bulletRays) {
+			Vec3 ray_origin = b[0];
+			Vec3 ray_dir = b[1];
+			ArrayList<Vec3[]> intersect = Model.rayIntersect(WORLD_SCENE, ray_origin, ray_dir);
+			if (intersect.size() != 0) {
+				float minDist = 0f;
+				Vec3 minVec = null;
+				Vec3 normal = null;
+				for (Vec3[] a : intersect) {
+					Vec3 v = a[0];
+					float dist = v.sub(ray_origin).length();
+					if (dist < minDist || minVec == null) {
+						minDist = dist;
+						minVec = v;
+						normal = a[1];
+					}
+				}
+
+				float yRot = (float) (Math.atan2(normal.z, normal.x) - Math.PI / 2f);
+				normal.rotateY(-yRot);
+				float xRot = (float) (Math.atan2(normal.y, normal.z));
+				normal.rotateX(-xRot);
+
+				System.out.println(normal);
+				
+				Mat4 modelMat4 = Mat4.translate(new Vec3(-0.5f, -0.5f, -0.9f));
+				modelMat4.muli(Mat4.scale((float) (Math.random() * 1f + 0.5f)));
+				modelMat4.muli(Mat4.translate(new Vec3(0, 0, 0.0001f)));
+				modelMat4.muli(Mat4.rotateZ((float) (Math.random() * Math.PI * 2f)));
+				modelMat4.muli(Mat4.rotateX(xRot));
+				modelMat4.muli(Mat4.rotateY(yRot));
+				modelMat4.muli(Mat4.translate(minVec));
+				long id = Model.addInstance(this.bloodDecal, modelMat4, DECAL_SCENE);
+				Model.updateInstance(id, new Material(new Vec4(1), new Vec4(0.7f), 64f));
+			}
+		}
+		this.bulletRays.clear();
 
 		// -- UPDATES --
 		Entity.updateEntities();
@@ -178,7 +225,9 @@ public class GameState extends State {
 	@Override
 	public void render(Framebuffer outputBuffer) {
 		perspectiveScreen.renderSkybox(true);
-		perspectiveScreen.render(outputBuffer, WORLD_SCENE);
+		perspectiveScreen.setWorldScene(WORLD_SCENE);
+		perspectiveScreen.setDecalScene(DECAL_SCENE);
+		perspectiveScreen.render(outputBuffer);
 	}
 
 	private void updateCamera() {
@@ -192,39 +241,39 @@ public class GameState extends State {
 		// shoot ray in direction of camera
 		Vec3 ray_origin = perspectiveCamera.getPos();
 		Vec3 ray_dir = perspectiveCamera.getFacing();
-		ArrayList<Vec3[]> intersect = Model.rayIntersect(WORLD_SCENE, ray_origin, ray_dir);
-		if (intersect.size() != 0) {
-			float minDist = 0f;
-			Vec3 minVec = null;
-			Vec3 normal = null;
-			Vec3 t0 = null;
-			for (Vec3[] a : intersect) {
-				Vec3 v = a[0];
-				float dist = v.sub(ray_origin).length();
-				if (dist < minDist || minVec == null) {
-					minDist = dist;
-					minVec = v;
-					normal = a[1];
-					t0 = a[2];
-				}
-			}
-
-			float yRot = (float) (Math.atan2(normal.z, normal.x) - Math.PI / 2f);
-			normal.rotateY(-yRot);
-			float xRot = (float) (Math.atan2(normal.y, normal.z));
-			normal.rotateX(-xRot);
-
-			System.out.println(normal);
-
-			Mat4 modelMat4 = Mat4.scale((float) (Math.random() * 1f + 0.5f));
-			modelMat4.muli(Mat4.translate(new Vec3(0, 0, 0.001f)));
-			modelMat4.muli(Mat4.rotateZ((float) (Math.random() * Math.PI * 2f)));
-			modelMat4.muli(Mat4.rotateX(xRot));
-			modelMat4.muli(Mat4.rotateY(yRot));
-			modelMat4.muli(Mat4.translate(minVec));
-			long id = Model.addInstance(this.bloodDecal, modelMat4, WORLD_SCENE);
-			Model.updateInstance(id, new Material(new Vec4(1), new Vec4(0.7f), 64f));
-		}
+		this.bulletRays.add(new Vec3[] {ray_origin, ray_dir});
+		
+//		ArrayList<Vec3[]> intersect = Model.rayIntersect(WORLD_SCENE, ray_origin, ray_dir);
+//		if (intersect.size() != 0) {
+//			float minDist = 0f;
+//			Vec3 minVec = null;
+//			Vec3 normal = null;
+//			for (Vec3[] a : intersect) {
+//				Vec3 v = a[0];
+//				float dist = v.sub(ray_origin).length();
+//				if (dist < minDist || minVec == null) {
+//					minDist = dist;
+//					minVec = v;
+//					normal = a[1];
+//				}
+//			}
+//
+//			float yRot = (float) (Math.atan2(normal.z, normal.x) - Math.PI / 2f);
+//			normal.rotateY(-yRot);
+//			float xRot = (float) (Math.atan2(normal.y, normal.z));
+//			normal.rotateX(-xRot);
+//
+//			System.out.println(normal);
+//
+//			Mat4 modelMat4 = Mat4.scale((float) (Math.random() * 1f + 0.5f));
+//			modelMat4.muli(Mat4.translate(new Vec3(0, 0, 0.001f)));
+//			modelMat4.muli(Mat4.rotateZ((float) (Math.random() * Math.PI * 2f)));
+//			modelMat4.muli(Mat4.rotateX(xRot));
+//			modelMat4.muli(Mat4.rotateY(yRot));
+//			modelMat4.muli(Mat4.translate(minVec));
+//			long id = Model.addInstance(this.bloodDecal, modelMat4, WORLD_SCENE);
+//			Model.updateInstance(id, new Material(new Vec4(1), new Vec4(0.7f), 64f));
+//		}
 
 //		Vec3 cam_pos = new Vec3(perspectiveCamera.getPos());
 //		Vec3 cam_dir = new Vec3(perspectiveCamera.getFacing());
