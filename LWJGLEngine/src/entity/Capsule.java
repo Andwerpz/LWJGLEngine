@@ -98,11 +98,7 @@ public class Capsule extends Entity {
 		ArrayList<Vec3[]> intersections = Model.capsuleIntersect(scene, capsule_bottom, capsule_top, radius);
 		for (Vec3[] a : intersections) {
 			Vec3 v = a[0];
-			Vec3 capsule_c = MathUtils.point_lineSegmentProjectClamped(v, capsule_bottomSphere, capsule_topSphere); // closest
-			// point
-			// on
-			// capsule
-			// midline
+			Vec3 capsule_c = MathUtils.point_lineSegmentProjectClamped(v, capsule_bottomSphere, capsule_topSphere); // closest point on capsule midline
 			Vec3 toCenter = new Vec3(v, capsule_c);
 
 			Vec3 normToCenter = new Vec3(toCenter).normalize();

@@ -61,6 +61,7 @@ public abstract class Server implements Runnable {
 		this.thread.start();
 	}
 
+	@Override
 	public void run() {
 		long start, elapsed, wait;
 		while (isRunning) {
@@ -71,7 +72,7 @@ public abstract class Server implements Runnable {
 			elapsed = System.nanoTime() - start;
 			wait = targetTime - elapsed / 1000000;
 
-			if(wait < 0) {
+			if (wait < 0) {
 				wait = 5;
 			}
 
@@ -92,7 +93,7 @@ public abstract class Server implements Runnable {
 	}
 
 	public void tick() {
-		if(this.serverConnectionRequestListener.hasNewClients()) {
+		if (this.serverConnectionRequestListener.hasNewClients()) {
 			ArrayList<Socket> newClients = this.serverConnectionRequestListener.getNewClients();
 			for (Socket s : newClients) {
 				PacketListener l = new PacketListener(s, "Server");
@@ -106,7 +107,7 @@ public abstract class Server implements Runnable {
 
 		// -- READ -- //should open for whenever
 		for (int ID : this.clientIDs) {
-			if(!this.packetListeners.get(ID).isConnected()) {
+			if (!this.packetListeners.get(ID).isConnected()) {
 				// Client Disconnected
 				System.out.println("Client disconnected");
 				this.packetListeners.get(ID).exit();
@@ -138,34 +139,33 @@ public abstract class Server implements Runnable {
 				e.printStackTrace();
 			}
 		}
+		this.writePacketEND();
 
-		if(this.clientSockets.size() == 0) { // no more clients :((
-			if(this.prevTickNoClients) {
-				if(System.currentTimeMillis() - this.firstNoClientTime > this.noClientTimeoutMillis) {
+		if (this.clientSockets.size() == 0) { // no more clients :((
+			if (this.prevTickNoClients) {
+				if (System.currentTimeMillis() - this.firstNoClientTime > this.noClientTimeoutMillis) {
 					System.out.println("No clients, shutting down server");
 					this.exit();
 				}
-			}
-			else {
+			} else {
 				this.firstNoClientTime = System.currentTimeMillis();
 				this.prevTickNoClients = true;
 			}
-		}
-		else {
+		} else {
 			this.prevTickNoClients = false;
 		}
 	}
 
-	// use the packet sender to write a packet. The parent class will flush it for
-	// you
+	// use the packet sender to write a packet. The parent class will flush it for you
 	public abstract void writePacket(PacketSender packetSender, int clientID);
 
-	// use the packet listener to read in the packet. The parent class has already
-	// polled the next packet
+	// run once after all packets to clients have been sent. 
+	public abstract void writePacketEND();
+
+	// use the packet listener to read in the packet. The parent class has already polled the next packet
 	public abstract void readPacket(PacketListener packetListener, int clientID);
 
-	// so that the child class can do whatever they need to do in the case of
-	// connection status change
+	// so that the child class can do whatever they need to do in the case of connection status change
 	public abstract void _clientConnect(int clientID);
 
 	public abstract void _clientDisconnect(int clientID);
@@ -182,10 +182,10 @@ public abstract class Server implements Runnable {
 
 		for (int ID : this.clientIDs) {
 			try {
-				if(this.packetListeners.get(ID) != null) {
+				if (this.packetListeners.get(ID) != null) {
 					this.packetListeners.get(ID).exit();
 				}
-				if(this.clientSockets.get(ID) != null) {
+				if (this.clientSockets.get(ID) != null) {
 					this.clientSockets.get(ID).close();
 				}
 			} catch (IOException e) {
@@ -223,10 +223,11 @@ class ServerConnectionRequestListener implements Runnable {
 		this.thread.start();
 	}
 
+	@Override
 	public void run() {
 		while (this.isRunning) {
 			Socket s = listenForServerRequest();
-			if(s != null) {
+			if (s != null) {
 				this.newClients.add(s);
 			}
 		}

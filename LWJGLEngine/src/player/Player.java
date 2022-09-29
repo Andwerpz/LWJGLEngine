@@ -4,6 +4,7 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import java.util.ArrayList;
 
+import entity.Capsule;
 import entity.Entity;
 import input.KeyboardInput;
 import input.MouseInput;
@@ -56,6 +57,18 @@ public class Player extends Entity {
 	@Override
 	protected void _kill() {
 	};
+
+	public Vec3 getBottom() {
+		return new Vec3(this.pos);
+	}
+
+	public Vec3 getTop() {
+		return this.pos.add(new Vec3(0, this.height, 0));
+	}
+
+	public float getRadius() {
+		return this.radius;
+	}
 
 	@Override
 	public void update() {

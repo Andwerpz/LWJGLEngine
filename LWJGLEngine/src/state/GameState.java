@@ -28,6 +28,7 @@ import server.GameServer;
 import util.Mat4;
 import util.MathUtils;
 import util.NetworkingUtils;
+import util.Pair;
 import util.Vec3;
 import util.Vec4;
 
@@ -54,7 +55,6 @@ public class GameState extends State {
 
 	private long mapID;
 
-	private ArrayList<Vec3[]> bulletRays; // point, direction
 	private Model bloodDecal, bulletHoleDecal;
 
 	public GameState(StateManager sm, String ip, int port, boolean hosting) {
@@ -76,13 +76,11 @@ public class GameState extends State {
 			perspectiveScreen.setCamera(perspectiveCamera);
 		}
 
-		this.bloodDecal = new Decal();
-		this.bloodDecal.setTextureMaterial(new TextureMaterial(AssetManager.getTexture("blood_splatter_texture")));
-
 		this.bulletHoleDecal = new Decal();
 		this.bulletHoleDecal.setTextureMaterial(new TextureMaterial(AssetManager.getTexture("bullet_hole_texture")));
 
-		this.bulletRays = new ArrayList<>();
+		this.bloodDecal = new Decal();
+		this.bloodDecal.setTextureMaterial(new TextureMaterial(AssetManager.getTexture("blood_splatter_texture")));
 
 		Main.lockCursor();
 		InputManager.removeAllInputs();
@@ -170,15 +168,31 @@ public class GameState extends State {
 		}
 
 		// process decals from bullets
-		for (Vec3[] b : this.bulletRays) {
-			Vec3 ray_origin = b[0];
-			Vec3 ray_dir = b[1];
+		ArrayList<Pair<Integer, Vec3[]>> bulletRays = this.client.getBulletRays();
+		for (Pair<Integer, Vec3[]> p : bulletRays) {
+			int clientID = p.first;
+			Vec3 ray_origin = p.second[0];
+			Vec3 ray_dir = p.second[1];
 
 			boolean playerIntersect = false;
-			for (Capsule c : this.otherPlayers.values()) {
+			//check against other players
+			for (int ID : this.otherPlayers.keySet()) {
+				System.out.println(ID);
+				if (clientID == ID) { //a player can't hit themselves with their own bullet
+					System.out.println("OWN BULLET");
+					continue;
+				}
+				Capsule c = this.otherPlayers.get(ID);
 				if (MathUtils.ray_capsuleIntersect(ray_origin, ray_dir, c.getBottom(), c.getTop(), c.getRadius()) != null) {
 					playerIntersect = true;
 					break;
+				}
+			}
+
+			//did the bullet hit yourself?
+			if (clientID != this.client.getID()) {
+				if (MathUtils.ray_capsuleIntersect(ray_origin, ray_dir, player.getBottom(), player.getTop(), player.getRadius()) != null) {
+					playerIntersect = true;
 				}
 			}
 
@@ -202,16 +216,7 @@ public class GameState extends State {
 				float xRot = (float) (Math.atan2(normal.y, normal.z));
 				normal.rotateX(-xRot);
 
-				//bullet hole decal
-				Mat4 modelMat4 = Mat4.translate(new Vec3(-0.5f, -0.5f, -0.95f));
-				modelMat4.muli(Mat4.scale((float) (Math.random() * 0.03f + 0.1f)));
-				modelMat4.muli(Mat4.translate(new Vec3(0, 0, 0.0001f)));
-				modelMat4.muli(Mat4.rotateZ((float) (Math.random() * Math.PI * 2f)));
-				modelMat4.muli(Mat4.rotateX(xRot));
-				modelMat4.muli(Mat4.rotateY(yRot));
-				modelMat4.muli(Mat4.translate(minVec));
-				long bulletHoleID = Model.addInstance(this.bulletHoleDecal, modelMat4, DECAL_SCENE);
-				Model.updateInstance(bulletHoleID, new Material(new Vec4(1), new Vec4(0f), 64f));
+				Mat4 modelMat4 = null;
 
 				if (playerIntersect) {
 					//blood splatter decal
@@ -223,13 +228,23 @@ public class GameState extends State {
 					modelMat4.muli(Mat4.rotateY(yRot + (float) (Math.random() * Math.PI / 6f)));
 					modelMat4.muli(Mat4.translate(minVec));
 					long bloodSplatterID = Model.addInstance(this.bloodDecal, modelMat4, DECAL_SCENE);
-					Model.updateInstance(bloodSplatterID, new Material(new Vec4(1), new Vec4(0.7f), 64f));
+					Model.updateInstance(bloodSplatterID, new Material(new Vec4(1), new Vec4(0.7f), 256f));
 				}
+
+				//bullet hole decal
+				modelMat4 = Mat4.translate(new Vec3(-0.5f, -0.5f, -0.95f));
+				modelMat4.muli(Mat4.scale((float) (Math.random() * 0.03f + 0.1f)));
+				modelMat4.muli(Mat4.translate(new Vec3(0, 0, 0.0001f)));
+				modelMat4.muli(Mat4.rotateZ((float) (Math.random() * Math.PI * 2f)));
+				modelMat4.muli(Mat4.rotateX(xRot));
+				modelMat4.muli(Mat4.rotateY(yRot));
+				modelMat4.muli(Mat4.translate(minVec));
+				long bulletHoleID = Model.addInstance(this.bulletHoleDecal, modelMat4, DECAL_SCENE);
+				Model.updateInstance(bulletHoleID, new Material(new Vec4(1), new Vec4(0f), 64f));
 
 			}
 
 		}
-		this.bulletRays.clear();
 
 		// -- UPDATES --
 		Entity.updateEntities();
@@ -265,7 +280,7 @@ public class GameState extends State {
 		// shoot ray in direction of camera
 		Vec3 ray_origin = perspectiveCamera.getPos();
 		Vec3 ray_dir = perspectiveCamera.getFacing();
-		this.bulletRays.add(new Vec3[] { ray_origin, ray_dir });
+		this.client.addBulletRay(ray_origin, ray_dir);
 
 		//		ArrayList<Vec3[]> intersect = Model.rayIntersect(WORLD_SCENE, ray_origin, ray_dir);
 		//		if (intersect.size() != 0) {

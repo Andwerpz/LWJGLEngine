@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import util.Pair;
 import util.Vec3;
 
 public class GameClient extends Client {
@@ -12,6 +13,9 @@ public class GameClient extends Client {
 
 	private HashMap<Integer, Vec3> otherPlayerPositions;
 	private ArrayList<Integer> disconnectedPlayers;
+	private ArrayList<Pair<Integer, Vec3[]>> inBulletRays; //player id, bullet ray. 
+
+	private ArrayList<Pair<Integer, Vec3[]>> outBulletRays;
 
 	private int id;
 
@@ -21,6 +25,9 @@ public class GameClient extends Client {
 		this.pos = new Vec3(0);
 		this.otherPlayerPositions = new HashMap<>();
 		this.disconnectedPlayers = new ArrayList<>();
+		this.inBulletRays = new ArrayList<>();
+
+		this.outBulletRays = new ArrayList<>();
 	}
 
 	@Override
@@ -29,6 +36,16 @@ public class GameClient extends Client {
 		packetSender.write(pos.x);
 		packetSender.write(pos.y);
 		packetSender.write(pos.z);
+
+		if (this.outBulletRays.size() != 0) {
+			packetSender.writeSectionHeader("bullet_rays", this.outBulletRays.size());
+			for (Pair<Integer, Vec3[]> p : this.outBulletRays) {
+				packetSender.write(this.id);
+				packetSender.write(p.second[0]);
+				packetSender.write(p.second[1]);
+			}
+			this.outBulletRays.clear();
+		}
 	}
 
 	@Override
@@ -44,7 +61,7 @@ public class GameClient extends Client {
 				for (int i = 0; i < elementAmt; i++) {
 					int playerID = packetListener.readInt();
 					float[] arr = packetListener.readNFloats(3);
-					if(playerID == this.id) {
+					if (playerID == this.id) {
 						continue;
 					}
 					this.otherPlayerPositions.put(playerID, new Vec3(arr[0], arr[1], arr[2]));
@@ -56,6 +73,15 @@ public class GameClient extends Client {
 					int playerID = packetListener.readInt();
 					this.otherPlayerPositions.remove(playerID);
 					this.disconnectedPlayers.add(playerID);
+				}
+				break;
+
+			case "bullet_rays":
+				for (int i = 0; i < elementAmt; i++) {
+					int playerID = packetListener.readInt();
+					Vec3 ray_origin = packetListener.readVec3();
+					Vec3 ray_dir = packetListener.readVec3();
+					this.inBulletRays.add(new Pair<Integer, Vec3[]>(playerID, new Vec3[] { ray_origin, ray_dir }));
 				}
 				break;
 			}
@@ -71,6 +97,21 @@ public class GameClient extends Client {
 		ans.addAll(this.disconnectedPlayers);
 		this.disconnectedPlayers.clear();
 		return ans;
+	}
+
+	public ArrayList<Pair<Integer, Vec3[]>> getBulletRays() {
+		ArrayList<Pair<Integer, Vec3[]>> ans = new ArrayList<>();
+		ans.addAll(this.inBulletRays);
+		this.inBulletRays.clear();
+		return ans;
+	}
+
+	public int getID() {
+		return this.id;
+	}
+
+	public void addBulletRay(Vec3 ray_origin, Vec3 ray_dir) {
+		this.outBulletRays.add(new Pair<Integer, Vec3[]>(this.id, new Vec3[] { ray_origin, ray_dir }));
 	}
 
 	public void setPos(Vec3 pos) {

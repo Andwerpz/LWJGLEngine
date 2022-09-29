@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import util.Vec3;
+
 public class PacketSender {
 	// packets always start with an int denoting the length of the packet
 
@@ -46,6 +48,12 @@ public class PacketSender {
 		for (float b : a) {
 			this.write(b);
 		}
+	}
+
+	public void write(Vec3 a) {
+		this.write(a.x);
+		this.write(a.y);
+		this.write(a.z);
 	}
 
 	public void write(int a) {

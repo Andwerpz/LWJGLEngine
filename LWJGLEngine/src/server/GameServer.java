@@ -3,6 +3,7 @@ package server;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import util.Pair;
 import util.Vec3;
 
 public class GameServer extends Server {
@@ -10,12 +11,14 @@ public class GameServer extends Server {
 	private HashMap<Integer, Vec3> playerPositions;
 
 	private ArrayList<Integer> disconnectedClients;
+	private ArrayList<Pair<Integer, Vec3[]>> bulletRays;
 
 	public GameServer(String ip, int port) {
 		super(ip, port);
 
 		this.playerPositions = new HashMap<>();
 		this.disconnectedClients = new ArrayList<>();
+		this.bulletRays = new ArrayList<>();
 	}
 
 	@Override
@@ -29,14 +32,28 @@ public class GameServer extends Server {
 			packetSender.write(new float[] { pos.x, pos.y, pos.z });
 		}
 
-		if(disconnectedClients.size() != 0) {
+		if (disconnectedClients.size() != 0) {
 			packetSender.writeSectionHeader("disconnect", disconnectedClients.size());
 			for (int i : disconnectedClients) {
 				packetSender.write(i);
 			}
-			disconnectedClients.clear();
 		}
 
+		if (this.bulletRays.size() != 0) {
+			packetSender.writeSectionHeader("bullet_rays", this.bulletRays.size());
+			for (Pair<Integer, Vec3[]> p : this.bulletRays) {
+				packetSender.write(p.first);
+				packetSender.write(p.second[0]);
+				packetSender.write(p.second[1]);
+			}
+		}
+
+	}
+
+	@Override
+	public void writePacketEND() {
+		disconnectedClients.clear();
+		bulletRays.clear();
 	}
 
 	@Override
@@ -49,6 +66,15 @@ public class GameServer extends Server {
 			case "pos":
 				float[] arr = packetListener.readNFloats(3);
 				playerPositions.put(clientID, new Vec3(arr[0], arr[1], arr[2]));
+				break;
+
+			case "bullet_rays":
+				for (int i = 0; i < elementAmt; i++) {
+					int playerID = packetListener.readInt();
+					Vec3 ray_origin = packetListener.readVec3();
+					Vec3 ray_dir = packetListener.readVec3();
+					this.bulletRays.add(new Pair<Integer, Vec3[]>(playerID, new Vec3[] { ray_origin, ray_dir }));
+				}
 				break;
 			}
 

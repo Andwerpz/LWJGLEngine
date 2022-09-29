@@ -6,6 +6,8 @@ import java.net.Socket;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
+import util.Vec3;
+
 public class PacketListener implements Runnable {
 	private boolean isRunning = true;
 	private Thread thread;
@@ -47,7 +49,7 @@ public class PacketListener implements Runnable {
 	}
 
 	public boolean nextPacket() {
-		if(this.packetQueue.size() == 0) {
+		if (this.packetQueue.size() == 0) {
 			return false;
 		}
 		this.packet = this.packetQueue.poll();
@@ -105,6 +107,10 @@ public class PacketListener implements Runnable {
 			ans[i] = this.readFloat();
 		}
 		return ans;
+	}
+
+	public Vec3 readVec3() {
+		return new Vec3(this.readFloat(), this.readFloat(), this.readFloat());
 	}
 
 	public char readChar() {

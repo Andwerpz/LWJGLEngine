@@ -21,6 +21,12 @@ public class Vec3 {
 		this.z = z;
 	}
 
+	public Vec3(float[] a) {
+		this.x = a[0];
+		this.y = a[1];
+		this.z = a[2];
+	}
+
 	public Vec3(Vec3 a, Vec3 b) {
 		this.x = b.x - a.x;
 		this.y = b.y - a.y;
