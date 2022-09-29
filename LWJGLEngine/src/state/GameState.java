@@ -184,9 +184,7 @@ public class GameState extends State {
 			boolean playerIntersect = false;
 			//check against other players
 			for (int ID : this.otherPlayers.keySet()) {
-				System.out.println(ID);
 				if (clientID == ID) { //a player can't hit themselves with their own bullet
-					System.out.println("OWN BULLET");
 					continue;
 				}
 				Capsule c = this.otherPlayers.get(ID);
@@ -294,45 +292,6 @@ public class GameState extends State {
 		Vec3 ray_origin = perspectiveCamera.getPos();
 		Vec3 ray_dir = perspectiveCamera.getFacing();
 		this.client.addBulletRay(ray_origin, ray_dir);
-
-		//		ArrayList<Vec3[]> intersect = Model.rayIntersect(WORLD_SCENE, ray_origin, ray_dir);
-		//		if (intersect.size() != 0) {
-		//			float minDist = 0f;
-		//			Vec3 minVec = null;
-		//			Vec3 normal = null;
-		//			for (Vec3[] a : intersect) {
-		//				Vec3 v = a[0];
-		//				float dist = v.sub(ray_origin).length();
-		//				if (dist < minDist || minVec == null) {
-		//					minDist = dist;
-		//					minVec = v;
-		//					normal = a[1];
-		//				}
-		//			}
-		//
-		//			float yRot = (float) (Math.atan2(normal.z, normal.x) - Math.PI / 2f);
-		//			normal.rotateY(-yRot);
-		//			float xRot = (float) (Math.atan2(normal.y, normal.z));
-		//			normal.rotateX(-xRot);
-		//
-		//			System.out.println(normal);
-		//
-		//			Mat4 modelMat4 = Mat4.scale((float) (Math.random() * 1f + 0.5f));
-		//			modelMat4.muli(Mat4.translate(new Vec3(0, 0, 0.001f)));
-		//			modelMat4.muli(Mat4.rotateZ((float) (Math.random() * Math.PI * 2f)));
-		//			modelMat4.muli(Mat4.rotateX(xRot));
-		//			modelMat4.muli(Mat4.rotateY(yRot));
-		//			modelMat4.muli(Mat4.translate(minVec));
-		//			long id = Model.addInstance(this.bloodDecal, modelMat4, WORLD_SCENE);
-		//			Model.updateInstance(id, new Material(new Vec4(1), new Vec4(0.7f), 64f));
-		//		}
-
-		//		Vec3 cam_pos = new Vec3(perspectiveCamera.getPos());
-		//		Vec3 cam_dir = new Vec3(perspectiveCamera.getFacing());
-		//		
-		//		//Capsule c = new Capsule(cam_pos, cam_dir.mul(0.3f), 0.25f, 1f, WORLD_SCENE);
-		//		Ball b = new Ball(cam_pos, cam_dir.mul(0.3f), 0.3f, WORLD_SCENE);
-		//		System.out.println(cam_pos + " " + cam_dir.mul(0.6f));
 	}
 
 	@Override
