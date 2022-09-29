@@ -51,6 +51,18 @@ public class Capsule extends Entity {
 		this.pos = new Vec3(pos);
 	}
 
+	public Vec3 getBottom() {
+		return new Vec3(this.pos);
+	}
+
+	public Vec3 getTop() {
+		return this.pos.add(new Vec3(0, this.height, 0));
+	}
+
+	public float getRadius() {
+		return this.radius;
+	}
+
 	public void updateModelMats() {
 		Vec3 capsule_bottomSphere = pos.add(new Vec3(0, radius, 0));
 		Vec3 capsule_topSphere = pos.add(new Vec3(0, height - radius, 0));

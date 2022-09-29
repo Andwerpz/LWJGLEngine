@@ -33,6 +33,12 @@ public class Vec3 {
 		this.z = v.z;
 	}
 
+	public void set(Vec3 v) {
+		this.x = v.x;
+		this.y = v.y;
+		this.z = v.z;
+	}
+
 	public Vec3 addi(Vec3 v) {
 		this.x += v.x;
 		this.y += v.y;
@@ -78,7 +84,7 @@ public class Vec3 {
 
 	public Vec3 normalize() {
 		float mag = this.length();
-		if(mag == 0) {
+		if (mag == 0) {
 			return this;
 		}
 		this.x /= mag;
@@ -143,6 +149,7 @@ public class Vec3 {
 		return this;
 	}
 
+	@Override
 	public String toString() {
 		return this.x + ", " + this.y + ", " + this.z;
 	}

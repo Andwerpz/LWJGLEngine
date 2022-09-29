@@ -35,19 +35,6 @@ public class MathUtils {
 		return x1 + (t3 - t1) * v;
 	}
 
-	/**
-	 * Calculates the distance between two 2D points. You can also do this by defining a vector between the two points, and querying the length.
-	 * 
-	 * @param x1
-	 * @param y1
-	 * @param x2
-	 * @param y2
-	 * @return
-	 */
-	public static float dist(float x1, float y1, float x2, float y2) {
-		return (float) Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-	}
-
 	// -- LINEAR ALGEBRA --
 
 	/**
@@ -97,6 +84,146 @@ public class MathUtils {
 			return new Vec2(intersectionX, intersectionY);
 		}
 		return null;
+	}
+
+	/**
+	 * Take in two lines in 3D, and returns the shortest distance between them.
+	 * @param a_point
+	 * @param a_dir
+	 * @param b_point
+	 * @param b_dir
+	 * @return
+	 */
+	public static float line_lineDistance(Vec3 a_point, Vec3 a_dir, Vec3 b_point, Vec3 b_dir) {
+		float[] nm = line_lineDistanceNM(a_point, a_point.add(a_dir), b_point, b_point.add(b_dir));
+		Vec3 v = new Vec3(a_point.add(a_dir.mul(nm[0])), b_point.add(b_dir.mul(nm[1])));
+		return v.length();
+	}
+
+	/**
+	 * Takes in a ray and a line segment, and returns the minimum distance between them. 
+	 * @param ray_origin
+	 * @param ray_dir
+	 * @param b0
+	 * @param b1
+	 * @return
+	 */
+	public static float ray_lineSegmentDistance(Vec3 ray_origin, Vec3 ray_dir, Vec3 b0, Vec3 b1) {
+		float[] nm = line_lineDistanceNM(ray_origin, ray_origin.add(ray_dir), b0, b1);
+		nm[0] = Math.max(0, nm[0]);
+		nm[1] = clamp(0, 1, nm[1]);
+		Vec3 b_dir = new Vec3(b0, b1);
+		Vec3 v = new Vec3(ray_origin.add(ray_dir.mul(nm[0])), b0.add(b_dir.mul(nm[1])));
+		return v.length();
+	}
+
+	/**
+	 * Takes in a ray and a line segment, and returns the minimum distance between them. 
+	 * @param ray_origin
+	 * @param ray_dir
+	 * @param b0
+	 * @param b1
+	 * @return
+	 */
+	public static float ray_lineSegmentDistance(Vec3 ray_origin, Vec3 ray_dir, Vec3 b0, Vec3 b1, Vec3 out_ray_point, Vec3 out_line_point) {
+		float[] nm = line_lineDistanceNM(ray_origin, ray_origin.add(ray_dir), b0, b1);
+		nm[0] = Math.max(0, nm[0]);
+		nm[1] = clamp(0, 1, nm[1]);
+		Vec3 b_dir = new Vec3(b0, b1);
+		out_ray_point.set(ray_origin.add(ray_dir.mul(nm[0])));
+		out_line_point.set(b0.add(b_dir.mul(nm[1])));
+		Vec3 v = new Vec3(out_ray_point, out_line_point);
+		return v.length();
+	}
+
+	/**
+	 * Takes in two line segments in 3D, and returns the values for n and m.
+	 * Where v is the vector between the two closest points of a and b,
+	 * v.x = (a0.x + n * d0.x) - (b0.x + m * d1.x)
+	 * v.y = (a0.y + n * d0.y) - (b0.y + m * d1.y)
+	 * v.z = (a0.z + n * d0.z) - (b0.z + m * d1.z)
+	 * 
+	 * d0 is the direction vector of a, d0 is for b. 
+	 * v.dot(d0) = 0
+	 * v.dot(d1) = 0
+	 * 
+	 * thus we can get the two equations: 
+	 * ((a0.x + n * d0.x) - (b0.x + m * d1.x)) * d0.x + 
+	 * ((a0.y + n * d0.y) - (b0.y + m * d1.y)) * d0.y + 
+	 * ((a0.z + n * d0.z) - (b0.z + m * d1.z)) * d0.z = 0
+	 * 
+	 * ((a0.x + n * d0.x) - (b0.x + m * d1.x)) * d1.x + 
+	 * ((a0.y + n * d0.y) - (b0.y + m * d1.y)) * d1.y + 
+	 * ((a0.z + n * d0.z) - (b0.z + m * d1.z)) * d1.z = 0
+	 * 
+	 * finally, solve for n and m. 
+	 * 
+	 * closest point on line a : a0 + n * d0. 
+	 * for line b : b0 + m * d0. 
+	 * 
+	 * @param a0
+	 * @param a1
+	 * @param b0
+	 * @param b1
+	 * @return
+	 */
+	private static float[] line_lineDistanceNM(Vec3 a0, Vec3 a1, Vec3 b0, Vec3 b1) {
+		Vec3 d0 = new Vec3(a0, a1);
+		Vec3 d1 = new Vec3(b0, b1);
+
+		float n = 0;
+		float m = 0;
+
+		float nExp0 = 0;
+		float mExp0 = 0;
+		float cnst0 = 0;
+
+		float nExp1 = 0;
+		float mExp1 = 0;
+		float cnst1 = 0;
+
+		//v is the vector between the two closest points of a and b. 
+		//v.x = (a0.x + n * d0.x) - (b0.x + m * d1.x);
+		//v.y = (a0.y + n * d0.y) - (b0.y + m * d1.y);
+		//v.z = (a0.z + n * d0.z) - (b0.z + m * d1.z);
+
+		//v.dot(d0) = 0
+		//v.dot(d1) = 0
+
+		//((a0.x + n * d0.x) - (b0.x + m * d1.x)) * d0.x + 
+		//((a0.y + n * d0.y) - (b0.y + m * d1.y)) * d0.y + 
+		//((a0.z + n * d0.z) - (b0.z + m * d1.z)) * d0.z = 0
+
+		nExp0 += d0.x * d0.x + d0.y * d0.y + d0.z * d0.z;
+		mExp0 -= d1.x * d0.x + d1.y * d0.y + d1.z * d0.z;
+		cnst0 -= a0.x * d0.x + a0.y * d0.y + a0.z * d0.z;
+		cnst0 += b0.x * d0.x + b0.y * d0.y + b0.z * d0.z;
+
+		//((a0.x + n * d0.x) - (b0.x + m * d1.x)) * d1.x + 
+		//((a0.y + n * d0.y) - (b0.y + m * d1.y)) * d1.y + 
+		//((a0.z + n * d0.z) - (b0.z + m * d1.z)) * d1.z = 0
+
+		nExp1 += d0.x * d1.x + d0.y * d1.y + d0.z * d1.z;
+		mExp1 -= d1.x * d1.x + d1.y * d1.y + d1.z * d1.z;
+		cnst1 -= a0.x * d1.x + a0.y * d1.y + a0.z * d1.z;
+		cnst1 += b0.x * d1.x + b0.y * d1.y + b0.z * d1.z;
+
+		//nExp0 * n + mExp0 * m = cnst0
+		//nExp1 * n + mExp1 * m = cnst1
+
+		//cancel out nExp0
+		float ratio = nExp0 / nExp1;
+		nExp0 -= nExp1 * ratio; //nExp1 * (nExp0 / nExp1) = nExp0
+		mExp0 -= mExp1 * ratio;
+		cnst0 -= cnst1 * ratio;
+
+		//now, nExp0 should = 0. Solve for m. 
+		m = cnst0 / mExp0;
+
+		//now solve for n. n = (cnst1 - mExp1 * m) / nExp1;
+		n = (cnst1 - mExp1 * m) / nExp1;
+
+		return new float[] { n, m };
 	}
 
 	/**
@@ -171,7 +298,8 @@ public class MathUtils {
 	}
 
 	/**
-	 * Take in a point and a line segment, and if the projection of the point onto the line is within the segment, returns the point projected onto the line, else returns null.
+	 * Take in a point and a line segment, and if the projection of the point onto the line is within the segment, 
+	 * returns the point projected onto the line, else returns null.
 	 * 
 	 * @param point
 	 * @param line_a
@@ -189,7 +317,8 @@ public class MathUtils {
 	}
 
 	/**
-	 * Take in a point and a line segment, and if the projection of the point onto the line is within the segment, returns the point projected onto the line, else clamps the point to the line segment, and returns the clamped point.
+	 * Take in a point and a line segment, and if the projection of the point onto the line is within the segment, 
+	 * returns the point projected onto the line, else clamps the point to the line segment, and returns the clamped point.
 	 * 
 	 * @param point
 	 * @param line_a
@@ -356,7 +485,8 @@ public class MathUtils {
 	}
 
 	/**
-	 * Takes a capsule and a triangle, and determines the point on the triangle, p, where dist(p, c) is minimal. Point c is a point in the capsule bound to the line segment defined by capsule_top and capsule_bottom.
+	 * Takes a capsule and a triangle, and determines the point on the triangle, p, where dist(p, c) is minimal. 
+	 * Point c is a point in the capsule bound to the line segment defined by capsule_top and capsule_bottom.
 	 * 
 	 * @param capsule_top
 	 * @param capsule_bottom
@@ -421,6 +551,32 @@ public class MathUtils {
 
 		Vec3 capsule_c = point_lineSegmentProjectClamped(referencePoint, capsule_a, capsule_b);
 		return sphere_triangleIntersect(capsule_c, capsule_radius, t0, t1, t2);
+	}
+
+	/**
+	 * Takes a ray and a capsule, and returns the point on the ray that is the deepest inside the capsule if they intersect. 
+	 * @param ray_origin
+	 * @param ray_dir
+	 * @param capsule_bottom
+	 * @param capsule_top
+	 * @param capsule_radius
+	 * @return
+	 */
+	public static Vec3 ray_capsuleIntersect(Vec3 ray_origin, Vec3 ray_dir, Vec3 capsule_bottom, Vec3 capsule_top, float capsule_radius) {
+		Vec3 capsule_tangent = new Vec3(capsule_bottom, capsule_top).normalize();
+		Vec3 capsule_a = capsule_bottom.add(capsule_tangent.mul(capsule_radius));
+		Vec3 capsule_b = capsule_top.sub(capsule_tangent.mul(capsule_radius));
+
+		Vec3 ray_close = new Vec3(0);
+		Vec3 capsule_close = new Vec3(0);
+
+		ray_lineSegmentDistance(ray_origin, ray_dir, capsule_a, capsule_b, ray_close, capsule_close);
+
+		float dist = new Vec3(ray_close, capsule_close).length();
+		if (dist < capsule_radius) {
+			return ray_close;
+		}
+		return null;
 	}
 
 	/**
