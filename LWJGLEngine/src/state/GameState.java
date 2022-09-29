@@ -2,8 +2,11 @@ package state;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_M;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Queue;
+import java.util.Stack;
 
 import entity.Capsule;
 import entity.Entity;
@@ -35,8 +38,10 @@ import util.Vec4;
 public class GameState extends State {
 
 	private static final int WORLD_SCENE = 0;
-
 	private static final int DECAL_SCENE = 1; // screen space decals
+
+	private static final int DECAL_LIMIT = 200;
+	private Queue<Long> decalIDs;
 
 	private String ip;
 	private int port;
@@ -81,6 +86,8 @@ public class GameState extends State {
 
 		this.bloodDecal = new Decal();
 		this.bloodDecal.setTextureMaterial(new TextureMaterial(AssetManager.getTexture("blood_splatter_texture")));
+
+		this.decalIDs = new ArrayDeque<>();
 
 		Main.lockCursor();
 		InputManager.removeAllInputs();
@@ -229,6 +236,7 @@ public class GameState extends State {
 					modelMat4.muli(Mat4.translate(minVec));
 					long bloodSplatterID = Model.addInstance(this.bloodDecal, modelMat4, DECAL_SCENE);
 					Model.updateInstance(bloodSplatterID, new Material(new Vec4(1), new Vec4(0.7f), 256f));
+					this.decalIDs.add(bloodSplatterID);
 				}
 
 				//bullet hole decal
@@ -241,9 +249,14 @@ public class GameState extends State {
 				modelMat4.muli(Mat4.translate(minVec));
 				long bulletHoleID = Model.addInstance(this.bulletHoleDecal, modelMat4, DECAL_SCENE);
 				Model.updateInstance(bulletHoleID, new Material(new Vec4(1), new Vec4(0f), 64f));
-
+				this.decalIDs.add(bulletHoleID);
 			}
+		}
 
+		//cull old decals
+		while (this.decalIDs.size() > DECAL_LIMIT) {
+			long ID = this.decalIDs.poll();
+			Model.removeInstance(ID);
 		}
 
 		// -- UPDATES --
