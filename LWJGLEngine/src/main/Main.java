@@ -47,6 +47,8 @@ public class Main implements Runnable {
 	public static final int DOWN = 5;
 
 	public static long selectedEntityID = 0;
+	
+	public long deltaMillis = 0;
 
 	private StateManager sm;
 
@@ -113,6 +115,7 @@ public class Main implements Runnable {
 		int frames = 0;
 		while (running) {
 			long now = System.nanoTime();
+			this.deltaMillis = (now - lastTime) / 1000000;
 			delta += (now - lastTime) / ns;
 			lastTime = now;
 			if(delta >= 1.0) {

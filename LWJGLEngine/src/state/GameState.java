@@ -15,6 +15,7 @@ import graphics.Material;
 import graphics.TextureMaterial;
 import input.InputManager;
 import input.KeyboardInput;
+import input.MouseInput;
 import main.Main;
 import model.AssetManager;
 import model.Decal;
@@ -61,6 +62,18 @@ public class GameState extends State {
 	private long mapID;
 
 	private Model bloodDecal, bulletHoleDecal;
+	private ArrayList<Pair<Integer, Vec3[]>> bulletRays;
+	
+	// -- INPUT --
+	private boolean leftMouse = false;
+	private boolean rightMouse = false;
+	
+	private int magazineSize = 30;
+	private int magazineAmmo = 30;
+	private int reserveAmmo = 90;
+	
+	private long fireDelayMillis = 100;
+	private long fireMillisCounter = 0;
 
 	public GameState(StateManager sm, String ip, int port, boolean hosting) {
 		super(sm);
@@ -105,6 +118,7 @@ public class GameState extends State {
 		// -- DECAL SCENE --
 		Model.removeInstancesFromScene(DECAL_SCENE);
 		Light.removeLightsFromScene(DECAL_SCENE);
+		this.bulletRays = new ArrayList<>();
 
 		// -- NETWORKING --
 		this.client = new GameClient();
@@ -142,6 +156,23 @@ public class GameState extends State {
 
 	@Override
 	public void update() {
+		// -- SHOOTING --
+		if(this.leftMouse) {
+			this.fireMillisCounter += Main.main.deltaMillis;
+			if(this.fireMillisCounter > this.fireDelayMillis) {
+				this.fireMillisCounter %= this.fireDelayMillis;
+				
+				// shoot ray in direction of camera
+				Vec3 ray_origin = perspectiveCamera.getPos();
+				Vec3 ray_dir = perspectiveCamera.getFacing();
+				this.client.addBulletRay(ray_origin, ray_dir);
+				this.bulletRays.add(new Pair<Integer, Vec3[]>(this.client.getID(), new Vec3[] {ray_origin, ray_dir}));
+			}
+		}
+		else {
+			this.fireMillisCounter = 0;
+		}
+		
 		// -- NETWORKING --
 
 		// check for disconnected host
@@ -175,11 +206,15 @@ public class GameState extends State {
 		}
 
 		// process decals from bullets
-		ArrayList<Pair<Integer, Vec3[]>> bulletRays = this.client.getBulletRays();
-		for (Pair<Integer, Vec3[]> p : bulletRays) {
+		this.bulletRays.addAll(this.client.getBulletRays());
+		for (Pair<Integer, Vec3[]> p : this.bulletRays) {
 			int clientID = p.first;
 			Vec3 ray_origin = p.second[0];
 			Vec3 ray_dir = p.second[1];
+			
+			if(clientID == this.client.getID()) {	//this bullet has been drawn the instant it gets shot
+				//continue;
+			}
 
 			boolean playerIntersect = false;
 			//check against other players
@@ -250,6 +285,7 @@ public class GameState extends State {
 				this.decalIDs.add(bulletHoleID);
 			}
 		}
+		this.bulletRays.clear();
 
 		//cull old decals
 		while (this.decalIDs.size() > DECAL_LIMIT) {
@@ -288,16 +324,23 @@ public class GameState extends State {
 
 	@Override
 	public void mousePressed(int button) {
-		// shoot ray in direction of camera
-		Vec3 ray_origin = perspectiveCamera.getPos();
-		Vec3 ray_dir = perspectiveCamera.getFacing();
-		this.client.addBulletRay(ray_origin, ray_dir);
+		if(button == MouseInput.LEFT_MOUSE_BUTTON) {
+			this.leftMouse = true;
+		}
+		else if(button == MouseInput.RIGHT_MOUSE_BUTTON) {
+			this.rightMouse = true;
+		}
+		
 	}
 
 	@Override
 	public void mouseReleased(int button) {
-		// TODO Auto-generated method stub
-
+		if(button == MouseInput.LEFT_MOUSE_BUTTON) {
+			this.leftMouse = false;
+		}
+		else if(button == MouseInput.RIGHT_MOUSE_BUTTON) {
+			this.rightMouse = false;
+		}
 	}
 
 }
