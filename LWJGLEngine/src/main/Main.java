@@ -47,7 +47,7 @@ public class Main implements Runnable {
 	public static final int DOWN = 5;
 
 	public static long selectedEntityID = 0;
-	
+
 	public long deltaMillis = 0;
 
 	private StateManager sm;
@@ -59,7 +59,7 @@ public class Main implements Runnable {
 	}
 
 	private void init() {
-		if(!glfwInit()) {
+		if (!glfwInit()) {
 			// window failed to init
 			return;
 		}
@@ -68,7 +68,7 @@ public class Main implements Runnable {
 		long primaryMonitor = glfwGetPrimaryMonitor();
 		window = glfwCreateWindow(windowWidth, windowHeight, "LWJGL", fullscreen ? primaryMonitor : NULL, NULL);
 
-		if(window == NULL) {
+		if (window == NULL) {
 			return;
 		}
 
@@ -103,10 +103,12 @@ public class Main implements Runnable {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 
+	@Override
 	public void run() {
 		init();
 
 		long lastTime = System.nanoTime();
+		long lastUpdateTime = System.nanoTime();
 		double delta = 0.0;
 		double ns = 1000000000.0 / 60;
 		long timer = System.currentTimeMillis();
@@ -115,10 +117,11 @@ public class Main implements Runnable {
 		int frames = 0;
 		while (running) {
 			long now = System.nanoTime();
-			this.deltaMillis = (now - lastTime) / 1000000;
 			delta += (now - lastTime) / ns;
 			lastTime = now;
-			if(delta >= 1.0) {
+			if (delta >= 1.0) {
+				this.deltaMillis = (System.nanoTime() - lastUpdateTime) / 1000000;
+				lastUpdateTime = now;
 				update();
 				delta--;
 				delta = Math.min(delta, 1);
@@ -128,14 +131,14 @@ public class Main implements Runnable {
 			render();
 			frames++;
 
-			if(System.currentTimeMillis() - timer > 1000) {
+			if (System.currentTimeMillis() - timer > 1000) {
 				timer += 1000;
 				System.out.println(frames + " fps \\ " + updates + " ups");
 				updates = 0;
 				frames = 0;
 			}
 
-			if(glfwWindowShouldClose(window)) {
+			if (glfwWindowShouldClose(window)) {
 				running = false;
 			}
 		}
@@ -148,7 +151,7 @@ public class Main implements Runnable {
 		glfwPollEvents();
 
 		// esc for exit
-		if(KeyboardInput.isKeyPressed(GLFW_KEY_ESCAPE)) {
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_ESCAPE)) {
 			running = false;
 			System.exit(0); // to close all threads
 		}
@@ -162,7 +165,7 @@ public class Main implements Runnable {
 		glfwSwapBuffers(window);
 
 		int error = glGetError();
-		if(error != GL_NO_ERROR) {
+		if (error != GL_NO_ERROR) {
 			System.out.println(error);
 		}
 	}

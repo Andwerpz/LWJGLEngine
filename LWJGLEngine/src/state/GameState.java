@@ -40,8 +40,9 @@ public class GameState extends State {
 
 	private static final int WORLD_SCENE = 0;
 	private static final int DECAL_SCENE = 1; // screen space decals
+	private static final int UI_SCENE = 2;
 
-	private static final int DECAL_LIMIT = 200;
+	private static final int DECAL_LIMIT = 500;
 	private Queue<Long> decalIDs;
 
 	private String ip;
@@ -63,15 +64,15 @@ public class GameState extends State {
 
 	private Model bloodDecal, bulletHoleDecal;
 	private ArrayList<Pair<Integer, Vec3[]>> bulletRays;
-	
+
 	// -- INPUT --
 	private boolean leftMouse = false;
 	private boolean rightMouse = false;
-	
+
 	private int magazineSize = 30;
 	private int magazineAmmo = 30;
 	private int reserveAmmo = 90;
-	
+
 	private long fireDelayMillis = 100;
 	private long fireMillisCounter = 0;
 
@@ -157,22 +158,20 @@ public class GameState extends State {
 	@Override
 	public void update() {
 		// -- SHOOTING --
-		if(this.leftMouse) {
-			this.fireMillisCounter += Main.main.deltaMillis;
-			if(this.fireMillisCounter > this.fireDelayMillis) {
+		this.fireMillisCounter += Main.main.deltaMillis;
+		if (this.leftMouse) {
+			if (this.fireMillisCounter > this.fireDelayMillis) {
+				System.out.println(this.fireMillisCounter);
 				this.fireMillisCounter %= this.fireDelayMillis;
-				
+
 				// shoot ray in direction of camera
 				Vec3 ray_origin = perspectiveCamera.getPos();
 				Vec3 ray_dir = perspectiveCamera.getFacing();
 				this.client.addBulletRay(ray_origin, ray_dir);
-				this.bulletRays.add(new Pair<Integer, Vec3[]>(this.client.getID(), new Vec3[] {ray_origin, ray_dir}));
+				this.bulletRays.add(new Pair<Integer, Vec3[]>(-1, new Vec3[] { ray_origin, ray_dir }));
 			}
 		}
-		else {
-			this.fireMillisCounter = 0;
-		}
-		
+
 		// -- NETWORKING --
 
 		// check for disconnected host
@@ -211,28 +210,29 @@ public class GameState extends State {
 			int clientID = p.first;
 			Vec3 ray_origin = p.second[0];
 			Vec3 ray_dir = p.second[1];
-			
-			if(clientID == this.client.getID()) {	//this bullet has been drawn the instant it gets shot
-				//continue;
+
+			if (clientID == this.client.getID()) { //already processed when it was initially shot
+				continue;
 			}
 
 			boolean playerIntersect = false;
 			//check against other players
-			for (int ID : this.otherPlayers.keySet()) {
-				if (clientID == ID) { //a player can't hit themselves with their own bullet
-					continue;
+			if (clientID != -1) { //if it is -1, then it's shot by the local client
+				for (int ID : this.otherPlayers.keySet()) {
+					if (clientID == ID) { //a player can't hit themselves with their own bullet
+						continue;
+					}
+					Capsule c = this.otherPlayers.get(ID);
+					if (MathUtils.ray_capsuleIntersect(ray_origin, ray_dir, c.getBottom(), c.getTop(), c.getRadius()) != null) {
+						playerIntersect = true;
+						break;
+					}
 				}
-				Capsule c = this.otherPlayers.get(ID);
-				if (MathUtils.ray_capsuleIntersect(ray_origin, ray_dir, c.getBottom(), c.getTop(), c.getRadius()) != null) {
-					playerIntersect = true;
-					break;
-				}
-			}
-
-			//did the bullet hit yourself?
-			if (clientID != this.client.getID()) {
-				if (MathUtils.ray_capsuleIntersect(ray_origin, ray_dir, player.getBottom(), player.getTop(), player.getRadius()) != null) {
-					playerIntersect = true;
+				//did the bullet hit yourself?
+				if (clientID != this.client.getID()) {
+					if (MathUtils.ray_capsuleIntersect(ray_origin, ray_dir, player.getBottom(), player.getTop(), player.getRadius()) != null) {
+						playerIntersect = true;
+					}
 				}
 			}
 
@@ -324,21 +324,19 @@ public class GameState extends State {
 
 	@Override
 	public void mousePressed(int button) {
-		if(button == MouseInput.LEFT_MOUSE_BUTTON) {
+		if (button == MouseInput.LEFT_MOUSE_BUTTON) {
 			this.leftMouse = true;
-		}
-		else if(button == MouseInput.RIGHT_MOUSE_BUTTON) {
+		} else if (button == MouseInput.RIGHT_MOUSE_BUTTON) {
 			this.rightMouse = true;
 		}
-		
+
 	}
 
 	@Override
 	public void mouseReleased(int button) {
-		if(button == MouseInput.LEFT_MOUSE_BUTTON) {
+		if (button == MouseInput.LEFT_MOUSE_BUTTON) {
 			this.leftMouse = false;
-		}
-		else if(button == MouseInput.RIGHT_MOUSE_BUTTON) {
+		} else if (button == MouseInput.RIGHT_MOUSE_BUTTON) {
 			this.rightMouse = false;
 		}
 	}

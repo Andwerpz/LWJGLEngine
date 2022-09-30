@@ -97,7 +97,7 @@ void main()
 	normal = normal * 2.0 - 1.0;
 	normal = normalize(invTBN * normal);	//transform normal into world space
 	
-	if(fragColor.w < 0.1){	//alpha = 0
+	if(fragColor.w == 0.0){	//alpha = 0
     	discard;
     }
 	
