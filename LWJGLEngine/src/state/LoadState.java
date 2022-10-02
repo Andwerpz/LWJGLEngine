@@ -63,28 +63,28 @@ public class LoadState extends State {
 	@Override
 	public void update() {
 		long curTime = System.currentTimeMillis();
-		if(this.state == TRANSITIONING_IN) {
+		if (this.state == TRANSITIONING_IN) {
 			this.alpha = MathUtils.interpolate(0, 0, 1, TRANSITION_IN_DURATION * 1000f, curTime - startTime);
-			if(curTime > endTime) {
+			if (curTime > endTime) {
 				alpha = 1;
 				this.state = READY_TO_LOAD;
 			}
 		}
-		else if(this.state == READY_TO_LOAD) {
+		else if (this.state == READY_TO_LOAD) {
 			this.nextState.load();
 			this.finishedLoading = true;
 			this.state = TRANSITIONING_OUT;
 			this.startTime = System.currentTimeMillis();
 			this.endTime = startTime + TRANSITION_OUT_DURATION * 1000L;
 		}
-		else if(this.state == TRANSITIONING_OUT) {
+		else if (this.state == TRANSITIONING_OUT) {
 			this.alpha = MathUtils.interpolate(1, 0, 0, TRANSITION_OUT_DURATION * 1000f, curTime - startTime);
-			if(curTime > endTime) {
+			if (curTime > endTime) {
 				alpha = 0;
 				this.state = FINISHED;
 			}
 		}
-		else if(this.state == FINISHED) {
+		else if (this.state == FINISHED) {
 			// System.out.println("FIN");
 		}
 		loadScreen.setAlpha(this.alpha);
@@ -104,6 +104,16 @@ public class LoadState extends State {
 	@Override
 	public void mouseReleased(int button) {
 		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void keyPressed(int key) {
+
+	}
+
+	@Override
+	public void keyReleased(int key) {
 
 	}
 

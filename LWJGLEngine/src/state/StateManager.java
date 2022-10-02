@@ -85,10 +85,12 @@ public class StateManager {
 	}
 
 	public void keyPressed(int key) {
+		activeState.keyPressed(key);
 		InputManager.keyPressed(key);
 	}
 
 	public void keyReleased(int key) {
+		activeState.keyReleased(key);
 		InputManager.keyReleased(key);
 	}
 

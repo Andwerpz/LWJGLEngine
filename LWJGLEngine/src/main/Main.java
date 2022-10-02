@@ -191,7 +191,6 @@ public class Main implements Runnable {
 		}
 
 		if (UIElement.shouldAlignUIElements) {
-			System.out.println("ALIGN ALL UI ELEMENTS");
 			UIElement.alignAllUIElements();
 		}
 

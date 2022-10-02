@@ -28,7 +28,7 @@ public class SplashState extends State {
 	@Override
 	public void update() {
 		long timeElapsed = System.currentTimeMillis() - this.startTime;
-		if(timeElapsed / 1000L > TIME_ON_SCREEN) {
+		if (timeElapsed / 1000L > TIME_ON_SCREEN) {
 			this.sm.switchState(new MainMenuState(this.sm));
 		}
 	}
@@ -47,6 +47,16 @@ public class SplashState extends State {
 	@Override
 	public void mouseReleased(int button) {
 		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void keyPressed(int key) {
+
+	}
+
+	@Override
+	public void keyReleased(int key) {
 
 	}
 

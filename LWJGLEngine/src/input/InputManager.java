@@ -44,9 +44,19 @@ public class InputManager {
 		return b == null ? false : b.isClicked();
 	}
 
+	public static String getClicked() {
+		for (String s : inputs.keySet()) {
+			Input i = inputs.get(s);
+			if (i.isClicked()) {
+				return s;
+			}
+		}
+		return "";
+	}
+
 	public static String getText(String id) {
 		Input b = inputs.get(id);
-		if(!(b instanceof TextField)) {
+		if (!(b instanceof TextField)) {
 			return null;
 		}
 		TextField tf = (TextField) b;
@@ -61,7 +71,7 @@ public class InputManager {
 
 	public static void pressed(long entityID) {
 		String id = entityToStringID.get(entityID);
-		if(id == null) {
+		if (id == null) {
 			return;
 		}
 		inputs.get(id).pressed(entityID);
@@ -75,7 +85,7 @@ public class InputManager {
 
 	public static void keyPressed(int key) {
 		for (Input b : inputs.values()) {
-			if(b instanceof TextField) {
+			if (b instanceof TextField) {
 				((TextField) b).keyPressed(key);
 			}
 		}
@@ -83,7 +93,7 @@ public class InputManager {
 
 	public static void keyReleased(int key) {
 		for (Input b : inputs.values()) {
-			if(b instanceof TextField) {
+			if (b instanceof TextField) {
 				((TextField) b).keyReleased(key);
 			}
 		}

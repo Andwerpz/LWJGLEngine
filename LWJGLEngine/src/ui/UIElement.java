@@ -32,9 +32,13 @@ public abstract class UIElement extends Entity {
 	public static final int ALIGN_CENTER = 4;
 
 	private int horizontalAlignFrame, verticalAlignFrame;
+	private int xOffset, yOffset; //along with alignment style, determines reference coordinates for drawing
+
 	protected int horizontalAlignContent, verticalAlignContent;
-	private int xOffset, yOffset;
-	protected int x, y, z, width, height;
+	protected int x, y, z; //reference coordinates for drawing
+	protected int width, height;
+
+	protected int alignedX, alignedY;
 
 	public UIElement(int xOffset, int yOffset) {
 		this.horizontalAlignFrame = FROM_LEFT;
@@ -45,6 +49,8 @@ public abstract class UIElement extends Entity {
 
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
+
+		this.alignFrame();
 
 		UIElement.uiElements.add(this);
 		UIElement.shouldAlignUIElements = true;
@@ -85,13 +91,14 @@ public abstract class UIElement extends Entity {
 	}
 
 	public static void alignAllUIElements() {
+		System.out.println("ALIGN ALL UI ELEMENTS");
 		for (UIElement i : UIElement.uiElements) {
-			i.alignFrame();
+			i.align();
 		}
 		UIElement.shouldAlignUIElements = false;
 	}
 
-	public void alignFrame() {
+	protected void alignFrame() {
 		switch (this.horizontalAlignFrame) {
 		case FROM_LEFT:
 			this.x = this.xOffset;
@@ -127,11 +134,45 @@ public abstract class UIElement extends Entity {
 			this.y = Main.windowHeight / 2 + this.yOffset;
 			break;
 		}
-
-		this.alignContents();
 	}
 
-	protected abstract void alignContents();
+	protected void alignContents() {
+		switch (this.horizontalAlignContent) {
+		case ALIGN_CENTER:
+			this.alignedX = this.x - this.width / 2;
+			break;
+
+		case ALIGN_RIGHT:
+			this.alignedX = this.x - this.width;
+			break;
+
+		case ALIGN_LEFT:
+			this.alignedX = this.x;
+			break;
+		}
+
+		switch (this.verticalAlignContent) {
+		case ALIGN_CENTER:
+			this.alignedY = this.y - this.height / 2;
+			break;
+
+		case ALIGN_TOP:
+			this.alignedY = this.y - this.height;
+			break;
+
+		case ALIGN_BOTTOM:
+			this.alignedY = this.y;
+			break;
+		}
+		this._alignContents();
+	}
+
+	protected abstract void _alignContents();
+
+	public void align() {
+		this.alignFrame();
+		this.alignContents();
+	}
 
 	@Override
 	protected abstract void update();

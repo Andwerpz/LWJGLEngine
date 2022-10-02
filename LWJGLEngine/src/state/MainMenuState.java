@@ -175,7 +175,9 @@ public class MainMenuState extends State {
 	@Override
 	public void mouseReleased(int button) {
 		InputManager.released(uiScreen.getEntityIDAtMouse());
-		if (InputManager.isClicked("btn_host_game")) {
+		String clickedButton = InputManager.getClicked();
+		switch (clickedButton) {
+		case "btn_host_game":
 			try {
 				int ip = Integer.parseInt(InputManager.getText("tf_host_port"));
 				this.sm.switchState(new GameState(this.sm, null, ip, true));
@@ -183,9 +185,9 @@ public class MainMenuState extends State {
 			catch (NumberFormatException e) {
 				System.err.println("BAD PORT");
 			}
+			break;
 
-		}
-		else if (InputManager.isClicked("btn_join_game")) {
+		case "btn_join_game":
 			try {
 				int ip = Integer.parseInt(InputManager.getText("tf_join_port"));
 				String port = InputManager.getText("tf_join_ip");
@@ -194,19 +196,36 @@ public class MainMenuState extends State {
 			catch (NumberFormatException e) {
 				System.err.println("BAD PORT");
 			}
-		}
-		else if (InputManager.isClicked("btn_quit_game")) {
+			break;
+
+		case "btn_quit_game":
 			Main.main.exit();
-		}
-		else if (InputManager.isClicked("btn_settings")) {
+			break;
+
+		case "btn_settings":
 			this.drawSettingsMenu();
-		}
-		else if (InputManager.isClicked("btn_settings_exit")) {
+			break;
+
+		case "btn_settings_exit":
 			this.drawMainMenu();
-		}
-		else if (InputManager.isClicked("btn_settings_toggle_fullscreen")) {
+			break;
+
+		case "btn_settings_toggle_fullscreen":
 			Main.main.toggleFullscreen();
+			break;
+
 		}
+
+	}
+
+	@Override
+	public void keyPressed(int key) {
+
+	}
+
+	@Override
+	public void keyReleased(int key) {
+
 	}
 
 }

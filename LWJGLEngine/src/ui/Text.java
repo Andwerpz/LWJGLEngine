@@ -39,47 +39,45 @@ public class Text extends UIElement {
 	public Text(int x, int y, String text, int fontSize, Material material, int scene) {
 		super(x, y);
 		Font derivedFont = new Font("Dialogue", Font.PLAIN, fontSize);
-		this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material, scene);
+		this.init(0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material, scene);
 	}
 
 	public Text(int x, int y, String text, Font font, int fontSize, Material material, int scene) {
 		super(x, y);
 		Font derivedFont = FontUtils.deriveSize(fontSize, font);
-		this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material, scene);
+		this.init(0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material, scene);
 	}
 
 	public Text(int x, int y, String text, Font font, Color color, int scene) {
 		super(x, y);
-		this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, font), text, font, new Material(color), scene);
+		this.init(0, GraphicsTools.calculateTextWidth(text, font), text, font, new Material(color), scene);
 	}
 
 	public Text(int x, int y, String text, Font font, int fontSize, Color color, int scene) {
 		super(x, y);
 		Font derivedFont = FontUtils.deriveSize(fontSize, font);
-		this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, new Material(color), scene);
+		this.init(0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, new Material(color), scene);
 	}
 
 	public Text(int x, int y, int z, String text, Font font, Material material, int scene) {
 		super(x, y);
-		this.init(x, y, z, GraphicsTools.calculateTextWidth(text, font), text, font, material, scene);
+		this.init(z, GraphicsTools.calculateTextWidth(text, font), text, font, material, scene);
 	}
 
 	public Text(int x, int y, int z, int width, String text, Font font, Material material, int scene) {
 		super(x, y);
-		this.init(x, y, z, width, text, font, material, scene);
+		this.init(z, width, text, font, material, scene);
 	}
 
 	public Text(int x, int y, String text, Font font, Material material, int scene) {
 		super(x, y);
-		this.init(x, y, 0, GraphicsTools.calculateTextWidth(text, font), text, font, material, scene);
+		this.init(0, GraphicsTools.calculateTextWidth(text, font), text, font, material, scene);
 	}
 
-	private void init(int x, int y, int z, int width, String text, Font font, Material material, int scene) {
+	private void init(int z, int width, String text, Font font, Material material, int scene) {
 		this.text = text;
 		this.font = font;
 		this.fontSize = font.getSize();
-		this.x = x;
-		this.y = y;
 		this.z = z;
 		this.width = width; // text will get cut off after this
 		this.material = material;
@@ -100,7 +98,7 @@ public class Text extends UIElement {
 		Texture texture = new Texture(img, false, false, true);
 		this.textTextureMaterial = new TextureMaterial(texture);
 
-		Mat4 modelMat4 = Mat4.scale(this.width, textMaxHeight, 1).mul(Mat4.translate(new Vec3(x, y, this.z)));
+		Mat4 modelMat4 = Mat4.scale(this.width, this.textMaxHeight, 1).mul(Mat4.translate(new Vec3(this.x, this.y, this.z)));
 
 		this.textRectangle = new FilledRectangle();
 		this.textRectangle.setTextureMaterial(textTextureMaterial);
@@ -117,34 +115,32 @@ public class Text extends UIElement {
 	}
 
 	@Override
-	protected void alignContents() {
-		int alignedX = x;
+	protected void _alignContents() {
 		switch (this.horizontalAlignContent) {
 		case ALIGN_CENTER:
-			alignedX = x - this.width / 2;
+			this.alignedX = this.x - this.width / 2;
 			break;
 
 		case ALIGN_RIGHT:
-			alignedX = x - this.width;
+			this.alignedX = this.x - this.width;
 			break;
 
 		case ALIGN_LEFT:
-			alignedX = x;
+			this.alignedX = this.x;
 			break;
 		}
 
-		int alignedY = y;
 		switch (this.verticalAlignContent) {
 		case ALIGN_CENTER:
-			alignedY = y - this.textMaxDescent - this.textSampleAscent / 2;
+			this.alignedY = this.y - this.textMaxDescent - this.textSampleAscent / 2;
 			break;
 
 		case ALIGN_TOP:
-			alignedY = y - this.textMaxDescent - this.textSampleAscent;
+			this.alignedY = this.y - this.textMaxDescent - this.textSampleAscent;
 			break;
 
 		case ALIGN_BOTTOM:
-			alignedY = y - this.textMaxDescent;
+			this.alignedY = this.y - this.textMaxDescent;
 			break;
 		}
 
@@ -185,7 +181,7 @@ public class Text extends UIElement {
 		this.text = text;
 		this.textWidth = GraphicsTools.calculateTextWidth(this.text, this.font);
 
-		this.alignContents();
+		this.align();
 	}
 
 	public void setMaterial(Material material) {

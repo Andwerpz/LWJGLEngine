@@ -31,4 +31,8 @@ public abstract class State {
 
 	public abstract void mouseReleased(int button);
 
+	public abstract void keyPressed(int key);
+
+	public abstract void keyReleased(int key);
+
 }

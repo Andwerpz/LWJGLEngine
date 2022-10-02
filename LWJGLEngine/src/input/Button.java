@@ -47,17 +47,17 @@ public class Button extends Input {
 
 	public Button(int x, int y, int width, int height, String text, Font font, int fontSize, int scene) {
 		super(x, y);
-		this.init(x, y, 0, width, height, text, FontUtils.deriveSize(fontSize, font), scene);
+		this.init(0, width, height, text, FontUtils.deriveSize(fontSize, font), scene);
 	}
 
 	// text size should already be included in the font
-	private void init(int x, int y, int z, int width, int height, String text, Font font, int scene) {
+	private void init(int z, int width, int height, String text, Font font, int scene) {
 		this.z = z;
 		this.width = width;
 		this.height = height;
 		this.scene = scene;
 
-		this.setFrameAlignment(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM, x, y);
+		this.setFrameAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 
 		this.horizontalAlignContent = UIElement.ALIGN_LEFT;
 		this.verticalAlignContent = UIElement.ALIGN_BOTTOM;
@@ -85,44 +85,14 @@ public class Button extends Input {
 	}
 
 	@Override
-	protected void alignContents() {
-		int alignedX = this.x;
-		switch (this.horizontalAlignContent) {
-		case ALIGN_CENTER:
-			alignedX = this.x - this.width / 2;
-			break;
-
-		case ALIGN_RIGHT:
-			alignedX = this.x - this.width;
-			break;
-
-		case ALIGN_LEFT:
-			alignedX = this.x;
-			break;
-		}
-
-		int alignedY = this.y;
-		switch (this.verticalAlignContent) {
-		case ALIGN_CENTER:
-			alignedY = this.y - this.height / 2;
-			break;
-
-		case ALIGN_TOP:
-			alignedY = this.y - this.height;
-			break;
-
-		case ALIGN_BOTTOM:
-			alignedY = this.y;
-			break;
-		}
-
-		Mat4 modelMat4 = Mat4.scale(this.width, this.height, 1).mul(Mat4.translate(new Vec3(alignedX, alignedY, this.z)));
+	protected void _alignContents() {
+		Mat4 modelMat4 = Mat4.scale(this.width, this.height, 1).mul(Mat4.translate(new Vec3(this.alignedX, this.alignedY, this.z)));
 		this.updateModelInstance(this.buttonInnerID, modelMat4);
 
 		int centerX = alignedX + this.width / 2;
 		int centerY = alignedY + this.height / 2;
 		this.buttonText.setFrameAlignment(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM, centerX, centerY);
-		this.buttonText.alignFrame();
+		this.buttonText.align();
 	}
 
 	@Override

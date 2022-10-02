@@ -1,6 +1,6 @@
 package state;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_M;
+import static org.lwjgl.glfw.GLFW.*;
 
 import java.awt.Font;
 import java.util.ArrayDeque;
@@ -86,6 +86,23 @@ public class GameState extends State {
 	private long fireDelayMillis = 100;
 	private long fireMillisCounter = 0;
 
+	private float recoilRecoverySpeed = 0.025f;
+	private float recoilVerticalRot = 0f;
+	private float recoilHorizontalRot = 0f;
+	private float recoilScale = 0.01f;
+	private float recoilScreenScale = 0.5f; //a value of 1 means that the bullet will land on the crosshair always
+
+	private float recoilVerticalImpulse = 5f;
+	private float recoilHorizontalImpulse = 0f;
+
+	private float movementInaccuracyScale = 800f; //500 is like an smg
+
+	private float weaponInaccuracy = 3f;
+
+	private boolean reloading = false;
+	private long reloadStartMillis;
+	private long reloadTimeMillis = 1000;
+
 	public GameState(StateManager sm, String ip, int port, boolean hosting) {
 		super(sm);
 		this.ip = ip;
@@ -137,7 +154,6 @@ public class GameState extends State {
 		Model.removeInstancesFromScene(UI_SCENE);
 		Light.removeLightsFromScene(UI_SCENE);
 
-		//crosshair
 		long crosshairRect1ID = FilledRectangle.addRectangle(Main.windowWidth / 2 - 1, Main.windowHeight / 2 - 6, 2, 12, UI_SCENE);
 		long crosshairRect2ID = FilledRectangle.addRectangle(Main.windowWidth / 2 - 6, Main.windowHeight / 2 - 1, 12, 2, UI_SCENE);
 		Material crosshairMaterial = new Material(new Vec4(0, 1, 0, 0.5f));
@@ -145,12 +161,15 @@ public class GameState extends State {
 		Model.updateInstance(crosshairRect2ID, crosshairMaterial);
 
 		this.healthText = new Text(20, 20, this.health + "", FontUtils.segoe_ui.deriveFont(Font.BOLD, 36), new Material(new Vec4(1)), UI_SCENE);
+		this.healthText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
 		this.healthText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 
-		this.reserveAmmoText = new Text(Main.windowWidth - 20, 20, this.reserveAmmo + "", FontUtils.segoe_ui.deriveFont(Font.BOLD, 24), new Material(new Vec4(1)), UI_SCENE);
+		this.reserveAmmoText = new Text(20, 20, this.reserveAmmo + "", FontUtils.segoe_ui.deriveFont(Font.BOLD, 24), new Material(new Vec4(1)), UI_SCENE);
+		this.reserveAmmoText.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_BOTTOM);
 		this.reserveAmmoText.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_BOTTOM);
 
-		this.magazineAmmoText = new Text(Main.windowWidth - 60, 20, this.magazineAmmo + "", FontUtils.segoe_ui.deriveFont(Font.BOLD, 36), new Material(new Vec4(1)), UI_SCENE);
+		this.magazineAmmoText = new Text(60, 20, this.magazineAmmo + "", FontUtils.segoe_ui.deriveFont(Font.BOLD, 36), new Material(new Vec4(1)), UI_SCENE);
+		this.magazineAmmoText.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_BOTTOM);
 		this.magazineAmmoText.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_BOTTOM);
 
 		UIElement.alignAllUIElements();
@@ -190,32 +209,73 @@ public class GameState extends State {
 	}
 
 	private boolean canShoot() {
-		return this.fireMillisCounter > this.fireDelayMillis && this.magazineAmmo > 0;
+		return this.fireMillisCounter > this.fireDelayMillis && this.magazineAmmo > 0 && !this.reloading;
 	}
 
 	private void shoot() {
 		if (this.canShoot()) {
 			this.fireMillisCounter %= this.fireDelayMillis;
 
-			// shoot ray in direction of camera
+			float spread = this.player.vel.length() * this.movementInaccuracyScale + this.weaponInaccuracy;
+
+			float totalYRot = player.camYRot - (this.recoilHorizontalRot + (float) (Math.random() * spread - spread / 2)) * this.recoilScale;
+			float totalXRot = player.camXRot - (this.recoilVerticalRot + (float) (Math.random() * spread - spread / 2)) * this.recoilScale;
+			Vec3 ray_dir = new Vec3(0, 0, -1).rotateX(totalXRot).rotateY(totalYRot);
 			Vec3 ray_origin = perspectiveScreen.getCamera().getPos();
-			Vec3 ray_dir = perspectiveScreen.getCamera().getFacing();
 			this.client.addBulletRay(ray_origin, ray_dir);
 			this.bulletRays.add(new Pair<Integer, Vec3[]>(-1, new Vec3[] { ray_origin, ray_dir }));
 
-			//update ammo info
 			this.magazineAmmo--;
-			this.magazineAmmoText.setText(this.magazineAmmo + "");
+
+			if (this.magazineAmmo == 0) {
+				this.startReloading();
+			}
+
+			//apply recoil
+			this.recoilVerticalRot += this.recoilVerticalImpulse;
+			this.recoilHorizontalRot += this.recoilHorizontalImpulse;
+
 		}
+	}
+
+	private void reload() {
+		if (System.currentTimeMillis() - this.reloadStartMillis >= this.reloadTimeMillis) {
+			this.reserveAmmo += this.magazineAmmo;
+			int transferAmmo = this.magazineSize + Math.min(this.reserveAmmo - this.magazineSize, 0);
+			this.reserveAmmo = Math.max(0, this.reserveAmmo - this.magazineSize);
+			this.magazineAmmo = transferAmmo;
+			this.reloading = false;
+		}
+	}
+
+	private void startReloading() {
+		if (this.magazineAmmo != this.magazineSize && this.reserveAmmo != 0 && !this.reloading) {
+			this.reloading = true;
+			this.reloadStartMillis = System.currentTimeMillis();
+		}
+	}
+
+	private void updateHud() {
+		this.magazineAmmoText.setText(this.magazineAmmo + "");
+		this.reserveAmmoText.setText(this.reserveAmmo + "");
+
+		this.healthText.setText(this.health + "");
 	}
 
 	@Override
 	public void update() {
 		// -- SHOOTING --
+		if (this.reloading) {
+			this.reload();
+		}
+
 		this.fireMillisCounter += Main.main.deltaMillis;
 		if (this.leftMouse) {
 			this.shoot();
 		}
+
+		this.recoilVerticalRot -= this.recoilVerticalRot * this.recoilRecoverySpeed;
+		this.recoilHorizontalRot -= this.recoilHorizontalRot * this.recoilRecoverySpeed;
 
 		// -- NETWORKING --
 
@@ -349,18 +409,14 @@ public class GameState extends State {
 		}
 
 		// -- UPDATES --
+		this.updateHud();
+
 		Entity.updateEntities();
 		Model.updateModels();
 		updateCamera();
 
 		this.client.setPos(this.player.pos);
 
-		// input
-		if (KeyboardInput.isKeyPressed(GLFW_KEY_M)) {
-			this.disconnect();
-			this.stopHosting();
-			this.sm.switchState(new MainMenuState(this.sm));
-		}
 	}
 
 	@Override
@@ -375,7 +431,7 @@ public class GameState extends State {
 	}
 
 	private void updateCamera() {
-		perspectiveScreen.getCamera().setFacing(player.camXRot, player.camYRot);
+		perspectiveScreen.getCamera().setFacing(player.camXRot - this.recoilVerticalRot * this.recoilScale * this.recoilScreenScale, player.camYRot - this.recoilHorizontalRot * this.recoilScale * this.recoilScreenScale);
 		perspectiveScreen.getCamera().setPos(player.pos.add(Player.cameraVec).sub(perspectiveScreen.getCamera().getFacing().mul(0f))); //last part is for third person
 		perspectiveScreen.getCamera().setUp(new Vec3(0, 1, 0));
 	}
@@ -398,6 +454,28 @@ public class GameState extends State {
 		else if (button == MouseInput.RIGHT_MOUSE_BUTTON) {
 			this.rightMouse = false;
 		}
+	}
+
+	@Override
+	public void keyPressed(int key) {
+		switch (key) {
+		case GLFW_KEY_M:
+			this.disconnect();
+			this.stopHosting();
+			this.sm.switchState(new MainMenuState(this.sm));
+			break;
+
+		case GLFW_KEY_R:
+			this.startReloading();
+			break;
+
+		}
+
+	}
+
+	@Override
+	public void keyReleased(int key) {
+
 	}
 
 }
