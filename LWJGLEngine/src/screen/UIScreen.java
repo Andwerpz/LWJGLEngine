@@ -10,11 +10,13 @@ import graphics.Texture;
 import input.MouseInput;
 import main.Main;
 import model.Model;
+import player.Camera;
+import util.Mat4;
 
 public class UIScreen extends Screen {
 	// higher values of z will go over lower values.
 	// colorID will go in reverse values.
-	
+
 	private int ui_scene;
 
 	private Framebuffer geometryBuffer;
@@ -27,7 +29,10 @@ public class UIScreen extends Screen {
 
 	public UIScreen() {
 		super();
+	}
 
+	@Override
+	public void buildBuffers() {
 		this.geometryBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.geometryPositionMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
 		this.geometryNormalMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
@@ -42,8 +47,10 @@ public class UIScreen extends Screen {
 		this.geometryBuffer.addDepthBuffer();
 		this.geometryBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
 		this.geometryBuffer.isComplete();
+
+		this.camera = new Camera(Mat4.orthographic(0, Main.windowWidth, 0, Main.windowHeight, -10, 10));
 	}
-	
+
 	public void setUIScene(int scene) {
 		this.ui_scene = scene;
 	}

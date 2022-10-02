@@ -15,12 +15,15 @@ public class LoadScreen extends Screen {
 
 	public LoadScreen() {
 		super();
+	}
 
+	@Override
+	public void buildBuffers() {
 		this.alpha = 0;
 	}
 
 	public void setAlpha(float alpha) {
-		this.alpha = (float) MathUtils.clamp(0, 1, alpha);
+		this.alpha = MathUtils.clamp(0, 1, alpha);
 	}
 
 	@Override

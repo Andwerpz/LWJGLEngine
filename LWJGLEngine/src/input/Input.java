@@ -1,25 +1,25 @@
 package input;
 
 import entity.Entity;
+import ui.UIElement;
 
-public abstract class Input extends Entity {
+public abstract class Input extends UIElement {
 
 	protected boolean pressed, hovered, clicked;
 
-	public Input() {
-		super();
+	public Input(int x, int y) {
+		super(x, y);
 
 		this.pressed = false;
 		this.hovered = false;
 		this.clicked = false;
 	}
 
+	@Override
 	protected abstract void update();
 
-	protected abstract void _kill();
-
 	public void hovered(long entityID) {
-		if(this.getID() != entityID) {
+		if (this.getID() != entityID) {
 			this.hovered = false;
 		}
 		else {
@@ -28,14 +28,14 @@ public abstract class Input extends Entity {
 	}
 
 	public void pressed(long entityID) {
-		if(this.getID() != entityID) {
+		if (this.getID() != entityID) {
 			return;
 		}
 		this.pressed = true;
 	}
 
 	public void released(long entityID) {
-		if(this.pressed && entityID == this.getID()) {
+		if (this.pressed && entityID == this.getID()) {
 			this.clicked = true;
 		}
 		else {

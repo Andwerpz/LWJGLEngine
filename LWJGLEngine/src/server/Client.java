@@ -37,17 +37,18 @@ public abstract class Client implements Runnable {
 		this.thread.start();
 	}
 
+	@Override
 	public void run() {
 		long start, elapsed, wait;
 		while (isRunning) {
 			start = System.nanoTime();
 
-			tick();
+			update();
 
 			elapsed = System.nanoTime() - start;
 			wait = targetTime - elapsed / 1000000;
 
-			if(wait < 0) {
+			if (wait < 0) {
 				wait = 5;
 			}
 
@@ -59,10 +60,13 @@ public abstract class Client implements Runnable {
 		}
 	}
 
-	public void tick() {
-		if(this.connectedToServer) {
+	public abstract void _update();
+
+	public void update() {
+		_update();
+		if (this.connectedToServer) {
 			// -- READ --
-			if(this.packetListener == null || !this.packetListener.isConnected()) { // lost connection to server
+			if (this.packetListener == null || !this.packetListener.isConnected()) { // lost connection to server
 				this.disconnect();
 			}
 
@@ -110,14 +114,14 @@ public abstract class Client implements Runnable {
 		this.connectionAttemptFailed = false;
 
 		try {
-			if(this.socket != null) {
+			if (this.socket != null) {
 				this.socket.close();
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if(this.packetListener != null) {
+		if (this.packetListener != null) {
 			this.packetListener.exit();
 		}
 	}
@@ -131,7 +135,7 @@ public abstract class Client implements Runnable {
 	}
 
 	public void exit() {
-		if(this.packetListener != null) {
+		if (this.packetListener != null) {
 			this.packetListener.exit();
 		}
 		this.disconnect();

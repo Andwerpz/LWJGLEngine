@@ -9,15 +9,16 @@ import util.Vec3;
 
 public class GameClient extends Client {
 
+	private int id;
+
 	private Vec3 pos;
 
 	private HashMap<Integer, Vec3> otherPlayerPositions;
 	private ArrayList<Integer> disconnectedPlayers;
 	private ArrayList<Pair<Integer, Vec3[]>> inBulletRays; //player id, bullet ray. 
+	private ArrayList<Pair<Integer, Integer>> damageSources;
 
 	private ArrayList<Pair<Integer, Vec3[]>> outBulletRays;
-
-	private int id;
 
 	public GameClient() {
 		super();
@@ -28,6 +29,11 @@ public class GameClient extends Client {
 		this.inBulletRays = new ArrayList<>();
 
 		this.outBulletRays = new ArrayList<>();
+	}
+
+	@Override
+	public void _update() {
+
 	}
 
 	@Override
@@ -84,6 +90,14 @@ public class GameClient extends Client {
 					this.inBulletRays.add(new Pair<Integer, Vec3[]>(playerID, new Vec3[] { ray_origin, ray_dir }));
 				}
 				break;
+
+			case "damage_sources":
+				for (int i = 0; i < elementAmt; i++) {
+					int playerID = packetListener.readInt();
+					int damage = packetListener.readInt();
+					this.damageSources.add(new Pair<Integer, Integer>(playerID, damage));
+				}
+				break;
 			}
 		}
 	}
@@ -103,6 +117,13 @@ public class GameClient extends Client {
 		ArrayList<Pair<Integer, Vec3[]>> ans = new ArrayList<>();
 		ans.addAll(this.inBulletRays);
 		this.inBulletRays.clear();
+		return ans;
+	}
+
+	public ArrayList<Pair<Integer, Integer>> getDamageSources() {
+		ArrayList<Pair<Integer, Integer>> ans = new ArrayList<>();
+		ans.addAll(this.damageSources);
+		this.damageSources.clear();
 		return ans;
 	}
 

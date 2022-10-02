@@ -8,19 +8,26 @@ import java.io.InputStream;
 
 public class FontUtils {
 
-	public static Font CSGOFont;
+	public static Font CSGOFont, segoe_ui;
 
 	public static void loadFonts() {
+		FontUtils.CSGOFont = loadFont("font/cs_regular.ttf");
+		FontUtils.segoe_ui = loadFont("font/segoe_ui.ttf");
+	}
+
+	public static Font loadFont(String path) {
 		try {
-			FileInputStream is = new FileInputStream(FileUtils.loadFile("font/cs_regular.ttf"));
-			// InputStream is =
-			// FontUtils.class.getResourceAsStream("/fonts/cs_regular.ttf");
-			FontUtils.CSGOFont = Font.createFont(Font.TRUETYPE_FONT, is);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (FontFormatException e) {
+			FileInputStream is = new FileInputStream(FileUtils.loadFile(path));
+			Font font = Font.createFont(Font.TRUETYPE_FONT, is);
+			return font;
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
+		catch (FontFormatException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	public static Font deriveSize(int size, Font font) {

@@ -2,6 +2,7 @@ package state;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_M;
 
+import java.awt.Font;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,8 +28,13 @@ import scene.Light;
 import scene.Scene;
 import screen.PerspectiveScreen;
 import screen.Screen;
+import screen.UIScreen;
 import server.GameClient;
 import server.GameServer;
+import ui.FilledRectangle;
+import ui.Text;
+import ui.UIElement;
+import util.FontUtils;
 import util.Mat4;
 import util.MathUtils;
 import util.NetworkingUtils;
@@ -42,7 +48,7 @@ public class GameState extends State {
 	private static final int DECAL_SCENE = 1; // screen space decals
 	private static final int UI_SCENE = 2;
 
-	private static final int DECAL_LIMIT = 500;
+	private static final int DECAL_LIMIT = 1000;
 	private Queue<Long> decalIDs;
 
 	private String ip;
@@ -51,7 +57,7 @@ public class GameState extends State {
 	private boolean hosting;
 
 	private static PerspectiveScreen perspectiveScreen;
-	private static Camera perspectiveCamera;
+	private static UIScreen uiScreen;
 
 	private Player player;
 
@@ -65,10 +71,14 @@ public class GameState extends State {
 	private Model bloodDecal, bulletHoleDecal;
 	private ArrayList<Pair<Integer, Vec3[]>> bulletRays;
 
-	// -- INPUT --
 	private boolean leftMouse = false;
 	private boolean rightMouse = false;
 
+	private static final int MAX_HEALTH = 100;
+	private Text healthText;
+	private int health = 100;
+
+	private Text magazineAmmoText, reserveAmmoText;
 	private int magazineSize = 30;
 	private int magazineAmmo = 30;
 	private int reserveAmmo = 90;
@@ -90,9 +100,11 @@ public class GameState extends State {
 	@Override
 	public void load() {
 		if (perspectiveScreen == null) {
-			perspectiveCamera = new Camera(Main.FOV, Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
 			perspectiveScreen = new PerspectiveScreen();
-			perspectiveScreen.setCamera(perspectiveCamera);
+		}
+
+		if (uiScreen == null) {
+			uiScreen = new UIScreen();
 		}
 
 		this.bulletHoleDecal = new Decal();
@@ -120,6 +132,28 @@ public class GameState extends State {
 		Model.removeInstancesFromScene(DECAL_SCENE);
 		Light.removeLightsFromScene(DECAL_SCENE);
 		this.bulletRays = new ArrayList<>();
+
+		// -- UI SCENE --
+		Model.removeInstancesFromScene(UI_SCENE);
+		Light.removeLightsFromScene(UI_SCENE);
+
+		//crosshair
+		long crosshairRect1ID = FilledRectangle.addRectangle(Main.windowWidth / 2 - 1, Main.windowHeight / 2 - 6, 2, 12, UI_SCENE);
+		long crosshairRect2ID = FilledRectangle.addRectangle(Main.windowWidth / 2 - 6, Main.windowHeight / 2 - 1, 12, 2, UI_SCENE);
+		Material crosshairMaterial = new Material(new Vec4(0, 1, 0, 0.5f));
+		Model.updateInstance(crosshairRect1ID, crosshairMaterial);
+		Model.updateInstance(crosshairRect2ID, crosshairMaterial);
+
+		this.healthText = new Text(20, 20, this.health + "", FontUtils.segoe_ui.deriveFont(Font.BOLD, 36), new Material(new Vec4(1)), UI_SCENE);
+		this.healthText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
+
+		this.reserveAmmoText = new Text(Main.windowWidth - 20, 20, this.reserveAmmo + "", FontUtils.segoe_ui.deriveFont(Font.BOLD, 24), new Material(new Vec4(1)), UI_SCENE);
+		this.reserveAmmoText.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_BOTTOM);
+
+		this.magazineAmmoText = new Text(Main.windowWidth - 60, 20, this.magazineAmmo + "", FontUtils.segoe_ui.deriveFont(Font.BOLD, 36), new Material(new Vec4(1)), UI_SCENE);
+		this.magazineAmmoText.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_BOTTOM);
+
+		UIElement.alignAllUIElements();
 
 		// -- NETWORKING --
 		this.client = new GameClient();
@@ -155,21 +189,32 @@ public class GameState extends State {
 		this.client.disconnect();
 	}
 
+	private boolean canShoot() {
+		return this.fireMillisCounter > this.fireDelayMillis && this.magazineAmmo > 0;
+	}
+
+	private void shoot() {
+		if (this.canShoot()) {
+			this.fireMillisCounter %= this.fireDelayMillis;
+
+			// shoot ray in direction of camera
+			Vec3 ray_origin = perspectiveScreen.getCamera().getPos();
+			Vec3 ray_dir = perspectiveScreen.getCamera().getFacing();
+			this.client.addBulletRay(ray_origin, ray_dir);
+			this.bulletRays.add(new Pair<Integer, Vec3[]>(-1, new Vec3[] { ray_origin, ray_dir }));
+
+			//update ammo info
+			this.magazineAmmo--;
+			this.magazineAmmoText.setText(this.magazineAmmo + "");
+		}
+	}
+
 	@Override
 	public void update() {
 		// -- SHOOTING --
 		this.fireMillisCounter += Main.main.deltaMillis;
 		if (this.leftMouse) {
-			if (this.fireMillisCounter > this.fireDelayMillis) {
-				System.out.println(this.fireMillisCounter);
-				this.fireMillisCounter %= this.fireDelayMillis;
-
-				// shoot ray in direction of camera
-				Vec3 ray_origin = perspectiveCamera.getPos();
-				Vec3 ray_dir = perspectiveCamera.getFacing();
-				this.client.addBulletRay(ray_origin, ray_dir);
-				this.bulletRays.add(new Pair<Integer, Vec3[]>(-1, new Vec3[] { ray_origin, ray_dir }));
-			}
+			this.shoot();
 		}
 
 		// -- NETWORKING --
@@ -215,24 +260,24 @@ public class GameState extends State {
 				continue;
 			}
 
-			boolean playerIntersect = false;
+			ArrayList<Vec3> playerIntersections = new ArrayList<>();
 			//check against other players
-			if (clientID != -1) { //if it is -1, then it's shot by the local client
-				for (int ID : this.otherPlayers.keySet()) {
-					if (clientID == ID) { //a player can't hit themselves with their own bullet
-						continue;
-					}
-					Capsule c = this.otherPlayers.get(ID);
-					if (MathUtils.ray_capsuleIntersect(ray_origin, ray_dir, c.getBottom(), c.getTop(), c.getRadius()) != null) {
-						playerIntersect = true;
-						break;
-					}
+			for (int ID : this.otherPlayers.keySet()) {
+				if (clientID == ID) { //a player can't hit themselves with their own bullet
+					continue;
 				}
-				//did the bullet hit yourself?
-				if (clientID != this.client.getID()) {
-					if (MathUtils.ray_capsuleIntersect(ray_origin, ray_dir, player.getBottom(), player.getTop(), player.getRadius()) != null) {
-						playerIntersect = true;
-					}
+				Capsule c = this.otherPlayers.get(ID);
+				Vec3 intersect = MathUtils.ray_capsuleIntersect(ray_origin, ray_dir, c.getBottom(), c.getTop(), c.getRadius());
+				if (intersect != null) {
+					playerIntersections.add(intersect);
+				}
+			}
+
+			//did the bullet hit yourself?
+			if (clientID != this.client.getID() && clientID != -1) {
+				Vec3 intersect = MathUtils.ray_capsuleIntersect(ray_origin, ray_dir, player.getBottom(), player.getTop(), player.getRadius());
+				if (intersect != null) {
+					playerIntersections.add(intersect);
 				}
 			}
 
@@ -258,7 +303,17 @@ public class GameState extends State {
 
 				Mat4 modelMat4 = null;
 
-				if (playerIntersect) {
+				//check if player intersection is close enough to the wall intersect to splat blood
+				float maxBloodSplatterDist = 1f;
+				float maxPlayerIntersectDist = -100f; //that is less than the minimum wall intersection dist, since wallbangs aren't a thing
+				for (Vec3 v : playerIntersections) {
+					float dist = new Vec3(ray_origin, v).length();
+					if (dist < minDist) {
+						maxPlayerIntersectDist = Math.max(minDist, maxPlayerIntersectDist);
+					}
+				}
+
+				if (minDist - maxPlayerIntersectDist < maxBloodSplatterDist) {
 					//blood splatter decal
 					modelMat4 = Mat4.translate(new Vec3(-0.5f, -0.5f, -0.9f));
 					modelMat4.muli(Mat4.scale((float) (Math.random() * 2f + 1.5f)));
@@ -314,29 +369,33 @@ public class GameState extends State {
 		perspectiveScreen.setWorldScene(WORLD_SCENE);
 		perspectiveScreen.setDecalScene(DECAL_SCENE);
 		perspectiveScreen.render(outputBuffer);
+
+		uiScreen.setUIScene(UI_SCENE);
+		uiScreen.render(outputBuffer);
 	}
 
 	private void updateCamera() {
-		perspectiveCamera.setFacing(player.camXRot, player.camYRot);
-		perspectiveCamera.setPos(player.pos.add(Player.cameraVec).sub(perspectiveCamera.getFacing().mul(0f)));
-		perspectiveCamera.setUp(new Vec3(0, 1, 0));
+		perspectiveScreen.getCamera().setFacing(player.camXRot, player.camYRot);
+		perspectiveScreen.getCamera().setPos(player.pos.add(Player.cameraVec).sub(perspectiveScreen.getCamera().getFacing().mul(0f))); //last part is for third person
+		perspectiveScreen.getCamera().setUp(new Vec3(0, 1, 0));
 	}
 
 	@Override
 	public void mousePressed(int button) {
 		if (button == MouseInput.LEFT_MOUSE_BUTTON) {
 			this.leftMouse = true;
-		} else if (button == MouseInput.RIGHT_MOUSE_BUTTON) {
+		}
+		else if (button == MouseInput.RIGHT_MOUSE_BUTTON) {
 			this.rightMouse = true;
 		}
-
 	}
 
 	@Override
 	public void mouseReleased(int button) {
 		if (button == MouseInput.LEFT_MOUSE_BUTTON) {
 			this.leftMouse = false;
-		} else if (button == MouseInput.RIGHT_MOUSE_BUTTON) {
+		}
+		else if (button == MouseInput.RIGHT_MOUSE_BUTTON) {
 			this.rightMouse = false;
 		}
 	}

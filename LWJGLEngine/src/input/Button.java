@@ -19,6 +19,7 @@ import model.Model;
 import scene.Scene;
 import ui.FilledRectangle;
 import ui.Text;
+import ui.UIElement;
 import util.FontUtils;
 import util.GraphicsTools;
 import util.Mat4;
@@ -38,37 +39,34 @@ public class Button extends Input {
 	private long buttonInnerID;
 	private Text buttonText;
 
-	private int x, y, z, width, height; // x, y, specifies bottom left corner of button
 	private int scene;
 
 	private Material pressedMaterial, releasedMaterial, hoveredMaterial;
 	private Material pressedTextMaterial, releasedTextMaterial, hoveredTextMaterial;
 	private Material currentMaterial;
 
-	private long modelInstanceID;
-
 	public Button(int x, int y, int width, int height, String text, Font font, int fontSize, int scene) {
-		super();
+		super(x, y);
 		this.init(x, y, 0, width, height, text, FontUtils.deriveSize(fontSize, font), scene);
 	}
 
 	// text size should already be included in the font
 	private void init(int x, int y, int z, int width, int height, String text, Font font, int scene) {
-		this.x = x;
-		this.y = y;
 		this.z = z;
 		this.width = width;
 		this.height = height;
 		this.scene = scene;
 
+		this.setFrameAlignment(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM, x, y);
+
+		this.horizontalAlignContent = UIElement.ALIGN_LEFT;
+		this.verticalAlignContent = UIElement.ALIGN_BOTTOM;
+
 		this.pressedTextMaterial = new Material(Color.YELLOW);
 		this.releasedTextMaterial = new Material(Color.WHITE);
 
-		// calculate where to put the text in order to center it in the button
-		int centerX = this.x + this.width / 2;
-		int centerY = this.y + this.height / 2;
 		this.buttonText = new Text(0, 0, this.z + 1, text, font, this.releasedTextMaterial, scene);
-		this.buttonText.center(centerX, centerY);
+		this.buttonText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 
 		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
 		this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
@@ -82,29 +80,71 @@ public class Button extends Input {
 	}
 
 	@Override
+	protected void __kill() {
+		this.buttonText.kill();
+	}
+
+	@Override
+	protected void alignContents() {
+		int alignedX = this.x;
+		switch (this.horizontalAlignContent) {
+		case ALIGN_CENTER:
+			alignedX = this.x - this.width / 2;
+			break;
+
+		case ALIGN_RIGHT:
+			alignedX = this.x - this.width;
+			break;
+
+		case ALIGN_LEFT:
+			alignedX = this.x;
+			break;
+		}
+
+		int alignedY = this.y;
+		switch (this.verticalAlignContent) {
+		case ALIGN_CENTER:
+			alignedY = this.y - this.height / 2;
+			break;
+
+		case ALIGN_TOP:
+			alignedY = this.y - this.height;
+			break;
+
+		case ALIGN_BOTTOM:
+			alignedY = this.y;
+			break;
+		}
+
+		Mat4 modelMat4 = Mat4.scale(this.width, this.height, 1).mul(Mat4.translate(new Vec3(alignedX, alignedY, this.z)));
+		this.updateModelInstance(this.buttonInnerID, modelMat4);
+
+		int centerX = alignedX + this.width / 2;
+		int centerY = alignedY + this.height / 2;
+		this.buttonText.setFrameAlignment(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM, centerX, centerY);
+		this.buttonText.alignFrame();
+	}
+
+	@Override
 	public void update() {
 		Material nextMaterial = null;
-		if(this.clicked) { // check for clicks happens when mouse is released.
+		if (this.clicked) { // check for clicks happens when mouse is released.
 			this.clicked = false;
 			nextMaterial = this.pressedMaterial;
 		}
-		else if(this.pressed) {
+		else if (this.pressed) {
 			nextMaterial = this.pressedMaterial;
 		}
-		else if(this.hovered) {
+		else if (this.hovered) {
 			nextMaterial = this.hoveredMaterial;
 		}
 		else {
 			nextMaterial = this.releasedMaterial;
 		}
-		if(this.currentMaterial != nextMaterial) {
+		if (this.currentMaterial != nextMaterial) {
 			this.currentMaterial = nextMaterial;
 			this.updateModelInstance(this.buttonInnerID, this.currentMaterial);
 		}
 	}
 
-	@Override
-	protected void _kill() {
-		this.buttonText.kill();
-	}
 }

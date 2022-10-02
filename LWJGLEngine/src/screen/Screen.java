@@ -5,6 +5,8 @@ import static org.lwjgl.opengl.GL11.GL_RGBA;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0;
 
+import java.util.HashSet;
+
 import graphics.Framebuffer;
 import graphics.Texture;
 import main.Main;
@@ -20,12 +22,23 @@ public abstract class Screen {
 	// each game state might have multiple screens that are layered on top of each other,
 	// for example: a UI might be layered on top of a 3D game scene.
 
+	private static HashSet<Screen> activeScreens = new HashSet<>();
+
 	protected static ScreenQuad screenQuad = new ScreenQuad();
 
 	protected Camera camera;
 
 	public Screen() {
+		this.buildBuffers();
+		Screen.activeScreens.add(this);
+	}
 
+	public abstract void buildBuffers();
+
+	public static void rebuildAllBuffers() {
+		for (Screen s : activeScreens) {
+			s.buildBuffers();
+		}
 	}
 
 	public Camera getCamera() {

@@ -22,6 +22,7 @@ import graphics.Texture;
 import graphics.TextureMaterial;
 import ui.FilledRectangle;
 import ui.Text;
+import ui.UIElement;
 import util.FontUtils;
 import util.GraphicsTools;
 import util.Mat4;
@@ -85,7 +86,7 @@ public class TextField extends Input {
 	private long fieldInnerID;
 	private Text fieldText;
 
-	private int x, y, z, width, height, scene;
+	private int scene;
 
 	private String text, hintText;
 	private int textLeftMargin = 5;
@@ -99,7 +100,7 @@ public class TextField extends Input {
 	private Material currentMaterial;
 
 	public TextField(int x, int y, int width, int height, String hintText, Font font, int fontSize, int scene) {
-		super();
+		super(x, y);
 		this.init(x, y, 0, width, height, hintText, FontUtils.deriveSize(fontSize, font), scene);
 	}
 
@@ -112,6 +113,11 @@ public class TextField extends Input {
 		this.height = height;
 		this.scene = scene;
 
+		this.setFrameAlignment(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM, x, y);
+
+		this.horizontalAlignContent = UIElement.ALIGN_LEFT;
+		this.verticalAlignContent = UIElement.ALIGN_BOTTOM;
+
 		this.text = "";
 		this.hintText = hintText;
 		this.pressedKeys = new HashSet<>();
@@ -119,9 +125,7 @@ public class TextField extends Input {
 		this.textMaterial = new Material(Color.WHITE);
 		this.hintTextMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
 		this.fieldText = new Text(0, 0, z + 1, width - (textLeftMargin + textRightMargin), hintText, font, this.hintTextMaterial, scene);
-
-		int centerY = y + height / 2;
-		this.fieldText.verticalCenter(x + this.textLeftMargin, centerY);
+		this.fieldText.setContentAlignmentStyle(Text.ALIGN_LEFT, Text.ALIGN_CENTER);
 
 		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
 		this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
@@ -137,25 +141,25 @@ public class TextField extends Input {
 	public void update() {
 		// -- FIELD INNER --
 		Material nextMaterial = null;
-		if(this.clicked) { // check for clicks happens when mouse is released.
+		if (this.clicked) { // check for clicks happens when mouse is released.
 			nextMaterial = this.selectedMaterial;
 		}
-		else if(this.pressed) {
+		else if (this.pressed) {
 			nextMaterial = this.pressedMaterial;
 		}
-		else if(this.hovered) {
+		else if (this.hovered) {
 			nextMaterial = this.hoveredMaterial;
 		}
 		else {
 			nextMaterial = this.releasedMaterial;
 		}
-		if(this.currentMaterial != nextMaterial) {
+		if (this.currentMaterial != nextMaterial) {
 			this.currentMaterial = nextMaterial;
 			this.updateModelInstance(this.fieldInnerID, this.currentMaterial);
 		}
 
 		// -- TEXT --
-		if(this.text.length() == 0) {
+		if (this.text.length() == 0) {
 			this.fieldText.setMaterial(this.hintTextMaterial);
 			this.fieldText.setText(this.hintText);
 		}
@@ -165,48 +169,90 @@ public class TextField extends Input {
 		}
 	}
 
+	@Override
+	protected void __kill() {
+		this.fieldText.kill();
+	}
+
+	@Override
+	protected void alignContents() {
+		int alignedX = this.x;
+		switch (this.horizontalAlignContent) {
+		case ALIGN_CENTER:
+			alignedX = this.x - this.width / 2;
+			break;
+
+		case ALIGN_RIGHT:
+			alignedX = this.x - this.width;
+			break;
+
+		case ALIGN_LEFT:
+			alignedX = this.x;
+			break;
+		}
+
+		int alignedY = this.y;
+		switch (this.verticalAlignContent) {
+		case ALIGN_CENTER:
+			alignedY = this.y - this.height / 2;
+			break;
+
+		case ALIGN_TOP:
+			alignedY = this.y - this.height;
+			break;
+
+		case ALIGN_BOTTOM:
+			alignedY = this.y;
+			break;
+		}
+
+		Mat4 modelMat4 = Mat4.scale(this.width, this.height, 1).mul(Mat4.translate(new Vec3(alignedX, alignedY, this.z)));
+		this.updateModelInstance(this.fieldInnerID, modelMat4);
+
+		int centerY = alignedY + this.height / 2;
+		this.fieldText.setFrameAlignment(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM, this.x + this.textLeftMargin, centerY);
+		this.fieldText.alignFrame();
+	}
+
 	public String getText() {
 		return this.text;
 	}
 
-	@Override
-	protected void _kill() {
-		this.fieldText.kill();
-	}
-
 	public void keyPressed(int key) {
-		if(this.clicked) {
+		if (this.clicked) {
 			pressedKeys.add(key);
 
 			// looking for ctrl + v
-			if((pressedKeys.contains(GLFW_KEY_LEFT_CONTROL) || pressedKeys.contains(GLFW_KEY_RIGHT_CONTROL)) && pressedKeys.contains(GLFW_KEY_V)) {
+			if ((pressedKeys.contains(GLFW_KEY_LEFT_CONTROL) || pressedKeys.contains(GLFW_KEY_RIGHT_CONTROL)) && pressedKeys.contains(GLFW_KEY_V)) {
 				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 				String result = "";
 				try {
 					result = (String) clipboard.getData(DataFlavor.stringFlavor);
-				} catch (UnsupportedFlavorException e) {
+				}
+				catch (UnsupportedFlavorException e) {
 					e.printStackTrace();
-				} catch (IOException e) {
+				}
+				catch (IOException e) {
 					e.printStackTrace();
 				}
 				this.text += result;
 				return;
 			}
-			else if(key == GLFW_KEY_BACKSPACE) {
-				if(this.text.length() != 0) {
+			else if (key == GLFW_KEY_BACKSPACE) {
+				if (this.text.length() != 0) {
 					this.text = this.text.substring(0, this.text.length() - 1);
 				}
 			}
-			else if(key == GLFW_KEY_SPACE) {
+			else if (key == GLFW_KEY_SPACE) {
 				this.text += " ";
 			}
 			else {
 				String keyName = glfwGetKeyName(key, 0);
-				if(keyName == null) {
+				if (keyName == null) {
 					return;
 				}
 				char k = keyName.charAt(0);
-				if(pressedKeys.contains(GLFW_KEY_LEFT_SHIFT) || pressedKeys.contains(GLFW_KEY_RIGHT_SHIFT)) {
+				if (pressedKeys.contains(GLFW_KEY_LEFT_SHIFT) || pressedKeys.contains(GLFW_KEY_RIGHT_SHIFT)) {
 					k = shiftMap.get(k);
 				}
 				this.text += k;
@@ -215,10 +261,11 @@ public class TextField extends Input {
 	}
 
 	public void keyReleased(int key) {
-		if(this.clicked) {
-			if(pressedKeys.contains(key)) {
+		if (this.clicked) {
+			if (pressedKeys.contains(key)) {
 				pressedKeys.remove(key);
 			}
 		}
 	}
+
 }

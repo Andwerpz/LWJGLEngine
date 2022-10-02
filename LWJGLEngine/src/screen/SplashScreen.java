@@ -22,7 +22,10 @@ public class SplashScreen extends Screen {
 
 	public SplashScreen() {
 		super();
+	}
 
+	@Override
+	public void buildBuffers() {
 		this.screenQuad = new ScreenQuad();
 		this.splashTexture = new Texture("/splash_screen/astolfo_plush.png", false, true, true);
 	}

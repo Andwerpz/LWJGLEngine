@@ -30,6 +30,8 @@ public class PerspectiveScreen extends Screen {
 	private static final int SHADOW_MAP_NR_CASCADES = 6;
 	private static float[] shadowCascades = new float[] { Main.NEAR, 1, 3, 7, 15, 30, Main.FAR };
 
+	private float cameraFOV;
+
 	private Framebuffer geometryBuffer;
 	private Framebuffer lightingBuffer;
 	private Framebuffer shadowBuffer;
@@ -55,7 +57,10 @@ public class PerspectiveScreen extends Screen {
 
 	public PerspectiveScreen() {
 		super();
+	}
 
+	@Override
+	public void buildBuffers() {
 		this.skyboxCube = new SkyboxCube();
 
 		this.geometryBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
@@ -95,6 +100,29 @@ public class PerspectiveScreen extends Screen {
 		this.skyboxBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.skyboxColorMap.getID());
 		this.skyboxBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.skyboxBuffer.isComplete();
+
+		this.cameraFOV = 90f;
+
+		Vec3 cameraPos = new Vec3();
+		Vec3 cameraFacing = new Vec3(0, 0, -1);
+
+		if (this.camera != null) {
+			cameraPos = this.camera.getPos();
+			cameraFacing = this.camera.getFacing();
+		}
+
+		this.camera = new Camera((float) Math.toRadians(this.cameraFOV), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
+		this.camera.setPos(cameraPos);
+		this.camera.setFacing(cameraFacing);
+	}
+
+	public void setCameraFOV(float degrees) {
+		this.cameraFOV = degrees;
+		Vec3 cameraPos = this.camera.getPos();
+		Vec3 cameraFacing = this.camera.getFacing();
+		this.camera = new Camera((float) Math.toRadians(this.cameraFOV), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
+		this.camera.setPos(cameraPos);
+		this.camera.setFacing(cameraFacing);
 	}
 
 	public void setWorldScene(int scene) {
@@ -260,7 +288,8 @@ public class PerspectiveScreen extends Screen {
 					lights.get(i).bind(Shader.LIGHTING, i);
 					screenQuad.render();
 				}
-			} else {
+			}
+			else {
 				Light light = lights.get(i);
 
 				// generate cubemap

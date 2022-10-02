@@ -23,6 +23,13 @@ public class StateManager {
 	public LoadState loadState;
 
 	public StateManager() {
+		this.buildBuffers();
+
+		this.activeState = null;
+		this.loadState = new LoadState(this, new MainMenuState(this));
+	}
+
+	public void buildBuffers() {
 		this.screenQuad = new ScreenQuad();
 
 		this.outputBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
@@ -30,25 +37,22 @@ public class StateManager {
 		this.outputBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.outputColorMap.getID());
 		this.outputBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.outputBuffer.isComplete();
-
-		this.activeState = null;
-		this.loadState = new LoadState(this, new MainMenuState(this));
 	}
 
 	// trigger a load screen
 	public void switchState(State nextState) {
-		if(!this.loadState.isFinishedLoading()) {
+		if (!this.loadState.isFinishedLoading()) {
 			return;
 		}
 		this.loadState = new LoadState(this, nextState);
 	}
 
 	public void update() {
-		if(this.activeState != null) {
+		if (this.activeState != null) {
 			this.activeState.update();
 		}
 		this.loadState.update();
-		if(this.loadState.isFinishedLoading() && this.activeState != this.loadState.getNextState()) {
+		if (this.loadState.isFinishedLoading() && this.activeState != this.loadState.getNextState()) {
 			this.activeState = this.loadState.getNextState();
 		}
 	}
@@ -56,7 +60,7 @@ public class StateManager {
 	public void render() {
 		outputBuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT);
-		if(this.activeState != null) {
+		if (this.activeState != null) {
 			this.activeState.render(outputBuffer);
 		}
 		this.loadState.render(outputBuffer);

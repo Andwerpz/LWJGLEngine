@@ -15,16 +15,20 @@ import input.MouseInput;
 import model.AssetManager;
 import model.ScreenQuad;
 import scene.Scene;
+import screen.Screen;
 import state.StateManager;
+import ui.UIElement;
 import util.FontUtils;
 import util.Mat4;
 
 import static org.lwjgl.opengl.GL.*;
 
 public class Main implements Runnable {
+	// seems like the maximum size the viewport can be is equal to the dimensions of the window
 
-	// seems like the maximum size the viewport can be is equal to the dimensions of
-	// the window
+	private static int windowedWidth = 1280;
+	private static int windowedHeight = 720;
+
 	public static int windowWidth = 1280;
 	public static int windowHeight = 720;
 
@@ -49,6 +53,8 @@ public class Main implements Runnable {
 	public static long selectedEntityID = 0;
 
 	public long deltaMillis = 0;
+	public int lastSecondUpdates = 0;
+	public int lastSecondFrames = 0;
 
 	private StateManager sm;
 
@@ -95,6 +101,32 @@ public class Main implements Runnable {
 		this.sm = new StateManager();
 	}
 
+	public void toggleFullscreen() {
+		GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		long primaryMonitor = glfwGetPrimaryMonitor();
+		if (this.fullscreen) {
+			Main.windowWidth = Main.windowedWidth;
+			Main.windowHeight = Main.windowedHeight;
+			glfwSetWindowMonitor(window, NULL, 0, 0, Main.windowWidth, Main.windowHeight, vidmode.refreshRate());
+			glfwSetWindowSize(window, Main.windowWidth, Main.windowHeight);
+			glfwSetWindowPos(window, (vidmode.width() - windowWidth) / 2, (vidmode.height() - windowHeight) / 2);
+		}
+		else {
+			glfwSetWindowMonitor(window, primaryMonitor, 0, 0, vidmode.width(), vidmode.height(), vidmode.refreshRate());
+			Main.windowWidth = vidmode.width();
+			Main.windowHeight = vidmode.height();
+		}
+
+		System.out.println("NEW RESOLUTION : " + Main.windowWidth + " " + Main.windowHeight);
+
+		UIElement.shouldAlignUIElements = true;
+
+		Screen.rebuildAllBuffers();
+		this.sm.buildBuffers();
+		glViewport(0, 0, Main.windowWidth, Main.windowHeight);
+		this.fullscreen = !this.fullscreen;
+	}
+
 	public static void lockCursor() {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
@@ -133,6 +165,8 @@ public class Main implements Runnable {
 
 			if (System.currentTimeMillis() - timer > 1000) {
 				timer += 1000;
+				this.lastSecondFrames = frames;
+				this.lastSecondUpdates = updates;
 				System.out.println(frames + " fps \\ " + updates + " ups");
 				updates = 0;
 				frames = 0;
@@ -154,6 +188,11 @@ public class Main implements Runnable {
 		if (KeyboardInput.isKeyPressed(GLFW_KEY_ESCAPE)) {
 			running = false;
 			System.exit(0); // to close all threads
+		}
+
+		if (UIElement.shouldAlignUIElements) {
+			System.out.println("ALIGN ALL UI ELEMENTS");
+			UIElement.alignAllUIElements();
 		}
 
 		this.sm.update();
