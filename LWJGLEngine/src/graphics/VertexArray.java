@@ -125,7 +125,7 @@ public class VertexArray {
 			i++;
 		}
 
-		if(scenes.get(whichScene) == null) {
+		if (scenes.get(whichScene) == null) {
 			// instanced model buffer doesn't exist yet
 			scenes.put(whichScene, new int[] { numInstances, glGenBuffers(), glGenBuffers(), glGenBuffers() });
 		}
@@ -147,7 +147,7 @@ public class VertexArray {
 	}
 
 	public void bindScene(int whichScene) {
-		if(scenes.get(whichScene) == null) {
+		if (scenes.get(whichScene) == null) {
 			System.err.println("SCREEN " + whichScene + " MODEL NOT INSTANTIATED");
 			return;
 		}
@@ -438,7 +438,7 @@ public class VertexArray {
 	}
 
 	public void render(int whichScene) {
-		if(this.scenes.get(whichScene) == null) { // TODO fix this
+		if (this.scenes.get(whichScene) == null) { // TODO fix this
 			return;
 		}
 		int numInstances = this.scenes.get(whichScene)[0];

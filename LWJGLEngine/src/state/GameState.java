@@ -44,7 +44,7 @@ import util.Vec4;
 
 public class GameState extends State {
 
-	private static final int WORLD_SCENE = 0;
+	public static final int WORLD_SCENE = 0;
 	private static final int DECAL_SCENE = 1; // screen space decals
 	private static final int UI_SCENE = 2;
 
@@ -77,27 +77,41 @@ public class GameState extends State {
 	private static final int MAX_HEALTH = 100;
 	private Text healthText;
 	private int health = 100;
+	private boolean isDead = false;
+
+	private static float[][] respawnPoints = new float[][] { { 19.034498f, 4.209578E-6f, -27.220726f }, { 16.666616f, 2.0344742E-6f, -13.573268f }, { 7.693447f, 1.3825484E-6f, -6.869356f }, { 7.530435f, -2.705492E-7f, 3.1779733f }, { -7.62718f, 1.7262031f, 10.893081f },
+			{ -24.021294f, 1.7262031f, 9.220424f }, { -23.85061f, 7.8836456E-7f, -4.302293f }, { -19.921665f, 0.43155238f, -14.355063f }, { -23.368916f, 3.1562522E-6f, -25.018263f }, { -20.494223f, 3.7797854E-6f, -31.763893f }, { -12.507785f, 4.310161E-6f, -33.866653f },
+			{ -4.116003f, -1.7262013f, -25.567888f }, { 3.98981f, -1.7262013f, -32.315727f }, { 16.353655f, 1.2946576f, -35.787464f }, { 5.4487123f, 1.2946573f, -34.161304f }, { 4.7261915f, 2.5471672E-6f, -20.083405f }, { -8.604298f, 2.3543835E-6f, -6.142592f },
+			{ -6.170692f, -1.726202f, -20.582148f }, { -12.950915f, -1.5104262f, -17.905237f }, };
 
 	private Text magazineAmmoText, reserveAmmoText;
-	private int magazineSize = 30;
+	private int magazineAmmoSize = 30;
 	private int magazineAmmo = 30;
+
+	private int reserveAmmoSize = 90;
 	private int reserveAmmo = 90;
 
 	private long fireDelayMillis = 100;
 	private long fireMillisCounter = 0;
 
-	private float recoilRecoverySpeed = 0.025f;
+	private float recoilRecoverySpeedPercent = 0.025f;
+	private float recoilRecoverySpeedLinear = 0.3f;
 	private float recoilVerticalRot = 0f;
 	private float recoilHorizontalRot = 0f;
 	private float recoilScale = 0.01f;
 	private float recoilScreenScale = 0.5f; //a value of 1 means that the bullet will land on the crosshair always
 
-	private float recoilVerticalImpulse = 5f;
+	private float recoilVerticalImpulse = 6f;
 	private float recoilHorizontalImpulse = 0f;
 
-	private float movementInaccuracyScale = 800f; //500 is like an smg
+	private float movementInaccuracyMinimum = 0.05f; //minimum movement speed required to trigger movement inaccuracy
+	private float movementInaccuracyScale = 1000f; //500 is like an smg
 
-	private float weaponInaccuracy = 3f;
+	private float weaponInaccuracy = 2f;
+
+	private int weaponDamage = 30;
+	private float weaponDamageFalloffDist = 7f;
+	private float weaponDamageFalloffPercent = 0.04f;
 
 	private boolean reloading = false;
 	private long reloadStartMillis;
@@ -143,7 +157,8 @@ public class GameState extends State {
 		Model.activateCollisionMesh(this.mapID);
 		Light.addLight(WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 		Scene.skyboxes.put(WORLD_SCENE, AssetManager.getSkybox("lake_skybox"));
-		player = new Player(new Vec3(18.417412f, 0.7f, -29.812654f), WORLD_SCENE);
+		player = new Player(new Vec3(0), WORLD_SCENE);
+		this.respawn();
 
 		// -- DECAL SCENE --
 		Model.removeInstancesFromScene(DECAL_SCENE);
@@ -216,7 +231,11 @@ public class GameState extends State {
 		if (this.canShoot()) {
 			this.fireMillisCounter %= this.fireDelayMillis;
 
-			float spread = this.player.vel.length() * this.movementInaccuracyScale + this.weaponInaccuracy;
+			float spread = this.weaponInaccuracy;
+			float movementSpeed = this.player.vel.length();
+			if (movementSpeed > this.movementInaccuracyMinimum) {
+				spread += movementSpeed * this.movementInaccuracyScale;
+			}
 
 			float totalYRot = player.camYRot - (this.recoilHorizontalRot + (float) (Math.random() * spread - spread / 2)) * this.recoilScale;
 			float totalXRot = player.camXRot - (this.recoilVerticalRot + (float) (Math.random() * spread - spread / 2)) * this.recoilScale;
@@ -224,6 +243,7 @@ public class GameState extends State {
 			Vec3 ray_origin = perspectiveScreen.getCamera().getPos();
 			this.client.addBulletRay(ray_origin, ray_dir);
 			this.bulletRays.add(new Pair<Integer, Vec3[]>(-1, new Vec3[] { ray_origin, ray_dir }));
+			this.computeBulletDamage(ray_origin, ray_dir);
 
 			this.magazineAmmo--;
 
@@ -241,15 +261,15 @@ public class GameState extends State {
 	private void reload() {
 		if (System.currentTimeMillis() - this.reloadStartMillis >= this.reloadTimeMillis) {
 			this.reserveAmmo += this.magazineAmmo;
-			int transferAmmo = this.magazineSize + Math.min(this.reserveAmmo - this.magazineSize, 0);
-			this.reserveAmmo = Math.max(0, this.reserveAmmo - this.magazineSize);
+			int transferAmmo = this.magazineAmmoSize + Math.min(this.reserveAmmo - this.magazineAmmoSize, 0);
+			this.reserveAmmo = Math.max(0, this.reserveAmmo - this.magazineAmmoSize);
 			this.magazineAmmo = transferAmmo;
 			this.reloading = false;
 		}
 	}
 
 	private void startReloading() {
-		if (this.magazineAmmo != this.magazineSize && this.reserveAmmo != 0 && !this.reloading) {
+		if (this.magazineAmmo != this.magazineAmmoSize && this.reserveAmmo != 0 && !this.reloading) {
 			this.reloading = true;
 			this.reloadStartMillis = System.currentTimeMillis();
 		}
@@ -262,8 +282,57 @@ public class GameState extends State {
 		this.healthText.setText(this.health + "");
 	}
 
+	private float computeClosestRayIntersectionDist(Vec3 ray_origin, Vec3 ray_dir, int scene) {
+		float minDist = 0f;
+		ArrayList<Vec3[]> intersect = Model.rayIntersect(scene, ray_origin, ray_dir);
+		if (intersect.size() != 0) {
+			minDist = -1f;
+			for (Vec3[] a : intersect) {
+				Vec3 v = a[0];
+				float dist = v.sub(ray_origin).length();
+				if (dist < minDist || minDist == -1f) {
+					minDist = dist;
+				}
+			}
+		}
+		return minDist;
+	}
+
+	private void computeBulletDamage(Vec3 ray_origin, Vec3 ray_dir) {
+		float mapIntersectDist = computeClosestRayIntersectionDist(ray_origin, ray_dir, WORLD_SCENE);
+
+		for (int ID : this.otherPlayers.keySet()) {
+			Capsule c = this.otherPlayers.get(ID);
+			Vec3 intersect = MathUtils.ray_capsuleIntersect(ray_origin, ray_dir, c.getBottom(), c.getTop(), c.getRadius());
+			if (intersect == null) {
+				continue;
+			}
+
+			float capsuleIntersectDist = new Vec3(ray_origin, intersect).length();
+			if (mapIntersectDist > capsuleIntersectDist) {
+				//scale damage
+				int damage = (int) Math.ceil(this.weaponDamage * Math.pow(1.0 - this.weaponDamageFalloffPercent, capsuleIntersectDist / this.weaponDamageFalloffDist));
+				this.client.addDamageSource(ID, damage);
+			}
+		}
+	}
+
+	private void respawn() {
+		this.player.setPos(new Vec3(respawnPoints[(int) (Math.random() * respawnPoints.length)]));
+		this.player.setVel(new Vec3(0));
+		this.health = MAX_HEALTH;
+
+		this.reserveAmmo = this.reserveAmmoSize;
+		this.magazineAmmo = this.magazineAmmoSize;
+	}
+
 	@Override
 	public void update() {
+		// -- RESPAWNING --
+		if (this.health <= 0) {
+			this.respawn();
+		}
+
 		// -- SHOOTING --
 		if (this.reloading) {
 			this.reload();
@@ -273,9 +342,15 @@ public class GameState extends State {
 		if (this.leftMouse) {
 			this.shoot();
 		}
+		else {
+			this.fireMillisCounter = Math.min(this.fireMillisCounter, this.fireDelayMillis);
+		}
 
-		this.recoilVerticalRot -= this.recoilVerticalRot * this.recoilRecoverySpeed;
-		this.recoilHorizontalRot -= this.recoilHorizontalRot * this.recoilRecoverySpeed;
+		this.recoilVerticalRot -= this.recoilVerticalRot * this.recoilRecoverySpeedPercent + this.recoilRecoverySpeedLinear;
+		this.recoilHorizontalRot -= this.recoilHorizontalRot * this.recoilRecoverySpeedPercent;
+
+		this.recoilVerticalRot = Math.max(this.recoilVerticalRot, 0);
+		this.recoilHorizontalRot = Math.max(this.recoilHorizontalRot, 0);
 
 		// -- NETWORKING --
 
@@ -309,7 +384,19 @@ public class GameState extends State {
 			this.otherPlayers.remove(ID);
 		}
 
-		// process decals from bullets
+		//update health from damage
+		ArrayList<Pair<Integer, int[]>> damageSources = this.client.getDamageSources();
+		for (Pair<Integer, int[]> p : damageSources) {
+			int attackerID = p.first;
+			int receiverID = p.second[0];
+			int damage = p.second[1];
+
+			if (receiverID == this.client.getID()) {
+				this.health -= damage;
+			}
+		}
+
+		// process decals and damage from bullets
 		this.bulletRays.addAll(this.client.getBulletRays());
 		for (Pair<Integer, Vec3[]> p : this.bulletRays) {
 			int clientID = p.first;
@@ -469,6 +556,9 @@ public class GameState extends State {
 			this.startReloading();
 			break;
 
+		case GLFW_KEY_P:
+			System.out.println(this.player.pos);
+			break;
 		}
 
 	}

@@ -85,6 +85,14 @@ public class Player extends Entity {
 		move();
 	}
 
+	public void setPos(Vec3 v) {
+		this.pos = new Vec3(v);
+	}
+
+	public void setVel(Vec3 v) {
+		this.vel = new Vec3(v);
+	}
+
 	// ignores all collision
 	private void move_noclip() {
 		this.vel.x *= airFriction;
@@ -100,7 +108,8 @@ public class Player extends Entity {
 			this.vel.x *= groundFriction;
 			this.vel.z *= groundFriction;
 			this.vel.y *= airFriction;
-		} else {
+		}
+		else {
 			this.vel.mul(airFriction);
 		}
 		this.pos.addi(vel);

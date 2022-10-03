@@ -3,8 +3,15 @@ package server;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import entity.Capsule;
+import graphics.Material;
+import model.Model;
+import state.GameState;
+import util.Mat4;
+import util.MathUtils;
 import util.Pair;
 import util.Vec3;
+import util.Vec4;
 
 public class GameServer extends Server {
 
@@ -12,13 +19,20 @@ public class GameServer extends Server {
 
 	private ArrayList<Integer> disconnectedClients;
 	private ArrayList<Pair<Integer, Vec3[]>> bulletRays;
+	private ArrayList<Pair<Integer, int[]>> damageSources;
 
 	public GameServer(String ip, int port) {
 		super(ip, port);
 
 		this.playerPositions = new HashMap<>();
+		this.damageSources = new ArrayList<>();
 		this.disconnectedClients = new ArrayList<>();
 		this.bulletRays = new ArrayList<>();
+	}
+
+	@Override
+	public void _update() {
+		//TODO move hit detection to server
 	}
 
 	@Override
@@ -48,11 +62,20 @@ public class GameServer extends Server {
 			}
 		}
 
+		if (this.damageSources.size() != 0) {
+			packetSender.writeSectionHeader("damage_sources", this.damageSources.size());
+			for (Pair<Integer, int[]> p : this.damageSources) {
+				packetSender.write(p.first);
+				packetSender.write(p.second);
+			}
+		}
+
 	}
 
 	@Override
 	public void writePacketEND() {
 		disconnectedClients.clear();
+		damageSources.clear();
 		bulletRays.clear();
 	}
 
@@ -76,8 +99,16 @@ public class GameServer extends Server {
 					this.bulletRays.add(new Pair<Integer, Vec3[]>(playerID, new Vec3[] { ray_origin, ray_dir }));
 				}
 				break;
-			}
 
+			case "damage_sources":
+				for (int i = 0; i < elementAmt; i++) {
+					int playerID = packetListener.readInt();
+					int receiverID = packetListener.readInt();
+					int damage = packetListener.readInt();
+					this.damageSources.add(new Pair<Integer, int[]>(playerID, new int[] { receiverID, damage }));
+				}
+				break;
+			}
 		}
 	}
 

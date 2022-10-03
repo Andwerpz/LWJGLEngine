@@ -54,7 +54,8 @@ public abstract class Client implements Runnable {
 
 			try {
 				this.thread.sleep(wait);
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -63,7 +64,6 @@ public abstract class Client implements Runnable {
 	public abstract void _update();
 
 	public void update() {
-		_update();
 		if (this.connectedToServer) {
 			// -- READ --
 			if (this.packetListener == null || !this.packetListener.isConnected()) { // lost connection to server
@@ -74,11 +74,14 @@ public abstract class Client implements Runnable {
 				this.readPacket(this.packetListener);
 			}
 
+			_update();
+
 			// -- WRITE --
 			try {
 				this.writePacket(this.packetSender);
 				this.packetSender.flush(this.socket);
-			} catch (IOException e) {
+			}
+			catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
@@ -98,7 +101,8 @@ public abstract class Client implements Runnable {
 		this.connectionAttemptFailed = false;
 		try {
 			this.socket = new Socket(this.ip, this.port);
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			this.connectionAttemptFailed = true;
 			System.out.println("Unable to connect to the address: " + ip + ":" + port);
 			return false;
@@ -117,7 +121,8 @@ public abstract class Client implements Runnable {
 			if (this.socket != null) {
 				this.socket.close();
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

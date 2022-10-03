@@ -43,7 +43,8 @@ public abstract class Server implements Runnable {
 		this.serverSocket = null;
 		try {
 			this.serverSocket = new ServerSocket(this.port, 8, InetAddress.getByName(this.ip));
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -67,7 +68,7 @@ public abstract class Server implements Runnable {
 		while (isRunning) {
 			start = System.nanoTime();
 
-			tick();
+			update();
 
 			elapsed = System.nanoTime() - start;
 			wait = targetTime - elapsed / 1000000;
@@ -78,7 +79,8 @@ public abstract class Server implements Runnable {
 
 			try {
 				this.thread.sleep(wait);
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
@@ -92,7 +94,7 @@ public abstract class Server implements Runnable {
 		return ID;
 	}
 
-	public void tick() {
+	public void update() {
 		if (this.serverConnectionRequestListener.hasNewClients()) {
 			ArrayList<Socket> newClients = this.serverConnectionRequestListener.getNewClients();
 			for (Socket s : newClients) {
@@ -114,7 +116,8 @@ public abstract class Server implements Runnable {
 				this.packetListeners.remove(ID);
 				try {
 					this.clientSockets.get(ID).close();
-				} catch (IOException e) {
+				}
+				catch (IOException e) {
 					e.printStackTrace();
 				}
 				this.clientSockets.remove(ID);
@@ -126,8 +129,9 @@ public abstract class Server implements Runnable {
 			while (this.packetListeners.get(ID).nextPacket()) {
 				this.readPacket(this.packetListeners.get(ID), ID);
 			}
-
 		}
+
+		this._update();
 
 		// -- WRITE -- //should run at set tickrate
 		for (int ID : this.clientIDs) {
@@ -135,7 +139,8 @@ public abstract class Server implements Runnable {
 			try {
 				this.writePacket(this.packetSender, ID);
 				this.packetSender.flush(s);
-			} catch (IOException e) {
+			}
+			catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
@@ -147,14 +152,19 @@ public abstract class Server implements Runnable {
 					System.out.println("No clients, shutting down server");
 					this.exit();
 				}
-			} else {
+			}
+			else {
 				this.firstNoClientTime = System.currentTimeMillis();
 				this.prevTickNoClients = true;
 			}
-		} else {
+		}
+		else {
 			this.prevTickNoClients = false;
 		}
 	}
+
+	//placed between read and write, allows the server to process the information just read in. 
+	public abstract void _update();
 
 	// use the packet sender to write a packet. The parent class will flush it for you
 	public abstract void writePacket(PacketSender packetSender, int clientID);
@@ -188,14 +198,16 @@ public abstract class Server implements Runnable {
 				if (this.clientSockets.get(ID) != null) {
 					this.clientSockets.get(ID).close();
 				}
-			} catch (IOException e) {
+			}
+			catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
 
 		try {
 			this.serverSocket.close();
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -250,7 +262,8 @@ class ServerConnectionRequestListener implements Runnable {
 			Socket socket = this.serverSocket.accept();
 			System.out.println("Client has joined");
 			return socket;
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			System.out.println("No connection requests");
 		}
 		return null;
