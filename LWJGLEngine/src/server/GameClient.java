@@ -8,13 +8,16 @@ import util.Pair;
 import util.Vec3;
 
 public class GameClient extends Client {
-
-	private int id;
-
+	
+	//each time you respawn, you get a new life id, this prevents bullets being shot against a 
+	//previous instance of you to harm the respawned instance.
+	private int lifeID;	
+	
 	private Vec3 pos;
 
-	private HashMap<Integer, Vec3> otherPlayerPositions;
+	private HashMap<Integer, Vec3> playerPositions;
 	private HashMap<Integer, Integer> playerHealths;
+	private HashMap<Integer, Integer> playerLifeIDs;
 
 	private ArrayList<Integer> disconnectedPlayers;
 	private ArrayList<Pair<Integer, Vec3[]>> inBulletRays; //player id, bullet ray. 
@@ -22,13 +25,20 @@ public class GameClient extends Client {
 
 	private ArrayList<Pair<Integer, int[]>> inDamageSources;
 	private ArrayList<Pair<Integer, int[]>> outDamageSources; //player id, reciever id, damage amt
+	
+	private boolean shouldRespawn = false;
+	private Vec3 respawnPos;
+	
+	private boolean writeRespawn = false;
+	private int writeRespawnHealth;
 
 	public GameClient() {
 		super();
 
 		this.pos = new Vec3(0);
-		this.otherPlayerPositions = new HashMap<>();
+		this.playerPositions = new HashMap<>();
 		this.playerHealths = new HashMap<>();
+		this.playerLifeIDs = new HashMap<>();
 		this.disconnectedPlayers = new ArrayList<>();
 
 		this.inBulletRays = new ArrayList<>();
@@ -36,18 +46,13 @@ public class GameClient extends Client {
 
 		this.inDamageSources = new ArrayList<>();
 		this.outDamageSources = new ArrayList<>();
+		
+		this.respawnPos = new Vec3(0);
+		this.writeRespawnHealth = 0;
 	}
 
 	@Override
 	public void _update() {
-		for (int ID : this.disconnectedPlayers) {
-			if (this.playerHealths.containsKey(ID)) {
-				this.playerHealths.remove(ID);
-			}
-			if (this.otherPlayerPositions.containsKey(ID)) {
-				this.otherPlayerPositions.remove(ID);
-			}
-		}
 	}
 
 	@Override
@@ -60,7 +65,7 @@ public class GameClient extends Client {
 		if (this.outBulletRays.size() != 0) {
 			packetSender.writeSectionHeader("bullet_rays", this.outBulletRays.size());
 			for (Pair<Integer, Vec3[]> p : this.outBulletRays) {
-				packetSender.write(this.id);
+				packetSender.write(this.ID);
 				packetSender.write(p.second[0]);
 				packetSender.write(p.second[1]);
 			}
@@ -75,12 +80,17 @@ public class GameClient extends Client {
 			}
 			this.outDamageSources.clear();
 		}
+		
+		if(this.writeRespawn) {
+			packetSender.writeSectionHeader("respawn", 1);
+			packetSender.write(this.writeRespawnHealth);
+			packetSender.write(this.lifeID);
+			this.writeRespawn = false;
+		}
 	}
 
 	@Override
 	public void readPacket(PacketListener packetListener) {
-		this.id = packetListener.readInt();
-
 		while (packetListener.hasMoreBytes()) {
 			String sectionName = packetListener.readSectionHeader();
 			int elementAmt = packetListener.getSectionElementAmt();
@@ -90,10 +100,7 @@ public class GameClient extends Client {
 				for (int i = 0; i < elementAmt; i++) {
 					int playerID = packetListener.readInt();
 					float[] arr = packetListener.readNFloats(3);
-					if (playerID == this.id) {
-						continue;
-					}
-					this.otherPlayerPositions.put(playerID, new Vec3(arr[0], arr[1], arr[2]));
+					this.playerPositions.put(playerID, new Vec3(arr[0], arr[1], arr[2]));
 				}
 				break;
 
@@ -104,11 +111,21 @@ public class GameClient extends Client {
 					this.playerHealths.put(playerID, playerHealth);
 				}
 				break;
+				
+			case "player_life_ids":
+				for(int i = 0; i < elementAmt; i++) {
+					int playerID = packetListener.readInt();
+					int lifeID = packetListener.readInt();
+					this.playerLifeIDs.put(playerID, lifeID);
+				}
+				break;
 
 			case "disconnect":
 				for (int i = 0; i < elementAmt; i++) {
 					int playerID = packetListener.readInt();
-					this.otherPlayerPositions.remove(playerID);
+					this.playerPositions.remove(playerID);
+					this.playerHealths.remove(playerID);
+					this.playerLifeIDs.remove(playerID);
 					this.disconnectedPlayers.add(playerID);
 				}
 				break;
@@ -130,12 +147,25 @@ public class GameClient extends Client {
 					this.inDamageSources.add(new Pair<Integer, int[]>(playerID, new int[] { recieverID, damage }));
 				}
 				break;
+				
+			case "should_respawn":
+				this.respawnPos = packetListener.readVec3();
+				this.shouldRespawn = true;
+				break;
 			}
 		}
 	}
 
-	public HashMap<Integer, Vec3> getOtherPlayerPositions() {
-		return this.otherPlayerPositions;
+	public HashMap<Integer, Vec3> getPlayerPositions() {
+		return this.playerPositions;
+	}
+	
+	public HashMap<Integer, Integer> getPlayerHealths() {
+		return this.playerHealths;
+	}
+	
+	public HashMap<Integer, Integer> getPlayerLifeIDs(){
+		return this.playerLifeIDs;
 	}
 
 	public ArrayList<Integer> getDisconnectedPlayers() {
@@ -158,17 +188,43 @@ public class GameClient extends Client {
 		this.inDamageSources.clear();
 		return ans;
 	}
+	
+	public boolean shouldRespawn() {
+		if(this.shouldRespawn) {
+			this.shouldRespawn = false;
+			return true;
+		}
+		return false;
+	}
+	
+	public Vec3 getRespawnPos() {
+		return this.respawnPos;
+	}
+	
+	public void respawn(int health) {
+		this.writeRespawn = true;
+		this.writeRespawnHealth = health;
+		int oldLifeID = this.lifeID;
+		while(this.lifeID != oldLifeID) {
+			this.lifeID = (int) (Math.random() * 1000000);
+		}
+	}
 
 	public int getID() {
-		return this.id;
+		return this.ID;
 	}
 
 	public void addBulletRay(Vec3 ray_origin, Vec3 ray_dir) {
-		this.outBulletRays.add(new Pair<Integer, Vec3[]>(this.id, new Vec3[] { ray_origin, ray_dir }));
+		this.outBulletRays.add(new Pair<Integer, Vec3[]>(this.ID, new Vec3[] { ray_origin, ray_dir }));
 	}
 
 	public void addDamageSource(int receiverID, int damage) {
-		this.outDamageSources.add(new Pair<Integer, int[]>(this.getID(), new int[] { receiverID, damage }));
+		if(!this.playerLifeIDs.containsKey(receiverID) || !this.playerLifeIDs.containsKey(this.ID)) {
+			return;
+		}
+		int aggressorLifeID = this.playerLifeIDs.get(this.ID);
+		int receiverLifeID = this.playerLifeIDs.get(receiverID);
+		this.outDamageSources.add(new Pair<Integer, int[]>(this.getID(), new int[] { receiverID, damage, aggressorLifeID, receiverLifeID }));
 	}
 
 	public void setPos(Vec3 pos) {

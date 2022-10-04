@@ -137,6 +137,7 @@ public abstract class Server implements Runnable {
 		for (int ID : this.clientIDs) {
 			Socket s = this.clientSockets.get(ID);
 			try {
+				this.packetSender.write(ID);
 				this.writePacket(this.packetSender, ID);
 				this.packetSender.flush(s);
 			}

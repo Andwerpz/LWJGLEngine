@@ -26,6 +26,8 @@ public abstract class Client implements Runnable {
 	private Socket socket;
 	private PacketListener packetListener;
 	private PacketSender packetSender;
+	
+	protected int ID;	//your client id assigned by the server
 
 	public Client() {
 		this.packetSender = new PacketSender();
@@ -71,6 +73,7 @@ public abstract class Client implements Runnable {
 			}
 
 			while (this.packetListener.nextPacket()) {
+				this.ID = this.packetListener.readInt();
 				this.readPacket(this.packetListener);
 			}
 

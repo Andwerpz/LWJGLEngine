@@ -15,12 +15,16 @@ import util.Vec3;
 import util.Vec4;
 
 public class GameServer extends Server {
-
-	private static final int MAX_HEALTH = 100;
+	
+	private static float[][] respawnPoints = new float[][] { { 19.034498f, 4.209578E-6f, -27.220726f }, { 16.666616f, 2.0344742E-6f, -13.573268f }, { 7.693447f, 1.3825484E-6f, -6.869356f }, { 7.530435f, -2.705492E-7f, 3.1779733f }, { -7.62718f, 1.7262031f, 10.893081f },
+		{ -24.021294f, 1.7262031f, 9.220424f }, { -23.85061f, 7.8836456E-7f, -4.302293f }, { -19.921665f, 0.43155238f, -14.355063f }, { -23.368916f, 3.1562522E-6f, -25.018263f }, { -20.494223f, 3.7797854E-6f, -31.763893f }, { -12.507785f, 4.310161E-6f, -33.866653f },
+		{ -4.116003f, -1.7262013f, -25.567888f }, { 3.98981f, -1.7262013f, -32.315727f }, { 16.353655f, 1.2946576f, -35.787464f }, { 5.4487123f, 1.2946573f, -34.161304f }, { 4.7261915f, 2.5471672E-6f, -20.083405f }, { -8.604298f, 2.3543835E-6f, -6.142592f },
+		{ -6.170692f, -1.726202f, -20.582148f }, { -12.950915f, -1.5104262f, -17.905237f }, };
 
 	private HashSet<Integer> connectedClients;
 	private HashMap<Integer, Vec3> playerPositions;
 	private HashMap<Integer, Integer> playerHealths;
+	private HashMap<Integer, Integer> playerLifeIDs;
 
 	private ArrayList<Integer> disconnectedClients;
 	private ArrayList<Pair<Integer, Vec3[]>> bulletRays;
@@ -33,6 +37,7 @@ public class GameServer extends Server {
 		this.connectedClients = new HashSet<>();
 		this.playerPositions = new HashMap<>();
 		this.playerHealths = new HashMap<>();
+		this.playerLifeIDs = new HashMap<>();
 
 		this.damageSources = new ArrayList<>();
 		this.bulletRays = new ArrayList<>();
@@ -44,12 +49,12 @@ public class GameServer extends Server {
 	@Override
 	public void _update() {
 		for (Pair<Integer, int[]> p : this.damageSources) {
-			int agressorID = p.first;
+			int aggressorID = p.first;
 			int receiverID = p.second[0];
 			int damage = p.second[1];
 
 			if (this.connectedClients.contains(receiverID)) {
-				if (!this.connectedClients.contains(agressorID) || this.playerHealths.get(agressorID) == 0) {
+				if (!this.connectedClients.contains(aggressorID) || this.playerHealths.get(aggressorID) <= 0) {
 					continue;
 				}
 				this.playerHealths.put(receiverID, this.playerHealths.get(receiverID) - damage);
@@ -59,8 +64,6 @@ public class GameServer extends Server {
 
 	@Override
 	public void writePacket(PacketSender packetSender, int clientID) {
-		packetSender.write(clientID);
-
 		packetSender.writeSectionHeader("player_positions", this.playerPositions.size());
 		for (int ID : this.playerPositions.keySet()) {
 			Vec3 pos = this.playerPositions.get(ID);
@@ -72,6 +75,17 @@ public class GameServer extends Server {
 		for (int ID : this.playerHealths.keySet()) {
 			packetSender.write(ID);
 			packetSender.write(this.playerHealths.get(ID));
+		}
+		
+		packetSender.writeSectionHeader("player_life_ids", this.playerLifeIDs.size());
+		for(int ID : this.playerLifeIDs.keySet()) {
+			packetSender.write(ID);
+			packetSender.write(this.playerLifeIDs.get(ID));
+		}
+		
+		if(playerHealths.get(clientID) <= 0) {
+			packetSender.writeSectionHeader("should_respawn", 1);
+			packetSender.write(new Vec3(respawnPoints[(int) (Math.random() * respawnPoints.length)]));
 		}
 
 		if (disconnectedClients.size() != 0) {
@@ -133,8 +147,21 @@ public class GameServer extends Server {
 					int playerID = packetListener.readInt();
 					int receiverID = packetListener.readInt();
 					int damage = packetListener.readInt();
+					int aggressorLifeID = packetListener.readInt();
+					int receiverLifeID = packetListener.readInt();
+					if(this.playerLifeIDs.get(clientID) != aggressorLifeID || this.playerLifeIDs.get(receiverID) != receiverLifeID) {
+						//the aggressor damaged the receivers past life. 
+						continue;
+					}
 					this.damageSources.add(new Pair<Integer, int[]>(playerID, new int[] { receiverID, damage }));
 				}
+				break;
+				
+			case "respawn":
+				int health = packetListener.readInt();
+				int lifeID = packetListener.readInt();
+				this.playerHealths.put(clientID, health);
+				this.playerLifeIDs.put(clientID, lifeID);
 				break;
 			}
 		}
@@ -143,7 +170,8 @@ public class GameServer extends Server {
 	@Override
 	public void _clientConnect(int clientID) {
 		this.playerPositions.put(clientID, new Vec3(0));
-		this.playerHealths.put(clientID, MAX_HEALTH);
+		this.playerHealths.put(clientID, 0);
+		this.playerLifeIDs.put(clientID, 0);
 		this.connectedClients.add(clientID);
 	}
 
@@ -151,6 +179,7 @@ public class GameServer extends Server {
 	public void _clientDisconnect(int clientID) {
 		this.playerPositions.remove(clientID);
 		this.playerHealths.remove(clientID);
+		this.playerLifeIDs.remove(clientID);
 		this.connectedClients.remove(clientID);
 		this.disconnectedClients.add(clientID);
 	}

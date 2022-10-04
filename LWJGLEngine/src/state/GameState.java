@@ -88,11 +88,6 @@ public class GameState extends State {
 	private int health = 100;
 	private boolean isDead = false;
 
-	private static float[][] respawnPoints = new float[][] { { 19.034498f, 4.209578E-6f, -27.220726f }, { 16.666616f, 2.0344742E-6f, -13.573268f }, { 7.693447f, 1.3825484E-6f, -6.869356f }, { 7.530435f, -2.705492E-7f, 3.1779733f }, { -7.62718f, 1.7262031f, 10.893081f },
-			{ -24.021294f, 1.7262031f, 9.220424f }, { -23.85061f, 7.8836456E-7f, -4.302293f }, { -19.921665f, 0.43155238f, -14.355063f }, { -23.368916f, 3.1562522E-6f, -25.018263f }, { -20.494223f, 3.7797854E-6f, -31.763893f }, { -12.507785f, 4.310161E-6f, -33.866653f },
-			{ -4.116003f, -1.7262013f, -25.567888f }, { 3.98981f, -1.7262013f, -32.315727f }, { 16.353655f, 1.2946576f, -35.787464f }, { 5.4487123f, 1.2946573f, -34.161304f }, { 4.7261915f, 2.5471672E-6f, -20.083405f }, { -8.604298f, 2.3543835E-6f, -6.142592f },
-			{ -6.170692f, -1.726202f, -20.582148f }, { -12.950915f, -1.5104262f, -17.905237f }, };
-
 	private Text magazineAmmoText, reserveAmmoText;
 	private int magazineAmmoSize = 30;
 	private int magazineAmmo = 30;
@@ -165,7 +160,6 @@ public class GameState extends State {
 		Light.addLight(WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 		Scene.skyboxes.put(WORLD_SCENE, AssetManager.getSkybox("lake_skybox"));
 		player = new Player(new Vec3(0), WORLD_SCENE);
-		this.respawn();
 
 		// -- DECAL SCENE --
 		this.clearScene(DECAL_SCENE);
@@ -213,17 +207,18 @@ public class GameState extends State {
 
 	private void togglePauseMenu() {
 		if (this.pauseMenuActive) {
+			this.pauseMenuActive = false;
 			Main.lockCursor();
-			this.player.setAcceptPlayerInputs(true);
+			this.enablePlayerControls();
 			this.clearScene(PAUSE_SCENE_STATIC);
 			this.clearScene(PAUSE_SCENE_DYNAMIC);
 		}
 		else {
+			this.pauseMenuActive = true;
 			Main.unlockCursor();
-			this.player.setAcceptPlayerInputs(false);
+			this.disablePlayerControls();
 			this.drawPauseMenu();
 		}
-		this.pauseMenuActive = !this.pauseMenuActive;
 	}
 
 	private void drawPauseMenu() {
@@ -261,7 +256,7 @@ public class GameState extends State {
 	}
 
 	private boolean canShoot() {
-		return this.fireMillisCounter > this.fireDelayMillis && this.magazineAmmo > 0 && !this.reloading && !this.pauseMenuActive;
+		return this.fireMillisCounter > this.fireDelayMillis && this.magazineAmmo > 0 && !this.reloading && !this.pauseMenuActive && !this.isDead;
 	}
 
 	private void shoot() {
@@ -355,12 +350,25 @@ public class GameState extends State {
 	}
 
 	private void respawn() {
-		this.player.setPos(new Vec3(respawnPoints[(int) (Math.random() * respawnPoints.length)]));
+		this.player.setPos(this.client.getRespawnPos());
 		this.player.setVel(new Vec3(0));
 		this.health = MAX_HEALTH;
 
 		this.reserveAmmo = this.reserveAmmoSize;
 		this.magazineAmmo = this.magazineAmmoSize;
+		
+		this.client.respawn(this.health);
+		this.enablePlayerControls();
+	}
+	
+	private void enablePlayerControls() {
+		if(!this.isDead && !this.pauseMenuActive) {
+			this.player.setAcceptPlayerInputs(true);
+		}
+	}
+	
+	private void disablePlayerControls() {
+		this.player.setAcceptPlayerInputs(false);
 	}
 
 	@Override
@@ -368,8 +376,20 @@ public class GameState extends State {
 		// -- MENU --
 		Input.inputsHovered(uiScreen.getEntityIDAtMouse());
 
-		// -- RESPAWNING --
-		if (this.health <= 0) {
+		// -- HEALTH --
+		HashMap<Integer, Integer> playerHealths = client.getPlayerHealths();
+		for(int ID : playerHealths.keySet()) {
+			int health = playerHealths.get(ID);
+			if(ID == this.client.getID()) {
+				this.health = health;
+			}
+		}
+		
+		this.isDead = this.health <= 0;
+		if(this.isDead) {
+			this.disablePlayerControls();
+		}
+		if(this.client.shouldRespawn()) {
 			this.respawn();
 		}
 
@@ -406,10 +426,13 @@ public class GameState extends State {
 			this.sm.switchState(new MainMenuState(this.sm));
 		}
 
-		// update player information
-		HashMap<Integer, Vec3> otherPlayerPositions = this.client.getOtherPlayerPositions();
-		for (int ID : otherPlayerPositions.keySet()) {
-			Vec3 pos = otherPlayerPositions.get(ID);
+		// update other player positions
+		HashMap<Integer, Vec3> playerPositions = this.client.getPlayerPositions();
+		for (int ID : playerPositions.keySet()) {
+			if(ID == this.client.getID()) {
+				continue;
+			}
+			Vec3 pos = playerPositions.get(ID);
 			if (!this.otherPlayers.keySet().contains(ID)) {
 				this.otherPlayers.put(ID, new Capsule(pos, new Vec3(0), 0.33f, 1f, WORLD_SCENE));
 			}
@@ -422,18 +445,6 @@ public class GameState extends State {
 		for (int ID : disconnectedPlayers) {
 			this.otherPlayers.get(ID).kill();
 			this.otherPlayers.remove(ID);
-		}
-
-		//update health from damage
-		ArrayList<Pair<Integer, int[]>> damageSources = this.client.getDamageSources();
-		for (Pair<Integer, int[]> p : damageSources) {
-			int attackerID = p.first;
-			int receiverID = p.second[0];
-			int damage = p.second[1];
-
-			if (receiverID == this.client.getID()) {
-				this.health -= damage;
-			}
 		}
 
 		// process decals and damage from bullets
@@ -496,7 +507,7 @@ public class GameState extends State {
 				for (Vec3 v : playerIntersections) {
 					float dist = new Vec3(ray_origin, v).length();
 					if (dist < minDist) {
-						maxPlayerIntersectDist = Math.max(minDist, maxPlayerIntersectDist);
+						maxPlayerIntersectDist = Math.max(dist, maxPlayerIntersectDist);
 					}
 				}
 
@@ -556,11 +567,16 @@ public class GameState extends State {
 		uiScreen.setUIScene(UI_SCENE);
 		uiScreen.render(outputBuffer);
 
-		uiScreen.setUIScene(PAUSE_SCENE_STATIC);
-		uiScreen.render(outputBuffer);
-
-		uiScreen.setUIScene(PAUSE_SCENE_DYNAMIC);
-		uiScreen.render(outputBuffer);
+		if(this.pauseMenuActive) {
+			uiScreen.setUIScene(PAUSE_SCENE_STATIC);
+			uiScreen.render(outputBuffer);
+	
+			uiScreen.setUIScene(PAUSE_SCENE_DYNAMIC);
+			uiScreen.render(outputBuffer);
+		}
+		
+		
+		
 	}
 
 	private void updateCamera() {
