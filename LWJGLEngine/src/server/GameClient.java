@@ -14,6 +14,8 @@ public class GameClient extends Client {
 	private Vec3 pos;
 
 	private HashMap<Integer, Vec3> otherPlayerPositions;
+	private HashMap<Integer, Integer> playerHealths;
+
 	private ArrayList<Integer> disconnectedPlayers;
 	private ArrayList<Pair<Integer, Vec3[]>> inBulletRays; //player id, bullet ray. 
 	private ArrayList<Pair<Integer, Vec3[]>> outBulletRays;
@@ -26,6 +28,7 @@ public class GameClient extends Client {
 
 		this.pos = new Vec3(0);
 		this.otherPlayerPositions = new HashMap<>();
+		this.playerHealths = new HashMap<>();
 		this.disconnectedPlayers = new ArrayList<>();
 
 		this.inBulletRays = new ArrayList<>();
@@ -37,7 +40,14 @@ public class GameClient extends Client {
 
 	@Override
 	public void _update() {
-
+		for (int ID : this.disconnectedPlayers) {
+			if (this.playerHealths.containsKey(ID)) {
+				this.playerHealths.remove(ID);
+			}
+			if (this.otherPlayerPositions.containsKey(ID)) {
+				this.otherPlayerPositions.remove(ID);
+			}
+		}
 	}
 
 	@Override
@@ -84,6 +94,14 @@ public class GameClient extends Client {
 						continue;
 					}
 					this.otherPlayerPositions.put(playerID, new Vec3(arr[0], arr[1], arr[2]));
+				}
+				break;
+
+			case "player_healths":
+				for (int i = 0; i < elementAmt; i++) {
+					int playerID = packetListener.readInt();
+					int playerHealth = packetListener.readInt();
+					this.playerHealths.put(playerID, playerHealth);
 				}
 				break;
 

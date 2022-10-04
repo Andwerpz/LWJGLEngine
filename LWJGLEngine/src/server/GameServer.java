@@ -2,6 +2,7 @@ package server;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import entity.Capsule;
 import graphics.Material;
@@ -15,24 +16,45 @@ import util.Vec4;
 
 public class GameServer extends Server {
 
+	private static final int MAX_HEALTH = 100;
+
+	private HashSet<Integer> connectedClients;
 	private HashMap<Integer, Vec3> playerPositions;
+	private HashMap<Integer, Integer> playerHealths;
 
 	private ArrayList<Integer> disconnectedClients;
 	private ArrayList<Pair<Integer, Vec3[]>> bulletRays;
 	private ArrayList<Pair<Integer, int[]>> damageSources;
+	private ArrayList<Pair<Integer, Integer>> killfeed;
 
 	public GameServer(String ip, int port) {
 		super(ip, port);
 
+		this.connectedClients = new HashSet<>();
 		this.playerPositions = new HashMap<>();
+		this.playerHealths = new HashMap<>();
+
 		this.damageSources = new ArrayList<>();
-		this.disconnectedClients = new ArrayList<>();
 		this.bulletRays = new ArrayList<>();
+		this.killfeed = new ArrayList<>();
+
+		this.disconnectedClients = new ArrayList<>();
 	}
 
 	@Override
 	public void _update() {
-		//TODO move hit detection to server
+		for (Pair<Integer, int[]> p : this.damageSources) {
+			int agressorID = p.first;
+			int receiverID = p.second[0];
+			int damage = p.second[1];
+
+			if (this.connectedClients.contains(receiverID)) {
+				if (!this.connectedClients.contains(agressorID) || this.playerHealths.get(agressorID) == 0) {
+					continue;
+				}
+				this.playerHealths.put(receiverID, this.playerHealths.get(receiverID) - damage);
+			}
+		}
 	}
 
 	@Override
@@ -44,6 +66,12 @@ public class GameServer extends Server {
 			Vec3 pos = this.playerPositions.get(ID);
 			packetSender.write(ID);
 			packetSender.write(new float[] { pos.x, pos.y, pos.z });
+		}
+
+		packetSender.writeSectionHeader("player_healths", this.playerHealths.size());
+		for (int ID : this.playerHealths.keySet()) {
+			packetSender.write(ID);
+			packetSender.write(this.playerHealths.get(ID));
 		}
 
 		if (disconnectedClients.size() != 0) {
@@ -115,11 +143,15 @@ public class GameServer extends Server {
 	@Override
 	public void _clientConnect(int clientID) {
 		this.playerPositions.put(clientID, new Vec3(0));
+		this.playerHealths.put(clientID, MAX_HEALTH);
+		this.connectedClients.add(clientID);
 	}
 
 	@Override
 	public void _clientDisconnect(int clientID) {
 		this.playerPositions.remove(clientID);
+		this.playerHealths.remove(clientID);
+		this.connectedClients.remove(clientID);
 		this.disconnectedClients.add(clientID);
 	}
 
