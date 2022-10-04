@@ -13,13 +13,17 @@ import entity.Capsule;
 import entity.Entity;
 import graphics.Framebuffer;
 import graphics.Material;
+import graphics.Texture;
 import graphics.TextureMaterial;
-import input.InputManager;
+import input.Button;
+import input.Input;
 import input.KeyboardInput;
 import input.MouseInput;
+import input.TextField;
 import main.Main;
 import model.AssetManager;
 import model.Decal;
+import model.FilledRectangle;
 import model.Model;
 import player.Camera;
 import player.Player;
@@ -31,9 +35,9 @@ import screen.Screen;
 import screen.UIScreen;
 import server.GameClient;
 import server.GameServer;
-import ui.FilledRectangle;
 import ui.Text;
 import ui.UIElement;
+import ui.UIFilledRectangle;
 import util.FontUtils;
 import util.Mat4;
 import util.MathUtils;
@@ -47,6 +51,9 @@ public class GameState extends State {
 	public static final int WORLD_SCENE = 0;
 	private static final int DECAL_SCENE = 1; // screen space decals
 	private static final int UI_SCENE = 2;
+
+	private static final int PAUSE_SCENE_STATIC = 3;
+	private static final int PAUSE_SCENE_DYNAMIC = 4;
 
 	private static final int DECAL_LIMIT = 1000;
 	private Queue<Long> decalIDs;
@@ -73,6 +80,8 @@ public class GameState extends State {
 
 	private boolean leftMouse = false;
 	private boolean rightMouse = false;
+
+	private boolean pauseMenuActive = false;
 
 	private static final int MAX_HEALTH = 100;
 	private Text healthText;
@@ -147,12 +156,10 @@ public class GameState extends State {
 		this.decalIDs = new ArrayDeque<>();
 
 		Main.lockCursor();
-		InputManager.removeAllInputs();
 		Entity.killAll();
 
 		// -- WORLD SCENE --
-		Model.removeInstancesFromScene(WORLD_SCENE);
-		Light.removeLightsFromScene(WORLD_SCENE);
+		this.clearScene(WORLD_SCENE);
 		this.mapID = Model.addInstance(AssetManager.getModel("dust2"), Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), WORLD_SCENE);
 		Model.activateCollisionMesh(this.mapID);
 		Light.addLight(WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
@@ -161,13 +168,11 @@ public class GameState extends State {
 		this.respawn();
 
 		// -- DECAL SCENE --
-		Model.removeInstancesFromScene(DECAL_SCENE);
-		Light.removeLightsFromScene(DECAL_SCENE);
+		this.clearScene(DECAL_SCENE);
 		this.bulletRays = new ArrayList<>();
 
 		// -- UI SCENE --
-		Model.removeInstancesFromScene(UI_SCENE);
-		Light.removeLightsFromScene(UI_SCENE);
+		this.clearScene(UI_SCENE);
 
 		long crosshairRect1ID = FilledRectangle.addRectangle(Main.windowWidth / 2 - 1, Main.windowHeight / 2 - 6, 2, 12, UI_SCENE);
 		long crosshairRect2ID = FilledRectangle.addRectangle(Main.windowWidth / 2 - 6, Main.windowHeight / 2 - 1, 12, 2, UI_SCENE);
@@ -187,7 +192,9 @@ public class GameState extends State {
 		this.magazineAmmoText.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_BOTTOM);
 		this.magazineAmmoText.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_BOTTOM);
 
-		UIElement.alignAllUIElements();
+		// -- PAUSE SCENE --
+		this.clearScene(PAUSE_SCENE_STATIC);
+		this.clearScene(PAUSE_SCENE_DYNAMIC);
 
 		// -- NETWORKING --
 		this.client = new GameClient();
@@ -202,6 +209,36 @@ public class GameState extends State {
 				break;
 			}
 		}
+	}
+
+	private void togglePauseMenu() {
+		if (this.pauseMenuActive) {
+			Main.lockCursor();
+			this.player.setAcceptPlayerInputs(true);
+			this.clearScene(PAUSE_SCENE_STATIC);
+			this.clearScene(PAUSE_SCENE_DYNAMIC);
+		}
+		else {
+			Main.unlockCursor();
+			this.player.setAcceptPlayerInputs(false);
+			this.drawPauseMenu();
+		}
+		this.pauseMenuActive = !this.pauseMenuActive;
+	}
+
+	private void drawPauseMenu() {
+		// -- STATIC --
+		this.clearScene(PAUSE_SCENE_STATIC);
+		UIFilledRectangle backgroundRect = new UIFilledRectangle(0, 0, 400, 350, PAUSE_SCENE_STATIC);
+		backgroundRect.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_BOTTOM);
+		backgroundRect.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
+		backgroundRect.setMaterial(new Material(new Vec4(0, 0, 0, 0.25f)));
+
+		// -- DYNAMIC --
+		this.clearScene(PAUSE_SCENE_DYNAMIC);
+		Button returnToMenu = new Button(0, 0, 300, 30, "btn_return_to_menu", "Return to Menu", FontUtils.CSGOFont, 32, PAUSE_SCENE_DYNAMIC);
+		returnToMenu.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_BOTTOM);
+		returnToMenu.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 	}
 
 	private void startHosting() {
@@ -224,7 +261,7 @@ public class GameState extends State {
 	}
 
 	private boolean canShoot() {
-		return this.fireMillisCounter > this.fireDelayMillis && this.magazineAmmo > 0 && !this.reloading;
+		return this.fireMillisCounter > this.fireDelayMillis && this.magazineAmmo > 0 && !this.reloading && !this.pauseMenuActive;
 	}
 
 	private void shoot() {
@@ -328,6 +365,9 @@ public class GameState extends State {
 
 	@Override
 	public void update() {
+		// -- MENU --
+		Input.inputsHovered(uiScreen.getEntityIDAtMouse());
+
 		// -- RESPAWNING --
 		if (this.health <= 0) {
 			this.respawn();
@@ -515,6 +555,12 @@ public class GameState extends State {
 
 		uiScreen.setUIScene(UI_SCENE);
 		uiScreen.render(outputBuffer);
+
+		uiScreen.setUIScene(PAUSE_SCENE_STATIC);
+		uiScreen.render(outputBuffer);
+
+		uiScreen.setUIScene(PAUSE_SCENE_DYNAMIC);
+		uiScreen.render(outputBuffer);
 	}
 
 	private void updateCamera() {
@@ -525,6 +571,7 @@ public class GameState extends State {
 
 	@Override
 	public void mousePressed(int button) {
+		Input.inputsPressed(uiScreen.getEntityIDAtMouse());
 		if (button == MouseInput.LEFT_MOUSE_BUTTON) {
 			this.leftMouse = true;
 		}
@@ -535,11 +582,20 @@ public class GameState extends State {
 
 	@Override
 	public void mouseReleased(int button) {
+		Input.inputsReleased(uiScreen.getEntityIDAtMouse());
 		if (button == MouseInput.LEFT_MOUSE_BUTTON) {
 			this.leftMouse = false;
 		}
 		else if (button == MouseInput.RIGHT_MOUSE_BUTTON) {
 			this.rightMouse = false;
+		}
+
+		String clickedButton = Input.getClicked();
+		switch (clickedButton) {
+		case "btn_return_to_menu":
+			this.disconnect();
+			this.stopHosting();
+			this.sm.switchState(new MainMenuState(this.sm));
 		}
 	}
 
@@ -556,8 +612,8 @@ public class GameState extends State {
 			this.startReloading();
 			break;
 
-		case GLFW_KEY_P:
-			System.out.println(this.player.pos);
+		case GLFW_KEY_ESCAPE:
+			this.togglePauseMenu();
 			break;
 		}
 

@@ -20,7 +20,7 @@ import entity.Entity;
 import graphics.Material;
 import graphics.Texture;
 import graphics.TextureMaterial;
-import ui.FilledRectangle;
+import model.FilledRectangle;
 import ui.Text;
 import ui.UIElement;
 import util.FontUtils;
@@ -86,8 +86,6 @@ public class TextField extends Input {
 	private long fieldInnerID;
 	private Text fieldText;
 
-	private int scene;
-
 	private String text, hintText;
 	private int textLeftMargin = 5;
 	private int textRightMargin = 5;
@@ -99,17 +97,14 @@ public class TextField extends Input {
 	private Material releasedMaterial, pressedMaterial, hoveredMaterial, selectedMaterial;
 	private Material currentMaterial;
 
-	public TextField(int x, int y, int width, int height, String hintText, Font font, int fontSize, int scene) {
-		super(x, y);
-		this.init(0, width, height, hintText, FontUtils.deriveSize(fontSize, font), scene);
+	public TextField(int x, int y, int width, int height, String sID, String hintText, Font font, int fontSize, int scene) {
+		super(x, y, width, height, sID, scene);
+		this.init(0, hintText, FontUtils.deriveSize(fontSize, font));
 	}
 
-	private void init(int z, int width, int height, String hintText, Font font, int scene) {
+	private void init(int z, String hintText, Font font) {
 		this.font = font;
 		this.z = z;
-		this.width = width;
-		this.height = height;
-		this.scene = scene;
 
 		this.setFrameAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 
@@ -122,7 +117,7 @@ public class TextField extends Input {
 
 		this.textMaterial = new Material(Color.WHITE);
 		this.hintTextMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
-		this.fieldText = new Text(0, 0, z + 1, width - (textLeftMargin + textRightMargin), hintText, font, this.hintTextMaterial, scene);
+		this.fieldText = new Text(0, 0, z + 1, width - (textLeftMargin + textRightMargin), hintText, font, this.hintTextMaterial, this.scene);
 		this.fieldText.setContentAlignmentStyle(Text.ALIGN_LEFT, Text.ALIGN_CENTER);
 
 		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
@@ -168,7 +163,7 @@ public class TextField extends Input {
 	}
 
 	@Override
-	protected void __kill() {
+	protected void ___kill() {
 		this.fieldText.kill();
 	}
 

@@ -1,11 +1,9 @@
-package ui;
+package model;
 
 import static org.lwjgl.opengl.GL11.*;
 
 import graphics.TextureMaterial;
 import graphics.VertexArray;
-import model.AssetManager;
-import model.Model;
 import util.Mat4;
 import util.Vec3;
 

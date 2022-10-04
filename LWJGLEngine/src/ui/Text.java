@@ -10,6 +10,7 @@ import entity.Entity;
 import graphics.Material;
 import graphics.Texture;
 import graphics.TextureMaterial;
+import model.FilledRectangle;
 import model.Model;
 import util.FontUtils;
 import util.GraphicsTools;
@@ -26,7 +27,6 @@ public class Text extends UIElement {
 
 	private int width, height;
 	private int textWidth, textMaxHeight, textMaxDescent, textMaxAscent, textSampleAscent, textSampleDescent;
-	private int scene;
 
 	private Material material;
 
@@ -37,44 +37,44 @@ public class Text extends UIElement {
 	private int fontSize;
 
 	public Text(int x, int y, String text, int fontSize, Material material, int scene) {
-		super(x, y);
+		super(x, y, 0, 0, scene);
 		Font derivedFont = new Font("Dialogue", Font.PLAIN, fontSize);
-		this.init(0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material, scene);
+		this.init(0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material);
 	}
 
 	public Text(int x, int y, String text, Font font, int fontSize, Material material, int scene) {
-		super(x, y);
+		super(x, y, 0, 0, scene);
 		Font derivedFont = FontUtils.deriveSize(fontSize, font);
-		this.init(0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material, scene);
+		this.init(0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material);
 	}
 
 	public Text(int x, int y, String text, Font font, Color color, int scene) {
-		super(x, y);
-		this.init(0, GraphicsTools.calculateTextWidth(text, font), text, font, new Material(color), scene);
+		super(x, y, 0, 0, scene);
+		this.init(0, GraphicsTools.calculateTextWidth(text, font), text, font, new Material(color));
 	}
 
 	public Text(int x, int y, String text, Font font, int fontSize, Color color, int scene) {
-		super(x, y);
+		super(x, y, 0, 0, scene);
 		Font derivedFont = FontUtils.deriveSize(fontSize, font);
-		this.init(0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, new Material(color), scene);
+		this.init(0, GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, new Material(color));
 	}
 
 	public Text(int x, int y, int z, String text, Font font, Material material, int scene) {
-		super(x, y);
-		this.init(z, GraphicsTools.calculateTextWidth(text, font), text, font, material, scene);
+		super(x, y, 0, 0, scene);
+		this.init(z, GraphicsTools.calculateTextWidth(text, font), text, font, material);
 	}
 
 	public Text(int x, int y, int z, int width, String text, Font font, Material material, int scene) {
-		super(x, y);
-		this.init(z, width, text, font, material, scene);
+		super(x, y, 0, 0, scene);
+		this.init(z, width, text, font, material);
 	}
 
 	public Text(int x, int y, String text, Font font, Material material, int scene) {
-		super(x, y);
-		this.init(0, GraphicsTools.calculateTextWidth(text, font), text, font, material, scene);
+		super(x, y, 0, 0, scene);
+		this.init(0, GraphicsTools.calculateTextWidth(text, font), text, font, material);
 	}
 
-	private void init(int z, int width, String text, Font font, Material material, int scene) {
+	private void init(int z, int width, String text, Font font, Material material) {
 		this.text = text;
 		this.font = font;
 		this.fontSize = font.getSize();

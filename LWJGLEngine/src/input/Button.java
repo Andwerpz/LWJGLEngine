@@ -15,9 +15,9 @@ import graphics.TextureMaterial;
 import graphics.Material;
 import graphics.Texture;
 import graphics.VertexArray;
+import model.FilledRectangle;
 import model.Model;
 import scene.Scene;
-import ui.FilledRectangle;
 import ui.Text;
 import ui.UIElement;
 import util.FontUtils;
@@ -39,23 +39,18 @@ public class Button extends Input {
 	private long buttonInnerID;
 	private Text buttonText;
 
-	private int scene;
-
 	private Material pressedMaterial, releasedMaterial, hoveredMaterial;
 	private Material pressedTextMaterial, releasedTextMaterial, hoveredTextMaterial;
 	private Material currentMaterial;
 
-	public Button(int x, int y, int width, int height, String text, Font font, int fontSize, int scene) {
-		super(x, y);
-		this.init(0, width, height, text, FontUtils.deriveSize(fontSize, font), scene);
+	public Button(int x, int y, int width, int height, String sID, String text, Font font, int fontSize, int scene) {
+		super(x, y, width, height, sID, scene);
+		this.init(0, text, FontUtils.deriveSize(fontSize, font));
 	}
 
 	// text size should already be included in the font
-	private void init(int z, int width, int height, String text, Font font, int scene) {
+	private void init(int z, String text, Font font) {
 		this.z = z;
-		this.width = width;
-		this.height = height;
-		this.scene = scene;
 
 		this.setFrameAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 
@@ -80,7 +75,7 @@ public class Button extends Input {
 	}
 
 	@Override
-	protected void __kill() {
+	protected void ___kill() {
 		this.buttonText.kill();
 	}
 

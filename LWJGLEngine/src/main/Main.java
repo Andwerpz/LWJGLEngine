@@ -185,7 +185,7 @@ public class Main implements Runnable {
 		glfwPollEvents();
 
 		// esc for exit
-		if (KeyboardInput.isKeyPressed(GLFW_KEY_ESCAPE)) {
+		if (KeyboardInput.isKeyPressed(GLFW_KEY_P)) {
 			running = false;
 			System.exit(0); // to close all threads
 		}

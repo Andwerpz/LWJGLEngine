@@ -387,6 +387,9 @@ public class Model {
 
 	public static void updateInstance(long ID, Mat4 mat4) {
 		Model model = IDtoModel.get(ID);
+		if (IDtoScene.get(ID) == null) {
+			System.out.println(ID);
+		}
 		int scene = IDtoScene.get(ID);
 		model.modelMats.get(scene).put(ID, mat4);
 		model.scenesNeedingUpdates.add(scene);
@@ -563,7 +566,8 @@ public class Model {
 		for (int i = 0; i < meshes.size(); i++) {
 			if (i < this.textureMaterials.size() && this.textureMaterials.get(i) != null) {
 				this.textureMaterials.get(i).bind();
-			} else {
+			}
+			else {
 				DEFAULT_TEXTURE_MATERIAL.bind();
 			}
 			this.meshes.get(i).render(scene);

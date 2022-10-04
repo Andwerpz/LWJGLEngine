@@ -6,7 +6,7 @@ import static org.lwjgl.opengl.GL30.*;
 import graphics.Framebuffer;
 import graphics.Shader;
 import graphics.Texture;
-import input.InputManager;
+import input.Input;
 import main.Main;
 import model.ScreenQuad;
 import player.Player;
@@ -86,12 +86,12 @@ public class StateManager {
 
 	public void keyPressed(int key) {
 		activeState.keyPressed(key);
-		InputManager.keyPressed(key);
+		Input.inputsKeyPressed(key);
 	}
 
 	public void keyReleased(int key) {
 		activeState.keyReleased(key);
-		InputManager.keyReleased(key);
+		Input.inputsKeyReleased(key);
 	}
 
 }

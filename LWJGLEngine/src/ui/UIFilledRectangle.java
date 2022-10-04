@@ -1,0 +1,34 @@
+package ui;
+
+import graphics.Material;
+import model.FilledRectangle;
+import util.Mat4;
+
+public class UIFilledRectangle extends UIElement {
+
+	private long rectangleID;
+
+	public UIFilledRectangle(int xOffset, int yOffset, int width, int height, int scene) {
+		super(xOffset, yOffset, width, height, scene);
+		this.rectangleID = FilledRectangle.addRectangle(xOffset, yOffset, width, height, scene);
+		this.registerModelInstance(this.rectangleID);
+	}
+
+	public void setMaterial(Material m) {
+		this.updateModelInstance(this.rectangleID, m);
+	}
+
+	@Override
+	protected void __kill() {
+	}
+
+	@Override
+	protected void _alignContents() {
+		this.updateModelInstance(this.rectangleID, Mat4.scale(this.width, this.height, 1).mul(Mat4.translate(this.alignedX, this.alignedY, this.z)));
+	}
+
+	@Override
+	protected void update() {
+	}
+
+}

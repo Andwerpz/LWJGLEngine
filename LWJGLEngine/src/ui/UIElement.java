@@ -1,5 +1,6 @@
 package ui;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import entity.Entity;
@@ -31,6 +32,8 @@ public abstract class UIElement extends Entity {
 	public static final int ALIGN_BOTTOM = 3;
 	public static final int ALIGN_CENTER = 4;
 
+	protected int scene;
+
 	private int horizontalAlignFrame, verticalAlignFrame;
 	private int xOffset, yOffset; //along with alignment style, determines reference coordinates for drawing
 
@@ -40,7 +43,7 @@ public abstract class UIElement extends Entity {
 
 	protected int alignedX, alignedY;
 
-	public UIElement(int xOffset, int yOffset) {
+	public UIElement(int xOffset, int yOffset, int width, int height, int scene) {
 		this.horizontalAlignFrame = FROM_LEFT;
 		this.verticalAlignFrame = FROM_BOTTOM;
 
@@ -50,7 +53,10 @@ public abstract class UIElement extends Entity {
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
 
-		this.alignFrame();
+		this.width = width;
+		this.height = height;
+
+		this.scene = scene;
 
 		UIElement.uiElements.add(this);
 		UIElement.shouldAlignUIElements = true;
@@ -63,6 +69,18 @@ public abstract class UIElement extends Entity {
 	}
 
 	protected abstract void __kill();
+
+	public static void removeAllUIElementsFromScene(int scene) {
+		ArrayList<UIElement> toRemove = new ArrayList<>();
+		for (UIElement i : uiElements) {
+			if (i.getScene() == scene) {
+				toRemove.add(i);
+			}
+		}
+		for (UIElement i : toRemove) {
+			i.kill();
+		}
+	}
 
 	public void setFrameAlignmentStyle(int horizontalAlign, int verticalAlign) {
 		this.horizontalAlignFrame = horizontalAlign;
@@ -87,6 +105,16 @@ public abstract class UIElement extends Entity {
 	public void setContentAlignmentStyle(int horizontalAlign, int verticalAlign) {
 		this.horizontalAlignContent = horizontalAlign;
 		this.verticalAlignContent = verticalAlign;
+		UIElement.shouldAlignUIElements = true;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+		UIElement.shouldAlignUIElements = true;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
 		UIElement.shouldAlignUIElements = true;
 	}
 
@@ -165,6 +193,10 @@ public abstract class UIElement extends Entity {
 			break;
 		}
 		this._alignContents();
+	}
+
+	public int getScene() {
+		return this.scene;
 	}
 
 	protected abstract void _alignContents();

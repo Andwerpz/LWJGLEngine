@@ -2,6 +2,9 @@ package state;
 
 import graphics.Framebuffer;
 import graphics.Texture;
+import model.Model;
+import scene.Light;
+import ui.UIElement;
 
 public abstract class State {
 	// each state manages it's own logic and rendering.
@@ -15,6 +18,12 @@ public abstract class State {
 
 	public State(StateManager sm) {
 		this.sm = sm;
+	}
+
+	protected void clearScene(int scene) {
+		UIElement.removeAllUIElementsFromScene(scene);
+		Model.removeInstancesFromScene(scene);
+		Light.removeLightsFromScene(scene);
 	}
 
 	// model and scene instance relations

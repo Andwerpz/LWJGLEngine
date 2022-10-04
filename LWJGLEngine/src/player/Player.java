@@ -40,6 +40,8 @@ public class Player extends Entity {
 	private boolean onGround = false;
 	private Vec3 groundNormal = new Vec3(0);
 
+	private boolean acceptPlayerInputs = true;
+
 	Vec2 mouse;
 
 	public float camXRot;
@@ -70,14 +72,21 @@ public class Player extends Entity {
 		return this.radius;
 	}
 
+	public void setAcceptPlayerInputs(boolean b) {
+		this.acceptPlayerInputs = b;
+	}
+
 	@Override
 	public void update() {
 		// ROTATION
 		Vec2 nextMouse = MouseInput.getMousePos();
 		Vec2 delta = nextMouse.sub(mouse);
-		camYRot += Math.toRadians(delta.x / 10f);
-		camXRot += Math.toRadians(delta.y / 10f);
-		mouse = nextMouse;
+
+		if (this.acceptPlayerInputs) {
+			camYRot += Math.toRadians(delta.x / 10f);
+			camXRot += Math.toRadians(delta.y / 10f);
+			mouse = nextMouse;
+		}
 
 		camXRot = MathUtils.clamp((float) -(Math.PI - 0.01) / 2f, (float) (Math.PI - 0.01) / 2f, camXRot);
 
@@ -123,39 +132,42 @@ public class Player extends Entity {
 		resolveCollisions();
 
 		// -- PLAYER INPUTS --
-		Vec3 forward = new Vec3(0, 0, -1);
-		forward.rotateY(camYRot);
-		Vec3 right = new Vec3(forward);
-		right.rotateY((float) Math.toRadians(-90));
+		if (this.acceptPlayerInputs) {
+			Vec3 forward = new Vec3(0, 0, -1);
+			forward.rotateY(camYRot);
+			Vec3 right = new Vec3(forward);
+			right.rotateY((float) Math.toRadians(-90));
 
-		Vec3 inputAccel = new Vec3(0);
+			Vec3 inputAccel = new Vec3(0);
 
-		if (KeyboardInput.isKeyPressed(GLFW_KEY_W)) {
-			inputAccel.addi(forward);
-		}
-		if (KeyboardInput.isKeyPressed(GLFW_KEY_S)) {
-			inputAccel.subi(forward);
-		}
-		if (KeyboardInput.isKeyPressed(GLFW_KEY_D)) {
-			inputAccel.subi(right);
-		}
-		if (KeyboardInput.isKeyPressed(GLFW_KEY_A)) {
-			inputAccel.addi(right);
-		}
-		if (onGround) {
-			Vec3 groundCorrection = inputAccel.projectOnto(groundNormal);
-			inputAccel.addi(groundCorrection);
-		}
-		inputAccel.setLength(this.onGround ? groundMoveSpeed : airMoveSpeed);
-		if (KeyboardInput.isKeyPressed(GLFW_KEY_SPACE)) {
-			if (onGround) {
-				this.vel.y = jumpVel;
-				this.vel.x *= groundFriction;
-				this.vel.y *= groundFriction;
+			if (KeyboardInput.isKeyPressed(GLFW_KEY_W)) {
+				inputAccel.addi(forward);
 			}
+			if (KeyboardInput.isKeyPressed(GLFW_KEY_S)) {
+				inputAccel.subi(forward);
+			}
+			if (KeyboardInput.isKeyPressed(GLFW_KEY_D)) {
+				inputAccel.subi(right);
+			}
+			if (KeyboardInput.isKeyPressed(GLFW_KEY_A)) {
+				inputAccel.addi(right);
+			}
+			if (onGround) {
+				Vec3 groundCorrection = inputAccel.projectOnto(groundNormal);
+				inputAccel.addi(groundCorrection);
+			}
+			inputAccel.setLength(this.onGround ? groundMoveSpeed : airMoveSpeed);
+			if (KeyboardInput.isKeyPressed(GLFW_KEY_SPACE)) {
+				if (onGround) {
+					this.vel.y = jumpVel;
+					this.vel.x *= groundFriction;
+					this.vel.y *= groundFriction;
+				}
+			}
+			this.vel.addi(inputAccel);
+			resolveCollisions();
 		}
-		this.vel.addi(inputAccel);
-		resolveCollisions();
+
 	}
 
 	// check if on the ground, and if so, then compute the ground normal

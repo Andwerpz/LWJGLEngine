@@ -158,6 +158,10 @@ public class Mat4 {
 		return result;
 	}
 
+	public static Mat4 translate(float x, float y, float z) {
+		return Mat4.translate(new Vec3(x, y, z));
+	}
+
 	/**
 	 * Returns a matrix that will rotate around the z axis
 	 * 
@@ -271,14 +275,13 @@ public class Mat4 {
 	}
 
 	public Vec3 mul(Vec3 vec, float w) {
-//		return new Vec3(
-//			vec.x * mat[0][0] + vec.y * mat[1][0] + vec.z * mat[2][0] + w * mat[3][0],
-//			vec.x * mat[0][1] + vec.y * mat[1][1] + vec.z * mat[2][1] + w * mat[3][1],
-//			vec.x * mat[0][2] + vec.y * mat[1][2] + vec.z * mat[2][2] + w * mat[3][2]
-//		);
+		//		return new Vec3(
+		//			vec.x * mat[0][0] + vec.y * mat[1][0] + vec.z * mat[2][0] + w * mat[3][0],
+		//			vec.x * mat[0][1] + vec.y * mat[1][1] + vec.z * mat[2][1] + w * mat[3][1],
+		//			vec.x * mat[0][2] + vec.y * mat[1][2] + vec.z * mat[2][2] + w * mat[3][2]
+		//		);
 
-		return new Vec3(vec.x * mat[0][0] + vec.y * mat[0][1] + vec.z * mat[0][2] + w * mat[0][3], vec.x * mat[1][0] + vec.y * mat[1][1] + vec.z * mat[1][2] + w * mat[1][3],
-				vec.x * mat[2][0] + vec.y * mat[2][1] + vec.z * mat[2][2] + w * mat[2][3]);
+		return new Vec3(vec.x * mat[0][0] + vec.y * mat[0][1] + vec.z * mat[0][2] + w * mat[0][3], vec.x * mat[1][0] + vec.y * mat[1][1] + vec.z * mat[1][2] + w * mat[1][3], vec.x * mat[2][0] + vec.y * mat[2][1] + vec.z * mat[2][2] + w * mat[2][3]);
 	}
 
 	public FloatBuffer toFloatBuffer() {
@@ -293,6 +296,7 @@ public class Mat4 {
 		return BufferUtils.createFloatBuffer(elements);
 	}
 
+	@Override
 	public String toString() {
 		String out = "";
 		for (float[] i : mat) {
