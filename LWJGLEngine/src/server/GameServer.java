@@ -15,11 +15,11 @@ import util.Vec3;
 import util.Vec4;
 
 public class GameServer extends Server {
-	
+
 	private static float[][] respawnPoints = new float[][] { { 19.034498f, 4.209578E-6f, -27.220726f }, { 16.666616f, 2.0344742E-6f, -13.573268f }, { 7.693447f, 1.3825484E-6f, -6.869356f }, { 7.530435f, -2.705492E-7f, 3.1779733f }, { -7.62718f, 1.7262031f, 10.893081f },
-		{ -24.021294f, 1.7262031f, 9.220424f }, { -23.85061f, 7.8836456E-7f, -4.302293f }, { -19.921665f, 0.43155238f, -14.355063f }, { -23.368916f, 3.1562522E-6f, -25.018263f }, { -20.494223f, 3.7797854E-6f, -31.763893f }, { -12.507785f, 4.310161E-6f, -33.866653f },
-		{ -4.116003f, -1.7262013f, -25.567888f }, { 3.98981f, -1.7262013f, -32.315727f }, { 16.353655f, 1.2946576f, -35.787464f }, { 5.4487123f, 1.2946573f, -34.161304f }, { 4.7261915f, 2.5471672E-6f, -20.083405f }, { -8.604298f, 2.3543835E-6f, -6.142592f },
-		{ -6.170692f, -1.726202f, -20.582148f }, { -12.950915f, -1.5104262f, -17.905237f }, };
+			{ -24.021294f, 1.7262031f, 9.220424f }, { -23.85061f, 7.8836456E-7f, -4.302293f }, { -19.921665f, 0.43155238f, -14.355063f }, { -23.368916f, 3.1562522E-6f, -25.018263f }, { -20.494223f, 3.7797854E-6f, -31.763893f }, { -12.507785f, 4.310161E-6f, -33.866653f },
+			{ -4.116003f, -1.7262013f, -25.567888f }, { 3.98981f, -1.7262013f, -32.315727f }, { 16.353655f, 1.2946576f, -35.787464f }, { 5.4487123f, 1.2946573f, -34.161304f }, { 4.7261915f, 2.5471672E-6f, -20.083405f }, { -8.604298f, 2.3543835E-6f, -6.142592f },
+			{ -6.170692f, -1.726202f, -20.582148f }, { -12.950915f, -1.5104262f, -17.905237f }, };
 
 	private HashSet<Integer> connectedClients;
 	private HashMap<Integer, Vec3> playerPositions;
@@ -57,7 +57,11 @@ public class GameServer extends Server {
 				if (!this.connectedClients.contains(aggressorID) || this.playerHealths.get(aggressorID) <= 0) {
 					continue;
 				}
+
 				this.playerHealths.put(receiverID, this.playerHealths.get(receiverID) - damage);
+				if (this.playerHealths.get(receiverID) <= 0 && this.playerHealths.get(receiverID) + damage > 0) { //killing blow
+					this.killfeed.add(new Pair<Integer, Integer>(aggressorID, receiverID));
+				}
 			}
 		}
 	}
@@ -76,14 +80,22 @@ public class GameServer extends Server {
 			packetSender.write(ID);
 			packetSender.write(this.playerHealths.get(ID));
 		}
-		
+
 		packetSender.writeSectionHeader("player_life_ids", this.playerLifeIDs.size());
-		for(int ID : this.playerLifeIDs.keySet()) {
+		for (int ID : this.playerLifeIDs.keySet()) {
 			packetSender.write(ID);
 			packetSender.write(this.playerLifeIDs.get(ID));
 		}
-		
-		if(playerHealths.get(clientID) <= 0) {
+
+		if (this.killfeed.size() != 0) {
+			packetSender.writeSectionHeader("killfeed", this.killfeed.size());
+			for (Pair<Integer, Integer> p : this.killfeed) {
+				packetSender.write(p.first);
+				packetSender.write(p.second);
+			}
+		}
+
+		if (playerHealths.get(clientID) <= 0) {
 			packetSender.writeSectionHeader("should_respawn", 1);
 			packetSender.write(new Vec3(respawnPoints[(int) (Math.random() * respawnPoints.length)]));
 		}
@@ -119,6 +131,7 @@ public class GameServer extends Server {
 		disconnectedClients.clear();
 		damageSources.clear();
 		bulletRays.clear();
+		killfeed.clear();
 	}
 
 	@Override
@@ -149,14 +162,14 @@ public class GameServer extends Server {
 					int damage = packetListener.readInt();
 					int aggressorLifeID = packetListener.readInt();
 					int receiverLifeID = packetListener.readInt();
-					if(this.playerLifeIDs.get(clientID) != aggressorLifeID || this.playerLifeIDs.get(receiverID) != receiverLifeID) {
+					if (this.playerLifeIDs.get(clientID) != aggressorLifeID || this.playerLifeIDs.get(receiverID) != receiverLifeID) {
 						//the aggressor damaged the receivers past life. 
 						continue;
 					}
 					this.damageSources.add(new Pair<Integer, int[]>(playerID, new int[] { receiverID, damage }));
 				}
 				break;
-				
+
 			case "respawn":
 				int health = packetListener.readInt();
 				int lifeID = packetListener.readInt();

@@ -353,20 +353,21 @@ public class GameState extends State {
 		this.player.setPos(this.client.getRespawnPos());
 		this.player.setVel(new Vec3(0));
 		this.health = MAX_HEALTH;
+		this.isDead = false;
 
 		this.reserveAmmo = this.reserveAmmoSize;
 		this.magazineAmmo = this.magazineAmmoSize;
-		
+
 		this.client.respawn(this.health);
 		this.enablePlayerControls();
 	}
-	
+
 	private void enablePlayerControls() {
-		if(!this.isDead && !this.pauseMenuActive) {
+		if (!this.isDead && !this.pauseMenuActive) {
 			this.player.setAcceptPlayerInputs(true);
 		}
 	}
-	
+
 	private void disablePlayerControls() {
 		this.player.setAcceptPlayerInputs(false);
 	}
@@ -378,18 +379,18 @@ public class GameState extends State {
 
 		// -- HEALTH --
 		HashMap<Integer, Integer> playerHealths = client.getPlayerHealths();
-		for(int ID : playerHealths.keySet()) {
+		for (int ID : playerHealths.keySet()) {
 			int health = playerHealths.get(ID);
-			if(ID == this.client.getID()) {
+			if (ID == this.client.getID()) {
 				this.health = health;
 			}
 		}
-		
+
 		this.isDead = this.health <= 0;
-		if(this.isDead) {
+		if (this.isDead) {
 			this.disablePlayerControls();
 		}
-		if(this.client.shouldRespawn()) {
+		if (this.client.shouldRespawn()) {
 			this.respawn();
 		}
 
@@ -429,7 +430,7 @@ public class GameState extends State {
 		// update other player positions
 		HashMap<Integer, Vec3> playerPositions = this.client.getPlayerPositions();
 		for (int ID : playerPositions.keySet()) {
-			if(ID == this.client.getID()) {
+			if (ID == this.client.getID()) {
 				continue;
 			}
 			Vec3 pos = playerPositions.get(ID);
@@ -502,7 +503,7 @@ public class GameState extends State {
 				Mat4 modelMat4 = null;
 
 				//check if player intersection is close enough to the wall intersect to splat blood
-				float maxBloodSplatterDist = 1f;
+				float maxBloodSplatterDist = 4f;
 				float maxPlayerIntersectDist = -100f; //that is less than the minimum wall intersection dist, since wallbangs aren't a thing
 				for (Vec3 v : playerIntersections) {
 					float dist = new Vec3(ray_origin, v).length();
@@ -567,16 +568,14 @@ public class GameState extends State {
 		uiScreen.setUIScene(UI_SCENE);
 		uiScreen.render(outputBuffer);
 
-		if(this.pauseMenuActive) {
+		if (this.pauseMenuActive) {
 			uiScreen.setUIScene(PAUSE_SCENE_STATIC);
 			uiScreen.render(outputBuffer);
-	
+
 			uiScreen.setUIScene(PAUSE_SCENE_DYNAMIC);
 			uiScreen.render(outputBuffer);
 		}
-		
-		
-		
+
 	}
 
 	private void updateCamera() {

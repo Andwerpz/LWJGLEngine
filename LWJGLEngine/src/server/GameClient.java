@@ -8,11 +8,11 @@ import util.Pair;
 import util.Vec3;
 
 public class GameClient extends Client {
-	
+
 	//each time you respawn, you get a new life id, this prevents bullets being shot against a 
 	//previous instance of you to harm the respawned instance.
-	private int lifeID;	
-	
+	private int lifeID;
+
 	private Vec3 pos;
 
 	private HashMap<Integer, Vec3> playerPositions;
@@ -20,15 +20,18 @@ public class GameClient extends Client {
 	private HashMap<Integer, Integer> playerLifeIDs;
 
 	private ArrayList<Integer> disconnectedPlayers;
+
+	private ArrayList<Pair<Integer, Integer>> killfeed;
+
 	private ArrayList<Pair<Integer, Vec3[]>> inBulletRays; //player id, bullet ray. 
 	private ArrayList<Pair<Integer, Vec3[]>> outBulletRays;
 
 	private ArrayList<Pair<Integer, int[]>> inDamageSources;
 	private ArrayList<Pair<Integer, int[]>> outDamageSources; //player id, reciever id, damage amt
-	
+
 	private boolean shouldRespawn = false;
 	private Vec3 respawnPos;
-	
+
 	private boolean writeRespawn = false;
 	private int writeRespawnHealth;
 
@@ -39,14 +42,17 @@ public class GameClient extends Client {
 		this.playerPositions = new HashMap<>();
 		this.playerHealths = new HashMap<>();
 		this.playerLifeIDs = new HashMap<>();
+
 		this.disconnectedPlayers = new ArrayList<>();
+
+		this.killfeed = new ArrayList<>();
 
 		this.inBulletRays = new ArrayList<>();
 		this.outBulletRays = new ArrayList<>();
 
 		this.inDamageSources = new ArrayList<>();
 		this.outDamageSources = new ArrayList<>();
-		
+
 		this.respawnPos = new Vec3(0);
 		this.writeRespawnHealth = 0;
 	}
@@ -80,8 +86,8 @@ public class GameClient extends Client {
 			}
 			this.outDamageSources.clear();
 		}
-		
-		if(this.writeRespawn) {
+
+		if (this.writeRespawn) {
 			packetSender.writeSectionHeader("respawn", 1);
 			packetSender.write(this.writeRespawnHealth);
 			packetSender.write(this.lifeID);
@@ -111,12 +117,20 @@ public class GameClient extends Client {
 					this.playerHealths.put(playerID, playerHealth);
 				}
 				break;
-				
+
 			case "player_life_ids":
-				for(int i = 0; i < elementAmt; i++) {
+				for (int i = 0; i < elementAmt; i++) {
 					int playerID = packetListener.readInt();
 					int lifeID = packetListener.readInt();
 					this.playerLifeIDs.put(playerID, lifeID);
+				}
+				break;
+
+			case "killfeed":
+				for (int i = 0; i < elementAmt; i++) {
+					int aggressorID = packetListener.readInt();
+					int receiverID = packetListener.readInt();
+					this.killfeed.add(new Pair<Integer, Integer>(aggressorID, receiverID));
 				}
 				break;
 
@@ -147,7 +161,7 @@ public class GameClient extends Client {
 					this.inDamageSources.add(new Pair<Integer, int[]>(playerID, new int[] { recieverID, damage }));
 				}
 				break;
-				
+
 			case "should_respawn":
 				this.respawnPos = packetListener.readVec3();
 				this.shouldRespawn = true;
@@ -159,13 +173,20 @@ public class GameClient extends Client {
 	public HashMap<Integer, Vec3> getPlayerPositions() {
 		return this.playerPositions;
 	}
-	
+
 	public HashMap<Integer, Integer> getPlayerHealths() {
 		return this.playerHealths;
 	}
-	
-	public HashMap<Integer, Integer> getPlayerLifeIDs(){
+
+	public HashMap<Integer, Integer> getPlayerLifeIDs() {
 		return this.playerLifeIDs;
+	}
+
+	public ArrayList<Pair<Integer, Integer>> getKillfeed() {
+		ArrayList<Pair<Integer, Integer>> ans = new ArrayList<>();
+		ans.addAll(this.killfeed);
+		this.killfeed.clear();
+		return ans;
 	}
 
 	public ArrayList<Integer> getDisconnectedPlayers() {
@@ -188,24 +209,24 @@ public class GameClient extends Client {
 		this.inDamageSources.clear();
 		return ans;
 	}
-	
+
 	public boolean shouldRespawn() {
-		if(this.shouldRespawn) {
+		if (this.shouldRespawn) {
 			this.shouldRespawn = false;
 			return true;
 		}
 		return false;
 	}
-	
+
 	public Vec3 getRespawnPos() {
 		return this.respawnPos;
 	}
-	
+
 	public void respawn(int health) {
 		this.writeRespawn = true;
 		this.writeRespawnHealth = health;
 		int oldLifeID = this.lifeID;
-		while(this.lifeID != oldLifeID) {
+		while (this.lifeID != oldLifeID) {
 			this.lifeID = (int) (Math.random() * 1000000);
 		}
 	}
@@ -219,7 +240,7 @@ public class GameClient extends Client {
 	}
 
 	public void addDamageSource(int receiverID, int damage) {
-		if(!this.playerLifeIDs.containsKey(receiverID) || !this.playerLifeIDs.containsKey(this.ID)) {
+		if (!this.playerLifeIDs.containsKey(receiverID) || !this.playerLifeIDs.containsKey(this.ID)) {
 			return;
 		}
 		int aggressorLifeID = this.playerLifeIDs.get(this.ID);
