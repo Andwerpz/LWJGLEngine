@@ -44,14 +44,12 @@ public class Button extends Input {
 	private Material currentMaterial;
 
 	public Button(int x, int y, int width, int height, String sID, String text, Font font, int fontSize, int scene) {
-		super(x, y, width, height, sID, scene);
-		this.init(0, text, FontUtils.deriveSize(fontSize, font));
+		super(x, y, 0, width, height, sID, scene);
+		this.init(text, FontUtils.deriveSize(fontSize, font));
 	}
 
 	// text size should already be included in the font
-	private void init(int z, String text, Font font) {
-		this.z = z;
-
+	private void init(String text, Font font) {
 		this.setFrameAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 
 		this.horizontalAlignContent = UIElement.ALIGN_LEFT;

@@ -8,8 +8,8 @@ public class UIFilledRectangle extends UIElement {
 
 	private long rectangleID;
 
-	public UIFilledRectangle(int xOffset, int yOffset, int width, int height, int scene) {
-		super(xOffset, yOffset, width, height, scene);
+	public UIFilledRectangle(int xOffset, int yOffset, int z, int width, int height, int scene) {
+		super(xOffset, yOffset, z, width, height, scene);
 		this.rectangleID = FilledRectangle.addRectangle(xOffset, yOffset, width, height, scene);
 		this.registerModelInstance(this.rectangleID);
 	}

@@ -82,6 +82,12 @@ public class GameState extends State {
 	private boolean rightMouse = false;
 
 	private boolean pauseMenuActive = false;
+	
+	private ArrayList<Text> killfeed;
+	private long killfeedActiveMillis = 5000;
+	private int killfeedFontSize = 18;
+	private int killfeedCellGap = 5;
+	private int killfeedMargin = 10;
 
 	private static final int MAX_HEALTH = 100;
 	private Text healthText;
@@ -149,6 +155,7 @@ public class GameState extends State {
 		this.bloodDecal.setTextureMaterial(new TextureMaterial(AssetManager.getTexture("blood_splatter_texture")));
 
 		this.decalIDs = new ArrayDeque<>();
+		this.killfeed = new ArrayList<>();
 
 		Main.lockCursor();
 		Entity.killAll();
@@ -224,7 +231,7 @@ public class GameState extends State {
 	private void drawPauseMenu() {
 		// -- STATIC --
 		this.clearScene(PAUSE_SCENE_STATIC);
-		UIFilledRectangle backgroundRect = new UIFilledRectangle(0, 0, 400, 350, PAUSE_SCENE_STATIC);
+		UIFilledRectangle backgroundRect = new UIFilledRectangle(0, 0, 0, 400, 350, PAUSE_SCENE_STATIC);
 		backgroundRect.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_BOTTOM);
 		backgroundRect.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 		backgroundRect.setMaterial(new Material(new Vec4(0, 0, 0, 0.25f)));
@@ -376,6 +383,25 @@ public class GameState extends State {
 	public void update() {
 		// -- MENU --
 		Input.inputsHovered(uiScreen.getEntityIDAtMouse());
+		
+		// -- KILLFEED --
+		ArrayList<Pair<Integer, Integer>> newKillfeed = this.client.getKillfeed();
+		for(Pair<Integer, Integer> p : newKillfeed) {
+			int aggressorID = p.first;
+			int receiverID = p.second;
+			Text nextText = new Text(0, 0, aggressorID + " killed " + receiverID, FontUtils.segoe_ui.deriveFont(Font.PLAIN, 18), new Material(new Vec4(1)), UI_SCENE);
+			nextText.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
+			nextText.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
+			nextText.setDrawBackgroundRectangle(true);
+			nextText.setMargin(this.killfeedMargin);
+			nextText.setBackgroundMaterial(new Material(new Vec4(0, 0, 0, 0.3f)));
+		}
+		
+		int yPtr = this.killfeedCellGap;
+		for(Text t : this.killfeed) {
+			t.setFrameAlignmentOffset(this.killfeedCellGap, yPtr);
+			yPtr += this.killfeedCellGap + t.getHeight();
+		}
 
 		// -- HEALTH --
 		HashMap<Integer, Integer> playerHealths = client.getPlayerHealths();

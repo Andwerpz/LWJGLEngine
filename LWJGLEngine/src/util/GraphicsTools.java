@@ -118,6 +118,10 @@ public class GraphicsTools {
 		Rectangle textBounds = getStringBounds(g, sampleText, 0, 0);
 		return (int) (textBounds.getHeight() - textBounds.getMaxY());
 	}
+	
+	public static int getFontSampleMaxHeight(Font font) {
+		return GraphicsTools.getFontSampleDescent(font) + GraphicsTools.getFontSampleAscent(font);
+	}
 
 	public static void enableTextAntialiasing(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g;

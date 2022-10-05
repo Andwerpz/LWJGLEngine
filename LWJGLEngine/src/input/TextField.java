@@ -98,13 +98,12 @@ public class TextField extends Input {
 	private Material currentMaterial;
 
 	public TextField(int x, int y, int width, int height, String sID, String hintText, Font font, int fontSize, int scene) {
-		super(x, y, width, height, sID, scene);
-		this.init(0, hintText, FontUtils.deriveSize(fontSize, font));
+		super(x, y, 0, width, height, sID, scene);
+		this.init(hintText, FontUtils.deriveSize(fontSize, font));
 	}
 
-	private void init(int z, String hintText, Font font) {
+	private void init(String hintText, Font font) {
 		this.font = font;
-		this.z = z;
 
 		this.setFrameAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 
@@ -153,11 +152,11 @@ public class TextField extends Input {
 
 		// -- TEXT --
 		if (this.text.length() == 0) {
-			this.fieldText.setMaterial(this.hintTextMaterial);
+			this.fieldText.setTextMaterial(this.hintTextMaterial);
 			this.fieldText.setText(this.hintText);
 		}
 		else {
-			this.fieldText.setMaterial(this.textMaterial);
+			this.fieldText.setTextMaterial(this.textMaterial);
 			this.fieldText.setText(this.text);
 		}
 	}
@@ -173,7 +172,7 @@ public class TextField extends Input {
 		this.updateModelInstance(this.fieldInnerID, modelMat4);
 
 		int centerY = alignedY + this.height / 2;
-		this.fieldText.setFrameAlignment(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM, this.x + this.textLeftMargin, centerY);
+		this.fieldText.setFrameAlignment(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM, this.alignedX + this.textLeftMargin, centerY);
 		this.fieldText.align();
 	}
 

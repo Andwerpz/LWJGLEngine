@@ -43,7 +43,7 @@ public abstract class UIElement extends Entity {
 
 	protected int alignedX, alignedY;
 
-	public UIElement(int xOffset, int yOffset, int width, int height, int scene) {
+	public UIElement(int xOffset, int yOffset, int z, int width, int height, int scene) {
 		this.horizontalAlignFrame = FROM_LEFT;
 		this.verticalAlignFrame = FROM_BOTTOM;
 
@@ -52,6 +52,7 @@ public abstract class UIElement extends Entity {
 
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
+		this.z = z;
 
 		this.width = width;
 		this.height = height;
