@@ -82,8 +82,8 @@ public class GameState extends State {
 	private boolean rightMouse = false;
 
 	private boolean pauseMenuActive = false;
-	
-	private ArrayList<Text> killfeed;
+
+	private Queue<Pair<Text, Long>> killfeed; //text, start time millis
 	private long killfeedActiveMillis = 5000;
 	private int killfeedFontSize = 18;
 	private int killfeedCellGap = 5;
@@ -155,7 +155,7 @@ public class GameState extends State {
 		this.bloodDecal.setTextureMaterial(new TextureMaterial(AssetManager.getTexture("blood_splatter_texture")));
 
 		this.decalIDs = new ArrayDeque<>();
-		this.killfeed = new ArrayList<>();
+		this.killfeed = new ArrayDeque<>();
 
 		Main.lockCursor();
 		Entity.killAll();
@@ -319,6 +319,20 @@ public class GameState extends State {
 		this.reserveAmmoText.setText(this.reserveAmmo + "");
 
 		this.healthText.setText(this.health + "");
+
+		while (this.killfeed.size() != 0 && System.currentTimeMillis() - this.killfeed.peek().second >= this.killfeedActiveMillis) {
+			Text t = this.killfeed.poll().first;
+			t.kill();
+		}
+
+		//realign elements in killfeed
+		int yPtr = this.killfeedCellGap;
+		for (Pair<Text, Long> p : this.killfeed) {
+			Text t = p.first;
+			t.setFrameAlignmentOffset(this.killfeedCellGap, yPtr);
+			t.align();
+			yPtr += this.killfeedCellGap + t.getHeight();
+		}
 	}
 
 	private float computeClosestRayIntersectionDist(Vec3 ray_origin, Vec3 ray_dir, int scene) {
@@ -383,24 +397,20 @@ public class GameState extends State {
 	public void update() {
 		// -- MENU --
 		Input.inputsHovered(uiScreen.getEntityIDAtMouse());
-		
+
 		// -- KILLFEED --
 		ArrayList<Pair<Integer, Integer>> newKillfeed = this.client.getKillfeed();
-		for(Pair<Integer, Integer> p : newKillfeed) {
+		for (Pair<Integer, Integer> p : newKillfeed) {
 			int aggressorID = p.first;
 			int receiverID = p.second;
-			Text nextText = new Text(0, 0, aggressorID + " killed " + receiverID, FontUtils.segoe_ui.deriveFont(Font.PLAIN, 18), new Material(new Vec4(1)), UI_SCENE);
+			Text nextText = new Text(0, 0, aggressorID + " killed " + receiverID, FontUtils.segoe_ui.deriveFont(Font.PLAIN, this.killfeedFontSize), new Material(new Vec4(1)), UI_SCENE);
 			nextText.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 			nextText.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
 			nextText.setDrawBackgroundRectangle(true);
 			nextText.setMargin(this.killfeedMargin);
 			nextText.setBackgroundMaterial(new Material(new Vec4(0, 0, 0, 0.3f)));
-		}
-		
-		int yPtr = this.killfeedCellGap;
-		for(Text t : this.killfeed) {
-			t.setFrameAlignmentOffset(this.killfeedCellGap, yPtr);
-			yPtr += this.killfeedCellGap + t.getHeight();
+
+			this.killfeed.add(new Pair<Text, Long>(nextText, System.currentTimeMillis()));
 		}
 
 		// -- HEALTH --

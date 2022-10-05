@@ -86,13 +86,13 @@ public abstract class UIElement extends Entity {
 	public void setFrameAlignmentStyle(int horizontalAlign, int verticalAlign) {
 		this.horizontalAlignFrame = horizontalAlign;
 		this.verticalAlignFrame = verticalAlign;
-		UIElement.shouldAlignUIElements = true;
+		this.alignFrame();
 	}
 
 	public void setFrameAlignmentOffset(int xOffset, int yOffset) {
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
-		UIElement.shouldAlignUIElements = true;
+		this.alignFrame();
 	}
 
 	public void setFrameAlignment(int horizontalAlign, int verticalAlign, int xOffset, int yOffset) {
@@ -100,23 +100,23 @@ public abstract class UIElement extends Entity {
 		this.verticalAlignFrame = verticalAlign;
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
-		UIElement.shouldAlignUIElements = true;
+		this.alignFrame();
 	}
 
 	public void setContentAlignmentStyle(int horizontalAlign, int verticalAlign) {
 		this.horizontalAlignContent = horizontalAlign;
 		this.verticalAlignContent = verticalAlign;
-		UIElement.shouldAlignUIElements = true;
+		this.alignContents();
 	}
 
 	public void setWidth(int width) {
 		this.width = width;
-		UIElement.shouldAlignUIElements = true;
+		this.alignContents();
 	}
 
 	public void setHeight(int height) {
 		this.height = height;
-		UIElement.shouldAlignUIElements = true;
+		this.alignContents();
 	}
 
 	public static void alignAllUIElements() {

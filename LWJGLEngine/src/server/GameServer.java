@@ -51,9 +51,11 @@ public class GameServer extends Server {
 		for (Pair<Integer, int[]> p : this.damageSources) {
 			int aggressorID = p.first;
 			int receiverID = p.second[0];
+			int aggressorLifeID = p.second[2];
+			int receiverLifeID = p.second[3];
 			int damage = p.second[1];
 
-			if (this.connectedClients.contains(receiverID)) {
+			if (this.connectedClients.contains(receiverID) && this.playerLifeIDs.get(receiverID) == receiverLifeID) {
 				if (!this.connectedClients.contains(aggressorID) || this.playerHealths.get(aggressorID) <= 0) {
 					continue;
 				}
@@ -166,7 +168,7 @@ public class GameServer extends Server {
 						//the aggressor damaged the receivers past life. 
 						continue;
 					}
-					this.damageSources.add(new Pair<Integer, int[]>(playerID, new int[] { receiverID, damage }));
+					this.damageSources.add(new Pair<Integer, int[]>(playerID, new int[] { receiverID, damage, aggressorLifeID, receiverLifeID }));
 				}
 				break;
 
