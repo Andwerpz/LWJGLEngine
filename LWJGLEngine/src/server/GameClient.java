@@ -153,15 +153,6 @@ public class GameClient extends Client {
 				}
 				break;
 
-			case "damage_sources":
-				for (int i = 0; i < elementAmt; i++) {
-					int playerID = packetListener.readInt();
-					int recieverID = packetListener.readInt();
-					int damage = packetListener.readInt();
-					this.inDamageSources.add(new Pair<Integer, int[]>(playerID, new int[] { recieverID, damage }));
-				}
-				break;
-
 			case "should_respawn":
 				this.respawnPos = packetListener.readVec3();
 				this.shouldRespawn = true;
@@ -226,7 +217,7 @@ public class GameClient extends Client {
 		this.writeRespawn = true;
 		this.writeRespawnHealth = health;
 		int oldLifeID = this.lifeID;
-		while (this.lifeID != oldLifeID) {
+		while (this.lifeID == oldLifeID || this.lifeID == 0) {
 			this.lifeID = (int) (Math.random() * 1000000);
 		}
 	}

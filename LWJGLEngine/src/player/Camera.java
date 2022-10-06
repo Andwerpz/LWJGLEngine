@@ -17,13 +17,32 @@ public class Camera {
 
 	public Mat4 projectionMatrix;
 
+	private boolean isPerspective;
+	private boolean isOrthographic;
+
+	private float verticalFOV, width, height, near, far;
+	private float left, right, bottom, top;
+
 	public Camera(float verticalFOV, float width, float height, float near, float far) {
 		init();
+		this.isPerspective = true;
+		this.verticalFOV = verticalFOV;
+		this.width = width;
+		this.height = height;
+		this.near = near;
+		this.far = far;
 		this.projectionMatrix = Mat4.perspective(verticalFOV, width, height, near, far);
 	}
 
 	public Camera(float left, float right, float bottom, float top, float near, float far) {
 		init();
+		this.isOrthographic = true;
+		this.left = left;
+		this.right = right;
+		this.bottom = bottom;
+		this.top = top;
+		this.near = near;
+		this.far = far;
 		this.projectionMatrix = Mat4.orthographic(left, right, bottom, top, near, far);
 	}
 
@@ -62,6 +81,19 @@ public class Camera {
 		ans.mat[2][3] = 0;
 
 		return ans;
+	}
+
+	public void setVerticalFOV(float fov) {
+		if (!this.isPerspective) {
+			System.err.println("WRONG CAMERA TYPE");
+			return;
+		}
+		this.verticalFOV = fov;
+		this.projectionMatrix = Mat4.perspective(verticalFOV, width, height, near, far);
+	}
+
+	public float getVerticalFOV() {
+		return this.verticalFOV;
 	}
 
 	public Vec3 getPos() {

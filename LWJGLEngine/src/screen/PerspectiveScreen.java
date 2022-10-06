@@ -26,11 +26,12 @@ public class PerspectiveScreen extends Screen {
 
 	private int world_scene;
 	private int decal_scene;
+	private int playermodel_scene;
 
 	private static final int SHADOW_MAP_NR_CASCADES = 6;
 	private static float[] shadowCascades = new float[] { Main.NEAR, 1, 3, 7, 15, 30, Main.FAR };
 
-	private float cameraFOV;
+	private float worldFOV;
 
 	private Framebuffer geometryBuffer;
 	private Framebuffer lightingBuffer;
@@ -53,7 +54,12 @@ public class PerspectiveScreen extends Screen {
 	private Texture skyboxColorMap; // RGB: color
 
 	private SkyboxCube skyboxCube;
-	private boolean renderSkybox = true;
+	private boolean renderSkybox = false;
+
+	private boolean renderDecals = false;
+
+	private boolean renderPlayermodel = false;
+	private float playermodelFOV;
 
 	public PerspectiveScreen() {
 		super();
@@ -101,7 +107,7 @@ public class PerspectiveScreen extends Screen {
 		this.skyboxBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.skyboxBuffer.isComplete();
 
-		this.cameraFOV = 90f;
+		this.worldFOV = 90f;
 
 		Vec3 cameraPos = new Vec3();
 		Vec3 cameraFacing = new Vec3(0, 0, -1);
@@ -111,16 +117,18 @@ public class PerspectiveScreen extends Screen {
 			cameraFacing = this.camera.getFacing();
 		}
 
-		this.camera = new Camera((float) Math.toRadians(this.cameraFOV), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
+		this.camera = new Camera((float) Math.toRadians(this.worldFOV), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
 		this.camera.setPos(cameraPos);
 		this.camera.setFacing(cameraFacing);
+
+		this.playermodelFOV = 50f;
 	}
 
 	public void setCameraFOV(float degrees) {
-		this.cameraFOV = degrees;
+		float cameraFOV = degrees;
 		Vec3 cameraPos = this.camera.getPos();
 		Vec3 cameraFacing = this.camera.getFacing();
-		this.camera = new Camera((float) Math.toRadians(this.cameraFOV), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
+		this.camera = new Camera((float) Math.toRadians(cameraFOV), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
 		this.camera.setPos(cameraPos);
 		this.camera.setFacing(cameraFacing);
 	}
@@ -133,6 +141,10 @@ public class PerspectiveScreen extends Screen {
 		this.decal_scene = scene;
 	}
 
+	public void setPlayermodelScene(int scene) {
+		this.playermodel_scene = scene;
+	}
+
 	public void setShaderCameraUniforms(Shader shader, Camera camera) {
 		shader.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
 		shader.setUniformMat4("vw_matrix", camera.getViewMatrix());
@@ -141,6 +153,14 @@ public class PerspectiveScreen extends Screen {
 
 	public void renderSkybox(boolean b) {
 		this.renderSkybox = b;
+	}
+
+	public void renderDecals(boolean b) {
+		this.renderDecals = b;
+	}
+
+	public void renderPlayermodel(boolean b) {
+		this.renderPlayermodel = b;
 	}
 
 	@Override
@@ -158,25 +178,47 @@ public class PerspectiveScreen extends Screen {
 		Texture.bindingEnabled = true;
 
 		Shader.GEOMETRY.enable();
+		this.setCameraFOV(this.worldFOV);
 		this.setShaderCameraUniforms(Shader.GEOMETRY, this.camera);
 		Model.renderModels(this.world_scene);
 
 		// -- DECALS -- : screen space decals
-		geometryBuffer.bind();
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-		glDepthMask(false);
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
-		glPolygonMode(GL_FRONT, GL_FILL);
-		// glEnable(GL_BLEND);
-		// glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		if (this.renderDecals) {
+			geometryBuffer.bind();
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LESS);
+			glDepthMask(false);
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+			glPolygonMode(GL_FRONT, GL_FILL);
 
-		Shader.DECAL.enable();
-		Shader.DECAL.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
-		Shader.DECAL.setUniformMat4("vw_matrix", camera.getViewMatrix());
-		this.geometryPositionMap.bind(GL_TEXTURE4);
-		Model.renderModels(this.decal_scene);
+			Shader.DECAL.enable();
+			Shader.DECAL.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
+			Shader.DECAL.setUniformMat4("vw_matrix", camera.getViewMatrix());
+			this.geometryPositionMap.bind(GL_TEXTURE4);
+			Model.renderModels(this.decal_scene);
+		}
+
+		// -- PLAYERMODEL -- : gun and hands
+		if (this.renderPlayermodel) {
+			//we clear the gDepth buffer in this step, should probably save it somewhere instead. 
+
+			geometryBuffer.bind();
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LESS);
+			glDepthMask(true);
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+			glClearDepth(1); // maximum value
+			glClear(GL_DEPTH_BUFFER_BIT);
+
+			Shader.GEOMETRY.enable();
+			this.setCameraFOV(this.playermodelFOV);
+			this.setShaderCameraUniforms(Shader.GEOMETRY, this.camera);
+			Model.renderModels(this.playermodel_scene);
+
+			this.setCameraFOV(this.worldFOV);
+		}
 
 		// -- LIGHTING -- : using information from the geometry buffer, calculate lighting.
 		lightingBuffer.bind();
@@ -348,14 +390,16 @@ public class PerspectiveScreen extends Screen {
 		Texture.bindingEnabled = true;
 
 		// -- SKYBOX -- : we'll use this texture in the post-processing step
-		skyboxBuffer.bind();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glDisable(GL_CULL_FACE);
-		Shader.SKYBOX.enable();
-		Shader.SKYBOX.setUniformMat4("vw_matrix", this.camera.getViewMatrix());
-		Shader.SKYBOX.setUniformMat4("pr_matrix", this.camera.getProjectionMatrix());
-		Scene.skyboxes.get(this.world_scene).bind(GL_TEXTURE0);
-		skyboxCube.render();
+		if (this.renderSkybox) {
+			skyboxBuffer.bind();
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glDisable(GL_CULL_FACE);
+			Shader.SKYBOX.enable();
+			Shader.SKYBOX.setUniformMat4("vw_matrix", this.camera.getViewMatrix());
+			Shader.SKYBOX.setUniformMat4("pr_matrix", this.camera.getProjectionMatrix());
+			Scene.skyboxes.get(this.world_scene).bind(GL_TEXTURE0);
+			skyboxCube.render();
+		}
 
 		outputBuffer.bind();
 		glDisable(GL_DEPTH_TEST);

@@ -137,7 +137,9 @@ public class MainMenuState extends State {
 
 	@Override
 	public void render(Framebuffer outputBuffer) {
-		perspectiveScreen.setDecalScene(-2);
+		perspectiveScreen.renderSkybox(true);
+		perspectiveScreen.renderDecals(false);
+		perspectiveScreen.renderPlayermodel(false);
 		perspectiveScreen.setWorldScene(BACKGROUND_SCENE);
 		perspectiveScreen.render(outputBuffer);
 

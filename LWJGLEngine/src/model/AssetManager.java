@@ -25,6 +25,7 @@ public class AssetManager {
 	// bind all asset names to load paths
 	public static void init() {
 		paths.put("dust2", new String[] { "/dust2/", "dust2_blend.obj" });
+		paths.put("ak47", new String[] { "/ak47/", "ak47.obj" });
 		paths.put("sphere", new String[] { "/sphere/", "sphere.obj" });
 		paths.put("cylinder", new String[] { "/cylinder/", "cylinder.obj" });
 

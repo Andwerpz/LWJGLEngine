@@ -48,12 +48,14 @@ import util.Vec4;
 
 public class GameState extends State {
 
-	public static final int WORLD_SCENE = 0;
-	private static final int DECAL_SCENE = 1; // screen space decals
-	private static final int UI_SCENE = 2;
+	private static final int WORLD_SCENE = 0;
+	private static final int PLAYERMODEL_SCENE = 1;
+	private static final int DECAL_SCENE = 2; // screen space decals
 
-	private static final int PAUSE_SCENE_STATIC = 3;
-	private static final int PAUSE_SCENE_DYNAMIC = 4;
+	private static final int UI_SCENE = 3;
+
+	private static final int PAUSE_SCENE_STATIC = 4;
+	private static final int PAUSE_SCENE_DYNAMIC = 5;
 
 	private static final int DECAL_LIMIT = 1000;
 	private Queue<Long> decalIDs;
@@ -105,7 +107,7 @@ public class GameState extends State {
 	private long fireMillisCounter = 0;
 
 	private float recoilRecoverySpeedPercent = 0.025f;
-	private float recoilRecoverySpeedLinear = 0.3f;
+	private float recoilRecoverySpeedLinear = 0.4f;
 	private float recoilVerticalRot = 0f;
 	private float recoilHorizontalRot = 0f;
 	private float recoilScale = 0.01f;
@@ -126,6 +128,9 @@ public class GameState extends State {
 	private boolean reloading = false;
 	private long reloadStartMillis;
 	private long reloadTimeMillis = 1000;
+
+	private long playermodelID;
+	private boolean playermodelLeftHanded = false;
 
 	public GameState(StateManager sm, String ip, int port, boolean hosting) {
 		super(sm);
@@ -167,6 +172,11 @@ public class GameState extends State {
 		Light.addLight(WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
 		Scene.skyboxes.put(WORLD_SCENE, AssetManager.getSkybox("lake_skybox"));
 		player = new Player(new Vec3(0), WORLD_SCENE);
+
+		// -- PLAYERMODEL SCENE --
+		this.clearScene(PLAYERMODEL_SCENE);
+		Light.addLight(PLAYERMODEL_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
+		this.playermodelID = Model.addInstance(AssetManager.getModel("ak47"), Mat4.identity(), PLAYERMODEL_SCENE);
 
 		// -- DECAL SCENE --
 		this.clearScene(DECAL_SCENE);
@@ -241,6 +251,10 @@ public class GameState extends State {
 		Button returnToMenu = new Button(0, 0, 300, 30, "btn_return_to_menu", "Return to Menu", FontUtils.CSGOFont, 32, PAUSE_SCENE_DYNAMIC);
 		returnToMenu.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_BOTTOM);
 		returnToMenu.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
+
+		Button togglePlayermodelSide = new Button(0, 40, 300, 30, "btn_toggle_playermodel_side", "Toggle Handedness", FontUtils.CSGOFont, 32, PAUSE_SCENE_DYNAMIC);
+		togglePlayermodelSide.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_BOTTOM);
+		togglePlayermodelSide.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 	}
 
 	private void startHosting() {
@@ -585,8 +599,20 @@ public class GameState extends State {
 
 		// -- UPDATES --
 		this.updateHud();
-
 		Entity.updateEntities();
+
+		// -- PLAYERMODEL --
+		Vec3 playermodelOffset = new Vec3(0.2f, -0.25f + this.recoilVerticalRot * this.recoilScale * 0.1f, -0.55f + this.recoilVerticalRot * this.recoilScale * 1f);
+		if (this.playermodelLeftHanded) {
+			playermodelOffset.x = -playermodelOffset.x;
+		}
+
+		Mat4 playermodelMat4 = Mat4.translate(playermodelOffset);
+		playermodelMat4.muli(Mat4.rotateX(this.player.camXRot - this.recoilVerticalRot * this.recoilScale * 0.7f));
+		playermodelMat4.muli(Mat4.rotateY(this.player.camYRot));
+		playermodelMat4.muli(Mat4.translate(this.player.pos.add(this.player.cameraVec).sub(this.player.vel.mul(0.5f))));
+		Model.updateInstance(this.playermodelID, playermodelMat4);
+
 		Model.updateModels();
 		updateCamera();
 
@@ -596,11 +622,16 @@ public class GameState extends State {
 
 	@Override
 	public void render(Framebuffer outputBuffer) {
+		//world
 		perspectiveScreen.renderSkybox(true);
+		perspectiveScreen.renderDecals(true);
+		perspectiveScreen.renderPlayermodel(true);
 		perspectiveScreen.setWorldScene(WORLD_SCENE);
 		perspectiveScreen.setDecalScene(DECAL_SCENE);
+		perspectiveScreen.setPlayermodelScene(PLAYERMODEL_SCENE);
 		perspectiveScreen.render(outputBuffer);
 
+		//ui
 		uiScreen.setUIScene(UI_SCENE);
 		uiScreen.render(outputBuffer);
 
@@ -647,6 +678,11 @@ public class GameState extends State {
 			this.disconnect();
 			this.stopHosting();
 			this.sm.switchState(new MainMenuState(this.sm));
+			break;
+
+		case "btn_toggle_playermodel_side":
+			this.playermodelLeftHanded = !this.playermodelLeftHanded;
+			break;
 		}
 	}
 

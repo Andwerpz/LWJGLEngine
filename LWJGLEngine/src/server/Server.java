@@ -107,28 +107,34 @@ public abstract class Server implements Runnable {
 			}
 		}
 
-		// -- READ -- //should open for whenever
+		// -- READ -- should open for whenever
+		ArrayList<Integer> disconnectedClients = new ArrayList<>();
 		for (int ID : this.clientIDs) {
 			if (!this.packetListeners.get(ID).isConnected()) {
-				// Client Disconnected
-				System.out.println("Client disconnected");
-				this.packetListeners.get(ID).exit();
-				this.packetListeners.remove(ID);
-				try {
-					this.clientSockets.get(ID).close();
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-				this.clientSockets.remove(ID);
-				this.clientIDs.remove(ID);
-				this._clientDisconnect(ID);
+				disconnectedClients.add(ID);
 				continue;
 			}
 
 			while (this.packetListeners.get(ID).nextPacket()) {
 				this.readPacket(this.packetListeners.get(ID), ID);
 			}
+		}
+
+		// -- DEAL WITH DISCONNECTED CLIENTS --
+		for (int ID : disconnectedClients) {
+			// Client Disconnected
+			System.out.println("Client disconnected");
+			this.packetListeners.get(ID).exit();
+			this.packetListeners.remove(ID);
+			try {
+				this.clientSockets.get(ID).close();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+			this.clientSockets.remove(ID);
+			this.clientIDs.remove(ID);
+			this._clientDisconnect(ID);
 		}
 
 		this._update();

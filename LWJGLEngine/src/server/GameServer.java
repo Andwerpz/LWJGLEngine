@@ -66,6 +66,7 @@ public class GameServer extends Server {
 				}
 			}
 		}
+		this.damageSources.clear();
 	}
 
 	@Override
@@ -118,20 +119,11 @@ public class GameServer extends Server {
 			}
 		}
 
-		if (this.damageSources.size() != 0) {
-			packetSender.writeSectionHeader("damage_sources", this.damageSources.size());
-			for (Pair<Integer, int[]> p : this.damageSources) {
-				packetSender.write(p.first);
-				packetSender.write(p.second);
-			}
-		}
-
 	}
 
 	@Override
 	public void writePacketEND() {
 		disconnectedClients.clear();
-		damageSources.clear();
 		bulletRays.clear();
 		killfeed.clear();
 	}
