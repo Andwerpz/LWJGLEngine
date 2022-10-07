@@ -36,6 +36,10 @@ public class Vec2 {
 		set(x, y);
 	}
 
+	public Vec2(float a) {
+		set(a, a);
+	}
+
 	public Vec2(double x, double y) {
 		set((float) x, (float) y);
 	}
@@ -303,7 +307,7 @@ public class Vec2 {
 	public void normalize() {
 		float lenSq = lengthSq();
 
-		if(lenSq > 0.000000001) {
+		if (lenSq > 0.000000001) {
 			float invLen = 1.0f / (float) StrictMath.sqrt(lenSq);
 			x *= invLen;
 			y *= invLen;
@@ -369,14 +373,14 @@ public class Vec2 {
 	}
 
 	public static Vec2 min(Vec2 a, Vec2 b, Vec2 out) {
-		out.x = (float) StrictMath.min(a.x, b.x);
-		out.y = (float) StrictMath.min(a.y, b.y);
+		out.x = StrictMath.min(a.x, b.x);
+		out.y = StrictMath.min(a.y, b.y);
 		return out;
 	}
 
 	public static Vec2 max(Vec2 a, Vec2 b, Vec2 out) {
-		out.x = (float) StrictMath.max(a.x, b.x);
-		out.y = (float) StrictMath.max(a.y, b.y);
+		out.x = StrictMath.max(a.x, b.x);
+		out.y = StrictMath.max(a.y, b.y);
 		return out;
 	}
 
@@ -427,6 +431,7 @@ public class Vec2 {
 		return array;
 	}
 
+	@Override
 	public String toString() {
 		return "[" + this.x + ", " + this.y + "]";
 	}

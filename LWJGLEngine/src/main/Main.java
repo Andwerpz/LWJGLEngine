@@ -184,12 +184,6 @@ public class Main implements Runnable {
 	private void update() {
 		glfwPollEvents();
 
-		// esc for exit
-		if (KeyboardInput.isKeyPressed(GLFW_KEY_P)) {
-			running = false;
-			System.exit(0); // to close all threads
-		}
-
 		if (UIElement.shouldAlignUIElements) {
 			UIElement.alignAllUIElements();
 		}

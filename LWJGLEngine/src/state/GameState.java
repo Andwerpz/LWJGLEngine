@@ -131,7 +131,7 @@ public class GameState extends State {
 
 	private long playermodelID;
 	private boolean playermodelLeftHanded = false;
-	
+
 	private ArrayList<Pair<Text, Long>> serverMessages;
 	private long serverMessageActiveMillis = 10000;
 	private int serverMessagesVerticalGap = 5;
@@ -182,7 +182,7 @@ public class GameState extends State {
 		// -- PLAYERMODEL SCENE --
 		this.clearScene(PLAYERMODEL_SCENE);
 		Light.addLight(PLAYERMODEL_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
-		this.playermodelID = Model.addInstance(AssetManager.getModel("ak47"), Mat4.identity(), PLAYERMODEL_SCENE);
+		this.playermodelID = Model.addInstance(AssetManager.getModel("m4a4"), Mat4.identity(), PLAYERMODEL_SCENE);
 
 		// -- DECAL SCENE --
 		this.clearScene(DECAL_SCENE);
@@ -257,11 +257,11 @@ public class GameState extends State {
 		Button setNicknameButton = new Button(5, -40, 145, 30, "btn_set_nickname", "Set Nick", FontUtils.CSGOFont, 32, PAUSE_SCENE_DYNAMIC);
 		setNicknameButton.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_BOTTOM);
 		setNicknameButton.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-		
+
 		TextField setNicknameTextField = new TextField(5, -40, 145, 30, "tf_set_nickname", "Nickname", new Font("Dialogue", Font.PLAIN, 1), 16, PAUSE_SCENE_DYNAMIC);
 		setNicknameTextField.setFrameAlignmentStyle(UIElement.FROM_CENTER_RIGHT, UIElement.FROM_CENTER_BOTTOM);
 		setNicknameTextField.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-		
+
 		Button returnToMenu = new Button(0, 0, 300, 30, "btn_return_to_menu", "Return to Menu", FontUtils.CSGOFont, 32, PAUSE_SCENE_DYNAMIC);
 		returnToMenu.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_BOTTOM);
 		returnToMenu.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
@@ -361,15 +361,15 @@ public class GameState extends State {
 			t.align();
 			yPtr += this.killfeedCellGap + t.getHeight();
 		}
-		
-		while(this.serverMessages.size() != 0 && System.currentTimeMillis() - this.serverMessages.get(this.serverMessages.size() - 1).second >= this.serverMessageActiveMillis) {
+
+		while (this.serverMessages.size() != 0 && System.currentTimeMillis() - this.serverMessages.get(this.serverMessages.size() - 1).second >= this.serverMessageActiveMillis) {
 			Text t = this.serverMessages.remove(this.serverMessages.size() - 1).first;
 			t.kill();
 		}
-		
+
 		//server messages
 		yPtr = 60;
-		for(Pair<Text, Long> p : this.serverMessages) {
+		for (Pair<Text, Long> p : this.serverMessages) {
 			Text t = p.first;
 			t.setFrameAlignmentOffset(this.serverMessagesHorizontalGap, yPtr);
 			t.align();
@@ -454,10 +454,10 @@ public class GameState extends State {
 
 			this.killfeed.add(0, new Pair<Text, Long>(nextText, System.currentTimeMillis()));
 		}
-		
+
 		// -- SERVER MESSAGES --
 		ArrayList<String> serverMessages = this.client.getServerMessages();
-		for(String s : serverMessages) {
+		for (String s : serverMessages) {
 			Text t = new Text(0, 0, s, new Font("Dialogue", Font.PLAIN, 12), new Material(new Vec4(1)), UI_SCENE);
 			t.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
 			t.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
@@ -644,7 +644,8 @@ public class GameState extends State {
 			playermodelOffset.x = -playermodelOffset.x;
 		}
 
-		Mat4 playermodelMat4 = Mat4.translate(playermodelOffset);
+		Mat4 playermodelMat4 = Mat4.scale(1f);
+		playermodelMat4.muli(Mat4.translate(playermodelOffset));
 		playermodelMat4.muli(Mat4.rotateX(this.player.camXRot - this.recoilVerticalRot * this.recoilScale * 0.7f));
 		playermodelMat4.muli(Mat4.rotateY(this.player.camYRot));
 		playermodelMat4.muli(Mat4.translate(this.player.pos.add(this.player.cameraVec).sub(this.player.vel.mul(0.5f))));
@@ -720,26 +721,20 @@ public class GameState extends State {
 		case "btn_toggle_playermodel_side":
 			this.playermodelLeftHanded = !this.playermodelLeftHanded;
 			break;
-			
+
 		case "btn_set_nickname":
 			String nickname = Input.getText("tf_set_nickname");
-			if(nickname.length() != 0) {
+			if (nickname.length() != 0) {
 				this.client.setNickname(nickname);
 			}
 			break;
-			
+
 		}
 	}
 
 	@Override
 	public void keyPressed(int key) {
 		switch (key) {
-		case GLFW_KEY_M:
-			this.disconnect();
-			this.stopHosting();
-			this.sm.switchState(new MainMenuState(this.sm));
-			break;
-
 		case GLFW_KEY_R:
 			this.startReloading();
 			break;
