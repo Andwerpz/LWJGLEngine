@@ -85,7 +85,7 @@ public class GameState extends State {
 
 	private boolean pauseMenuActive = false;
 
-	private Queue<Pair<Text, Long>> killfeed; //text, start time millis
+	private ArrayList<Pair<Text, Long>> killfeed; //text, start time millis
 	private long killfeedActiveMillis = 5000;
 	private int killfeedFontSize = 18;
 	private int killfeedCellGap = 5;
@@ -131,6 +131,11 @@ public class GameState extends State {
 
 	private long playermodelID;
 	private boolean playermodelLeftHanded = false;
+	
+	private ArrayList<Pair<Text, Long>> serverMessages;
+	private long serverMessageActiveMillis = 10000;
+	private int serverMessagesVerticalGap = 5;
+	private int serverMessagesHorizontalGap = 20;
 
 	public GameState(StateManager sm, String ip, int port, boolean hosting) {
 		super(sm);
@@ -160,7 +165,8 @@ public class GameState extends State {
 		this.bloodDecal.setTextureMaterial(new TextureMaterial(AssetManager.getTexture("blood_splatter_texture")));
 
 		this.decalIDs = new ArrayDeque<>();
-		this.killfeed = new ArrayDeque<>();
+		this.killfeed = new ArrayList<>();
+		this.serverMessages = new ArrayList<>();
 
 		Main.lockCursor();
 		Entity.killAll();
@@ -248,6 +254,14 @@ public class GameState extends State {
 
 		// -- DYNAMIC --
 		this.clearScene(PAUSE_SCENE_DYNAMIC);
+		Button setNicknameButton = new Button(5, -40, 145, 30, "btn_set_nickname", "Set Nick", FontUtils.CSGOFont, 32, PAUSE_SCENE_DYNAMIC);
+		setNicknameButton.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_BOTTOM);
+		setNicknameButton.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
+		
+		TextField setNicknameTextField = new TextField(5, -40, 145, 30, "tf_set_nickname", "Nickname", new Font("Dialogue", Font.PLAIN, 1), 16, PAUSE_SCENE_DYNAMIC);
+		setNicknameTextField.setFrameAlignmentStyle(UIElement.FROM_CENTER_RIGHT, UIElement.FROM_CENTER_BOTTOM);
+		setNicknameTextField.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
+		
 		Button returnToMenu = new Button(0, 0, 300, 30, "btn_return_to_menu", "Return to Menu", FontUtils.CSGOFont, 32, PAUSE_SCENE_DYNAMIC);
 		returnToMenu.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_BOTTOM);
 		returnToMenu.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
@@ -334,8 +348,8 @@ public class GameState extends State {
 
 		this.healthText.setText(this.health + "");
 
-		while (this.killfeed.size() != 0 && System.currentTimeMillis() - this.killfeed.peek().second >= this.killfeedActiveMillis) {
-			Text t = this.killfeed.poll().first;
+		while (this.killfeed.size() != 0 && System.currentTimeMillis() - this.killfeed.get(this.killfeed.size() - 1).second >= this.killfeedActiveMillis) {
+			Text t = this.killfeed.remove(this.killfeed.size() - 1).first;
 			t.kill();
 		}
 
@@ -346,6 +360,20 @@ public class GameState extends State {
 			t.setFrameAlignmentOffset(this.killfeedCellGap, yPtr);
 			t.align();
 			yPtr += this.killfeedCellGap + t.getHeight();
+		}
+		
+		while(this.serverMessages.size() != 0 && System.currentTimeMillis() - this.serverMessages.get(this.serverMessages.size() - 1).second >= this.serverMessageActiveMillis) {
+			Text t = this.serverMessages.remove(this.serverMessages.size() - 1).first;
+			t.kill();
+		}
+		
+		//server messages
+		yPtr = 60;
+		for(Pair<Text, Long> p : this.serverMessages) {
+			Text t = p.first;
+			t.setFrameAlignmentOffset(this.serverMessagesHorizontalGap, yPtr);
+			t.align();
+			yPtr += this.serverMessagesVerticalGap + t.getHeight();
 		}
 	}
 
@@ -413,18 +441,27 @@ public class GameState extends State {
 		Input.inputsHovered(uiScreen.getEntityIDAtMouse());
 
 		// -- KILLFEED --
-		ArrayList<Pair<Integer, Integer>> newKillfeed = this.client.getKillfeed();
-		for (Pair<Integer, Integer> p : newKillfeed) {
-			int aggressorID = p.first;
-			int receiverID = p.second;
-			Text nextText = new Text(0, 0, aggressorID + " killed " + receiverID, FontUtils.segoe_ui.deriveFont(Font.PLAIN, this.killfeedFontSize), new Material(new Vec4(1)), UI_SCENE);
+		ArrayList<Pair<String, String>> newKillfeed = this.client.getKillfeed();
+		for (Pair<String, String> p : newKillfeed) {
+			String aggressorNick = p.first;
+			String receiverNick = p.second;
+			Text nextText = new Text(0, 0, aggressorNick + " killed " + receiverNick, FontUtils.segoe_ui.deriveFont(Font.PLAIN, this.killfeedFontSize), new Material(new Vec4(1)), UI_SCENE);
 			nextText.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 			nextText.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
 			nextText.setDrawBackgroundRectangle(true);
 			nextText.setMargin(this.killfeedMargin);
 			nextText.setBackgroundMaterial(new Material(new Vec4(0, 0, 0, 0.3f)));
 
-			this.killfeed.add(new Pair<Text, Long>(nextText, System.currentTimeMillis()));
+			this.killfeed.add(0, new Pair<Text, Long>(nextText, System.currentTimeMillis()));
+		}
+		
+		// -- SERVER MESSAGES --
+		ArrayList<String> serverMessages = this.client.getServerMessages();
+		for(String s : serverMessages) {
+			Text t = new Text(0, 0, s, new Font("Dialogue", Font.PLAIN, 12), new Material(new Vec4(1)), UI_SCENE);
+			t.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
+			t.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
+			this.serverMessages.add(0, new Pair<Text, Long>(t, System.currentTimeMillis()));
 		}
 
 		// -- HEALTH --
@@ -683,6 +720,14 @@ public class GameState extends State {
 		case "btn_toggle_playermodel_side":
 			this.playermodelLeftHanded = !this.playermodelLeftHanded;
 			break;
+			
+		case "btn_set_nickname":
+			String nickname = Input.getText("tf_set_nickname");
+			if(nickname.length() != 0) {
+				this.client.setNickname(nickname);
+			}
+			break;
+			
 		}
 	}
 

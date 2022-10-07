@@ -25,11 +25,14 @@ public class GameServer extends Server {
 	private HashMap<Integer, Vec3> playerPositions;
 	private HashMap<Integer, Integer> playerHealths;
 	private HashMap<Integer, Integer> playerLifeIDs;
+	private HashMap<Integer, String> playerNicknames;
 
 	private ArrayList<Integer> disconnectedClients;
 	private ArrayList<Pair<Integer, Vec3[]>> bulletRays;
 	private ArrayList<Pair<Integer, int[]>> damageSources;
-	private ArrayList<Pair<Integer, Integer>> killfeed;
+	private ArrayList<Pair<String, String>> killfeed;
+	
+	private ArrayList<String> serverMessages;
 
 	public GameServer(String ip, int port) {
 		super(ip, port);
@@ -38,12 +41,15 @@ public class GameServer extends Server {
 		this.playerPositions = new HashMap<>();
 		this.playerHealths = new HashMap<>();
 		this.playerLifeIDs = new HashMap<>();
+		this.playerNicknames = new HashMap<>();
 
 		this.damageSources = new ArrayList<>();
 		this.bulletRays = new ArrayList<>();
 		this.killfeed = new ArrayList<>();
 
 		this.disconnectedClients = new ArrayList<>();
+		
+		this.serverMessages = new ArrayList<>();
 	}
 
 	@Override
@@ -62,7 +68,9 @@ public class GameServer extends Server {
 
 				this.playerHealths.put(receiverID, this.playerHealths.get(receiverID) - damage);
 				if (this.playerHealths.get(receiverID) <= 0 && this.playerHealths.get(receiverID) + damage > 0) { //killing blow
-					this.killfeed.add(new Pair<Integer, Integer>(aggressorID, receiverID));
+					String aggressorNick = this.playerNicknames.get(aggressorID);
+					String receiverNick = this.playerNicknames.get(receiverID);
+					this.killfeed.add(new Pair<String, String>(aggressorNick, receiverNick));
 				}
 			}
 		}
@@ -92,8 +100,10 @@ public class GameServer extends Server {
 
 		if (this.killfeed.size() != 0) {
 			packetSender.writeSectionHeader("killfeed", this.killfeed.size());
-			for (Pair<Integer, Integer> p : this.killfeed) {
+			for (Pair<String, String> p : this.killfeed) {
+				packetSender.write(p.first.length());
 				packetSender.write(p.first);
+				packetSender.write(p.second.length());
 				packetSender.write(p.second);
 			}
 		}
@@ -118,6 +128,14 @@ public class GameServer extends Server {
 				packetSender.write(p.second[1]);
 			}
 		}
+		
+		if(this.serverMessages.size() != 0) {
+			packetSender.writeSectionHeader("server_messages", this.serverMessages.size());
+			for(String s : this.serverMessages) {
+				packetSender.write(s.length());
+				packetSender.write(s);
+			}
+		}
 
 	}
 
@@ -126,6 +144,7 @@ public class GameServer extends Server {
 		disconnectedClients.clear();
 		bulletRays.clear();
 		killfeed.clear();
+		serverMessages.clear();
 	}
 
 	@Override
@@ -170,6 +189,13 @@ public class GameServer extends Server {
 				this.playerHealths.put(clientID, health);
 				this.playerLifeIDs.put(clientID, lifeID);
 				break;
+				
+			case "set_nickname":
+				int nickLength = packetListener.readInt();
+				String nickname = packetListener.readString(nickLength);
+				this.serverMessages.add(this.playerNicknames.get(clientID) + " changed their name to " + nickname);
+				this.playerNicknames.put(clientID, nickname);
+				break;
 			}
 		}
 	}
@@ -179,14 +205,20 @@ public class GameServer extends Server {
 		this.playerPositions.put(clientID, new Vec3(0));
 		this.playerHealths.put(clientID, 0);
 		this.playerLifeIDs.put(clientID, 0);
+		this.playerNicknames.put(clientID, "" + clientID);
 		this.connectedClients.add(clientID);
+		
+		this.serverMessages.add(this.playerNicknames.get(clientID) + " connected");
 	}
 
 	@Override
 	public void _clientDisconnect(int clientID) {
+		this.serverMessages.add(this.playerNicknames.get(clientID) + " disconnected");
+		
 		this.playerPositions.remove(clientID);
 		this.playerHealths.remove(clientID);
 		this.playerLifeIDs.remove(clientID);
+		this.playerNicknames.remove(clientID);
 		this.connectedClients.remove(clientID);
 		this.disconnectedClients.add(clientID);
 	}

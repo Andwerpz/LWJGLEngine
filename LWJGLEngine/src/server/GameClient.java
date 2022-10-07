@@ -21,19 +21,24 @@ public class GameClient extends Client {
 
 	private ArrayList<Integer> disconnectedPlayers;
 
-	private ArrayList<Pair<Integer, Integer>> killfeed;
+	private ArrayList<Pair<String, String>> killfeed;
 
 	private ArrayList<Pair<Integer, Vec3[]>> inBulletRays; //player id, bullet ray. 
 	private ArrayList<Pair<Integer, Vec3[]>> outBulletRays;
 
 	private ArrayList<Pair<Integer, int[]>> inDamageSources;
 	private ArrayList<Pair<Integer, int[]>> outDamageSources; //player id, reciever id, damage amt
+	
+	private ArrayList<String> serverMessages;
 
 	private boolean shouldRespawn = false;
 	private Vec3 respawnPos;
 
 	private boolean writeRespawn = false;
 	private int writeRespawnHealth;
+	
+	private boolean writeNickname = false;
+	private String nickname;
 
 	public GameClient() {
 		super();
@@ -52,6 +57,8 @@ public class GameClient extends Client {
 
 		this.inDamageSources = new ArrayList<>();
 		this.outDamageSources = new ArrayList<>();
+		
+		this.serverMessages = new ArrayList<>();
 
 		this.respawnPos = new Vec3(0);
 		this.writeRespawnHealth = 0;
@@ -93,6 +100,13 @@ public class GameClient extends Client {
 			packetSender.write(this.lifeID);
 			this.writeRespawn = false;
 		}
+		
+		if(this.writeNickname) {
+			packetSender.writeSectionHeader("set_nickname", 1);
+			packetSender.write(this.nickname.length());
+			packetSender.write(this.nickname);
+			this.writeNickname = false;
+		}
 	}
 
 	@Override
@@ -128,9 +142,11 @@ public class GameClient extends Client {
 
 			case "killfeed":
 				for (int i = 0; i < elementAmt; i++) {
-					int aggressorID = packetListener.readInt();
-					int receiverID = packetListener.readInt();
-					this.killfeed.add(new Pair<Integer, Integer>(aggressorID, receiverID));
+					int aggressorNickLength = packetListener.readInt();
+					String aggressorNick = packetListener.readString(aggressorNickLength);
+					int receiverNickLength = packetListener.readInt();
+					String receiverNick = packetListener.readString(receiverNickLength);
+					this.killfeed.add(new Pair<String, String>(aggressorNick, receiverNick));
 				}
 				break;
 
@@ -157,6 +173,14 @@ public class GameClient extends Client {
 				this.respawnPos = packetListener.readVec3();
 				this.shouldRespawn = true;
 				break;
+				
+			case "server_messages":
+				for(int i = 0; i < elementAmt; i++) {
+					int sLength = packetListener.readInt();
+					String s = packetListener.readString(sLength);
+					this.serverMessages.add(s);
+				}
+				break;
 			}
 		}
 	}
@@ -173,8 +197,8 @@ public class GameClient extends Client {
 		return this.playerLifeIDs;
 	}
 
-	public ArrayList<Pair<Integer, Integer>> getKillfeed() {
-		ArrayList<Pair<Integer, Integer>> ans = new ArrayList<>();
+	public ArrayList<Pair<String, String>> getKillfeed() {
+		ArrayList<Pair<String, String>> ans = new ArrayList<>();
 		ans.addAll(this.killfeed);
 		this.killfeed.clear();
 		return ans;
@@ -198,6 +222,13 @@ public class GameClient extends Client {
 		ArrayList<Pair<Integer, int[]>> ans = new ArrayList<>();
 		ans.addAll(this.inDamageSources);
 		this.inDamageSources.clear();
+		return ans;
+	}
+	
+	public ArrayList<String> getServerMessages(){
+		ArrayList<String> ans = new ArrayList<>();
+		ans.addAll(this.serverMessages);
+		this.serverMessages.clear();
 		return ans;
 	}
 
@@ -241,6 +272,11 @@ public class GameClient extends Client {
 
 	public void setPos(Vec3 pos) {
 		this.pos = new Vec3(pos);
+	}
+	
+	public void setNickname(String nickname) {
+		this.nickname = nickname;
+		this.writeNickname = true;
 	}
 
 }
