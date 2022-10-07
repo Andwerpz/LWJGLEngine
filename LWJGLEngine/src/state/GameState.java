@@ -182,7 +182,7 @@ public class GameState extends State {
 		// -- PLAYERMODEL SCENE --
 		this.clearScene(PLAYERMODEL_SCENE);
 		Light.addLight(PLAYERMODEL_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
-		this.playermodelID = Model.addInstance(AssetManager.getModel("m4a4"), Mat4.identity(), PLAYERMODEL_SCENE);
+		this.playermodelID = Model.addInstance(AssetManager.getModel("ak47"), Mat4.identity(), PLAYERMODEL_SCENE);
 
 		// -- DECAL SCENE --
 		this.clearScene(DECAL_SCENE);

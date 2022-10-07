@@ -192,16 +192,9 @@ public class Model {
 			}
 
 			AIVector3D.Buffer AIuvs = mesh.mTextureCoords(0);
-			if (AIuvs == null) {
-				for (int j = 0; j < AIVertices.limit(); j++) {
-					uvs.get(matIndex).add(new Vec2(Math.random(), Math.random()));
-				}
-			}
-			else {
-				for (int j = 0; j < AIuvs.limit(); j++) {
-					AIVector3D v = AIuvs.get(j);
-					uvs.get(matIndex).add(new Vec2(v.x(), v.y()));
-				}
+			for (int j = 0; j < AIuvs.limit(); j++) {
+				AIVector3D v = AIuvs.get(j);
+				uvs.get(matIndex).add(new Vec2(v.x(), v.y()));
 			}
 
 			AIFace.Buffer AIFaces = mesh.mFaces();
@@ -309,10 +302,10 @@ public class Model {
 		String fileExtension = getFileExtension(path);
 		switch (fileExtension) {
 		case "png":
-			return FileUtils.loadImage(path);
+			return GraphicsTools.verticalFlip(FileUtils.loadImage(path));
 
 		case "jpg":
-			return FileUtils.loadImage(path);
+			return GraphicsTools.verticalFlip(FileUtils.loadImage(path));
 
 		case "tga":
 			return TargaReader.getImage(SystemUtils.getWorkingDirectory() + "\\res" + path);
