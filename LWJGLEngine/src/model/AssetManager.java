@@ -28,6 +28,7 @@ public class AssetManager {
 		paths.put("ak47", new String[] { "/ak47/", "ak47.obj" });
 		paths.put("m4a4", new String[] { "/m4a4/", "m4a4.obj" });
 		paths.put("usps", new String[] { "/usps/", "usps.obj" });
+		paths.put("awp", new String[] { "/awp/", "awp.obj" });
 		paths.put("sphere", new String[] { "/sphere/", "sphere.obj" });
 		paths.put("cylinder", new String[] { "/cylinder/", "cylinder.obj" });
 

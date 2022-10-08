@@ -175,7 +175,7 @@ public class GameState extends State {
 		this.clearScene(WORLD_SCENE);
 		this.mapID = Model.addInstance(AssetManager.getModel("dust2"), Mat4.rotateX((float) Math.toRadians(90)).mul(Mat4.scale((float) 0.05)), WORLD_SCENE);
 		Model.activateCollisionMesh(this.mapID);
-		Light.addLight(WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(0.8f), 0.3f));
+		Light.addLight(WORLD_SCENE, new DirLight(new Vec3(0.3f, -1f, -0.5f), new Vec3(1f), 0.3f));
 		Scene.skyboxes.put(WORLD_SCENE, AssetManager.getSkybox("lake_skybox"));
 		player = new Player(new Vec3(0), WORLD_SCENE);
 
