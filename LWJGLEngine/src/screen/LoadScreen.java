@@ -18,6 +18,11 @@ public class LoadScreen extends Screen {
 	}
 
 	@Override
+	protected void _kill() {
+
+	}
+
+	@Override
 	public void buildBuffers() {
 		this.alpha = 0;
 	}

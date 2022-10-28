@@ -10,9 +10,9 @@ import java.util.HashSet;
 import graphics.Framebuffer;
 import graphics.Texture;
 import main.Main;
-import model.ScreenQuad;
 import player.Camera;
 import scene.Scene;
+import ui.UIElement;
 
 public abstract class Screen {
 	// the screen class is what's called on to render stuff
@@ -50,4 +50,11 @@ public abstract class Screen {
 	}
 
 	public abstract void render(Framebuffer outputBuffer);
+
+	public void kill() {
+		Screen.activeScreens.remove(this);
+		this._kill();
+	}
+
+	protected abstract void _kill();
 }

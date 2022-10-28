@@ -32,6 +32,8 @@ public abstract class State {
 	// any others, and reset scene instancing
 	public abstract void load(); // this is where all the heavy lifting should be done, not in constructor
 
+	public abstract void kill();
+
 	public abstract void update();
 
 	public abstract void render(Framebuffer outputBuffer);

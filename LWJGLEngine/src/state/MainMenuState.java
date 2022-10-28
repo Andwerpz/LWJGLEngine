@@ -2,6 +2,7 @@ package state;
 
 import java.awt.Font;
 
+import audio.Sound;
 import entity.Entity;
 import graphics.Framebuffer;
 import graphics.Texture;
@@ -34,8 +35,10 @@ public class MainMenuState extends State {
 	private static final int STATIC_UI_SCENE = 1; // for unchanging parts of the ui like the logo
 	private static final int DYNAMIC_UI_SCENE = 2; // inputs and stuff
 
-	private static PerspectiveScreen perspectiveScreen; // 3D background
-	private static UIScreen uiScreen; // Menu UI
+	private PerspectiveScreen perspectiveScreen; // 3D background
+	private UIScreen uiScreen; // Menu UI
+
+	private Sound menuMusic;
 
 	private long startTime;
 
@@ -47,15 +50,11 @@ public class MainMenuState extends State {
 
 	@Override
 	public void load() {
-		if (perspectiveScreen == null) {
-			perspectiveScreen = new PerspectiveScreen();
-			perspectiveScreen.setCamera(new Camera((float) Math.toRadians(70f), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR));
-		}
-		perspectiveScreen.getCamera().setPos(new Vec3(18.417412f, 1.7f, -29.812654f));
+		this.perspectiveScreen = new PerspectiveScreen();
+		this.perspectiveScreen.setCamera(new Camera((float) Math.toRadians(70f), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR));
+		this.perspectiveScreen.getCamera().setPos(new Vec3(18.417412f, 1.7f, -29.812654f));
 
-		if (uiScreen == null) {
-			uiScreen = new UIScreen();
-		}
+		this.uiScreen = new UIScreen();
 
 		Main.unlockCursor();
 
@@ -68,6 +67,19 @@ public class MainMenuState extends State {
 		Scene.skyboxes.put(BACKGROUND_SCENE, AssetManager.getSkybox("stars_skybox"));
 
 		this.drawMainMenu();
+
+		menuMusic = new Sound("csgo_main_menu.ogg", true);
+		int menuMusicID = menuMusic.addSource();
+		Sound.setRelativePosition(menuMusicID, new Vec3(0));
+		Sound.setGain(menuMusicID, 0.3f);
+	}
+
+	@Override
+	public void kill() {
+		this.perspectiveScreen.kill();
+		this.uiScreen.kill();
+
+		this.menuMusic.kill();
 	}
 
 	private void drawMainMenu() {
@@ -104,7 +116,7 @@ public class MainMenuState extends State {
 		// -- STATIC UI --
 		this.clearScene(STATIC_UI_SCENE);
 		FilledRectangle csgoLogo = new FilledRectangle();
-		csgoLogo.setTextureMaterial(new TextureMaterial(new Texture("/cs_go_logo.png", false, false, true)));
+		csgoLogo.setTextureMaterial(new TextureMaterial(new Texture("/cs_go_logo.png", Texture.VERTICAL_FLIP_BIT)));
 		Mat4 logoMat4 = Mat4.scale(700, 150, 1).mul(Mat4.translate(new Vec3(120, Main.windowHeight / 2, 0)));
 		Model.addInstance(csgoLogo, logoMat4, STATIC_UI_SCENE);
 	}

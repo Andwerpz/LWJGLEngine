@@ -16,18 +16,39 @@ import util.Vec3;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL31.*;
+import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL46.*;
 
 public class Texture {
 
+	public static final int INVERT_COLORS_BIT = (1 << 0);
+	public static final int HORIZONTAL_FLIP_BIT = (1 << 1);
+	public static final int VERTICAL_FLIP_BIT = (1 << 2);
+
 	// if this is false, bind() and unbind() will not work.
-	// used for rendering depth maps with the same draw method as the geometry map
+	// used when you don't want models autobinding their own textures. 
 	public static boolean bindingEnabled = true;
 
 	private int width, height;
 	private int textureID;
 
 	public Texture(String path) {
-		this.textureID = this.load(path, false, false);
+		this.textureID = this.load(path, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
+	}
+
+	public Texture(BufferedImage img) {
+		this.textureID = this.load(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
+	}
+
+	public Texture(String path, int loadOptions) {
+		this.textureID = this.load(path, loadOptions, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
+	}
+
+	public Texture(BufferedImage img, int loadOptions) {
+		this.textureID = this.load(img, loadOptions, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
 	}
 
 	public Texture(int r, int g, int b, float a) {
@@ -41,35 +62,15 @@ public class Texture {
 		rgb <<= 8;
 		rgb |= (int) MathUtils.clamp(0, 255, b);
 		img.setRGB(0, 0, rgb);
-		this.textureID = this.load(img, false, false);
+		this.textureID = this.load(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
 	}
 
-	public Texture(BufferedImage img) {
-		this.textureID = this.load(img, false, false);
+	public Texture(BufferedImage img, int loadOptions, int minSampleType, int magSampleType, int numMipmapLevels) {
+		this.textureID = this.load(img, loadOptions, minSampleType, magSampleType, numMipmapLevels);
 	}
 
-	public Texture(String path, boolean invertColors, boolean horizontalFlip) {
-		this.textureID = this.load(path, invertColors, horizontalFlip);
-	}
-
-	public Texture(BufferedImage img, boolean invertColors, boolean horizontalFlip) {
-		this.textureID = this.load(img, invertColors, horizontalFlip);
-	}
-
-	public Texture(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
-		this.textureID = this.load(path, invertColors, horizontalFlip, verticalFlip);
-	}
-
-	public Texture(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
-		this.textureID = this.load(img, invertColors, horizontalFlip, verticalFlip);
-	}
-
-	public Texture(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int sampleType) {
-		this.textureID = this.load(img, invertColors, horizontalFlip, verticalFlip, sampleType);
-	}
-
-	public Texture(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int sampleType) {
-		this.textureID = this.load(path, invertColors, horizontalFlip, verticalFlip, sampleType);
+	public Texture(String path, int loadOptions, int minSampleType, int magSampleType, int numMipmapLevels) {
+		this.textureID = this.load(path, loadOptions, minSampleType, magSampleType, numMipmapLevels);
 	}
 
 	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType) {
@@ -102,61 +103,42 @@ public class Texture {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
-	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int sampleType) {
+	private int load(String path, int loadOptions, int minSampleType, int magSampleType, int numMipmapLevels) {
+		BufferedImage img = FileUtils.loadImage(path);
+		return this.load(img, loadOptions, minSampleType, magSampleType, numMipmapLevels);
+	}
+
+	private int load(BufferedImage img, int loadOptions, int minSampleType, int magSampleType, int numMipmapLevels) {
 		int[] outWH = new int[2];
-		int[] data = getDataFromImage(img, invertColors, horizontalFlip, verticalFlip, outWH);
+		int[] data = getDataFromImage(img, loadOptions, outWH);
 		this.width = outWH[0];
 		this.height = outWH[1];
 
 		int result = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, result);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, sampleType);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, sampleType); // magnification filter
+		glTexStorage2D(GL_TEXTURE_2D, numMipmapLevels, GL_RGBA8, width, height);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this.width, this.height, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
+		glGenerateMipmap(GL_TEXTURE_2D); //Generate num_mipmaps number of mipmaps here.
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minSampleType);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magSampleType); // magnification filter
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
 		glBindTexture(GL_TEXTURE_2D, 0);
 		return result;
 	}
 
-	public int load(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int sampleType) {
-		return this.load(FileUtils.loadImage(path), invertColors, horizontalFlip, verticalFlip, sampleType);
+	public static int[] getDataFromImage(String path, int loadOptions, int[] outWH) {
+		BufferedImage img = FileUtils.loadImage(path);
+		return Texture.getDataFromImage(img, loadOptions, outWH);
 	}
 
-	public int load(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
-		return this.load(FileUtils.loadImage(path), invertColors, horizontalFlip, verticalFlip, GL_LINEAR);
-	}
-
-	public int load(String path, boolean invertColors, boolean horizontalFlip) {
-		return this.load(FileUtils.loadImage(path), invertColors, horizontalFlip, false, GL_LINEAR);
-	}
-
-	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip) {
-		return this.load(img, invertColors, horizontalFlip, verticalFlip, GL_LINEAR);
-	}
-
-	public int load(BufferedImage img, boolean invertColors, boolean horizontalFlip) {
-		return this.load(img, invertColors, horizontalFlip, false, GL_LINEAR);
-	}
-
-	public static int[] getDataFromImage(BufferedImage img, boolean invertColors, boolean horizontalFlip, int[] outWH) {
-		return Texture.getDataFromImage(img, invertColors, horizontalFlip, false, outWH);
-	}
-
-	public static int[] getDataFromImage(String path, boolean invertColors, boolean horizontalFlip, int[] outWH) {
-		return Texture.getDataFromImage(FileUtils.loadImage(path), invertColors, horizontalFlip, false, outWH);
-	}
-
-	public static int[] getDataFromImage(String path, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int[] outWH) {
-		return Texture.getDataFromImage(FileUtils.loadImage(path), invertColors, horizontalFlip, verticalFlip, outWH);
-	}
-
-	public static int[] getDataFromImage(BufferedImage img, boolean invertColors, boolean horizontalFlip, boolean verticalFlip, int[] outWH) {
+	public static int[] getDataFromImage(BufferedImage img, int loadOptions, int[] outWH) {
 		int[] pixels = null;
 		BufferedImage image = GraphicsTools.copyImage(img);
-		if (horizontalFlip)
+		if ((loadOptions & HORIZONTAL_FLIP_BIT) != 0)
 			image = GraphicsTools.horizontalFlip(image);
-		if (verticalFlip)
+		if ((loadOptions & VERTICAL_FLIP_BIT) != 0)
 			image = GraphicsTools.verticalFlip(image);
 		int width = image.getWidth();
 		int height = image.getHeight();
@@ -172,7 +154,7 @@ public class Texture {
 			int g = (pixels[i] & 0xff00) >> 8;
 			int b = (pixels[i] & 0xff);
 
-			if (invertColors) {
+			if ((loadOptions & INVERT_COLORS_BIT) != 0) {
 				a = 255 - a;
 				r = 255 - r;
 				g = 255 - g;
@@ -201,5 +183,9 @@ public class Texture {
 			return;
 		glActiveTexture(glTextureLocation);
 		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	public void kill() {
+		glDeleteTextures(BufferUtils.createIntBuffer(new int[] { this.textureID }));
 	}
 }

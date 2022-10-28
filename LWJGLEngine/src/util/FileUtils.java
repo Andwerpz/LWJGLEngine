@@ -25,7 +25,8 @@ public class FileUtils {
 				result.append(buffer + '\n');
 			}
 			fin.close();
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 		}
 
@@ -43,7 +44,8 @@ public class FileUtils {
 		try {
 			img = ImageIO.read(new File(resDirectory + filepath));
 			System.out.println(" SUCCESS");
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			System.out.println(" FAILED");
 		}
 
@@ -59,6 +61,16 @@ public class FileUtils {
 		System.out.println(" SUCCESS");
 
 		return file;
+	}
+
+	public static String getFileExtension(String path) {
+		int lastPeriod = path.lastIndexOf('.');
+		return path.substring(lastPeriod + 1);
+	}
+
+	public static String removeFileExtension(String path) {
+		int lastPeriod = path.lastIndexOf('.');
+		return path.substring(0, lastPeriod);
 	}
 
 }

@@ -61,6 +61,11 @@ public class LoadState extends State {
 	}
 
 	@Override
+	public void kill() {
+
+	}
+
+	@Override
 	public void update() {
 		long curTime = System.currentTimeMillis();
 		if (this.state == TRANSITIONING_IN) {

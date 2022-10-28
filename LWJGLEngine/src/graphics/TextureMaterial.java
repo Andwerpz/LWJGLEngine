@@ -42,8 +42,8 @@ public class TextureMaterial {
 
 	public static final Texture DIFFUSE_DEFAULT = new Texture(255, 255, 255, 1);
 	public static final Texture SPECULAR_DEFAULT = new Texture(255, 255, 255, 1);
-	public static final Texture NORMAL_DEFAULT = new Texture("tex_normal_default.png", false, false);
-	public static final Texture DISPLACEMENT_DEFAULT = new Texture("tex_displacement_default.png", true, false);
+	public static final Texture NORMAL_DEFAULT = new Texture("tex_normal_default.png");
+	public static final Texture DISPLACEMENT_DEFAULT = new Texture("tex_displacement_default.png", Texture.INVERT_COLORS_BIT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
 
 	private int width, height;
 	private Texture diffuse, specular, normal, displacement;
@@ -67,7 +67,7 @@ public class TextureMaterial {
 	}
 
 	public TextureMaterial(BufferedImage diffuse) {
-		this.diffuse = new Texture(diffuse, false, false);
+		this.diffuse = new Texture(diffuse);
 		this.specular = SPECULAR_DEFAULT;
 		this.normal = NORMAL_DEFAULT;
 		this.displacement = DISPLACEMENT_DEFAULT;
@@ -81,58 +81,58 @@ public class TextureMaterial {
 	}
 
 	public TextureMaterial(String diffusePath, String specularPath, String normalPath, String displacementPath) {
-		if(diffusePath == null) {
+		if (diffusePath == null) {
 			diffuse = DIFFUSE_DEFAULT;
 		}
 		else {
-			diffuse = new Texture(diffusePath, false, false);
+			diffuse = new Texture(diffusePath, Texture.VERTICAL_FLIP_BIT);
 		}
 
-		if(specularPath == null) {
+		if (specularPath == null) {
 			specular = SPECULAR_DEFAULT;
 		}
 		else {
-			specular = new Texture(specularPath, false, false);
+			specular = new Texture(specularPath, Texture.VERTICAL_FLIP_BIT);
 		}
 
-		if(normalPath == null) {
+		if (normalPath == null) {
 			normal = NORMAL_DEFAULT;
 		}
 		else {
-			normal = new Texture(normalPath, false, false);
+			normal = new Texture(normalPath, Texture.VERTICAL_FLIP_BIT);
 		}
 
-		if(displacementPath == null) {
+		if (displacementPath == null) {
 			displacement = DISPLACEMENT_DEFAULT;
 		}
 		else {
-			displacement = new Texture(displacementPath, true, false);
+			displacement = new Texture(displacementPath, Texture.VERTICAL_FLIP_BIT | Texture.INVERT_COLORS_BIT);
 		}
 	}
 
 	public TextureMaterial(Texture diffuse, Texture specular, Texture normal, Texture displacement) {
-		if(diffuse == null) {
+		if (diffuse == null) {
 			this.diffuse = DIFFUSE_DEFAULT;
 		}
 		else {
 			this.diffuse = diffuse;
 		}
 
-		if(specular == null) {
+		if (specular == null) {
 			this.specular = SPECULAR_DEFAULT;
 		}
 		else {
 			this.specular = specular;
 		}
 
-		if(normal == null) {
+		if (normal == null) {
 			this.normal = NORMAL_DEFAULT;
 		}
 		else {
 			this.normal = normal;
 		}
 
-		if(displacement == null) {
+		if (displacement == null) {
 			this.displacement = DISPLACEMENT_DEFAULT;
 		}
 		else {
@@ -147,19 +147,19 @@ public class TextureMaterial {
 	public void setTexture(String path, int which) {
 		switch (which) {
 		case DIFFUSE:
-			diffuse = new Texture(path, false, false);
+			diffuse = new Texture(path, Texture.VERTICAL_FLIP_BIT);
 			break;
 
 		case SPECULAR:
-			specular = new Texture(path, false, false);
+			specular = new Texture(path, Texture.VERTICAL_FLIP_BIT);
 			break;
 
 		case NORMAL:
-			normal = new Texture(path, false, false);
+			normal = new Texture(path, Texture.VERTICAL_FLIP_BIT);
 			break;
 
 		case DISPLACEMENT:
-			displacement = new Texture(path, true, false);
+			displacement = new Texture(path, Texture.VERTICAL_FLIP_BIT | Texture.INVERT_COLORS_BIT);
 			break;
 		}
 	}
@@ -167,19 +167,19 @@ public class TextureMaterial {
 	public void setTexture(BufferedImage img, int which) {
 		switch (which) {
 		case DIFFUSE:
-			diffuse = new Texture(img, false, false);
+			diffuse = new Texture(img, Texture.VERTICAL_FLIP_BIT);
 			break;
 
 		case SPECULAR:
-			specular = new Texture(img, false, false);
+			specular = new Texture(img, Texture.VERTICAL_FLIP_BIT);
 			break;
 
 		case NORMAL:
-			normal = new Texture(img, false, false);
+			normal = new Texture(img, Texture.VERTICAL_FLIP_BIT);
 			break;
 
 		case DISPLACEMENT:
-			displacement = new Texture(img, true, false);
+			displacement = new Texture(img, Texture.VERTICAL_FLIP_BIT | Texture.INVERT_COLORS_BIT);
 			break;
 		}
 	}
@@ -216,5 +216,20 @@ public class TextureMaterial {
 		specular.unbind(GL_TEXTURE1);
 		normal.unbind(GL_TEXTURE2);
 		displacement.unbind(GL_TEXTURE3);
+	}
+
+	public void kill() {
+		if (this.diffuse != DIFFUSE_DEFAULT) {
+			this.diffuse.kill();
+		}
+		if (this.specular != SPECULAR_DEFAULT) {
+			this.specular.kill();
+		}
+		if (this.normal != NORMAL_DEFAULT) {
+			this.normal.kill();
+		}
+		if (this.displacement != DISPLACEMENT_DEFAULT) {
+			this.displacement.kill();
+		}
 	}
 }

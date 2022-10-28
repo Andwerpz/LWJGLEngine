@@ -7,15 +7,21 @@ import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
+import static org.lwjgl.openal.ALC10.*;
+
 import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.openal.AL;
+import org.lwjgl.openal.ALC;
+import org.lwjgl.openal.ALCCapabilities;
+import org.lwjgl.openal.ALCapabilities;
 
 import graphics.Shader;
 import input.KeyboardInput;
 import input.MouseInput;
 import model.AssetManager;
-import model.ScreenQuad;
 import scene.Scene;
 import screen.Screen;
+import screen.ScreenQuad;
 import state.StateManager;
 import ui.UIElement;
 import util.FontUtils;
@@ -43,13 +49,6 @@ public class Main implements Runnable {
 	public static final float ASPECT_RATIO = (float) Main.windowWidth / (float) Main.windowHeight;
 	public static final float FOV = (float) Math.toRadians(90f); // vertical FOV
 
-	public static final int NORTH = 0;
-	public static final int SOUTH = 1;
-	public static final int EAST = 2;
-	public static final int WEST = 3;
-	public static final int UP = 4;
-	public static final int DOWN = 5;
-
 	public static long selectedEntityID = 0;
 
 	public long deltaMillis = 0;
@@ -58,6 +57,9 @@ public class Main implements Runnable {
 
 	private StateManager sm;
 
+	private long audioContext;
+	private long audioDevice;
+
 	public void start() {
 		running = true;
 		thread = new Thread(this, "Game");
@@ -65,6 +67,19 @@ public class Main implements Runnable {
 	}
 
 	private void init() {
+		//initializing audio device. 
+		//make sure to do this before createCapabilities();
+		String defaultDeviceName = alcGetString(0, ALC_DEFAULT_DEVICE_SPECIFIER);
+		audioDevice = alcOpenDevice(defaultDeviceName);
+		int[] attributes = { 0 };
+		audioContext = alcCreateContext(audioDevice, attributes);
+		alcMakeContextCurrent(audioContext);
+
+		ALCCapabilities alcCapabilities = ALC.createCapabilities(audioDevice);
+		ALCapabilities alCapabilities = AL.createCapabilities(alcCapabilities);
+
+		assert alCapabilities.OpenAL10 : "Audio library not supported";
+
 		if (!glfwInit()) {
 			// window failed to init
 			return;
@@ -204,6 +219,10 @@ public class Main implements Runnable {
 
 	public void exit() {
 		this.running = false;
+
+		//destroy audio context
+		alcDestroyContext(audioContext);
+		alcCloseDevice(audioDevice);
 	}
 
 	public static Main main;

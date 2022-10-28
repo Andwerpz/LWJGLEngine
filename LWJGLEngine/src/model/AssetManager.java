@@ -12,9 +12,7 @@ import graphics.Texture;
 public class AssetManager {
 	// manages all of our assets
 
-	// when loading, check against the asset manager to make sure you haven't loaded
-	// that
-	// particular asset before.
+	// when loading, check against the asset manager to make sure you haven't loaded that particular asset before.
 
 	public static HashMap<String, Model> models = new HashMap<>();
 	public static HashMap<String, Texture> textures = new HashMap<>();
@@ -28,12 +26,14 @@ public class AssetManager {
 		paths.put("ak47", new String[] { "/ak47/", "ak47.obj" });
 		paths.put("m4a4", new String[] { "/m4a4/", "m4a4.obj" });
 		paths.put("usps", new String[] { "/usps/", "usps.obj" });
+		paths.put("deagle", new String[] { "/deagle/", "deagle.obj" });
 		paths.put("awp", new String[] { "/awp/", "awp.obj" });
 		paths.put("sphere", new String[] { "/sphere/", "sphere.obj" });
 		paths.put("cylinder", new String[] { "/cylinder/", "cylinder.obj" });
 
-		paths.put("blood_splatter_texture", new String[] { "decal/blood_splatter.png", GL_NEAREST + "" });
-		paths.put("bullet_hole_texture", new String[] { "decal/bullet_hole.png", GL_NEAREST + "" });
+		//paths.put("blood_splatter_texture", new String[] { "decal/blood_splatter.png", GL_LINEAR_MIPMAP_LINEAR + "", GL_LINEAR + "", 5 + "" });
+		paths.put("bullet_hole_texture", new String[] { "decal/bullet_hole.png", GL_LINEAR_MIPMAP_LINEAR + "", GL_LINEAR + "", 5 + "" });
+		paths.put("blood_splatter_texture", new String[] { "decal/blood-splatter-png-image-0.png", GL_LINEAR_MIPMAP_LINEAR + "", GL_LINEAR + "", 5 + "" });
 
 		paths.put("lake_skybox", new String[] { "/skybox/lake/right.jpg", "/skybox/lake/left.jpg", "/skybox/lake/top.jpg", "/skybox/lake/bottom.jpg", "/skybox/lake/front.jpg", "/skybox/lake/back.jpg" });
 		paths.put("stars_skybox", new String[] { "/skybox/stars/right.png", "/skybox/stars/left.png", "/skybox/stars/top.png", "/skybox/stars/bottom.png", "/skybox/stars/front.png", "/skybox/stars/back.png" });
@@ -46,7 +46,7 @@ public class AssetManager {
 
 	public static void loadTexture(String name) {
 		String[] p = paths.get(name);
-		textures.put(name, new Texture(p[0], false, false, false, Integer.parseInt(p[1])));
+		textures.put(name, new Texture(p[0], 0, Integer.parseInt(p[1]), Integer.parseInt(p[2]), Integer.parseInt(p[3])));
 	}
 
 	public static void loadSkybox(String name) {

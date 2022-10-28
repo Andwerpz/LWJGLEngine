@@ -65,7 +65,7 @@ public class Button extends Input {
 		this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
 		this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.0f));
 
-		this.buttonInnerID = FilledRectangle.addRectangle(this.x, this.y, this.z, this.width, this.height, this.scene);
+		this.buttonInnerID = FilledRectangle.DEFAULT_RECTANGLE.addRectangle(this.x, this.y, this.z, this.width, this.height, this.scene);
 		this.registerModelInstance(this.buttonInnerID);
 		this.updateModelInstance(this.buttonInnerID, releasedMaterial);
 

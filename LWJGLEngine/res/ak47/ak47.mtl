@@ -1,22 +1,15 @@
 # Blender 3.3.0 MTL File: 'None'
 # www.blender.org
 
-newmtl Material.001
-Ns 1000.000000
-Ka 1.000000 1.000000 1.000000
-Kd 0.125059 0.142589 0.247631
-Ks 0.000000 0.000000 0.000000
-Ke 0.000000 0.000000 0.000000
-Ni 1.450000
-d 1.000000
-illum 1
-
-newmtl Material.002
+newmtl DefaultMaterial
 Ns 360.000000
 Ka 1.000000 1.000000 1.000000
-Kd 0.672444 0.243291 0.169302
+Kd 0.800000 0.800000 0.800000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
-Ni 1.450000
+Ni 1.000000
 d 1.000000
 illum 2
+map_Kd DefaultMaterial_diffuse.png
+map_Ks DefaultMaterial_specularGlossiness.png
+norm DefaultMaterial_normal.png

@@ -69,6 +69,10 @@ public abstract class Input extends UIElement {
 		return this.clicked;
 	}
 
+	public boolean isHovered() {
+		return this.hovered;
+	}
+
 	public static void addInput(String id, Input input) {
 		inputs.put(id, input);
 		entityToStringID.put(input.getID(), id);
@@ -88,6 +92,16 @@ public abstract class Input extends UIElement {
 		for (String s : inputs.keySet()) {
 			Input i = inputs.get(s);
 			if (i.isClicked()) {
+				return s;
+			}
+		}
+		return "";
+	}
+
+	public static String getHovered() {
+		for (String s : inputs.keySet()) {
+			Input i = inputs.get(s);
+			if (i.isHovered()) {
 				return s;
 			}
 		}

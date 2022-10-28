@@ -14,7 +14,6 @@ import graphics.Shader;
 import graphics.Texture;
 import main.Main;
 import model.Model;
-import model.SkyboxCube;
 import player.Camera;
 import scene.Light;
 import scene.Scene;
@@ -62,7 +61,15 @@ public class PerspectiveScreen extends Screen {
 	private float playermodelFOV;
 
 	public PerspectiveScreen() {
-		super();
+
+	}
+
+	@Override
+	protected void _kill() {
+		this.geometryBuffer.kill();
+		this.lightingBuffer.kill();
+		this.shadowBuffer.kill();
+		this.skyboxBuffer.kill();
 	}
 
 	@Override
@@ -124,13 +131,21 @@ public class PerspectiveScreen extends Screen {
 		this.playermodelFOV = 50f;
 	}
 
-	public void setCameraFOV(float degrees) {
+	private void setCameraFOV(float degrees) {
 		float cameraFOV = degrees;
 		Vec3 cameraPos = this.camera.getPos();
 		Vec3 cameraFacing = this.camera.getFacing();
 		this.camera = new Camera((float) Math.toRadians(cameraFOV), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
 		this.camera.setPos(cameraPos);
 		this.camera.setFacing(cameraFacing);
+	}
+
+	public void setWorldCameraFOV(float degrees) {
+		this.worldFOV = degrees;
+	}
+
+	public void setPlayermodelCameraFOV(float degrees) {
+		this.playermodelFOV = degrees;
 	}
 
 	public void setWorldScene(int scene) {
@@ -183,6 +198,7 @@ public class PerspectiveScreen extends Screen {
 		Model.renderModels(this.world_scene);
 
 		// -- DECALS -- : screen space decals
+		//decals can be transparent, but they cannot have a shininess value greater than 0. 
 		if (this.renderDecals) {
 			geometryBuffer.bind();
 			glEnable(GL_DEPTH_TEST);
@@ -192,11 +208,17 @@ public class PerspectiveScreen extends Screen {
 			glCullFace(GL_BACK);
 			glPolygonMode(GL_FRONT, GL_FILL);
 
+			glEnable(GL_BLEND);
+			//first two are for rgb, while last two are for alpha
+			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+
 			Shader.DECAL.enable();
 			Shader.DECAL.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
 			Shader.DECAL.setUniformMat4("vw_matrix", camera.getViewMatrix());
 			this.geometryPositionMap.bind(GL_TEXTURE4);
 			Model.renderModels(this.decal_scene);
+
+			glDisable(GL_BLEND);
 		}
 
 		// -- PLAYERMODEL -- : gun and hands

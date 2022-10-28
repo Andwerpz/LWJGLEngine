@@ -79,8 +79,7 @@ public class Model {
 	// default per instance traditional blinn-phong Ka, Ks, Kd
 	protected ArrayList<Material> defaultMaterials;
 
-	// like material, but uses a texture2D sampler instead. Is multiplied by the
-	// instanced material to get the final result.
+	// like material, but uses a texture2D sampler instead. Is multiplied by the instanced material to get the final result.
 	protected ArrayList<TextureMaterial> textureMaterials;
 
 	// created in init(), stores the same data that meshes stores, just all in
@@ -142,6 +141,7 @@ public class Model {
 			System.err.println("Texture material index out of bounds");
 			return;
 		}
+		this.textureMaterials.get(index).kill();
 		this.textureMaterials.set(index, m);
 	}
 
@@ -299,12 +299,15 @@ public class Model {
 	}
 
 	public static BufferedImage loadImage(String path) {
-		String fileExtension = getFileExtension(path);
+		String fileExtension = FileUtils.getFileExtension(path);
 		switch (fileExtension) {
 		case "png":
 			return GraphicsTools.verticalFlip(FileUtils.loadImage(path));
 
 		case "jpg":
+			return GraphicsTools.verticalFlip(FileUtils.loadImage(path));
+
+		case "jpeg":
 			return GraphicsTools.verticalFlip(FileUtils.loadImage(path));
 
 		case "tga":
@@ -313,16 +316,6 @@ public class Model {
 
 		System.err.println("File extension " + fileExtension + " is not supported");
 		return null;
-	}
-
-	public static String getFileExtension(String path) {
-		int lastPeriod = path.lastIndexOf('.');
-		return path.substring(lastPeriod + 1);
-	}
-
-	public static String removeFileExtension(String path) {
-		int lastPeriod = path.lastIndexOf('.');
-		return path.substring(0, lastPeriod);
 	}
 
 	public static int getScene(long ID) {
@@ -586,6 +579,10 @@ public class Model {
 			modelInstanceIDs.remove(id);
 			IDtoScene.remove(id);
 			IDtoModel.remove(id);
+		}
+
+		for (TextureMaterial t : this.textureMaterials) {
+			t.kill();
 		}
 
 		models.remove(this);

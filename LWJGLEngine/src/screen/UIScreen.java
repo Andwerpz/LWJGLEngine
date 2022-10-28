@@ -32,6 +32,11 @@ public class UIScreen extends Screen {
 	}
 
 	@Override
+	protected void _kill() {
+		this.geometryBuffer.kill();
+	}
+
+	@Override
 	public void buildBuffers() {
 		this.geometryBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.geometryPositionMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);

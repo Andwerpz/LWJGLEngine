@@ -21,7 +21,8 @@ public class Shader {
 	public static final int INSTANCED_COLOR_ATTRIB = 9; // used for quick model selection
 	public static final int INSTANCED_MATERIAL_ATTRIB = 10; // takes up 3 slots
 
-	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS, IMG_POST_PROCESS, SPLASH, OVERWRITE_ALPHA, DECAL;
+	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS;
+	public static Shader IMG_POST_PROCESS, SPLASH, OVERWRITE_ALPHA, DECAL, RENDER_BUFFER;
 
 	private boolean enabled = false;
 

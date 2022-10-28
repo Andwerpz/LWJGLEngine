@@ -124,7 +124,7 @@ public class TextField extends Input {
 		this.selectedMaterial = new Material(new Vec4(0, 0, 0, 0.4f));
 		this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.15f));
 
-		this.fieldInnerID = FilledRectangle.addRectangle(x, y, z, width, height, scene);
+		this.fieldInnerID = FilledRectangle.DEFAULT_RECTANGLE.addRectangle(x, y, z, width, height, scene);
 		this.registerModelInstance(this.fieldInnerID);
 		this.updateModelInstance(this.fieldInnerID, this.releasedMaterial);
 	}

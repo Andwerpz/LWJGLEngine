@@ -53,6 +53,26 @@ struct Light {
 
 uniform Light light;
 
+float SampleShadowMap(sampler2D shadowMap, vec2 coords, float compare) {
+	return step(texture2D(shadowMap, coords.xy).r, compare);
+}
+
+float SampleShadowMapLinear(sampler2D shadowMap, vec2 coords, float compare, vec2 texelSize) {
+	vec2 pixelPos = coords/texelSize + vec2(0.5);
+	vec2 fracPart = fract(pixelPos);
+	vec2 startTexel = (pixelPos - fracPart) * texelSize;
+	
+	float blTexel = SampleShadowMap(shadowMap, startTexel, compare);
+	float brTexel = SampleShadowMap(shadowMap, startTexel + vec2(texelSize.x, 0.0), compare);
+	float tlTexel = SampleShadowMap(shadowMap, startTexel + vec2(0.0, texelSize.y), compare);
+	float trTexel = SampleShadowMap(shadowMap, startTexel + texelSize, compare);
+	
+	float mixA = mix(blTexel, tlTexel, fracPart.y);
+	float mixB = mix(brTexel, trTexel, fracPart.y);
+	
+	return mix(mixA, mixB, fracPart.x);
+}
+
 void main()
 {	
 	vec3 fragPos = texture(tex_position, frag_uv).rgb;
@@ -134,20 +154,22 @@ void main()
    	 	float backfaceBias = texture(shadowBackfaceMap, projCoords.xy).r == 1? 0 : 0;
    	 	//float backfaceBias = 0;
    	 	
-   	 	//float bias = max(0.001 * (1.0 - dot(normal, lightDir)), 0.005);  
+   	 	//float bias = max(0.0003 * (1.0 - dot(normal, lightDir)), 0.0005);  
    	 	float bias = 0.0001;
    	 	
    	 	vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-   	 	int pcfSampleN = 1;
-		for(int x = -pcfSampleN; x <= pcfSampleN; ++x)
-		{
-		    for(int y = -pcfSampleN; y <= pcfSampleN; ++y)
-		    {
-		    	float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-		        shadow += currentDepth - bias > pcfDepth + backfaceBias? 1.0 : 0.0; 
+   	 	int pcfSampleN = 2;
+		for(int x = -pcfSampleN; x <= pcfSampleN; ++x) {
+		    for(int y = -pcfSampleN; y <= pcfSampleN; ++y) {
+		    	//pixeleated pcf shadows
+		    	//float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+		        //shadow += currentDepth - bias > pcfDepth + backfaceBias? 1.0 : 0.0; 
+		        
+		        //linear soft shadows
+		        shadow += SampleShadowMapLinear(shadowMap, projCoords.xy + vec2(x, y) * texelSize, currentDepth - bias, texelSize);
 		    }    
 		}
-		shadow /= 9;
+		shadow /= 25;
    	 	
    	 	if(projCoords.z > 1.0){
         	shadow = 0.0;

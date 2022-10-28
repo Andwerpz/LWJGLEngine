@@ -12,11 +12,8 @@ import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import graphics.Framebuffer;
 import graphics.Shader;
 import graphics.Texture;
-import model.ScreenQuad;
 
 public class SplashScreen extends Screen {
-
-	private ScreenQuad screenQuad;
 
 	private Texture splashTexture;
 
@@ -25,9 +22,13 @@ public class SplashScreen extends Screen {
 	}
 
 	@Override
+	protected void _kill() {
+		this.splashTexture.kill();
+	}
+
+	@Override
 	public void buildBuffers() {
-		this.screenQuad = new ScreenQuad();
-		this.splashTexture = new Texture("/splash_screen/astolfo_plush.png", false, true, true);
+		this.splashTexture = new Texture("/csgo splash.png", Texture.VERTICAL_FLIP_BIT);
 	}
 
 	@Override

@@ -2,9 +2,9 @@ package state;
 
 import graphics.Framebuffer;
 import graphics.Texture;
-import model.ScreenQuad;
 import scene.Scene;
 import screen.Screen;
+import screen.ScreenQuad;
 import screen.SplashScreen;
 
 public class SplashState extends State {
@@ -22,7 +22,11 @@ public class SplashState extends State {
 	public void load() {
 		this.splashScreen = new SplashScreen();
 		this.startTime = System.currentTimeMillis();
+	}
 
+	@Override
+	public void kill() {
+		this.splashScreen.kill();
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import model.Model;
+import scene.Scene;
 import util.BufferUtils;
 import util.Mat4;
 import util.Vec2;
@@ -136,14 +137,11 @@ public class VertexArray {
 		int materialBuffer = scene[3];
 
 		glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW); // TODO switch to
-		// glBufferSubData
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
 		glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW); // TODO switch to
-		// glBufferSubData
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
 		glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(materials), GL_DYNAMIC_DRAW); // TODO switch to
-		// glBufferSubData
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(materials), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
 	}
 
 	public void bindScene(int whichScene) {

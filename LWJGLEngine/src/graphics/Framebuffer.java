@@ -24,12 +24,13 @@ import model.Model;
 
 public class Framebuffer {
 
-	// after creating a new instance, you need to add either one color buffer, or a
-	// render buffer
+	// after creating a new instance, you need to add either one color buffer, or a render buffer
+	//this is so that the gpu can actually write to the buffer. 
 	// check if complete using the isComplete function.
 
 	private int fbo;
 	private int renderBuffer, depthBuffer;
+	private ArrayList<Integer> buffers;
 
 	private int width, height;
 
@@ -37,10 +38,20 @@ public class Framebuffer {
 		this.width = width;
 		this.height = height;
 
+		this.buffers = new ArrayList<>();
+
 		fbo = glGenFramebuffers();
 	}
 
-	public void addRenderBuffer() {
+	public int getWidth() {
+		return this.width;
+	}
+
+	public int getHeight() {
+		return this.height;
+	}
+
+	public int addRenderBuffer() {
 		this.bind();
 		renderBuffer = glGenRenderbuffers();
 		glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
@@ -48,6 +59,9 @@ public class Framebuffer {
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 		this.unbind();
+
+		this.buffers.add(renderBuffer);
+		return renderBuffer;
 	}
 
 	public int addColorBuffer(int internalFormat, int dataFormat, int dataType, int layoutLocation) {
@@ -60,6 +74,8 @@ public class Framebuffer {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, layoutLocation, GL_TEXTURE_2D, id, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		this.unbind();
+
+		this.buffers.add(id);
 		return id;
 	}
 
@@ -77,6 +93,8 @@ public class Framebuffer {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthBuffer, 0);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		this.unbind();
+
+		this.buffers.add(depthBuffer);
 		return depthBuffer;
 	}
 
@@ -88,12 +106,13 @@ public class Framebuffer {
 	public void bindTextureToBuffer(int bufferType, int textureType, int textureID) {
 		this.bind();
 		glFramebufferTexture2D(GL_FRAMEBUFFER, bufferType, textureType, textureID, 0);
+		this.buffers.add(textureID);
 	}
 
 	public boolean isComplete() {
 		this.bind();
 		boolean ans = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-		if(ans) {
+		if (ans) {
 			System.out.println("Framebuffer " + fbo + " generated successfully");
 		}
 		else {
@@ -125,6 +144,15 @@ public class Framebuffer {
 
 	public void unbind() {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	//also kills any textures associated with it. 
+	public void kill() {
+		for (int ID : this.buffers) {
+			glDeleteTextures(BufferUtils.createIntBuffer(new int[] { ID }));
+		}
+		glDeleteFramebuffers(BufferUtils.createIntBuffer(new int[] { this.fbo }));
+		System.out.println("KILL FRAMEBUFFER " + this.fbo);
 	}
 
 }
