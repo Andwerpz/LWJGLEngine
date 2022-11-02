@@ -29,7 +29,7 @@ public class Rectangle extends Model {
 
 		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_LINES));
 		this.defaultMaterials.add(Material.defaultMaterial());
-		this.textureMaterials.add(TextureMaterial.defaultMaterial());
+		this.textureMaterials.add(TextureMaterial.defaultTextureMaterial());
 	}
 
 	public static long addRectangle(float x, float y, float width, float height, int scene) {

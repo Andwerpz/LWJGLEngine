@@ -42,20 +42,17 @@ import util.Vec3;
 
 public class Model {
 	// always instanced rendering
-	// in order to render with correct model matrices, you must first update the
-	// model matrices.
+	// in order to render with correct model matrices, you must first update the model matrices.
 	// if model matrix updates aren't needed, then you shouldn't update them.
 
 	// each model will have separate instances per scene.
 
 	// if a model instance is bound to an entity, they will not share the same ID.
-	// the entity is responsible for keeping track of the IDs of all the model
-	// instances it has.
-	// the Entity class should be able to return an entity or entity ID based on a
-	// model instance ID.
+	// the entity is responsible for keeping track of the IDs of all the model instances it has.
+	// the Entity class should be able to return an entity or entity ID based on a model instance ID.
 
 	public static final Material DEFAULT_MATERIAL = Material.defaultMaterial();
-	public static final TextureMaterial DEFAULT_TEXTURE_MATERIAL = TextureMaterial.defaultMaterial();
+	public static final TextureMaterial DEFAULT_TEXTURE_MATERIAL = TextureMaterial.defaultTextureMaterial();
 
 	private static HashSet<Model> models = new HashSet<>();
 	private static HashSet<Long> modelInstanceIDs = new HashSet<>();
@@ -237,7 +234,7 @@ public class Model {
 
 			// load material data
 			AIMaterial AIMat = AIMaterial.create(materials.get(i)); // wrap raw pointer in AIMaterial instance
-			TextureMaterial material = TextureMaterial.defaultMaterial();
+			TextureMaterial material = TextureMaterial.defaultTextureMaterial();
 			AIString path;
 
 			// traditional phong-blinn Material
@@ -350,8 +347,7 @@ public class Model {
 	public static void removeInstance(long ID) {
 		Model model = IDtoModel.get(ID);
 		if (model == null) { // couldn't find model to remove
-			// could happen if you try to kill an entity after removing all models from a
-			// scene
+			// could happen if you try to kill an entity after removing all models from a scene
 			return;
 		}
 		int scene = IDtoScene.get(ID);

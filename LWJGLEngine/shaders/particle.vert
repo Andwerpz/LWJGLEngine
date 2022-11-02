@@ -26,10 +26,29 @@ out float frag_material_shininess;
 
 out vec3 frag_colorID;
 
+noperspective out vec2 frag_screen_uv;
+
 void main()
 {
-    gl_Position = pr_matrix * vw_matrix * md_matrix * vec4(pos, 1.0);
-    frag_pos = vec3(md_matrix * vec4(pos, 1.0));
+	//saving z rotation and scaling effects from original model matrix
+	mat4 scale_rot_matrix = mat4(
+		vec4(md_matrix[0].xyz, 0),
+		vec4(md_matrix[1].xyz, 0),
+		vec4(md_matrix[2].xyz, 0),
+		0, 0, 0, 1
+	);
+	
+	//we want to adjust the model matrix, so that the rotation part is the transpose of the view matrix, while preserving scale
+	mat4 adjusted_md_matrix = md_matrix;
+	
+	mat3 transpose_view_rot = transpose(mat3(vw_matrix[0].xyz, vw_matrix[1].xyz, vw_matrix[2].xyz));
+	adjusted_md_matrix[0].xyz = transpose_view_rot[0].xyz;
+	adjusted_md_matrix[1].xyz = transpose_view_rot[1].xyz;
+	adjusted_md_matrix[2].xyz = transpose_view_rot[2].xyz;
+	
+    gl_Position = pr_matrix * vw_matrix * adjusted_md_matrix * scale_rot_matrix * vec4(pos, 1.0);
+    frag_screen_uv = ((gl_Position.xy / gl_Position.w) + vec2(1)) / 2;
+    frag_pos = vec3(adjusted_md_matrix * vec4(pos, 1.0));
     frag_uv = uv;
     frag_colorID = colorID;
     if(!enableTexScaling){
@@ -40,7 +59,7 @@ void main()
     frag_material_specular = material_specular;
     frag_material_shininess = material_shininess.r;
     
-    mat3 normalMatrix = transpose(inverse(mat3(md_matrix)));
+    mat3 normalMatrix = transpose(inverse(mat3(adjusted_md_matrix)));
     vec3 T = normalize(normalMatrix * tangent);
     vec3 B = normalize(normalMatrix * bitangent);
     vec3 N = normalize(normalMatrix * normal);

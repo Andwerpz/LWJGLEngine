@@ -28,7 +28,7 @@ public class Line extends Model {
 
 		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_LINES));
 		this.defaultMaterials.add(DEFAULT_MATERIAL);
-		this.textureMaterials.add(TextureMaterial.defaultMaterial());
+		this.textureMaterials.add(TextureMaterial.defaultTextureMaterial());
 	}
 
 	public static long addLine(float x1, float y1, float z1, float x2, float y2, float z2, int scene) {

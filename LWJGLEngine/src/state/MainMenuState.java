@@ -51,7 +51,7 @@ public class MainMenuState extends State {
 	@Override
 	public void load() {
 		this.perspectiveScreen = new PerspectiveScreen();
-		this.perspectiveScreen.setCamera(new Camera((float) Math.toRadians(70f), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR));
+		this.perspectiveScreen.getCamera().setVerticalFOV((float) Math.toRadians(70f));
 		this.perspectiveScreen.getCamera().setPos(new Vec3(18.417412f, 1.7f, -29.812654f));
 
 		this.uiScreen = new UIScreen();

@@ -44,8 +44,6 @@ public class Main implements Runnable {
 	public static long window;
 	private boolean fullscreen = false;
 
-	public static final float NEAR = 0.1f;
-	public static final float FAR = 200.0f;
 	public static final float ASPECT_RATIO = (float) Main.windowWidth / (float) Main.windowHeight;
 	public static final float FOV = (float) Math.toRadians(90f); // vertical FOV
 

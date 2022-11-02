@@ -11,18 +11,9 @@ import util.Vec3;
 
 public class Shader {
 
-	// location when passed into shaders
-	public static final int VERTEX_ATTRIB = 0;
-	public static final int TCOORD_ATTRIB = 1;
-	public static final int NORMAL_ATTRIB = 2;
-	public static final int TANGENT_ATTRIB = 3;
-	public static final int BITANGENT_ATTRIB = 4;
-	public static final int INSTANCED_MODEL_ATTRIB = 5; // takes up 4 slots
-	public static final int INSTANCED_COLOR_ATTRIB = 9; // used for quick model selection
-	public static final int INSTANCED_MATERIAL_ATTRIB = 10; // takes up 3 slots
-
 	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS;
 	public static Shader IMG_POST_PROCESS, SPLASH, OVERWRITE_ALPHA, DECAL, RENDER_BUFFER;
+	public static Shader PARTICLE;
 
 	private boolean enabled = false;
 
@@ -44,6 +35,7 @@ public class Shader {
 		SPLASH = new Shader("/splash.vert", "/splash.frag"); // takes in a texture and alpha value.
 		OVERWRITE_ALPHA = new Shader("/splash.vert", "/overwrite_alpha.frag"); // uses the first textures color, and the second textures alpha.
 		DECAL = new Shader("/decal.vert", "/decal.frag");
+		PARTICLE = new Shader("/particle.vert", "/particle.frag");
 
 		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
 		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
@@ -79,6 +71,14 @@ public class Shader {
 		Shader.DECAL.setUniform1i("tex_normal", 2);
 		Shader.DECAL.setUniform1i("tex_displacement", 3);
 		Shader.DECAL.setUniform1i("tex_position", 4);
+
+		Shader.PARTICLE.setUniform1i("tex_diffuse", 0);
+		Shader.PARTICLE.setUniform1i("tex_specular", 1);
+		Shader.PARTICLE.setUniform1i("tex_normal", 2);
+		Shader.PARTICLE.setUniform1i("tex_displacement", 3);
+		Shader.PARTICLE.setUniform1i("tex_pos", 4);
+		Shader.PARTICLE.setUniform1i("enableParallaxMapping", 0);
+		Shader.PARTICLE.setUniform1i("enableTexScaling", 1);
 	}
 
 	public int getUniform(String name) {

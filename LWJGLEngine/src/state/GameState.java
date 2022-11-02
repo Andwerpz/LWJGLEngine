@@ -35,6 +35,7 @@ import model.AssetManager;
 import model.Decal;
 import model.FilledRectangle;
 import model.Model;
+import particle.Particle;
 import player.Camera;
 import player.Player;
 import scene.DirLight;
@@ -68,16 +69,17 @@ public class GameState extends State {
 	private static final int WORLD_SCENE = 0;
 	private static final int PLAYERMODEL_SCENE = 1;
 	private static final int DECAL_SCENE = 2; // screen space decals
+	private static final int PARTICLE_SCENE = 3;
 
-	private static final int UI_SCENE = 3;
+	private static final int UI_SCENE = 4;
 
-	private static final int PAUSE_SCENE_STATIC = 4;
-	private static final int PAUSE_SCENE_DYNAMIC = 5;
+	private static final int PAUSE_SCENE_STATIC = 5;
+	private static final int PAUSE_SCENE_DYNAMIC = 6;
 
-	private static final int BUY_SCENE_STATIC = 6;
-	private static final int BUY_SCENE_DYNAMIC = 7;
+	private static final int BUY_SCENE_STATIC = 7;
+	private static final int BUY_SCENE_DYNAMIC = 8;
 
-	private static final int WEAPON_PREVIEW_SCENE = 8;
+	private static final int WEAPON_PREVIEW_SCENE = 9;
 
 	private static final int DECAL_LIMIT = 1000;
 	private Queue<Long> decalIDs;
@@ -152,6 +154,8 @@ public class GameState extends State {
 	private static int numLandingSounds = 4;
 	private Sound[] landingSounds;
 
+	private Particle sparkParticle;
+
 	public GameState(StateManager sm, String ip, int port, boolean hosting) {
 		super(sm);
 		this.ip = ip;
@@ -178,6 +182,9 @@ public class GameState extends State {
 
 	@Override
 	public void load() {
+		Main.lockCursor();
+		Entity.killAll();
+
 		this.perspectiveScreen = new PerspectiveScreen();
 		this.uiScreen = new UIScreen();
 		this.weaponPreviewScreen = new PerspectiveScreen();
@@ -202,8 +209,8 @@ public class GameState extends State {
 			this.landingSounds[i] = new Sound("/land/land" + (i + 1) + ".ogg", false);
 		}
 
-		Main.lockCursor();
-		Entity.killAll();
+		this.sparkParticle = new Particle(TextureMaterial.defaultTextureMaterial(), 80, 0.02f);
+		this.sparkParticle.setDefaultMaterial(new Material(Color.YELLOW));
 
 		// -- WORLD SCENE --
 		this.clearScene(WORLD_SCENE);
@@ -526,6 +533,7 @@ public class GameState extends State {
 
 	@Override
 	public void update() {
+
 		// -- AUDIO --
 		Sound.cullAllStoppedSources();
 
@@ -770,10 +778,10 @@ public class GameState extends State {
 					}
 				}
 
-				float yRot = (float) (Math.atan2(normal.z, normal.x) - Math.PI / 2f);
-				normal.rotateY(-yRot);
-				float xRot = (float) (Math.atan2(normal.y, normal.z));
-				normal.rotateX(-xRot);
+				float normYRot = (float) (Math.atan2(normal.z, normal.x) - Math.PI / 2f);
+				normal.rotateY(-normYRot);
+				float normXRot = (float) (Math.atan2(normal.y, normal.z));
+				normal.rotateX(-normXRot);
 
 				Mat4 modelMat4 = null;
 
@@ -793,8 +801,8 @@ public class GameState extends State {
 					modelMat4.muli(Mat4.scale((float) (Math.random() * 2f + 1.5f)));
 					modelMat4.muli(Mat4.translate(new Vec3(0, 0, 0.0001f)));
 					modelMat4.muli(Mat4.rotateZ((float) (Math.random() * Math.PI * 2f)));
-					modelMat4.muli(Mat4.rotateX(xRot + (float) (Math.random() * Math.PI / 6f)));
-					modelMat4.muli(Mat4.rotateY(yRot + (float) (Math.random() * Math.PI / 6f)));
+					modelMat4.muli(Mat4.rotateX(normXRot + (float) (Math.random() * Math.PI / 6f)));
+					modelMat4.muli(Mat4.rotateY(normYRot + (float) (Math.random() * Math.PI / 6f)));
 					modelMat4.muli(Mat4.translate(minVec));
 					long bloodSplatterID = Model.addInstance(this.bloodDecal, modelMat4, DECAL_SCENE);
 					Model.updateInstance(bloodSplatterID, new Material(new Vec4(1), new Vec4(0f), 256f));
@@ -806,12 +814,23 @@ public class GameState extends State {
 				modelMat4.muli(Mat4.scale((float) (Math.random() * 0.03f + 0.1f)));
 				modelMat4.muli(Mat4.translate(new Vec3(0, 0, 0.0001f)));
 				modelMat4.muli(Mat4.rotateZ((float) (Math.random() * Math.PI * 2f)));
-				modelMat4.muli(Mat4.rotateX(xRot));
-				modelMat4.muli(Mat4.rotateY(yRot));
+				modelMat4.muli(Mat4.rotateX(normXRot));
+				modelMat4.muli(Mat4.rotateY(normYRot));
 				modelMat4.muli(Mat4.translate(minVec));
 				long bulletHoleID = Model.addInstance(this.bulletHoleDecal, modelMat4, DECAL_SCENE);
 				Model.updateInstance(bulletHoleID, new Material(new Vec4(1), new Vec4(0f), 64f));
 				this.decalIDs.add(bulletHoleID);
+
+				//spark particles
+				for (int i = 0; i < 10; i++) {
+					Vec3 sparkVel = new Vec3(0, 0, 0.15f);
+					sparkVel.rotateX(normXRot + (float) Math.toRadians(Math.random() * 110f - 55f));
+					sparkVel.rotateY(normYRot + (float) Math.toRadians(Math.random() * 110f - 55f));
+
+					Vec3 sparkPos = new Vec3(minVec);
+
+					this.sparkParticle.addInstance(sparkPos, sparkVel, 0, PARTICLE_SCENE);
+				}
 			}
 		}
 		this.bulletRays.clear();
@@ -866,8 +885,10 @@ public class GameState extends State {
 		perspectiveScreen.renderSkybox(true);
 		perspectiveScreen.renderDecals(true);
 		perspectiveScreen.renderPlayermodel(true);
+		perspectiveScreen.renderParticles(true);
 		perspectiveScreen.setWorldScene(WORLD_SCENE);
 		perspectiveScreen.setDecalScene(DECAL_SCENE);
+		perspectiveScreen.setParticleScene(PARTICLE_SCENE);
 		perspectiveScreen.setPlayermodelScene(PLAYERMODEL_SCENE);
 		perspectiveScreen.render(outputBuffer);
 

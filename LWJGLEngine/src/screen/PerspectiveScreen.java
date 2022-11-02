@@ -23,12 +23,22 @@ import util.Vec3;
 public class PerspectiveScreen extends Screen {
 	// renders the scene with a perspective projection matrix.
 
+	private static final float NEAR = 0.1f;
+	private static final float FAR = 200.0f;
+
 	private int world_scene;
 	private int decal_scene;
+
 	private int playermodel_scene;
+	private boolean renderPlayermodel = false;
+	private float playermodelFOV;
+	private Framebuffer playermodelBuffer;
+
+	private int particle_scene;
+	private boolean renderParticles = false;
 
 	private static final int SHADOW_MAP_NR_CASCADES = 6;
-	private static float[] shadowCascades = new float[] { Main.NEAR, 1, 3, 7, 15, 30, Main.FAR };
+	private static float[] shadowCascades = new float[] { NEAR, 1, 3, 7, 15, 30, FAR };
 
 	private float worldFOV;
 
@@ -37,11 +47,14 @@ public class PerspectiveScreen extends Screen {
 	private Framebuffer shadowBuffer;
 	private Framebuffer skyboxBuffer;
 
-	private Texture geometryPositionMap; // RGB: pos, A: depth
+	private Texture geometryPositionMap; // RGB: pos, A: normalized depth; 0 - 1
 	private Texture geometryNormalMap; // RGB: normal
 	private Texture geometrySpecularMap; // RGB: specular, A: shininess
 	private Texture geometryColorMap; // RGB: color, A: alpha
 	private Texture geometryColorIDMap; // RGB: colorID
+
+	//TODO move shininess out of the alpha channel, and add emissiveness buffer so we can do full bright particles. 
+	//actually, we can do full bright particles by just moving particle rendering after the lighting step. 
 
 	private Texture lightingColorMap; // RGB: color
 	private Texture lightingBrightnessMap; // R: brightness
@@ -57,9 +70,6 @@ public class PerspectiveScreen extends Screen {
 
 	private boolean renderDecals = false;
 
-	private boolean renderPlayermodel = false;
-	private float playermodelFOV;
-
 	public PerspectiveScreen() {
 
 	}
@@ -70,6 +80,7 @@ public class PerspectiveScreen extends Screen {
 		this.lightingBuffer.kill();
 		this.shadowBuffer.kill();
 		this.skyboxBuffer.kill();
+		this.playermodelBuffer.kill();
 	}
 
 	@Override
@@ -90,6 +101,16 @@ public class PerspectiveScreen extends Screen {
 		this.geometryBuffer.addDepthBuffer();
 		this.geometryBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
 		this.geometryBuffer.isComplete();
+
+		this.playermodelBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
+		this.playermodelBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.geometryPositionMap.getID());
+		this.playermodelBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this.geometryNormalMap.getID());
+		this.playermodelBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, this.geometrySpecularMap.getID());
+		this.playermodelBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, this.geometryColorMap.getID());
+		this.playermodelBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, this.geometryColorIDMap.getID());
+		this.playermodelBuffer.addDepthBuffer();
+		this.playermodelBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
+		this.playermodelBuffer.addDepthBuffer();
 
 		this.lightingBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.lightingColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_UNSIGNED_BYTE);
@@ -124,7 +145,7 @@ public class PerspectiveScreen extends Screen {
 			cameraFacing = this.camera.getFacing();
 		}
 
-		this.camera = new Camera((float) Math.toRadians(this.worldFOV), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
+		this.camera = new Camera((float) Math.toRadians(this.worldFOV), Main.windowWidth, Main.windowHeight, NEAR, FAR);
 		this.camera.setPos(cameraPos);
 		this.camera.setFacing(cameraFacing);
 
@@ -135,7 +156,7 @@ public class PerspectiveScreen extends Screen {
 		float cameraFOV = degrees;
 		Vec3 cameraPos = this.camera.getPos();
 		Vec3 cameraFacing = this.camera.getFacing();
-		this.camera = new Camera((float) Math.toRadians(cameraFOV), Main.windowWidth, Main.windowHeight, Main.NEAR, Main.FAR);
+		this.camera = new Camera((float) Math.toRadians(cameraFOV), Main.windowWidth, Main.windowHeight, NEAR, FAR);
 		this.camera.setPos(cameraPos);
 		this.camera.setFacing(cameraFacing);
 	}
@@ -160,6 +181,10 @@ public class PerspectiveScreen extends Screen {
 		this.playermodel_scene = scene;
 	}
 
+	public void setParticleScene(int scene) {
+		this.particle_scene = scene;
+	}
+
 	public void setShaderCameraUniforms(Shader shader, Camera camera) {
 		shader.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
 		shader.setUniformMat4("vw_matrix", camera.getViewMatrix());
@@ -176,6 +201,10 @@ public class PerspectiveScreen extends Screen {
 
 	public void renderPlayermodel(boolean b) {
 		this.renderPlayermodel = b;
+	}
+
+	public void renderParticles(boolean b) {
+		this.renderParticles = b;
 	}
 
 	@Override
@@ -203,7 +232,7 @@ public class PerspectiveScreen extends Screen {
 			geometryBuffer.bind();
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LESS);
-			glDepthMask(false);
+			glDepthMask(false); //disable writing to the depth buffer
 			glEnable(GL_CULL_FACE);
 			glCullFace(GL_BACK);
 			glPolygonMode(GL_FRONT, GL_FILL);
@@ -224,8 +253,7 @@ public class PerspectiveScreen extends Screen {
 		// -- PLAYERMODEL -- : gun and hands
 		if (this.renderPlayermodel) {
 			//we clear the gDepth buffer in this step, should probably save it somewhere instead. 
-
-			geometryBuffer.bind();
+			this.playermodelBuffer.bind();
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LESS);
 			glDepthMask(true);
@@ -296,6 +324,9 @@ public class PerspectiveScreen extends Screen {
 
 							new Vec3(x2, y2, -far), new Vec3(-x2, y2, -far), new Vec3(-x2, -y2, -far), new Vec3(x2, -y2, -far), };
 
+					//we have to normalize the near and far coordinates
+					near = (1f / near - 1f / NEAR) / (1f / FAR - 1f / NEAR);
+					far = (1f / far - 1f / NEAR) / (1f / FAR - 1f / NEAR);
 					Shader.LIGHTING.setUniform1f("shadowMapNear", near);
 					Shader.LIGHTING.setUniform1f("shadowMapFar", far);
 
@@ -411,6 +442,27 @@ public class PerspectiveScreen extends Screen {
 
 		Texture.bindingEnabled = true;
 
+		// -- PARTICLES -- : front facing rectangular billboards
+		//this renders after lighting, so we can do transparency.
+		//TODO when particles have no 'scene' behind them, they fail to render. 
+		if (this.renderParticles) {
+			lightingBuffer.bind();
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LESS);
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+			glPolygonMode(GL_FRONT, GL_FILL);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+			this.geometryPositionMap.bind(GL_TEXTURE4);
+
+			Shader.PARTICLE.enable();
+			this.setCameraFOV(this.worldFOV);
+			this.setShaderCameraUniforms(Shader.PARTICLE, this.camera);
+			Model.renderModels(this.particle_scene);
+		}
+
 		// -- SKYBOX -- : we'll use this texture in the post-processing step
 		if (this.renderSkybox) {
 			skyboxBuffer.bind();
@@ -436,6 +488,7 @@ public class PerspectiveScreen extends Screen {
 		}
 
 		this.lightingColorMap.bind(GL_TEXTURE0);
+		//this.geometryPositionMap.bind(GL_TEXTURE0);
 		screenQuad.render();
 	}
 

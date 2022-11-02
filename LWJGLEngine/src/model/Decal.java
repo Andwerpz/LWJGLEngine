@@ -43,7 +43,7 @@ public class Decal extends Model {
 
 		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_TRIANGLES));
 		this.defaultMaterials.add(DEFAULT_MATERIAL);
-		this.textureMaterials.add(TextureMaterial.defaultMaterial());
+		this.textureMaterials.add(TextureMaterial.defaultTextureMaterial());
 	}
 
 }

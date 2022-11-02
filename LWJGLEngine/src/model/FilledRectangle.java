@@ -9,8 +9,7 @@ import util.Vec3;
 
 public class FilledRectangle extends Model {
 	// as the name suggests, this rectangle is indeed filled
-	// you can render any rectangle with the transformation of the rectangle (0, 0)
-	// to (1, 1).
+	// you can render any rectangle with the transformation of the rectangle (0, 0, 0) to (1, 1, 0).
 
 	public static final FilledRectangle DEFAULT_RECTANGLE = new FilledRectangle();
 
@@ -28,10 +27,8 @@ public class FilledRectangle extends Model {
 
 		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_TRIANGLES));
 		this.defaultMaterials.add(DEFAULT_MATERIAL);
-		this.textureMaterials.add(TextureMaterial.defaultMaterial());
+		this.textureMaterials.add(TextureMaterial.defaultTextureMaterial());
 	}
-	
-	
 
 	public long addRectangle(float x, float y, float width, float height, int scene) {
 		Mat4 modelMat4 = Mat4.scale(width, height, 1).mul(Mat4.translate(new Vec3(x, y, 0)));

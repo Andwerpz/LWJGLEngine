@@ -1,6 +1,5 @@
 package graphics;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
@@ -25,10 +24,19 @@ public class VertexArray {
 
 	// glBindVertexArray(vao);
 	// glBindBuffer(GL_ARRAY_BUFFER, vbo); //binds vbo to GL_ARRAY_BUFFER
-	// glEnableVertexAttribArray(Shader.VERTEX_ATTRIB); //uses whatever is currently
-	// inside GL_ARRAY_BUFFER
+	// glEnableVertexAttribArray(VERTEX_ATTRIB); //uses whatever is currently inside GL_ARRAY_BUFFER
 
 	// each scene will have different model mat4s for each vertex array.
+
+	// vertex array information location when passed into shaders
+	public static final int VERTEX_ATTRIB = 0;
+	public static final int TCOORD_ATTRIB = 1;
+	public static final int NORMAL_ATTRIB = 2;
+	public static final int TANGENT_ATTRIB = 3;
+	public static final int BITANGENT_ATTRIB = 4;
+	public static final int INSTANCED_MODEL_ATTRIB = 5; // takes up 4 slots
+	public static final int INSTANCED_COLOR_ATTRIB = 9; // used for quick model selection
+	public static final int INSTANCED_MATERIAL_ATTRIB = 10; // takes up 3 slots
 
 	private int renderType;
 	private int vao, vbo, tbo, nbo, ntbo, nbtbo, ibo;
@@ -53,6 +61,7 @@ public class VertexArray {
 		this.init(vertices, normals, tangents, bitangents, uvs, indices, renderType);
 	}
 
+	//vertices, indices, and render type must not be null. 
 	private void init(float[] vertices, float[] normals, float[] tangents, float[] bitangents, float[] uvs, int[] indices, int renderType) {
 		this.vertices = vertices;
 		this.normals = normals;
@@ -62,7 +71,7 @@ public class VertexArray {
 		this.indices = indices;
 
 		this.renderType = renderType;
-		triCount = indices.length;
+		this.triCount = indices.length;
 		this.scenes = new HashMap<Integer, int[]>();
 
 		vao = glGenVertexArrays();
@@ -71,32 +80,40 @@ public class VertexArray {
 		vbo = glGenBuffers(); // vertices
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(vertices), GL_STATIC_DRAW);
-		glVertexAttribPointer(Shader.VERTEX_ATTRIB, 3, GL_FLOAT, false, 0, 0);
-		glEnableVertexAttribArray(Shader.VERTEX_ATTRIB);
+		glVertexAttribPointer(VERTEX_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+		glEnableVertexAttribArray(VERTEX_ATTRIB);
 
-		tbo = glGenBuffers(); // textures
-		glBindBuffer(GL_ARRAY_BUFFER, tbo);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(uvs), GL_STATIC_DRAW);
-		glVertexAttribPointer(Shader.TCOORD_ATTRIB, 2, GL_FLOAT, false, 0, 0);
-		glEnableVertexAttribArray(Shader.TCOORD_ATTRIB);
+		if (uvs != null) {
+			tbo = glGenBuffers(); // uvs
+			glBindBuffer(GL_ARRAY_BUFFER, tbo);
+			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(uvs), GL_STATIC_DRAW);
+			glVertexAttribPointer(TCOORD_ATTRIB, 2, GL_FLOAT, false, 0, 0);
+			glEnableVertexAttribArray(TCOORD_ATTRIB);
+		}
 
-		nbo = glGenBuffers(); // normals
-		glBindBuffer(GL_ARRAY_BUFFER, nbo);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(normals), GL_STATIC_DRAW);
-		glVertexAttribPointer(Shader.NORMAL_ATTRIB, 3, GL_FLOAT, false, 0, 0);
-		glEnableVertexAttribArray(Shader.NORMAL_ATTRIB);
+		if (normals != null) {
+			nbo = glGenBuffers(); // normals
+			glBindBuffer(GL_ARRAY_BUFFER, nbo);
+			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(normals), GL_STATIC_DRAW);
+			glVertexAttribPointer(NORMAL_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+			glEnableVertexAttribArray(NORMAL_ATTRIB);
+		}
 
-		ntbo = glGenBuffers(); // tangents
-		glBindBuffer(GL_ARRAY_BUFFER, ntbo);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(tangents), GL_STATIC_DRAW);
-		glVertexAttribPointer(Shader.TANGENT_ATTRIB, 3, GL_FLOAT, false, 0, 0);
-		glEnableVertexAttribArray(Shader.TANGENT_ATTRIB);
+		if (tangents != null) {
+			ntbo = glGenBuffers(); // tangents
+			glBindBuffer(GL_ARRAY_BUFFER, ntbo);
+			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(tangents), GL_STATIC_DRAW);
+			glVertexAttribPointer(TANGENT_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+			glEnableVertexAttribArray(TANGENT_ATTRIB);
+		}
 
-		nbtbo = glGenBuffers(); // bitangents
-		glBindBuffer(GL_ARRAY_BUFFER, nbtbo);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(bitangents), GL_STATIC_DRAW);
-		glVertexAttribPointer(Shader.BITANGENT_ATTRIB, 3, GL_FLOAT, false, 0, 0);
-		glEnableVertexAttribArray(Shader.BITANGENT_ATTRIB);
+		if (bitangents != null) {
+			nbtbo = glGenBuffers(); // bitangents
+			glBindBuffer(GL_ARRAY_BUFFER, nbtbo);
+			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(bitangents), GL_STATIC_DRAW);
+			glVertexAttribPointer(BITANGENT_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+			glEnableVertexAttribArray(BITANGENT_ATTRIB);
+		}
 
 		ibo = glGenBuffers();
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
@@ -159,28 +176,26 @@ public class VertexArray {
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);
 		for (int i = 0; i < 4; i++) {
-			glVertexAttribPointer(Shader.INSTANCED_MODEL_ATTRIB + i, 4, GL_FLOAT, false, 16 * 4, 16 * i);
-			glVertexAttribDivisor(Shader.INSTANCED_MODEL_ATTRIB + i, 1);
-			glEnableVertexAttribArray(Shader.INSTANCED_MODEL_ATTRIB + i);
+			glVertexAttribPointer(INSTANCED_MODEL_ATTRIB + i, 4, GL_FLOAT, false, 16 * 4, 16 * i);
+			glVertexAttribDivisor(INSTANCED_MODEL_ATTRIB + i, 1);
+			glEnableVertexAttribArray(INSTANCED_MODEL_ATTRIB + i);
 		}
 
 		glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
-		glVertexAttribPointer(Shader.INSTANCED_COLOR_ATTRIB, 3, GL_FLOAT, false, 0, 0);
-		glVertexAttribDivisor(Shader.INSTANCED_COLOR_ATTRIB, 1);
-		glEnableVertexAttribArray(Shader.INSTANCED_COLOR_ATTRIB);
+		glVertexAttribPointer(INSTANCED_COLOR_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+		glVertexAttribDivisor(INSTANCED_COLOR_ATTRIB, 1);
+		glEnableVertexAttribArray(INSTANCED_COLOR_ATTRIB);
 
 		glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
-		glVertexAttribPointer(Shader.INSTANCED_MATERIAL_ATTRIB + 0, 4, GL_FLOAT, false, 9 * 4, 0); // diffuse : 4 floats
-		glVertexAttribPointer(Shader.INSTANCED_MATERIAL_ATTRIB + 1, 4, GL_FLOAT, false, 9 * 4, 16); // specular : 4
-		// floats
-		glVertexAttribPointer(Shader.INSTANCED_MATERIAL_ATTRIB + 2, 1, GL_FLOAT, false, 9 * 4, 32); // shininess : 1
-		// float
-		glVertexAttribDivisor(Shader.INSTANCED_MATERIAL_ATTRIB + 0, 1);
-		glVertexAttribDivisor(Shader.INSTANCED_MATERIAL_ATTRIB + 1, 1);
-		glVertexAttribDivisor(Shader.INSTANCED_MATERIAL_ATTRIB + 2, 1);
-		glEnableVertexAttribArray(Shader.INSTANCED_MATERIAL_ATTRIB + 0);
-		glEnableVertexAttribArray(Shader.INSTANCED_MATERIAL_ATTRIB + 1);
-		glEnableVertexAttribArray(Shader.INSTANCED_MATERIAL_ATTRIB + 2);
+		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 0, 4, GL_FLOAT, false, 9 * 4, 0); // diffuse : 4 floats
+		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 1, 4, GL_FLOAT, false, 9 * 4, 16); // specular : 4 floats
+		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 2, 1, GL_FLOAT, false, 9 * 4, 32); // shininess : 1 float
+		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 0, 1);
+		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 1, 1);
+		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 2, 1);
+		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 0);
+		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 1);
+		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 2);
 
 		glBindVertexArray(0);
 	}

@@ -15,25 +15,21 @@ import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL13.*;
 
 public class TextureMaterial {
-	// in the shaders, the texture material is different from the rgb-specular
-	// material.
-	// rgb-specular material is instanced along with the model mat4, while the
-	// texture materials
+	// in the shaders, the texture material is different from the rgb-specular material.
+	// rgb-specular material is instanced along with the model mat4, while the texture materials 
 	// must be bound seperately for each render call.
+	// this means that one model object can only have one texture material for all of it's instances. 
 
-	// TODO by default, a rgb-specular material is included with every model
+	// by default, a rgb-specular material is included with every model
 	// instance, set to:
 	// diffuse : (1, 1, 1)
 	// specular : (1, 1, 1)
 	// shininess : (32.0)
 
-	// TODO these values are then multiplied with the values supplied in the
-	// texture2D sampler to get the final value.
-	// note that if you don't change the default rgb-specular material, the texture
-	// material should work as expected.
+	// these values are then multiplied with the values supplied in the texture2D sampler to get the final value.
+	// note that if you don't change the default rgb-specular material, the texture material should work as expected.
 
-	// TODO if a .mat file includes rgb-specular values, then those are used as
-	// default instead.
+	// if a .mat file includes rgb-specular values, then those are used as default instead.
 
 	public static final int DIFFUSE = 0;
 	public static final int SPECULAR = 1;
@@ -138,10 +134,6 @@ public class TextureMaterial {
 		else {
 			this.displacement = displacement;
 		}
-	}
-
-	public static TextureMaterial defaultMaterial() {
-		return new TextureMaterial();
 	}
 
 	public void setTexture(String path, int which) {
