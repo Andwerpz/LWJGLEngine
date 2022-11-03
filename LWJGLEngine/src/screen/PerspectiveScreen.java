@@ -453,7 +453,7 @@ public class PerspectiveScreen extends Screen {
 			glCullFace(GL_BACK);
 			glPolygonMode(GL_FRONT, GL_FILL);
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_ONE);
 
 			this.geometryPositionMap.bind(GL_TEXTURE4);
 
@@ -468,6 +468,7 @@ public class PerspectiveScreen extends Screen {
 			skyboxBuffer.bind();
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glDisable(GL_CULL_FACE);
+			glDisable(GL_BLEND);
 			Shader.SKYBOX.enable();
 			Shader.SKYBOX.setUniformMat4("vw_matrix", this.camera.getViewMatrix());
 			Shader.SKYBOX.setUniformMat4("pr_matrix", this.camera.getProjectionMatrix());

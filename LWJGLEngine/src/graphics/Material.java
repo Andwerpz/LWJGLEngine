@@ -11,7 +11,8 @@ import util.Vec4;
 
 public class Material {
 
-	private Vec4 diffuse, specular;
+	private Vec4 diffuse; //RGBA
+	private Vec4 specular; //Reflection RGB, 
 
 	private float shininess; // also known as specular exponent
 
@@ -71,6 +72,10 @@ public class Material {
 
 	public float getShininess() {
 		return this.shininess;
+	}
+
+	public void setAlpha(float alpha) {
+		this.diffuse.w = alpha;
 	}
 
 	@Override

@@ -105,5 +105,7 @@ void main() {
 	normal = normalize(invTBN * normal);	//transform normal into world space
 	
     lColor.rgba = scaleWithMaterial(texture(tex_diffuse, texCoords).rgba, frag_material_diffuse.rgba).rgba;
+    //lColor.rgb = vec3(1 - frag_material_diffuse.a);
+    lColor.a = frag_material_diffuse.a;
 } 
 

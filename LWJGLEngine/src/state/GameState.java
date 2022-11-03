@@ -209,7 +209,7 @@ public class GameState extends State {
 			this.landingSounds[i] = new Sound("/land/land" + (i + 1) + ".ogg", false);
 		}
 
-		this.sparkParticle = new Particle(TextureMaterial.defaultTextureMaterial(), 80, 0.02f);
+		this.sparkParticle = new Particle(TextureMaterial.defaultTextureMaterial(), 100, 0.01f);
 		this.sparkParticle.setDefaultMaterial(new Material(Color.YELLOW));
 
 		// -- WORLD SCENE --

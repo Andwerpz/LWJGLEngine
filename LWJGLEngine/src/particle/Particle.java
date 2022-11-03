@@ -49,7 +49,7 @@ public class Particle extends Entity {
 	public void addInstance(Vec3 pos, Vec3 vel, float rot, int scene) {
 		long modelInstanceID = Model.addInstance(this.rectangleModel, Mat4.identity(), scene);
 		Model.updateInstance(modelInstanceID, this.defaultMaterial);
-		this.particles.add(new ParticleInstance(pos, vel, this.lifeLengthMillis, rot, scale, modelInstanceID));
+		this.particles.add(new ParticleInstance(pos, vel, this.lifeLengthMillis, rot, scale, this.defaultMaterial, modelInstanceID));
 	}
 
 	@Override
@@ -91,6 +91,8 @@ class ParticleInstance {
 
 	private long modelInstanceID;
 
+	private Material material;
+
 	private Vec3 pos, vel;
 	private long lifeLengthMillis;
 	private float rot; //z rotation
@@ -98,12 +100,14 @@ class ParticleInstance {
 
 	private long elapsedTime = 0;
 
-	public ParticleInstance(Vec3 pos, Vec3 vel, long lifeLengthMillis, float rot, float scale, long modelInstanceID) {
+	public ParticleInstance(Vec3 pos, Vec3 vel, long lifeLengthMillis, float rot, float scale, Material material, long modelInstanceID) {
 		this.pos = new Vec3(pos);
 		this.vel = new Vec3(vel);
 		this.lifeLengthMillis = lifeLengthMillis;
 		this.rot = rot;
 		this.scale = scale;
+
+		this.material = material;
 
 		this.modelInstanceID = modelInstanceID;
 	}
@@ -117,6 +121,9 @@ class ParticleInstance {
 
 		this.pos.addi(this.vel);
 
+		float alpha = 1f - ((float) this.elapsedTime / this.lifeLengthMillis);
+		this.material.setAlpha((float) this.elapsedTime / (float) this.lifeLengthMillis);
+
 		this.updateModelInstance();
 
 		return true;
@@ -129,6 +136,7 @@ class ParticleInstance {
 		modelMat4.muli(Mat4.translate(this.pos));
 
 		Model.updateInstance(this.modelInstanceID, modelMat4);
+		Model.updateInstance(this.modelInstanceID, this.material);
 	}
 
 	public void kill() {
