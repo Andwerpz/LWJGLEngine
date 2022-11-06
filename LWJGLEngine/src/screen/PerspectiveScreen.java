@@ -444,7 +444,6 @@ public class PerspectiveScreen extends Screen {
 
 		// -- PARTICLES -- : front facing rectangular billboards
 		//this renders after lighting, so we can do transparency.
-		//TODO when particles have no 'scene' behind them, they fail to render. 
 		if (this.renderParticles) {
 			lightingBuffer.bind();
 			glEnable(GL_DEPTH_TEST);

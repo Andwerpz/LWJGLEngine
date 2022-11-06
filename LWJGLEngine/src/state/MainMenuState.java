@@ -179,7 +179,7 @@ public class MainMenuState extends State {
 		case "btn_host_game":
 			try {
 				int ip = Integer.parseInt(Input.getText("tf_host_port"));
-				this.sm.switchState(new GameState(this.sm, null, ip, true));
+				this.sm.switchState(new GameState(this.sm));
 			}
 			catch (NumberFormatException e) {
 				System.err.println("BAD PORT");
@@ -190,7 +190,7 @@ public class MainMenuState extends State {
 			try {
 				int ip = Integer.parseInt(Input.getText("tf_join_port"));
 				String port = Input.getText("tf_join_ip");
-				this.sm.switchState(new GameState(this.sm, port, ip, false));
+				this.sm.switchState(new GameState(this.sm));
 			}
 			catch (NumberFormatException e) {
 				System.err.println("BAD PORT");

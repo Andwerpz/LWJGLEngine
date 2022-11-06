@@ -35,6 +35,9 @@ public class Player extends Entity {
 	private static float runningSpeed = 0.05f;
 	private static float walkingSpeed = 0.02f; //TBD
 
+	private static float noclipSpeed = 0.05f;
+	private static float noclipFriction = 0.7f;
+
 	public Vec3 pos, vel;
 	public float radius = 0.33f;
 	public float height = 1f;
@@ -96,7 +99,7 @@ public class Player extends Entity {
 		camXRot = MathUtils.clamp((float) -(Math.PI - 0.01) / 2f, (float) (Math.PI - 0.01) / 2f, camXRot);
 
 		// TRANSLATION
-		move();
+		move_noclip();
 	}
 
 	public void setPos(Vec3 v) {
@@ -109,11 +112,44 @@ public class Player extends Entity {
 
 	// ignores all collision
 	private void move_noclip() {
-		this.vel.x *= airFriction;
-		this.vel.z *= airFriction;
-		this.vel.y *= airFriction;
+		this.vel.x *= noclipFriction;
+		this.vel.z *= noclipFriction;
+		this.vel.y *= noclipFriction;
 
-		this.pos.add(this.vel);
+		this.pos.addi(this.vel);
+
+		if (this.acceptPlayerInputs) {
+			Vec3 forward = new Vec3(0, 0, -1);
+			forward.rotateY(camYRot);
+			Vec3 right = new Vec3(forward);
+			right.rotateY((float) Math.toRadians(-90));
+
+			Vec3 inputAccel = new Vec3(0);
+
+			if (KeyboardInput.isKeyPressed(GLFW_KEY_W)) {
+				inputAccel.addi(forward);
+			}
+			if (KeyboardInput.isKeyPressed(GLFW_KEY_S)) {
+				inputAccel.subi(forward);
+			}
+			if (KeyboardInput.isKeyPressed(GLFW_KEY_D)) {
+				inputAccel.subi(right);
+			}
+			if (KeyboardInput.isKeyPressed(GLFW_KEY_A)) {
+				inputAccel.addi(right);
+			}
+			if (KeyboardInput.isKeyPressed(GLFW_KEY_SPACE)) {
+				inputAccel.y += 1;
+			}
+			if (KeyboardInput.isKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
+				inputAccel.y -= 1;
+			}
+
+			inputAccel.setLength(noclipSpeed);
+
+			this.vel.addi(inputAccel);
+		}
+
 	}
 
 	private void move() {
