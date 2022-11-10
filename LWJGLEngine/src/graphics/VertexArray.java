@@ -14,6 +14,7 @@ import model.Model;
 import scene.Scene;
 import util.BufferUtils;
 import util.Mat4;
+import util.Pair;
 import util.Vec2;
 import util.Vec3;
 
@@ -83,37 +84,29 @@ public class VertexArray {
 		glVertexAttribPointer(VERTEX_ATTRIB, 3, GL_FLOAT, false, 0, 0);
 		glEnableVertexAttribArray(VERTEX_ATTRIB);
 
-		if (uvs != null) {
-			tbo = glGenBuffers(); // uvs
-			glBindBuffer(GL_ARRAY_BUFFER, tbo);
-			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(uvs), GL_STATIC_DRAW);
-			glVertexAttribPointer(TCOORD_ATTRIB, 2, GL_FLOAT, false, 0, 0);
-			glEnableVertexAttribArray(TCOORD_ATTRIB);
-		}
+		tbo = glGenBuffers(); // uvs
+		glBindBuffer(GL_ARRAY_BUFFER, tbo);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(uvs), GL_STATIC_DRAW);
+		glVertexAttribPointer(TCOORD_ATTRIB, 2, GL_FLOAT, false, 0, 0);
+		glEnableVertexAttribArray(TCOORD_ATTRIB);
 
-		if (normals != null) {
-			nbo = glGenBuffers(); // normals
-			glBindBuffer(GL_ARRAY_BUFFER, nbo);
-			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(normals), GL_STATIC_DRAW);
-			glVertexAttribPointer(NORMAL_ATTRIB, 3, GL_FLOAT, false, 0, 0);
-			glEnableVertexAttribArray(NORMAL_ATTRIB);
-		}
+		nbo = glGenBuffers(); // normals
+		glBindBuffer(GL_ARRAY_BUFFER, nbo);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(normals), GL_STATIC_DRAW);
+		glVertexAttribPointer(NORMAL_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+		glEnableVertexAttribArray(NORMAL_ATTRIB);
 
-		if (tangents != null) {
-			ntbo = glGenBuffers(); // tangents
-			glBindBuffer(GL_ARRAY_BUFFER, ntbo);
-			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(tangents), GL_STATIC_DRAW);
-			glVertexAttribPointer(TANGENT_ATTRIB, 3, GL_FLOAT, false, 0, 0);
-			glEnableVertexAttribArray(TANGENT_ATTRIB);
-		}
+		ntbo = glGenBuffers(); // tangents
+		glBindBuffer(GL_ARRAY_BUFFER, ntbo);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(tangents), GL_STATIC_DRAW);
+		glVertexAttribPointer(TANGENT_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+		glEnableVertexAttribArray(TANGENT_ATTRIB);
 
-		if (bitangents != null) {
-			nbtbo = glGenBuffers(); // bitangents
-			glBindBuffer(GL_ARRAY_BUFFER, nbtbo);
-			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(bitangents), GL_STATIC_DRAW);
-			glVertexAttribPointer(BITANGENT_ATTRIB, 3, GL_FLOAT, false, 0, 0);
-			glEnableVertexAttribArray(BITANGENT_ATTRIB);
-		}
+		nbtbo = glGenBuffers(); // bitangents
+		glBindBuffer(GL_ARRAY_BUFFER, nbtbo);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(bitangents), GL_STATIC_DRAW);
+		glVertexAttribPointer(BITANGENT_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+		glEnableVertexAttribArray(BITANGENT_ATTRIB);
 
 		ibo = glGenBuffers();
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
@@ -122,6 +115,12 @@ public class VertexArray {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
+	}
+
+	//copies over the information in the given vertex array to this one
+	public void set(VertexArray v) {
+		this.killVertexBuffers();
+		this.init(v.getVertices(), v.getNormals(), v.getTangents(), v.getBitangents(), v.getUVs(), v.getIndices(), v.getRenderType());
 	}
 
 	// seperate methods for updating materials and updating model mats??
@@ -436,6 +435,26 @@ public class VertexArray {
 		return this.indices;
 	}
 
+	public float[] getUVs() {
+		return this.uvs;
+	}
+
+	public float[] getBitangents() {
+		return this.bitangents;
+	}
+
+	public float[] getTangents() {
+		return this.tangents;
+	}
+
+	public float[] getNormals() {
+		return this.normals;
+	}
+
+	public int getRenderType() {
+		return this.renderType;
+	}
+
 	public void bind() {
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
@@ -459,5 +478,22 @@ public class VertexArray {
 		bind();
 		drawInstanced(numInstances);
 		unbind();
+	}
+
+	//doesn't take care of model instance ids, that must be done on the model side. 
+	public void kill() {
+		this.killVertexBuffers();
+		this.killInstanceBuffers();
+	}
+
+	private void killVertexBuffers() {
+		glDeleteVertexArrays(new int[] { this.vao });
+		glDeleteBuffers(new int[] { this.vbo, this.nbo, this.tbo, this.ntbo, this.nbtbo, this.ibo });
+	}
+
+	private void killInstanceBuffers() {
+		for (int[] i : this.scenes.values()) {
+			glDeleteBuffers(new int[] { i[1], i[2], i[3] });
+		}
 	}
 }

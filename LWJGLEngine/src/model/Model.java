@@ -30,6 +30,7 @@ import org.lwjgl.assimp.AIVector3D;
 
 import graphics.TextureMaterial;
 import graphics.Material;
+import graphics.Shader;
 import graphics.Texture;
 import graphics.VertexArray;
 import util.FileUtils;
@@ -467,7 +468,7 @@ public class Model {
 			}
 		}
 
-		scenesNeedingUpdates.clear();
+		this.scenesNeedingUpdates.clear();
 	}
 
 	public static ArrayList<Vec3[]> rayIntersect(int scene, Vec3 ray_origin, Vec3 ray_dir) {
@@ -547,7 +548,7 @@ public class Model {
 		}
 	}
 
-	private void render(int scene) {
+	protected void render(int scene) {
 		if (modelMats.get(scene) == null) { // check whether or not this model actually has any instances in the
 			// specified scene
 			return;
@@ -559,6 +560,7 @@ public class Model {
 			else {
 				DEFAULT_TEXTURE_MATERIAL.bind();
 			}
+
 			this.meshes.get(i).render(scene);
 		}
 	}
@@ -579,6 +581,10 @@ public class Model {
 
 		for (TextureMaterial t : this.textureMaterials) {
 			t.kill();
+		}
+
+		for (VertexArray v : this.meshes) {
+			v.kill();
 		}
 
 		models.remove(this);
