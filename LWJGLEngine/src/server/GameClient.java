@@ -6,7 +6,6 @@ import java.util.HashSet;
 
 import util.Pair;
 import util.Vec3;
-import weapon.Weapon;
 
 public class GameClient extends Client {
 
@@ -290,10 +289,6 @@ public class GameClient extends Client {
 
 	public int getID() {
 		return this.ID;
-	}
-
-	public void addBulletRay(Weapon weapon, Vec3 ray_origin, Vec3 ray_dir) {
-		this.outBulletRays.add(new Pair<Integer, Pair<Integer, Vec3[]>>(this.ID, new Pair<Integer, Vec3[]>(weapon.getWeaponID(), new Vec3[] { ray_origin, ray_dir })));
 	}
 
 	public void addDamageSource(int receiverID, int damage) {

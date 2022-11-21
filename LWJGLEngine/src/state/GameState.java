@@ -57,12 +57,6 @@ import util.NetworkingUtils;
 import util.Pair;
 import util.Vec3;
 import util.Vec4;
-import weapon.AK47;
-import weapon.AWP;
-import weapon.Deagle;
-import weapon.M4A4;
-import weapon.Usps;
-import weapon.Weapon;
 
 public class GameState extends State {
 

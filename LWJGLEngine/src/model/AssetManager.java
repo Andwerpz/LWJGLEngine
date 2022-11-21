@@ -23,15 +23,7 @@ public class AssetManager {
 	// bind all asset names to load paths
 	public static void init() {
 		paths.put("dust2", new String[] { "/dust2/", "dust2_blend.obj" });
-		paths.put("ak47", new String[] { "/ak47/", "ak47.obj" });
-		paths.put("m4a4", new String[] { "/m4a4/", "m4a4.obj" });
-		paths.put("usps", new String[] { "/usps/", "usps.obj" });
-		paths.put("deagle", new String[] { "/deagle/", "deagle.obj" });
-		paths.put("awp", new String[] { "/awp/", "awp.obj" });
-		paths.put("sphere", new String[] { "/sphere/", "sphere.obj" });
-		paths.put("cylinder", new String[] { "/cylinder/", "cylinder.obj" });
 
-		//paths.put("blood_splatter_texture", new String[] { "decal/blood_splatter.png", GL_LINEAR_MIPMAP_LINEAR + "", GL_LINEAR + "", 5 + "" });
 		paths.put("bullet_hole_texture", new String[] { "decal/bullet_hole.png", GL_LINEAR_MIPMAP_LINEAR + "", GL_LINEAR + "", 5 + "" });
 		paths.put("blood_splatter_texture", new String[] { "decal/blood-splatter-png-image-0.png", GL_LINEAR_MIPMAP_LINEAR + "", GL_LINEAR + "", 5 + "" });
 
