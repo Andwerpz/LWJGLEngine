@@ -35,6 +35,16 @@ public class MathUtils {
 		return x1 + (t3 - t1) * v;
 	}
 
+	/**
+	 * Linearly interpolates between two vec3 points
+	 * 
+	 * @param 
+	 */
+	public static Vec3 interpolate(Vec3 v1, float t1, Vec3 v2, float t2, float t3) {
+		Vec3 v = (v2.sub(v1)).divi(t2 - t1);
+		return v1.add(v.mul(t3 - t1));
+	}
+
 	// -- LINEAR ALGEBRA --
 
 	/**
@@ -516,7 +526,8 @@ public class MathUtils {
 		if (plane_intersect == null) {
 			// capsule_tangent is parallel to the plane, plane_intersect doesn't exist.
 			referencePoint = new Vec3(t0);
-		} else if (n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
+		}
+		else if (n0.dot(t0.sub(plane_intersect)) < 0 || n1.dot(t1.sub(plane_intersect)) < 0 || n2.dot(t2.sub(plane_intersect)) < 0) {
 			// plane_intersect point is outside of the triangle.
 			// find closest point to plane_intersect that is on the triangle.
 			Vec3 minS_p = null;
@@ -544,7 +555,8 @@ public class MathUtils {
 			}
 
 			referencePoint = minS_p;
-		} else {
+		}
+		else {
 			// plane intersection is inside the triangle
 			referencePoint = plane_intersect;
 		}

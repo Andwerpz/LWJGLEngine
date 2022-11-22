@@ -88,6 +88,19 @@ public class Vec3 {
 		return result;
 	}
 
+	public Vec3 divi(float val) {
+		this.x /= val;
+		this.y /= val;
+		this.z /= val;
+		return this;
+	}
+
+	public Vec3 div(float val) {
+		Vec3 result = new Vec3(this);
+		result.divi(val);
+		return result;
+	}
+
 	public Vec3 normalize() {
 		float mag = this.length();
 		if (mag == 0) {
