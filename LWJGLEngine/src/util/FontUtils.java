@@ -8,11 +8,12 @@ import java.io.InputStream;
 
 public class FontUtils {
 
-	public static Font CSGOFont, segoe_ui;
+	public static Font CSGOFont, segoe_ui, ggsans;
 
 	public static void loadFonts() {
 		FontUtils.CSGOFont = loadFont("font/cs_regular.ttf");
 		FontUtils.segoe_ui = loadFont("font/segoe_ui.ttf");
+		FontUtils.ggsans = loadFont("font/ggsans-Normal.ttf");
 	}
 
 	public static Font loadFont(String path) {

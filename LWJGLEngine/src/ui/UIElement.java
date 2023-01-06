@@ -210,4 +210,12 @@ public abstract class UIElement extends Entity {
 	@Override
 	protected abstract void update();
 
+	public int getXOffset() {
+		return this.xOffset;
+	}
+
+	public int getYOffset() {
+		return this.yOffset;
+	}
+
 }
