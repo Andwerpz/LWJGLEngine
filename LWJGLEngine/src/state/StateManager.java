@@ -81,6 +81,11 @@ public class StateManager {
 		screenQuad.render();
 	}
 
+	public void kill() {
+		this.activeState.kill();
+		this.loadState.kill();
+	}
+
 	public void mousePressed(int button) {
 		activeState.mousePressed(button);
 	}

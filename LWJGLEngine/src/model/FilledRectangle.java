@@ -40,4 +40,8 @@ public class FilledRectangle extends Model {
 		return Model.addInstance(this, modelMat4, scene);
 	}
 
+	public TextureMaterial getTextureMaterial() {
+		return this.textureMaterials.get(0);
+	}
+
 }

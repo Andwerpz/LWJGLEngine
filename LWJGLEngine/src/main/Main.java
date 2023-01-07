@@ -190,6 +190,8 @@ public class Main implements Runnable {
 			}
 		}
 
+		this.exit();
+
 		glfwDestroyWindow(window);
 		glfwTerminate();
 	}
@@ -217,6 +219,8 @@ public class Main implements Runnable {
 
 	public void exit() {
 		this.running = false;
+
+		this.sm.kill();
 
 		//destroy audio context
 		alcDestroyContext(audioContext);
