@@ -15,6 +15,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public abstract class Server implements Runnable {
+
+	public static HashSet<Server> servers = new HashSet<>();
+
 	private boolean isRunning = true;
 	private Thread thread;
 
@@ -53,6 +56,8 @@ public abstract class Server implements Runnable {
 		this.packetListeners = new HashMap<>();
 		this.serverConnectionRequestListener = new ServerConnectionRequestListener(this.serverSocket);
 		this.packetSender = new PacketSender();
+
+		Server.servers.add(this);
 
 		this.start();
 	}

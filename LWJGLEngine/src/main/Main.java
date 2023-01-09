@@ -22,6 +22,8 @@ import model.AssetManager;
 import scene.Scene;
 import screen.Screen;
 import screen.ScreenQuad;
+import server.Client;
+import server.Server;
 import state.StateManager;
 import ui.UIElement;
 import util.FontUtils;
@@ -190,7 +192,7 @@ public class Main implements Runnable {
 			}
 		}
 
-		this.exit();
+		exit();
 
 		glfwDestroyWindow(window);
 		glfwTerminate();
@@ -221,6 +223,15 @@ public class Main implements Runnable {
 		this.running = false;
 
 		this.sm.kill();
+
+		//terminate any networking threads
+		for (Server s : Server.servers) {
+			s.exit();
+		}
+
+		for (Client c : Client.clients) {
+			c.exit();
+		}
 
 		//destroy audio context
 		alcDestroyContext(audioContext);

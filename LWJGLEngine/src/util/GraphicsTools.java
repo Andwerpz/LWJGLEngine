@@ -70,7 +70,7 @@ public class GraphicsTools {
 	}
 
 	public static BufferedImage generateTextImage(String text, Font font, Color c, int widthCutoff) {
-		if(widthCutoff <= 0) {
+		if (widthCutoff <= 0) {
 			System.err.println("Width cutoff has to be greater than 0");
 			return null;
 		}
@@ -118,7 +118,7 @@ public class GraphicsTools {
 		Rectangle textBounds = getStringBounds(g, sampleText, 0, 0);
 		return (int) (textBounds.getHeight() - textBounds.getMaxY());
 	}
-	
+
 	public static int getFontSampleMaxHeight(Font font) {
 		return GraphicsTools.getFontSampleDescent(font) + GraphicsTools.getFontSampleAscent(font);
 	}
@@ -220,32 +220,14 @@ public class GraphicsTools {
 		return output;
 	}
 
-	// loads image from filepath
-	// filepath is relative to this class
-	public static BufferedImage loadImage(String filepath) {
-		BufferedImage img = null;
-		InputStream is;
-
-		System.out.print("LOADING IMAGE: " + filepath);
-
-		try {
-			is = GraphicsTools.class.getResourceAsStream(filepath);
-			img = ImageIO.read(is);
-			System.out.println(" SUCCESS");
-		} catch (IOException e) {
-			System.out.println(" FAILED");
-		}
-
-		return img;
+	public static ArrayList<BufferedImage> loadAnimation(String filepath, int width, int height) {
+		BufferedImage animationPng = FileUtils.loadImage(filepath);
+		return GraphicsTools.loadAnimation(animationPng, width, height);
 	}
 
 	// loads images from spritesheet
-	// goes from top left to bottom right, going horizontally first
-	public static ArrayList<BufferedImage> loadAnimation(String filepath, int width, int height) {
-
+	public static ArrayList<BufferedImage> loadAnimation(BufferedImage animationPng, int width, int height) {
 		ArrayList<BufferedImage> animation = new ArrayList<BufferedImage>();
-
-		BufferedImage animationPng = GraphicsTools.loadImage(filepath);
 
 		int spritesheetHeight = animationPng.getHeight();
 		int spritesheetWidth = animationPng.getWidth();
@@ -257,7 +239,6 @@ public class GraphicsTools {
 				g.drawImage(animationPng, -(j * width), -(i * height), null);
 				animation.add(next);
 			}
-
 		}
 
 		return animation;

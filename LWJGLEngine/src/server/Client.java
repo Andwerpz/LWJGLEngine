@@ -10,8 +10,12 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public abstract class Client implements Runnable {
+
+	public static HashSet<Client> clients = new HashSet<>();
+
 	private boolean isRunning = true;
 	private Thread thread;
 
@@ -26,11 +30,14 @@ public abstract class Client implements Runnable {
 	private Socket socket;
 	private PacketListener packetListener;
 	private PacketSender packetSender;
-	
-	protected int ID;	//your client id assigned by the server
+
+	protected int ID; //your client id assigned by the server
 
 	public Client() {
 		this.packetSender = new PacketSender();
+
+		Client.clients.add(this);
+
 		this.start();
 	}
 
