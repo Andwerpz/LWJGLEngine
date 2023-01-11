@@ -116,7 +116,7 @@ public class TextField extends Input {
 
 		this.textMaterial = new Material(Color.WHITE);
 		this.hintTextMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
-		this.fieldText = new Text(0, 0, z + 1, width - (textLeftMargin + textRightMargin), hintText, font, this.hintTextMaterial, this.scene);
+		this.fieldText = new Text(0, 0, z + depthSpacing, width - (textLeftMargin + textRightMargin), hintText, font, this.hintTextMaterial, this.scene);
 		this.fieldText.setContentAlignmentStyle(Text.ALIGN_LEFT, Text.ALIGN_CENTER);
 
 		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
@@ -178,6 +178,10 @@ public class TextField extends Input {
 
 	public String getText() {
 		return this.text;
+	}
+
+	public void setText(String text) {
+		this.text = text;
 	}
 
 	public void keyPressed(int key) {

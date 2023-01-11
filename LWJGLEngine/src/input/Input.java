@@ -31,9 +31,14 @@ public abstract class Input extends UIElement {
 	@Override
 	protected void __kill() {
 		inputs.remove(this.sID);
-		long entityID = stringToEntityID.get(this.sID);
-		entityToStringID.remove(entityID);
-		stringToEntityID.remove(this.sID);
+		if (stringToEntityID.get(this.sID) == null) {
+			System.err.println("Can't find input : " + this.sID);
+		}
+		else {
+			long entityID = stringToEntityID.get(this.sID);
+			entityToStringID.remove(entityID);
+			stringToEntityID.remove(this.sID);
+		}
 		this.___kill();
 	}
 

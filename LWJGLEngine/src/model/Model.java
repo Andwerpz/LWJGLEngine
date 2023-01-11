@@ -378,7 +378,7 @@ public class Model {
 	public static void updateInstance(long ID, Mat4 mat4) {
 		Model model = IDtoModel.get(ID);
 		if (IDtoScene.get(ID) == null) {
-			System.out.println(ID);
+			System.err.println("Can't find model instance " + ID + " when updating");
 		}
 		int scene = IDtoScene.get(ID);
 		model.modelMats.get(scene).put(ID, mat4);

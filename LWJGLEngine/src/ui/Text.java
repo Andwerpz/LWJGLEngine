@@ -66,17 +66,17 @@ public class Text extends UIElement {
 		this.init(GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, new Material(color));
 	}
 
-	public Text(int x, int y, int z, String text, Font font, Material material, int scene) {
+	public Text(int x, int y, float z, String text, Font font, Material material, int scene) {
 		super(x, y, z, 0, 0, scene);
 		this.init(GraphicsTools.calculateTextWidth(text, font), text, font, material);
 	}
 
-	public Text(int x, int y, int z, int width, String text, Font font, Material material, int scene) {
+	public Text(int x, int y, float z, int width, String text, Font font, Material material, int scene) {
 		super(x, y, z, 0, 0, scene);
 		this.init(width, text, font, material);
 	}
 
-	public Text(int x, int y, int z, int width, String text, Font font, int fontSize, Color color, int scene) {
+	public Text(int x, int y, float z, int width, String text, Font font, int fontSize, Color color, int scene) {
 		super(x, y, z, 0, 0, scene);
 		Font derivedFont = FontUtils.deriveSize(fontSize, font);
 		this.init(width, text, derivedFont, new Material(color));
@@ -126,10 +126,12 @@ public class Text extends UIElement {
 		this.setContentAlignmentStyle(ALIGN_LEFT, ALIGN_BOTTOM);
 	}
 
+	@Override
 	public int getHeight() {
 		return this.height;
 	}
 
+	@Override
 	public int getWidth() {
 		return this.width;
 	}

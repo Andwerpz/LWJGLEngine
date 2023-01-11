@@ -32,18 +32,29 @@ public abstract class UIElement extends Entity {
 	public static final int ALIGN_BOTTOM = 3;
 	public static final int ALIGN_CENTER = 4;
 
+	protected static float depthSpacing = 0.001f;
+
+	//you can bind other ui elements to this one to align them to the bounding box of this ui element
+	//when you re-align this ui element, any elements that are bound to this one will be re-aligned. 
+	private ArrayList<UIElement> boundElements;
+
+	private boolean isBound = false;
+	private UIElement parentElement;
+
 	protected int scene;
 
 	private int horizontalAlignFrame, verticalAlignFrame;
 	private int xOffset, yOffset; //along with alignment style, determines reference coordinates for drawing
 
 	protected int horizontalAlignContent, verticalAlignContent;
-	protected int x, y, z; //reference coordinates for drawing
+	protected int x, y; //reference coordinates for drawing
+	protected float z; //needed as float for layering purposes
 	protected int width, height;
 
+	//denotes the bottom left point of the bounding rectangle for this ui element
 	protected int alignedX, alignedY;
 
-	public UIElement(int xOffset, int yOffset, int z, int width, int height, int scene) {
+	public UIElement(int xOffset, int yOffset, float z, int width, int height, int scene) {
 		this.horizontalAlignFrame = FROM_LEFT;
 		this.verticalAlignFrame = FROM_BOTTOM;
 
@@ -59,13 +70,20 @@ public abstract class UIElement extends Entity {
 
 		this.scene = scene;
 
+		this.boundElements = new ArrayList<>();
+
 		UIElement.uiElements.add(this);
 		UIElement.shouldAlignUIElements = true;
 	}
 
 	@Override
 	protected void _kill() {
+		this.unbind();
 		uiElements.remove(this);
+		for (int i = 0; i < this.boundElements.size(); i += 0) {
+			UIElement e = this.boundElements.get(i);
+			e.kill();
+		}
 		this.__kill();
 	}
 
@@ -122,45 +140,60 @@ public abstract class UIElement extends Entity {
 	public static void alignAllUIElements() {
 		System.out.println("ALIGN ALL UI ELEMENTS");
 		for (UIElement i : UIElement.uiElements) {
+			if (i.isBound) { //the parent will call on the bound element to be aligned. 
+				continue;
+			}
 			i.align();
 		}
 		UIElement.shouldAlignUIElements = false;
 	}
 
 	protected void alignFrame() {
+		int leftBorder = 0;
+		int rightBorder = Main.windowWidth;
+		int bottomBorder = 0;
+		int topBorder = Main.windowHeight;
+
+		if (this.isBound) {
+			leftBorder = this.parentElement.getLeftBorder();
+			rightBorder = this.parentElement.getRightBorder();
+			bottomBorder = this.parentElement.getBottomBorder();
+			topBorder = this.parentElement.getTopBorder();
+		}
+
 		switch (this.horizontalAlignFrame) {
 		case FROM_LEFT:
-			this.x = this.xOffset;
+			this.x = this.xOffset + leftBorder;
 			break;
 
 		case FROM_RIGHT:
-			this.x = Main.windowWidth - this.xOffset;
+			this.x = rightBorder - this.xOffset;
 			break;
 
 		case FROM_CENTER_LEFT:
-			this.x = Main.windowWidth / 2 - this.xOffset;
+			this.x = leftBorder + (rightBorder - leftBorder) / 2 - this.xOffset;
 			break;
 
 		case FROM_CENTER_RIGHT:
-			this.x = Main.windowWidth / 2 + this.xOffset;
+			this.x = leftBorder + (rightBorder - leftBorder) / 2 + this.xOffset;
 			break;
 		}
 
 		switch (this.verticalAlignFrame) {
 		case FROM_BOTTOM:
-			this.y = this.yOffset;
+			this.y = this.yOffset + bottomBorder;
 			break;
 
 		case FROM_TOP:
-			this.y = Main.windowHeight - this.yOffset;
+			this.y = topBorder - this.yOffset;
 			break;
 
 		case FROM_CENTER_BOTTOM:
-			this.y = Main.windowHeight / 2 - this.yOffset;
+			this.y = bottomBorder + (topBorder - bottomBorder) / 2 - this.yOffset;
 			break;
 
 		case FROM_CENTER_TOP:
-			this.y = Main.windowHeight / 2 + this.yOffset;
+			this.y = bottomBorder + (topBorder - bottomBorder) / 2 + this.yOffset;
 			break;
 		}
 	}
@@ -196,6 +229,30 @@ public abstract class UIElement extends Entity {
 		this._alignContents();
 	}
 
+	public int getLeftBorder() {
+		return this.alignedX;
+	}
+
+	public int getRightBorder() {
+		return this.alignedX + this.width;
+	}
+
+	public int getBottomBorder() {
+		return this.alignedY;
+	}
+
+	public int getTopBorder() {
+		return this.alignedY + this.height;
+	}
+
+	public int getWidth() {
+		return this.width;
+	}
+
+	public int getHeight() {
+		return this.height;
+	}
+
 	public int getScene() {
 		return this.scene;
 	}
@@ -205,6 +262,10 @@ public abstract class UIElement extends Entity {
 	public void align() {
 		this.alignFrame();
 		this.alignContents();
+
+		for (UIElement e : this.boundElements) {
+			e.align();
+		}
 	}
 
 	@Override
@@ -216,6 +277,40 @@ public abstract class UIElement extends Entity {
 
 	public int getYOffset() {
 		return this.yOffset;
+	}
+
+	public void setZ(float z) {
+		this.z = z;
+
+		for (UIElement e : this.boundElements) {
+			e.setZ(this.z + depthSpacing);
+		}
+	}
+
+	//binds this element to another element
+	public void bind(UIElement e) {
+		this.isBound = true;
+		this.parentElement = e;
+		e.boundElements.add(this);
+
+		this.setZ(this.z + depthSpacing);
+	}
+
+	//if this element has a parent element, it unbinds itself
+	public void unbind() {
+		if (this.isBound()) {
+			this.getParent().boundElements.remove(this);
+			this.isBound = false;
+			this.parentElement = null;
+		}
+	}
+
+	public boolean isBound() {
+		return this.isBound;
+	}
+
+	public UIElement getParent() {
+		return this.isBound() ? this.parentElement : null;
 	}
 
 }

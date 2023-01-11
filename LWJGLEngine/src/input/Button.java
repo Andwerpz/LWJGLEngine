@@ -28,12 +28,10 @@ import util.Vec4;
 
 public class Button extends Input {
 
-	// for now, each button has it's own button model. Later, i would like it so
-	// that all buttons
+	// for now, each button has it's own button model. Later, i would like it so that all buttons
 	// of the same shape and size can share one model, or something like that.
 
-	// the button isn't responsible for checking if it is pressed, another class,
-	// probably ButtonManager
+	// the button isn't responsible for checking if it is pressed, another class, probably ButtonManager
 	// or InputManager should do that, and swap textures.
 
 	private long buttonInnerID;
@@ -58,12 +56,12 @@ public class Button extends Input {
 		this.pressedTextMaterial = new Material(Color.YELLOW);
 		this.releasedTextMaterial = new Material(Color.WHITE);
 
-		this.buttonText = new Text(0, 0, this.z + 1, text, font, this.releasedTextMaterial, scene);
+		this.buttonText = new Text(0, 0, this.z + depthSpacing, text, font, this.releasedTextMaterial, scene);
 		this.buttonText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 
 		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
 		this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
-		this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.0f));
+		this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.1f));
 
 		this.buttonInnerID = FilledRectangle.DEFAULT_RECTANGLE.addRectangle(this.x, this.y, this.z, this.width, this.height, this.scene);
 		this.registerModelInstance(this.buttonInnerID);
