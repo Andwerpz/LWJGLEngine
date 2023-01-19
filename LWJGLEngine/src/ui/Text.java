@@ -43,62 +43,62 @@ public class Text extends UIElement {
 	private boolean textWrapping = false;
 	private int lineSpacing = 3; //in pixels
 
-	public Text(int x, int y, String text, int fontSize, Material material, int scene) {
+	public Text(float x, float y, String text, int fontSize, Material material, int scene) {
 		super(x, y, 0, 0, 0, scene);
 		Font derivedFont = new Font("Dialogue", Font.PLAIN, fontSize);
 		this.init(GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material);
 	}
 
-	public Text(int x, int y, String text, Font font, int fontSize, Material material, int scene) {
+	public Text(float x, float y, String text, Font font, int fontSize, Material material, int scene) {
 		super(x, y, 0, 0, 0, scene);
 		Font derivedFont = FontUtils.deriveSize(fontSize, font);
 		this.init(GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material);
 	}
 
-	public Text(int x, int y, String text, Font font, Color color, int scene) {
+	public Text(float x, float y, String text, Font font, Color color, int scene) {
 		super(x, y, 0, 0, 0, scene);
 		this.init(GraphicsTools.calculateTextWidth(text, font), text, font, new Material(color));
 	}
 
-	public Text(int x, int y, String text, Font font, int fontSize, Color color, int scene) {
+	public Text(float x, float y, String text, Font font, int fontSize, Color color, int scene) {
 		super(x, y, 0, 0, 0, scene);
 		Font derivedFont = FontUtils.deriveSize(fontSize, font);
 		this.init(GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, new Material(color));
 	}
 
-	public Text(int x, int y, float z, String text, Font font, Material material, int scene) {
+	public Text(float x, float y, float z, String text, Font font, Material material, int scene) {
 		super(x, y, z, 0, 0, scene);
 		this.init(GraphicsTools.calculateTextWidth(text, font), text, font, material);
 	}
 
-	public Text(int x, int y, float z, int width, String text, Font font, Material material, int scene) {
+	public Text(float x, float y, float z, float width, String text, Font font, Material material, int scene) {
 		super(x, y, z, 0, 0, scene);
 		this.init(width, text, font, material);
 	}
 
-	public Text(int x, int y, float z, int width, String text, Font font, int fontSize, Color color, int scene) {
+	public Text(float x, float y, float z, float width, String text, Font font, int fontSize, Color color, int scene) {
 		super(x, y, z, 0, 0, scene);
 		Font derivedFont = FontUtils.deriveSize(fontSize, font);
 		this.init(width, text, derivedFont, new Material(color));
 	}
 
-	public Text(int x, int y, String text, Font font, Material material, int scene) {
+	public Text(float x, float y, String text, Font font, Material material, int scene) {
 		super(x, y, 0, 0, 0, scene);
 		this.init(GraphicsTools.calculateTextWidth(text, font), text, font, material);
 	}
 
-	private void init(int width, String text, Font font, Material material) {
+	private void init(float width, String text, Font font, Material material) {
 		this.init(width, GraphicsTools.getFontSampleAscent(font), text, font, material);
 	}
 
-	private void init(int width, int height, String text, Font font, Material textMaterial) {
+	private void init(float width, float height, String text, Font font, Material textMaterial) {
 		this.text = text;
 		this.font = font;
 		this.fontSize = font.getSize();
 
 		this.textHorizontalMargin = 0;
 		this.textVerticalMargin = 0;
-		this.maxTextWidth = width; //text will get cut off after this
+		this.maxTextWidth = (int) width; //text will get cut off after this
 
 		//width and height of the background rectangle
 		this.width = this.maxTextWidth + textHorizontalMargin * 2;
@@ -124,16 +124,6 @@ public class Text extends UIElement {
 		this.updateModelInstance(this.textRectangleID, textMaterial);
 
 		this.setContentAlignmentStyle(ALIGN_LEFT, ALIGN_BOTTOM);
-	}
-
-	@Override
-	public int getHeight() {
-		return this.height;
-	}
-
-	@Override
-	public int getWidth() {
-		return this.width;
 	}
 
 	@Override

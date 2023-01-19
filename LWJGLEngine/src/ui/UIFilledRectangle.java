@@ -10,13 +10,13 @@ public class UIFilledRectangle extends UIElement {
 
 	private long rectangleID;
 
-	public UIFilledRectangle(int xOffset, int yOffset, float z, int width, int height, int scene) {
+	public UIFilledRectangle(float xOffset, float yOffset, float z, float width, float height, int scene) {
 		super(xOffset, yOffset, z, width, height, scene);
 		this.rectangleID = FilledRectangle.DEFAULT_RECTANGLE.addRectangle(xOffset, yOffset, width, height, scene);
 		this.registerModelInstance(this.rectangleID);
 	}
 
-	public UIFilledRectangle(int xOffset, int yOffset, float z, int width, int height, FilledRectangle rectangle, int scene) {
+	public UIFilledRectangle(float xOffset, float yOffset, float z, float width, float height, FilledRectangle rectangle, int scene) {
 		super(xOffset, yOffset, z, width, height, scene);
 		this.rectangleID = rectangle.addRectangle(xOffset, yOffset, width, height, scene);
 		this.registerModelInstance(this.rectangleID);

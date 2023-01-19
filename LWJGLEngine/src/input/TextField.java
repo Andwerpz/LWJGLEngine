@@ -171,7 +171,7 @@ public class TextField extends Input {
 		Mat4 modelMat4 = Mat4.scale(this.width, this.height, 1).mul(Mat4.translate(new Vec3(this.alignedX, this.alignedY, this.z)));
 		this.updateModelInstance(this.fieldInnerID, modelMat4);
 
-		int centerY = alignedY + this.height / 2;
+		float centerY = alignedY + this.height / 2;
 		this.fieldText.setFrameAlignment(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM, this.alignedX + this.textLeftMargin, centerY);
 		this.fieldText.align();
 	}

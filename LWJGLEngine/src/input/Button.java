@@ -41,7 +41,7 @@ public class Button extends Input {
 	private Material pressedTextMaterial, releasedTextMaterial, hoveredTextMaterial;
 	private Material currentMaterial;
 
-	public Button(int x, int y, int width, int height, String sID, String text, Font font, int fontSize, int scene) {
+	public Button(float x, float y, float width, float height, String sID, String text, Font font, int fontSize, int scene) {
 		super(x, y, 0, width, height, sID, scene);
 		this.init(text, FontUtils.deriveSize(fontSize, font));
 	}
@@ -80,8 +80,8 @@ public class Button extends Input {
 		Mat4 modelMat4 = Mat4.scale(this.width, this.height, 1).mul(Mat4.translate(new Vec3(this.alignedX, this.alignedY, this.z)));
 		this.updateModelInstance(this.buttonInnerID, modelMat4);
 
-		int centerX = alignedX + this.width / 2;
-		int centerY = alignedY + this.height / 2;
+		float centerX = alignedX + this.width / 2;
+		float centerY = alignedY + this.height / 2;
 		this.buttonText.setFrameAlignment(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM, centerX, centerY);
 		this.buttonText.align();
 	}

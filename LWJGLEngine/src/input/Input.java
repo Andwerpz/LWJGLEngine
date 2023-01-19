@@ -16,7 +16,7 @@ public abstract class Input extends UIElement {
 
 	private String sID;
 
-	public Input(int x, int y, int z, int width, int height, String sID, int scene) {
+	public Input(float x, float y, float z, float width, float height, String sID, int scene) {
 		super(x, y, z, width, height, scene);
 
 		this.sID = sID;

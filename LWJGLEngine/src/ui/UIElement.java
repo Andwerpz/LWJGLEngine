@@ -44,17 +44,20 @@ public abstract class UIElement extends Entity {
 	protected int scene;
 
 	private int horizontalAlignFrame, verticalAlignFrame;
-	private int xOffset, yOffset; //along with alignment style, determines reference coordinates for drawing
+	private float xOffset, yOffset; //along with alignment style, determines reference coordinates for drawing
 
 	protected int horizontalAlignContent, verticalAlignContent;
-	protected int x, y; //reference coordinates for drawing
+	protected float x, y; //reference coordinates for drawing
 	protected float z; //needed as float for layering purposes
-	protected int width, height;
+	protected float width, height;
 
 	//denotes the bottom left point of the bounding rectangle for this ui element
-	protected int alignedX, alignedY;
+	//we want this to be int as opposed to float to not get any weird interpixel sampling issues
+	//on ui elements that are constantly being resized tho, you might want them to remain as floats. 
+	protected float alignedX, alignedY;
+	private boolean clampAlignedCoordinatesToInt = true;
 
-	public UIElement(int xOffset, int yOffset, float z, int width, int height, int scene) {
+	public UIElement(float xOffset, float yOffset, float z, float width, float height, int scene) {
 		this.horizontalAlignFrame = FROM_LEFT;
 		this.verticalAlignFrame = FROM_BOTTOM;
 
@@ -107,13 +110,13 @@ public abstract class UIElement extends Entity {
 		this.alignFrame();
 	}
 
-	public void setFrameAlignmentOffset(int xOffset, int yOffset) {
+	public void setFrameAlignmentOffset(float xOffset, float yOffset) {
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
 		this.alignFrame();
 	}
 
-	public void setFrameAlignment(int horizontalAlign, int verticalAlign, int xOffset, int yOffset) {
+	public void setFrameAlignment(int horizontalAlign, int verticalAlign, float xOffset, float yOffset) {
 		this.horizontalAlignFrame = horizontalAlign;
 		this.verticalAlignFrame = verticalAlign;
 		this.xOffset = xOffset;
@@ -127,12 +130,12 @@ public abstract class UIElement extends Entity {
 		this.alignContents();
 	}
 
-	public void setWidth(int width) {
+	public void setWidth(float width) {
 		this.width = width;
 		this.alignContents();
 	}
 
-	public void setHeight(int height) {
+	public void setHeight(float height) {
 		this.height = height;
 		this.alignContents();
 	}
@@ -149,10 +152,10 @@ public abstract class UIElement extends Entity {
 	}
 
 	protected void alignFrame() {
-		int leftBorder = 0;
-		int rightBorder = Main.windowWidth;
-		int bottomBorder = 0;
-		int topBorder = Main.windowHeight;
+		float leftBorder = 0;
+		float rightBorder = Main.windowWidth;
+		float bottomBorder = 0;
+		float topBorder = Main.windowHeight;
 
 		if (this.isBound) {
 			leftBorder = this.parentElement.getLeftBorder();
@@ -201,55 +204,65 @@ public abstract class UIElement extends Entity {
 	protected void alignContents() {
 		switch (this.horizontalAlignContent) {
 		case ALIGN_CENTER:
-			this.alignedX = this.x - this.width / 2;
+			this.alignedX = (this.x - this.width / 2);
 			break;
 
 		case ALIGN_RIGHT:
-			this.alignedX = this.x - this.width;
+			this.alignedX = (this.x - this.width);
 			break;
 
 		case ALIGN_LEFT:
-			this.alignedX = this.x;
+			this.alignedX = (this.x);
 			break;
 		}
 
 		switch (this.verticalAlignContent) {
 		case ALIGN_CENTER:
-			this.alignedY = this.y - this.height / 2;
+			this.alignedY = (this.y - this.height / 2);
 			break;
 
 		case ALIGN_TOP:
-			this.alignedY = this.y - this.height;
+			this.alignedY = (this.y - this.height);
 			break;
 
 		case ALIGN_BOTTOM:
-			this.alignedY = this.y;
+			this.alignedY = (this.y);
 			break;
 		}
+
+		if (this.clampAlignedCoordinatesToInt) {
+			this.alignedX = (int) alignedX;
+			this.alignedY = (int) alignedY;
+		}
+
 		this._alignContents();
 	}
 
-	public int getLeftBorder() {
+	public void setClampAlignedCoordinatesToInt(boolean b) {
+		this.clampAlignedCoordinatesToInt = b;
+	}
+
+	public float getLeftBorder() {
 		return this.alignedX;
 	}
 
-	public int getRightBorder() {
+	public float getRightBorder() {
 		return this.alignedX + this.width;
 	}
 
-	public int getBottomBorder() {
+	public float getBottomBorder() {
 		return this.alignedY;
 	}
 
-	public int getTopBorder() {
+	public float getTopBorder() {
 		return this.alignedY + this.height;
 	}
 
-	public int getWidth() {
+	public float getWidth() {
 		return this.width;
 	}
 
-	public int getHeight() {
+	public float getHeight() {
 		return this.height;
 	}
 
@@ -271,11 +284,11 @@ public abstract class UIElement extends Entity {
 	@Override
 	protected abstract void update();
 
-	public int getXOffset() {
+	public float getXOffset() {
 		return this.xOffset;
 	}
 
-	public int getYOffset() {
+	public float getYOffset() {
 		return this.yOffset;
 	}
 
@@ -289,6 +302,10 @@ public abstract class UIElement extends Entity {
 
 	//binds this element to another element
 	public void bind(UIElement e) {
+		if (this.isBound()) {
+			this.unbind();
+		}
+
 		this.isBound = true;
 		this.parentElement = e;
 		e.boundElements.add(this);
