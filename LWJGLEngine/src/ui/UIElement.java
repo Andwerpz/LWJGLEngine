@@ -4,13 +4,27 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 import entity.Entity;
+import graphics.Material;
+import graphics.TextureMaterial;
 import main.Main;
+import model.FilledRectangle;
+import model.Model;
+import util.Mat4;
 
 public abstract class UIElement extends Entity {
 	//am i overengineering ui element alignment?
 
 	//stores all UIElement entities, with alignment information. 
 	//in the case of window resizing, a static method can re-align all ui elements by modifying x y coordinates. 
+
+	//TODO proper inheritance of transforms from parent to child
+	//each ui element should just consist of one bounding rectangle, and references to all of it's children elements. 
+	//top level elements will be relative to the screen. 
+	//child elements are relative to their parents. This is enforced through the generation of the alignment coordinates. 
+
+	//to inherit transform matrices, it's child inherited = child matrix * parent matrix. 
+
+	//ui elements are in charge of creating their own textures, and or creating child ui elements. 
 
 	private static HashSet<UIElement> uiElements = new HashSet<UIElement>();
 	public static boolean shouldAlignUIElements = false;
@@ -43,6 +57,13 @@ public abstract class UIElement extends Entity {
 
 	protected int scene;
 
+	//this refers to the bounding rect. 
+	private long modelID;
+	private Mat4 modelMat4;
+
+	private FilledRectangle boundingRect;
+	private boolean hasCustomBoundingRect; //if it doesn't, then we don't want it to assign texture materials. 
+
 	private int horizontalAlignFrame, verticalAlignFrame;
 	private float xOffset, yOffset; //along with alignment style, determines reference coordinates for drawing
 
@@ -57,7 +78,18 @@ public abstract class UIElement extends Entity {
 	protected float alignedX, alignedY;
 	private boolean clampAlignedCoordinatesToInt = true;
 
+	protected float rotationRads;
+
 	public UIElement(float xOffset, float yOffset, float z, float width, float height, int scene) {
+		this.init(xOffset, yOffset, z, width, height, FilledRectangle.DEFAULT_RECTANGLE, scene);
+	}
+
+	public UIElement(float xOffset, float yOffset, float z, float width, float height, FilledRectangle boundingRect, int scene) {
+		this.hasCustomBoundingRect = true;
+		this.init(xOffset, yOffset, z, width, height, boundingRect, scene);
+	}
+
+	private void init(float xOffset, float yOffset, float z, float width, float height, FilledRectangle boundingRect, int scene) {
 		this.horizontalAlignFrame = FROM_LEFT;
 		this.verticalAlignFrame = FROM_BOTTOM;
 
@@ -70,6 +102,13 @@ public abstract class UIElement extends Entity {
 
 		this.width = width;
 		this.height = height;
+
+		this.boundingRect = boundingRect;
+
+		//just a dummy rectangle for now. We'll set it's transformations manually thru Model interface
+		this.modelID = this.boundingRect.addRectangle(0, 0, 1, 1, scene);
+		this.modelMat4 = Mat4.identity();
+		this.registerModelInstance(this.modelID);
 
 		this.scene = scene;
 
@@ -102,6 +141,30 @@ public abstract class UIElement extends Entity {
 		for (UIElement i : toRemove) {
 			i.kill();
 		}
+	}
+
+	protected Mat4 getTranslateMat4() {
+		Mat4 ret = Mat4.identity();
+		ret.muli(Mat4.translate(-this.width / 2, -this.height / 2, 0));
+		ret.muli(Mat4.rotateZ(this.rotationRads));
+		ret.muli(Mat4.translate(this.width / 2, this.height / 2, 0));
+		ret.muli(Mat4.translate(this.alignedX, this.alignedY, this.z));
+		if (this.isBound) {
+			ret.muli(this.getParent().getTranslateMat4());
+		}
+		return ret;
+	}
+
+	protected Mat4 getScaleMat4() {
+		return Mat4.scale(this.width, this.height, 1);
+	}
+
+	public Mat4 getModelMat4() {
+		return this.modelMat4;
+	}
+
+	public long getModelID() {
+		return this.modelID;
 	}
 
 	public void setFrameAlignmentStyle(int horizontalAlign, int verticalAlign) {
@@ -140,6 +203,23 @@ public abstract class UIElement extends Entity {
 		this.alignContents();
 	}
 
+	public void setRotationRads(float rads) {
+		this.rotationRads = rads;
+		this.alignContents();
+	}
+
+	public void setMaterial(Material m) {
+		this.updateModelInstance(this.modelID, m);
+	}
+
+	public void setTextureMaterial(TextureMaterial m) {
+		if (!this.hasCustomBoundingRect) {
+			System.err.println("Should not change texture material of default filled rect");
+			return;
+		}
+		this.boundingRect.setTextureMaterial(m);
+	}
+
 	public static void alignAllUIElements() {
 		System.out.println("ALIGN ALL UI ELEMENTS");
 		for (UIElement i : UIElement.uiElements) {
@@ -152,51 +232,47 @@ public abstract class UIElement extends Entity {
 	}
 
 	protected void alignFrame() {
-		float leftBorder = 0;
-		float rightBorder = Main.windowWidth;
-		float bottomBorder = 0;
-		float topBorder = Main.windowHeight;
+		float frameWidth = Main.windowWidth;
+		float frameHeight = Main.windowHeight;
 
 		if (this.isBound) {
-			leftBorder = this.parentElement.getLeftBorder();
-			rightBorder = this.parentElement.getRightBorder();
-			bottomBorder = this.parentElement.getBottomBorder();
-			topBorder = this.parentElement.getTopBorder();
+			frameWidth = this.parentElement.getWidth();
+			frameHeight = this.parentElement.getHeight();
 		}
 
 		switch (this.horizontalAlignFrame) {
 		case FROM_LEFT:
-			this.x = this.xOffset + leftBorder;
+			this.x = this.xOffset;
 			break;
 
 		case FROM_RIGHT:
-			this.x = rightBorder - this.xOffset;
+			this.x = frameWidth - this.xOffset;
 			break;
 
 		case FROM_CENTER_LEFT:
-			this.x = leftBorder + (rightBorder - leftBorder) / 2 - this.xOffset;
+			this.x = frameWidth / 2 - this.xOffset;
 			break;
 
 		case FROM_CENTER_RIGHT:
-			this.x = leftBorder + (rightBorder - leftBorder) / 2 + this.xOffset;
+			this.x = frameWidth / 2 + this.xOffset;
 			break;
 		}
 
 		switch (this.verticalAlignFrame) {
 		case FROM_BOTTOM:
-			this.y = this.yOffset + bottomBorder;
+			this.y = this.yOffset;
 			break;
 
 		case FROM_TOP:
-			this.y = topBorder - this.yOffset;
+			this.y = frameHeight - this.yOffset;
 			break;
 
 		case FROM_CENTER_BOTTOM:
-			this.y = bottomBorder + (topBorder - bottomBorder) / 2 - this.yOffset;
+			this.y = frameHeight / 2 - this.yOffset;
 			break;
 
 		case FROM_CENTER_TOP:
-			this.y = bottomBorder + (topBorder - bottomBorder) / 2 + this.yOffset;
+			this.y = frameHeight / 2 + this.yOffset;
 			break;
 		}
 	}
@@ -236,12 +312,21 @@ public abstract class UIElement extends Entity {
 		}
 
 		this._alignContents();
+
+		this.modelMat4 = this.getScaleMat4().muli(this.getTranslateMat4());
+
+		this.updateModelInstance(this.modelID, this.modelMat4);
 	}
+
+	//idk, might regenerate some texture, still needed
+	//obvious case is text re-alignment on changing align style
+	protected abstract void _alignContents();
 
 	public void setClampAlignedCoordinatesToInt(boolean b) {
 		this.clampAlignedCoordinatesToInt = b;
 	}
 
+	//these should be absolute coordinates, (relative to the scene origin)
 	public float getLeftBorder() {
 		return this.alignedX;
 	}
@@ -266,11 +351,13 @@ public abstract class UIElement extends Entity {
 		return this.height;
 	}
 
+	public float getRotationRads() {
+		return this.rotationRads;
+	}
+
 	public int getScene() {
 		return this.scene;
 	}
-
-	protected abstract void _alignContents();
 
 	public void align() {
 		this.alignFrame();

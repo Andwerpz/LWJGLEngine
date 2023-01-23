@@ -190,8 +190,6 @@ public class GameState extends State {
 		Input.inputsHovered(uiScreen.getEntityIDAtMouse());
 
 		// -- UPDATES --
-		Entity.updateEntities();
-		Model.updateModels();
 		updateCamera();
 
 		// -- AUDIO --

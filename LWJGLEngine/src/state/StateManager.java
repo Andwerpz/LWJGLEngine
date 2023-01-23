@@ -3,11 +3,13 @@ package state;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
 
+import entity.Entity;
 import graphics.Framebuffer;
 import graphics.Shader;
 import graphics.Texture;
 import input.Input;
 import main.Main;
+import model.Model;
 import player.Player;
 import screen.ScreenQuad;
 import util.Vec3;
@@ -53,7 +55,13 @@ public class StateManager {
 		if (this.activeState != null) {
 			this.activeState.update();
 		}
+
 		this.loadState.update();
+
+		//normal updating stuff
+		Entity.updateEntities();
+		Model.updateModels();
+
 		if (this.loadState.isFinishedLoading() && this.activeState != this.loadState.getNextState()) {
 			if (this.activeState != null) {
 				this.activeState.kill();

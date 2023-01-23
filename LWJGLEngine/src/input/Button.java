@@ -27,10 +27,6 @@ import util.Vec3;
 import util.Vec4;
 
 public class Button extends Input {
-
-	// for now, each button has it's own button model. Later, i would like it so that all buttons
-	// of the same shape and size can share one model, or something like that.
-
 	// the button isn't responsible for checking if it is pressed, another class, probably ButtonManager
 	// or InputManager should do that, and swap textures.
 
@@ -57,33 +53,27 @@ public class Button extends Input {
 		this.releasedTextMaterial = new Material(Color.WHITE);
 
 		this.buttonText = new Text(0, 0, this.z + depthSpacing, text, font, this.releasedTextMaterial, scene);
+		this.buttonText.setFrameAlignmentStyle(UIElement.FROM_CENTER_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.buttonText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
+		this.buttonText.bind(this);
 
 		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
 		this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
 		this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.1f));
 
-		this.buttonInnerID = FilledRectangle.DEFAULT_RECTANGLE.addRectangle(this.x, this.y, this.z, this.width, this.height, this.scene);
-		this.registerModelInstance(this.buttonInnerID);
-		this.updateModelInstance(this.buttonInnerID, releasedMaterial);
+		this.setMaterial(this.releasedMaterial);
 
 		this.currentMaterial = this.releasedMaterial;
 	}
 
 	@Override
 	protected void ___kill() {
-		this.buttonText.kill();
+
 	}
 
 	@Override
 	protected void _alignContents() {
-		Mat4 modelMat4 = Mat4.scale(this.width, this.height, 1).mul(Mat4.translate(new Vec3(this.alignedX, this.alignedY, this.z)));
-		this.updateModelInstance(this.buttonInnerID, modelMat4);
 
-		float centerX = alignedX + this.width / 2;
-		float centerY = alignedY + this.height / 2;
-		this.buttonText.setFrameAlignment(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM, centerX, centerY);
-		this.buttonText.align();
 	}
 
 	@Override
@@ -104,7 +94,7 @@ public class Button extends Input {
 		}
 		if (this.currentMaterial != nextMaterial) {
 			this.currentMaterial = nextMaterial;
-			this.updateModelInstance(this.buttonInnerID, this.currentMaterial);
+			this.setMaterial(nextMaterial);
 		}
 	}
 

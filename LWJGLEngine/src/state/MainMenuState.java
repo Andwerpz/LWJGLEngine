@@ -142,8 +142,6 @@ public class MainMenuState extends State {
 	public void update() {
 		Input.inputsHovered(uiScreen.getEntityIDAtMouse());
 
-		Entity.updateEntities();
-		Model.updateModels();
 		updateCamera();
 	}
 

@@ -8,40 +8,38 @@ import util.Mat4;
 
 public class UIFilledRectangle extends UIElement {
 
-	private long rectangleID;
+	//this is pretty much deprecated. 
+	//base UIElement has all this functionality. 
+
+	//still here since it's used alot in the project
+
+	//clockwise rotation. 
+	//TODO make general rotation for ui elements. 
+	//inheriting rotation is going to be a challenge. 
+	//probably will have to do it with some sort of binding 
+	private float rotationRads;
 
 	public UIFilledRectangle(float xOffset, float yOffset, float z, float width, float height, int scene) {
 		super(xOffset, yOffset, z, width, height, scene);
-		this.rectangleID = FilledRectangle.DEFAULT_RECTANGLE.addRectangle(xOffset, yOffset, width, height, scene);
-		this.registerModelInstance(this.rectangleID);
 	}
 
 	public UIFilledRectangle(float xOffset, float yOffset, float z, float width, float height, FilledRectangle rectangle, int scene) {
-		super(xOffset, yOffset, z, width, height, scene);
-		this.rectangleID = rectangle.addRectangle(xOffset, yOffset, width, height, scene);
-		this.registerModelInstance(this.rectangleID);
-	}
-
-	public void setMaterial(Material m) {
-		this.updateModelInstance(this.rectangleID, m);
-	}
-
-	public void setTextureMaterial(TextureMaterial m) {
-		Model rect = Model.getModel(rectangleID);
-		rect.setTextureMaterial(m);
+		super(xOffset, yOffset, z, width, height, rectangle, scene);
 	}
 
 	@Override
 	protected void __kill() {
+
 	}
 
 	@Override
 	protected void _alignContents() {
-		this.updateModelInstance(this.rectangleID, Mat4.scale(this.width, this.height, 1).mul(Mat4.translate(this.alignedX, this.alignedY, this.z)));
+
 	}
 
 	@Override
 	protected void update() {
+
 	}
 
 }

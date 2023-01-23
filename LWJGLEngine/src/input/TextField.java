@@ -83,7 +83,7 @@ public class TextField extends Input {
 		}
 	};
 
-	private long fieldInnerID;
+	//private long fieldInnerID;
 	private Text fieldText;
 
 	private String text, hintText;
@@ -116,17 +116,18 @@ public class TextField extends Input {
 
 		this.textMaterial = new Material(Color.WHITE);
 		this.hintTextMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
-		this.fieldText = new Text(0, 0, z + depthSpacing, width - (textLeftMargin + textRightMargin), hintText, font, this.hintTextMaterial, this.scene);
-		this.fieldText.setContentAlignmentStyle(Text.ALIGN_LEFT, Text.ALIGN_CENTER);
+
+		this.fieldText = new Text(textLeftMargin, 0, z + depthSpacing, width - (textLeftMargin + textRightMargin), hintText, font, this.hintTextMaterial, this.scene);
+		this.fieldText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
+		this.fieldText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
+		this.fieldText.bind(this);
 
 		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
 		this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
 		this.selectedMaterial = new Material(new Vec4(0, 0, 0, 0.4f));
 		this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.15f));
 
-		this.fieldInnerID = FilledRectangle.DEFAULT_RECTANGLE.addRectangle(x, y, z, width, height, scene);
-		this.registerModelInstance(this.fieldInnerID);
-		this.updateModelInstance(this.fieldInnerID, this.releasedMaterial);
+		this.setMaterial(this.releasedMaterial);
 	}
 
 	@Override
@@ -147,16 +148,17 @@ public class TextField extends Input {
 		}
 		if (this.currentMaterial != nextMaterial) {
 			this.currentMaterial = nextMaterial;
-			this.updateModelInstance(this.fieldInnerID, this.currentMaterial);
+			this.setMaterial(this.currentMaterial);
+			//this.updateModelInstance(this.fieldInnerID, this.currentMaterial);
 		}
 
 		// -- TEXT --
 		if (this.text.length() == 0) {
-			this.fieldText.setTextMaterial(this.hintTextMaterial);
+			this.fieldText.setMaterial(this.hintTextMaterial);
 			this.fieldText.setText(this.hintText);
 		}
 		else {
-			this.fieldText.setTextMaterial(this.textMaterial);
+			this.fieldText.setMaterial(this.textMaterial);
 			this.fieldText.setText(this.text);
 		}
 	}
@@ -168,12 +170,7 @@ public class TextField extends Input {
 
 	@Override
 	protected void _alignContents() {
-		Mat4 modelMat4 = Mat4.scale(this.width, this.height, 1).mul(Mat4.translate(new Vec3(this.alignedX, this.alignedY, this.z)));
-		this.updateModelInstance(this.fieldInnerID, modelMat4);
 
-		float centerY = alignedY + this.height / 2;
-		this.fieldText.setFrameAlignment(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM, this.alignedX + this.textLeftMargin, centerY);
-		this.fieldText.align();
 	}
 
 	public String getText() {
