@@ -66,13 +66,13 @@ public class PacketListener implements Runnable {
 		return this.readPtr < this.packet.length;
 	}
 
-	public byte readByte() {
+	public byte readByte() throws IOException {
 		byte ans = this.packet[this.readPtr];
 		this.readPtr++;
 		return ans;
 	}
 
-	public byte[] readNBytes(int n) {
+	public byte[] readNBytes(int n) throws IOException {
 		byte[] ans = new byte[n];
 		for (int i = 0; i < n; i++) {
 			ans[i] = this.readByte();
@@ -80,7 +80,7 @@ public class PacketListener implements Runnable {
 		return ans;
 	}
 
-	public int readInt() {
+	public int readInt() throws IOException {
 		int ans = 0;
 		for (int i = 0; i < 4; i++) {
 			ans <<= 8;
@@ -89,7 +89,7 @@ public class PacketListener implements Runnable {
 		return ans;
 	}
 
-	public int[] readNInts(int n) {
+	public int[] readNInts(int n) throws IOException {
 		int[] ans = new int[n];
 		for (int i = 0; i < n; i++) {
 			ans[i] = this.readInt();
@@ -97,11 +97,11 @@ public class PacketListener implements Runnable {
 		return ans;
 	}
 
-	public float readFloat() {
+	public float readFloat() throws IOException {
 		return Float.intBitsToFloat(this.readInt());
 	}
 
-	public float[] readNFloats(int n) {
+	public float[] readNFloats(int n) throws IOException {
 		float[] ans = new float[n];
 		for (int i = 0; i < n; i++) {
 			ans[i] = this.readFloat();
@@ -109,15 +109,15 @@ public class PacketListener implements Runnable {
 		return ans;
 	}
 
-	public Vec3 readVec3() {
+	public Vec3 readVec3() throws IOException {
 		return new Vec3(this.readFloat(), this.readFloat(), this.readFloat());
 	}
 
-	public char readChar() {
+	public char readChar() throws IOException {
 		return (char) this.readByte();
 	}
 
-	public char[] readNChars(int n) {
+	public char[] readNChars(int n) throws IOException {
 		char[] ans = new char[n];
 		for (int i = 0; i < n; i++) {
 			ans[i] = this.readChar();
@@ -125,11 +125,11 @@ public class PacketListener implements Runnable {
 		return ans;
 	}
 
-	public String readString(int len) {
+	public String readString(int len) throws IOException {
 		return new String(this.readNChars(len));
 	}
 
-	public String readSectionHeader() {
+	public String readSectionHeader() throws IOException {
 		int len = this.readInt();
 		String sectionName = this.readString(len);
 		this.sectionElementAmt = this.readInt();
@@ -146,7 +146,8 @@ public class PacketListener implements Runnable {
 			int packetSize = dis.readInt();
 			this.packetQueue.add(this.readNBytes(packetSize, dis));
 			// System.out.println(this.name + " read packet of size " + packetSize);
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			// probably closed connection
 			System.err.println(this.name + " closed connection");
 			e.printStackTrace();

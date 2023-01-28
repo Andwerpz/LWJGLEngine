@@ -80,8 +80,15 @@ public abstract class Client implements Runnable {
 			}
 
 			while (this.packetListener.nextPacket()) {
-				this.ID = this.packetListener.readInt();
-				this.readPacket(this.packetListener);
+				try {
+					this.ID = this.packetListener.readInt();
+					this.readPacket(this.packetListener);
+				}
+				catch (IOException e) {
+					System.err.println("Error when communicating with server");
+					e.printStackTrace();
+				}
+
 			}
 
 			_update();
@@ -103,7 +110,7 @@ public abstract class Client implements Runnable {
 
 	// use the packet listener to read in the packet. The parent class has already
 	// polled the next packet
-	public abstract void readPacket(PacketListener packetListener);
+	public abstract void readPacket(PacketListener packetListener) throws IOException;
 
 	public boolean connect(String ip, int port) {
 		this.ip = ip;

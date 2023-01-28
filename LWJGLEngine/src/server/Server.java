@@ -35,6 +35,8 @@ public abstract class Server implements Runnable {
 	private HashMap<Integer, PacketListener> packetListeners;
 	private PacketSender packetSender;
 
+	private HashMap<Integer, Integer> clientCommunicationErrorCounter;
+
 	private long noClientTimeoutMillis = 15000;
 	private long firstNoClientTime = 0;
 	private boolean prevTickNoClients = false;
@@ -56,6 +58,8 @@ public abstract class Server implements Runnable {
 		this.packetListeners = new HashMap<>();
 		this.serverConnectionRequestListener = new ServerConnectionRequestListener(this.serverSocket);
 		this.packetSender = new PacketSender();
+
+		this.clientCommunicationErrorCounter = new HashMap<>();
 
 		Server.servers.add(this);
 
@@ -121,7 +125,22 @@ public abstract class Server implements Runnable {
 			}
 
 			while (this.packetListeners.get(ID).nextPacket()) {
-				this.readPacket(this.packetListeners.get(ID), ID);
+				try {
+					this.readPacket(this.packetListeners.get(ID), ID);
+					if (this.clientCommunicationErrorCounter.containsKey(ID)) {
+						this.clientCommunicationErrorCounter.remove(ID);
+					}
+				}
+				catch (IOException e) {
+					//something went wrong with communicating with the client. 
+					System.err.println("Error when communicating with client " + ID);
+					this.clientCommunicationErrorCounter.put(ID, this.clientCommunicationErrorCounter.getOrDefault(ID, 0) + 1);
+					if (this.clientCommunicationErrorCounter.get(ID) >= 3) {
+						System.err.println("Force disconnect client " + ID + " due to too many errors during communication");
+						disconnectedClients.add(ID);
+					}
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -185,7 +204,7 @@ public abstract class Server implements Runnable {
 	public abstract void writePacketEND();
 
 	// use the packet listener to read in the packet. The parent class has already polled the next packet
-	public abstract void readPacket(PacketListener packetListener, int clientID);
+	public abstract void readPacket(PacketListener packetListener, int clientID) throws IOException;
 
 	// so that the child class can do whatever they need to do in the case of connection status change
 	public abstract void _clientConnect(int clientID);

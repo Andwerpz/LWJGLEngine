@@ -1,5 +1,6 @@
 package server;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -161,7 +162,7 @@ public class GameServer extends Server {
 	}
 
 	@Override
-	public void readPacket(PacketListener packetListener, int clientID) {
+	public void readPacket(PacketListener packetListener, int clientID) throws IOException {
 		while (packetListener.hasMoreBytes()) {
 			String sectionName = packetListener.readSectionHeader();
 			int elementAmt = packetListener.getSectionElementAmt();
