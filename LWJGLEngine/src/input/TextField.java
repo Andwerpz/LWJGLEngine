@@ -97,7 +97,9 @@ public class TextField extends Input {
 	private Material releasedMaterial, pressedMaterial, hoveredMaterial, selectedMaterial;
 	private Material currentMaterial;
 
-	public TextField(int x, int y, int width, int height, String sID, String hintText, Font font, int fontSize, int scene) {
+	private boolean textWrapping = false;
+
+	public TextField(float x, float y, float width, float height, String sID, String hintText, Font font, int fontSize, int scene) {
 		super(x, y, 0, width, height, sID, scene);
 		this.init(hintText, FontUtils.deriveSize(fontSize, font));
 	}
@@ -117,7 +119,10 @@ public class TextField extends Input {
 		this.textMaterial = new Material(Color.WHITE);
 		this.hintTextMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
 
-		this.fieldText = new Text(textLeftMargin, 0, z + depthSpacing, width - (textLeftMargin + textRightMargin), hintText, font, this.hintTextMaterial, this.scene);
+		float textWidth = this.width - (textLeftMargin + textRightMargin);
+		textWidth = Math.max(textWidth, 1);
+
+		this.fieldText = new Text(textLeftMargin, 0, z + depthSpacing, textWidth, hintText, font, this.hintTextMaterial, this.scene);
 		this.fieldText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.fieldText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.fieldText.bind(this);
@@ -170,6 +175,26 @@ public class TextField extends Input {
 
 	@Override
 	protected void _alignContents() {
+		float textWidth = this.width - (textLeftMargin + textRightMargin);
+		textWidth = Math.max(textWidth, 1);
+
+		this.fieldText.setWidth(textWidth);
+	}
+
+	public void setTextWrapping(boolean b) {
+		this.textWrapping = b;
+		if (this.textWrapping) {
+			this.fieldText.setTextWrapping(true);
+			this.fieldText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+			this.fieldText.setFrameAlignmentOffset(this.textLeftMargin, this.textLeftMargin);
+			this.fieldText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+		}
+		else {
+			this.fieldText.setTextWrapping(false);
+			this.fieldText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
+			this.fieldText.setFrameAlignmentOffset(this.textLeftMargin, 0);
+			this.fieldText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
+		}
 
 	}
 

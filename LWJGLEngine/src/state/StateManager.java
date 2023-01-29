@@ -108,6 +108,13 @@ public class StateManager {
 		activeState.mouseReleased(button);
 	}
 
+	public void mouseScrolled(float wheelOffset, float smoothOffset) {
+		if (activeState == null) {
+			return;
+		}
+		activeState.mouseScrolled(wheelOffset, smoothOffset);
+	}
+
 	public void keyPressed(int key) {
 		if (activeState == null) {
 			return;

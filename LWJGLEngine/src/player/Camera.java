@@ -56,6 +56,10 @@ public class Camera {
 		up = new Vec3(0, 1, 0);
 		pos = new Vec3(0, 0, 0);
 	}
+	
+	public void setProjectionMatrix(Mat4 m) {
+		this.projectionMatrix = m;
+	}
 
 	public Mat4 getProjectionMatrix() {
 		return this.projectionMatrix;

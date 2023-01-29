@@ -263,6 +263,11 @@ public class GameState extends State {
 	}
 
 	@Override
+	public void mouseScrolled(float wheelOffset, float smoothOffset) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
 	public void keyPressed(int key) {
 		switch (key) {
 		case GLFW_KEY_ESCAPE:

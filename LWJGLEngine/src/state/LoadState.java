@@ -113,6 +113,11 @@ public class LoadState extends State {
 	}
 
 	@Override
+	public void mouseScrolled(float wheelOffset, float smoothOffset) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
 	public void keyPressed(int key) {
 
 	}

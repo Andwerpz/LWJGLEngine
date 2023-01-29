@@ -18,12 +18,14 @@ import org.lwjgl.openal.ALCapabilities;
 import graphics.Shader;
 import input.KeyboardInput;
 import input.MouseInput;
+import input.ScrollInput;
 import model.AssetManager;
 import scene.Scene;
 import screen.Screen;
 import screen.ScreenQuad;
 import server.Client;
 import server.Server;
+import state.MainMenuState;
 import state.StateManager;
 import ui.UIElement;
 import util.FontUtils;
@@ -87,7 +89,7 @@ public class Main implements Runnable {
 
 		glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 		long primaryMonitor = glfwGetPrimaryMonitor();
-		window = glfwCreateWindow(windowWidth, windowHeight, "LWJGL", fullscreen ? primaryMonitor : NULL, NULL);
+		window = glfwCreateWindow(windowWidth, windowHeight, "LWJGL Engine", fullscreen ? primaryMonitor : NULL, NULL);
 
 		if (window == NULL) {
 			return;
@@ -100,6 +102,7 @@ public class Main implements Runnable {
 
 		glfwSetKeyCallback(window, new KeyboardInput());
 		glfwSetMouseButtonCallback(window, new MouseInput());
+		glfwSetScrollCallback(window, new ScrollInput());
 
 		createCapabilities();
 		glClearColor(0f, 0f, 0f, 0f);
@@ -251,6 +254,10 @@ public class Main implements Runnable {
 
 	public void mouseReleased(int button) {
 		this.sm.mouseReleased(button);
+	}
+
+	public void mouseScrolled(float wheelOffset, float smoothOffset) {
+		this.sm.mouseScrolled(wheelOffset, smoothOffset);
 	}
 
 	public void keyPressed(int key) {

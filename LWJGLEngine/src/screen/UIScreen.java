@@ -27,6 +27,20 @@ public class UIScreen extends Screen {
 	private Texture geometryColorMap; // RGB: color, A: alpha
 	private Texture geometryColorIDMap; // RGB: colorID
 
+	private Framebuffer colorIDBuffer;
+	private Texture colorIDMap;
+
+	//if set to true, this will clear the color id buffer upon every call of render(), 
+	//as opposed to only clearing it once each frame. 
+	private boolean clearColorIDBufferOnRender = false;
+
+	//if set to true, then the depth testing will be reversed when drawing to the colorID buffer. 
+	//this allows buttons to work better, as the button background will be drawn over the text,
+	//but in other cases where you want proper depth ids, you should turn this off. 
+	private boolean reverseDepthColorID = true;
+
+	private float left, right, bottom, top, near, far;
+
 	public UIScreen() {
 		super();
 	}
@@ -53,7 +67,54 @@ public class UIScreen extends Screen {
 		this.geometryBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
 		this.geometryBuffer.isComplete();
 
-		this.camera = new Camera(Mat4.orthographic(0, Main.windowWidth, 0, Main.windowHeight, -10, 10));
+		this.colorIDBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
+		this.colorIDMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.colorIDBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.colorIDMap.getID());
+		this.colorIDBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
+		this.colorIDBuffer.isComplete();
+
+		this.left = 0;
+		this.right = Main.windowWidth;
+		this.bottom = 0;
+		this.top = Main.windowHeight;
+		this.near = -1000;
+		this.far = 1000;
+
+		this.camera = new Camera(Mat4.orthographic(left, right, bottom, top, near, far));
+	}
+
+	public void setLeft(float f) {
+		this.left = f;
+		this.updateCamera();
+	}
+
+	public void setRight(float f) {
+		this.right = f;
+		this.updateCamera();
+	}
+
+	public void setBottom(float f) {
+		this.bottom = f;
+		this.updateCamera();
+	}
+
+	public void setTop(float f) {
+		this.top = f;
+		this.updateCamera();
+	}
+
+	public void setNear(float f) {
+		this.near = f;
+		this.updateCamera();
+	}
+
+	public void setFar(float f) {
+		this.far = f;
+		this.updateCamera();
+	}
+
+	private void updateCamera() {
+		this.camera.setProjectionMatrix(Mat4.orthographic(left, right, bottom, top, near, far));
 	}
 
 	public void setUIScene(int scene) {
@@ -61,19 +122,38 @@ public class UIScreen extends Screen {
 	}
 
 	public long getEntityIDAtMouse() {
-		long modelInstanceID = Model.convertRGBToID(geometryBuffer.sampleColorAtPoint((int) MouseInput.getMousePos().x, (int) MouseInput.getMousePos().y, GL_COLOR_ATTACHMENT4));
+		long modelInstanceID = Model.convertRGBToID(colorIDBuffer.sampleColorAtPoint((int) MouseInput.getMousePos().x, (int) MouseInput.getMousePos().y, GL_COLOR_ATTACHMENT0));
 		long entityID = Entity.getEntityIDFromModelID(modelInstanceID);
 		return entityID;
 	}
 
+	public void clearColorIDBuffer() {
+		this.colorIDBuffer.bind();
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
+
+	public void setClearColorIDBufferOnRender(boolean b) {
+		this.clearColorIDBufferOnRender = b;
+	}
+
+	public void setReverseDepthColorID(boolean b) {
+		this.reverseDepthColorID = b;
+	}
+
 	@Override
 	public void render(Framebuffer outputBuffer) {
+		if (this.clearColorIDBufferOnRender) {
+			this.clearColorIDBuffer();
+		}
+
 		// -- RENDER UI --
 		this.geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
+		//glEnable(GL_BLEND);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glClearDepth(1); // maximum value
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
@@ -92,18 +172,20 @@ public class UIScreen extends Screen {
 		Shader.SPLASH.enable();
 		Shader.SPLASH.setUniform1f("alpha", 1f);
 		geometryColorMap.bind(GL_TEXTURE0);
-		// geometryColorIDMap.bind(GL_TEXTURE0);
+		//geometryColorIDMap.bind(GL_TEXTURE0);
 		screenQuad.render();
 
 		// -- RENDER PROPER UI HITBOXES --
-		// we just reverse the depth det.
 		this.geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_GREATER);
 		glEnable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
-		glClearDepth(0); // minimum value
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+
+		if (this.reverseDepthColorID) {
+			glDepthFunc(GL_GREATER);
+			glClearDepth(0); // minimum value
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
+		}
 
 		Shader.GEOMETRY.enable();
 		Shader.GEOMETRY.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
@@ -111,6 +193,33 @@ public class UIScreen extends Screen {
 		Shader.GEOMETRY.setUniform3f("view_pos", camera.getPos());
 		Model.renderModels(this.ui_scene);
 
+		// -- RENDER COLOR ID TO SAVE--
+		this.colorIDBuffer.bind();
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		Shader.SPLASH.enable();
+		Shader.SPLASH.setUniform1f("alpha", 1f);
+		geometryColorIDMap.bind(GL_TEXTURE0);
+		screenQuad.render();
+
+		//		// -- RENDER TO OUTPUT --
+		//		outputBuffer.bind();
+		//		glDisable(GL_DEPTH_TEST);
+		//		glEnable(GL_BLEND);
+		//		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		//
+		//		Shader.SPLASH.enable();
+		//		Shader.SPLASH.setUniform1f("alpha", 1f);
+		//		geometryColorMap.bind(GL_TEXTURE0);
+		//		geometryColorIDMap.bind(GL_TEXTURE0);
+		//		screenQuad.render();
+
+	}
+
+	public Texture getColorIDMap() {
+		return this.geometryColorIDMap;
 	}
 
 }

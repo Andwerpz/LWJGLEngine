@@ -42,6 +42,8 @@ public abstract class State {
 
 	public abstract void mouseReleased(int button);
 
+	public abstract void mouseScrolled(float wheelOffset, float smoothOffset);
+
 	public abstract void keyPressed(int key);
 
 	public abstract void keyReleased(int key);
