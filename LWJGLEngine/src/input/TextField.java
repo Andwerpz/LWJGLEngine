@@ -136,7 +136,7 @@ public class TextField extends Input {
 	}
 
 	@Override
-	public void update() {
+	protected void __update() {
 		// -- FIELD INNER --
 		Material nextMaterial = null;
 		if (this.clicked) { // check for clicks happens when mouse is released.

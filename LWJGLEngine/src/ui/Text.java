@@ -237,7 +237,7 @@ public class Text extends UIElement {
 	}
 
 	@Override
-	public void update() {
+	protected void _update() {
 
 	}
 

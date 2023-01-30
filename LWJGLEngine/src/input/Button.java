@@ -77,7 +77,7 @@ public class Button extends Input {
 	}
 
 	@Override
-	public void update() {
+	protected void __update() {
 		Material nextMaterial = null;
 		if (this.clicked) { // check for clicks happens when mouse is released.
 			this.clicked = false;

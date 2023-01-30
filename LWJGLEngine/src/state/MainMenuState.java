@@ -140,7 +140,7 @@ public class MainMenuState extends State {
 
 	@Override
 	public void update() {
-		Input.inputsHovered(uiScreen.getEntityIDAtMouse());
+		Input.inputsHovered(uiScreen.getEntityIDAtMouse(), DYNAMIC_UI_SCENE);
 
 		updateCamera();
 	}
@@ -171,7 +171,7 @@ public class MainMenuState extends State {
 
 	@Override
 	public void mouseReleased(int button) {
-		Input.inputsReleased(uiScreen.getEntityIDAtMouse());
+		Input.inputsReleased(uiScreen.getEntityIDAtMouse(), DYNAMIC_UI_SCENE);
 		String clickedButton = Input.getClicked();
 		switch (clickedButton) {
 		case "btn_host_game":

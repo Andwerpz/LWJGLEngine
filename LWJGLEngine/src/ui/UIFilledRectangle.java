@@ -13,12 +13,6 @@ public class UIFilledRectangle extends UIElement {
 
 	//still here since it's used alot in the project
 
-	//clockwise rotation. 
-	//TODO make general rotation for ui elements. 
-	//inheriting rotation is going to be a challenge. 
-	//probably will have to do it with some sort of binding 
-	private float rotationRads;
-
 	public UIFilledRectangle(float xOffset, float yOffset, float z, float width, float height, int scene) {
 		super(xOffset, yOffset, z, width, height, scene);
 	}
@@ -38,7 +32,7 @@ public class UIFilledRectangle extends UIElement {
 	}
 
 	@Override
-	protected void update() {
+	protected void _update() {
 
 	}
 

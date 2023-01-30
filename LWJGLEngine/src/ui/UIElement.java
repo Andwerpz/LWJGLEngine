@@ -13,12 +13,13 @@ import util.Mat4;
 import util.Vec2;
 
 public abstract class UIElement extends Entity {
-	//am i overengineering ui element alignment?
+	//am i overengineering ui element alignment? no i am not. Maybe i should make it so that less boilerplate is required. 
+	//templates? maybe have some common predefined alignment styles
 
 	//stores all UIElement entities, with alignment information. 
 	//in the case of window resizing, a static method can re-align all ui elements by modifying x y coordinates. 
 
-	//TODO proper inheritance of transforms from parent to child
+	//proper inheritance of transforms from parent to child
 	//each ui element should just consist of one bounding rectangle, and references to all of it's children elements. 
 	//top level elements will be relative to the screen. 
 	//child elements are relative to their parents. This is enforced through the generation of the alignment coordinates. 
@@ -65,8 +66,27 @@ public abstract class UIElement extends Entity {
 	private FilledRectangle boundingRect;
 	private boolean hasCustomBoundingRect; //if it doesn't, then we don't want it to assign texture materials. 
 
+	//if this is true, then it'll align itself during the next update. 
+	private boolean shouldAlign = false;
+
 	private int horizontalAlignFrame, verticalAlignFrame;
 	private float xOffset, yOffset; //along with alignment style, determines reference coordinates for drawing
+
+	public static final int EASE_OUT_EXPO = 0;
+	public static final int EASE_OUT_QUAD = 1;
+	public static final int EASE_OUT_BACK = 2;
+	public static final int EASE_OUT_BOUNCE = 3;
+
+	private boolean isEasing = false; //the flag that says yes we're doing an animation
+	private int easingStyle = EASE_OUT_EXPO;
+
+	private long easingDurationMillis = 1000;
+	private long easingStartMillis;
+
+	//for ui element transitions. 
+	//maybe introduce different transition functions in the future? for now just exponential easing
+	private float easingStartXOffset, easingStartYOffset;
+	private float easingTargetXOffset, easingTargetYOffset;
 
 	protected int horizontalAlignContent, verticalAlignContent;
 	protected float x, y; //reference coordinates for drawing
@@ -121,8 +141,10 @@ public abstract class UIElement extends Entity {
 
 		this.boundElements = new ArrayList<>();
 
+		this.shouldAlign = true;
+
 		UIElement.uiElements.add(this);
-		UIElement.shouldAlignUIElements = true;
+		//UIElement.shouldAlignUIElements = true;	TODO decide if we need this
 	}
 
 	@Override
@@ -177,66 +199,91 @@ public abstract class UIElement extends Entity {
 	public void setFrameAlignmentStyle(int horizontalAlign, int verticalAlign) {
 		this.horizontalAlignFrame = horizontalAlign;
 		this.verticalAlignFrame = verticalAlign;
-		this.alignFrame();
+		this.shouldAlign = true;
 	}
 
 	public void setFrameAlignmentOffset(float xOffset, float yOffset) {
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
-		this.alignFrame();
+		this.shouldAlign = true;
 	}
 
 	public void setXOffset(float xOffset) {
-		this.xOffset = xOffset;
+		this.setFrameAlignmentOffset(xOffset, this.getYOffset());
 	}
 
 	public void setYOffset(float yOffset) {
-		this.yOffset = yOffset;
+		this.setFrameAlignmentOffset(this.getXOffset(), yOffset);
 	}
 
-	public void setFrameAlignment(int horizontalAlign, int verticalAlign, float xOffset, float yOffset) {
-		this.horizontalAlignFrame = horizontalAlign;
-		this.verticalAlignFrame = verticalAlign;
-		this.xOffset = xOffset;
-		this.yOffset = yOffset;
-		this.alignFrame();
+	public void easeFrameAlignmentOffset(float xOffset, float yOffset) {
+		//for now, we can cancel a current easing animation with a new one. 
+
+		this.easingStartMillis = System.currentTimeMillis();
+		this.easingStartXOffset = this.getXOffset();
+		this.easingStartYOffset = this.getYOffset();
+
+		this.easingTargetXOffset = xOffset;
+		this.easingTargetYOffset = yOffset;
+
+		this.isEasing = true;
+	}
+
+	public void easeXOffset(float xOffset) {
+		this.easeFrameAlignmentOffset(xOffset, this.getYOffset());
+	}
+
+	public void easeYOffset(float yOffset) {
+		this.easeFrameAlignmentOffset(this.getXOffset(), yOffset);
 	}
 
 	public void setContentAlignmentStyle(int horizontalAlign, int verticalAlign) {
 		this.horizontalAlignContent = horizontalAlign;
 		this.verticalAlignContent = verticalAlign;
-		this.alignContents();
+		this.shouldAlign = true;
 	}
 
 	public void setWidth(float width) {
 		this.width = width;
-		this.alignContents();
+		this.shouldAlign = true;
 	}
 
 	public void setHeight(float height) {
 		this.height = height;
-		this.alignContents();
+		this.shouldAlign = true;
 	}
 
 	public void setRotationRads(float rads) {
 		this.rotationRads = rads;
-		this.alignContents();
+		this.shouldAlign = true;
 	}
 
 	public void setFillWidth(boolean b) {
 		this.fillWidth = b;
+		this.shouldAlign = true;
 	}
 
 	public void setFillHeight(boolean b) {
 		this.fillHeight = b;
+		this.shouldAlign = true;
 	}
 
 	public void setFillWidthMargin(float margin) {
 		this.fillWidthMargin = margin;
+		this.shouldAlign = true;
 	}
 
 	public void setFillHeightMargin(float margin) {
 		this.fillHeightMargin = margin;
+		this.shouldAlign = true;
+	}
+
+	public void setEasingDurationMillis(long millis) {
+		this.easingDurationMillis = millis;
+	}
+
+	public void setEasingStyle(int style) {
+		this.easingStyle = style;
 	}
 
 	public void setMaterial(Material m) {
@@ -382,6 +429,7 @@ public abstract class UIElement extends Entity {
 	}
 
 	//these should be absolute coordinates, (relative to the scene origin)
+	//make sure to align the things that you are querying borders from. 
 	public float getLeftBorder() {
 		float ans = this.getAlignedX();
 		if (this.isBound()) {
@@ -433,6 +481,10 @@ public abstract class UIElement extends Entity {
 	}
 
 	public void align() {
+		if (this.shouldAlign) {
+			this.shouldAlign = false;
+		}
+
 		this.alignFrame();
 		this.alignContents();
 
@@ -442,7 +494,83 @@ public abstract class UIElement extends Entity {
 	}
 
 	@Override
-	protected abstract void update();
+	protected void update() {
+		if (this.isEasing) {
+			long easingElapsedMillis = System.currentTimeMillis() - this.easingStartMillis;
+			float nextXOffset = 0;
+			float nextYOffset = 0;
+			if (easingElapsedMillis >= this.easingDurationMillis) {
+				this.isEasing = false;
+				nextXOffset = this.easingTargetXOffset;
+				nextYOffset = this.easingTargetYOffset;
+			}
+			else {
+				float easeProgress = (float) easingElapsedMillis / (float) this.easingDurationMillis;
+				float easeOffset = 0;
+				switch (this.easingStyle) {
+				case EASE_OUT_EXPO:
+					easeOffset = this.easeOutExpo(easeProgress);
+					break;
+				case EASE_OUT_QUAD:
+					easeOffset = this.easeOutQuad(easeProgress);
+					break;
+				case EASE_OUT_BACK:
+					easeOffset = this.easeOutBack(easeProgress);
+					break;
+				case EASE_OUT_BOUNCE:
+					easeOffset = this.easeOutBounce(easeProgress);
+					break;
+				}
+				nextXOffset = this.easingStartXOffset + (this.easingTargetXOffset - this.easingStartXOffset) * easeOffset;
+				nextYOffset = this.easingStartYOffset + (this.easingTargetYOffset - this.easingStartYOffset) * easeOffset;
+			}
+			this.xOffset = nextXOffset;
+			this.yOffset = nextYOffset;
+			this.shouldAlign = true;
+		}
+
+		if (this.shouldAlign) {
+			this.align();
+		}
+
+		this._update();
+	}
+
+	private float easeOutExpo(float x) {
+		return (float) (1 - Math.pow(2, -10 * x));
+	}
+
+	private float easeOutQuad(float x) {
+		return 1 - (1 - x) * (1 - x);
+	}
+
+	private float easeOutBack(float x) {
+		float c1 = 1.70158f;
+		float c3 = c1 + 1;
+
+		return (float) (1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2));
+	}
+
+	private float easeOutBounce(float x) {
+		float n1 = 7.5625f;
+		float d1 = 2.75f;
+
+		if (x < 1 / d1) {
+			return n1 * x * x;
+		}
+		else if (x < 2 / d1) {
+			return n1 * (x -= 1.5f / d1) * x + 0.75f;
+		}
+		else if (x < 2.5 / d1) {
+			return n1 * (x -= 2.25f / d1) * x + 0.9375f;
+		}
+		else {
+			return n1 * (x -= 2.625f / d1) * x + 0.984375f;
+		}
+
+	}
+
+	protected abstract void _update();
 
 	public float getXOffset() {
 		return this.xOffset;

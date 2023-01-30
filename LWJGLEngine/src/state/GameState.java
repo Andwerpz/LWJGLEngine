@@ -187,7 +187,7 @@ public class GameState extends State {
 	public void update() {
 
 		// -- MENU --
-		Input.inputsHovered(uiScreen.getEntityIDAtMouse());
+		Input.inputsHovered(uiScreen.getEntityIDAtMouse(), PAUSE_SCENE_DYNAMIC);
 
 		// -- UPDATES --
 		updateCamera();
@@ -248,7 +248,7 @@ public class GameState extends State {
 
 	@Override
 	public void mouseReleased(int button) {
-		Input.inputsReleased(uiScreen.getEntityIDAtMouse());
+		Input.inputsReleased(uiScreen.getEntityIDAtMouse(), PAUSE_SCENE_DYNAMIC);
 		if (button == MouseInput.LEFT_MOUSE_BUTTON) {
 			this.leftMouse = false;
 		}

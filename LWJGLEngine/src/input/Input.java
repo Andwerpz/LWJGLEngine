@@ -13,6 +13,7 @@ public abstract class Input extends UIElement {
 	private static HashMap<String, Long> stringToEntityID = new HashMap<>();
 
 	protected boolean pressed, hovered, clicked;
+	protected boolean mouseEntered, mouseExited;
 
 	private String sID;
 
@@ -44,11 +45,20 @@ public abstract class Input extends UIElement {
 
 	protected abstract void ___kill();
 
-	private void hovered(long entityID) {
+	private void hovered(long entityID, int scene) {
+		if (scene != this.scene) {
+			return;
+		}
 		if (this.getID() != entityID) {
+			if (this.hovered) {
+				this.mouseExited = true;
+			}
 			this.hovered = false;
 		}
 		else {
+			if (!this.hovered) {
+				this.mouseEntered = true;
+			}
 			this.hovered = true;
 		}
 	}
@@ -60,7 +70,10 @@ public abstract class Input extends UIElement {
 		this.pressed = true;
 	}
 
-	private void released(long entityID) {
+	private void released(long entityID, int scene) {
+		if (scene != this.scene) {
+			return;
+		}
 		if (this.pressed && entityID == this.getID()) {
 			this.clicked = true;
 		}
@@ -76,6 +89,14 @@ public abstract class Input extends UIElement {
 
 	public boolean isHovered() {
 		return this.hovered;
+	}
+
+	public boolean hasMouseEntered() {
+		return this.mouseEntered;
+	}
+
+	public boolean hasMouseExited() {
+		return this.mouseExited;
 	}
 
 	public static void addInput(String id, Input input) {
@@ -122,9 +143,19 @@ public abstract class Input extends UIElement {
 		return tf.getText();
 	}
 
-	public static void inputsHovered(long entityID) {
+	@Override
+	protected void _update() {
+		this.mouseEntered = false;
+		this.mouseExited = false;
+
+		this.__update();
+	}
+
+	protected abstract void __update();
+
+	public static void inputsHovered(long entityID, int scene) {
 		for (Input b : inputs.values()) {
-			b.hovered(entityID);
+			b.hovered(entityID, scene);
 		}
 	}
 
@@ -136,9 +167,9 @@ public abstract class Input extends UIElement {
 		inputs.get(id).pressed(entityID);
 	}
 
-	public static void inputsReleased(long entityID) {
+	public static void inputsReleased(long entityID, int scene) {
 		for (Input b : inputs.values()) {
-			b.released(entityID);
+			b.released(entityID, scene);
 		}
 	}
 
