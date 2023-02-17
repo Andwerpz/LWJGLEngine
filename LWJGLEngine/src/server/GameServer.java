@@ -82,27 +82,31 @@ public class GameServer extends Server {
 
 	@Override
 	public void writePacket(PacketSender packetSender, int clientID) {
-		packetSender.writeSectionHeader("player_positions", this.playerPositions.size());
+		packetSender.startSection("player_positions");
+		packetSender.write(this.playerPositions.size());
 		for (int ID : this.playerPositions.keySet()) {
 			Vec3 pos = this.playerPositions.get(ID);
 			packetSender.write(ID);
 			packetSender.write(new float[] { pos.x, pos.y, pos.z });
 		}
 
-		packetSender.writeSectionHeader("player_healths", this.playerHealths.size());
+		packetSender.startSection("player_healths");
+		packetSender.write(this.playerHealths.size());
 		for (int ID : this.playerHealths.keySet()) {
 			packetSender.write(ID);
 			packetSender.write(this.playerHealths.get(ID));
 		}
 
-		packetSender.writeSectionHeader("player_life_ids", this.playerLifeIDs.size());
+		packetSender.startSection("player_life_ids");
+		packetSender.write(this.playerLifeIDs.size());
 		for (int ID : this.playerLifeIDs.keySet()) {
 			packetSender.write(ID);
 			packetSender.write(this.playerLifeIDs.get(ID));
 		}
 
 		if (this.killfeed.size() != 0) {
-			packetSender.writeSectionHeader("killfeed", this.killfeed.size());
+			packetSender.startSection("killfeed");
+			packetSender.write(this.killfeed.size());
 			for (Pair<String, String> p : this.killfeed) {
 				packetSender.write(p.first.length());
 				packetSender.write(p.first);
@@ -112,19 +116,21 @@ public class GameServer extends Server {
 		}
 
 		if (playerHealths.get(clientID) <= 0) {
-			packetSender.writeSectionHeader("should_respawn", 1);
+			packetSender.startSection("should_respawn");
 			packetSender.write(new Vec3(respawnPoints[(int) (Math.random() * respawnPoints.length)]));
 		}
 
 		if (disconnectedClients.size() != 0) {
-			packetSender.writeSectionHeader("disconnect", disconnectedClients.size());
+			packetSender.startSection("disconnect");
+			packetSender.write(this.disconnectedClients.size());
 			for (int i : disconnectedClients) {
 				packetSender.write(i);
 			}
 		}
 
 		if (this.bulletRays.size() != 0) {
-			packetSender.writeSectionHeader("bullet_rays", this.bulletRays.size());
+			packetSender.startSection("bullet_rays");
+			packetSender.write(this.bulletRays.size());
 			for (Pair<Integer, Pair<Integer, Vec3[]>> p : this.bulletRays) {
 				packetSender.write(p.first);
 				packetSender.write(p.second.first);
@@ -134,7 +140,8 @@ public class GameServer extends Server {
 		}
 
 		if (this.serverMessages.size() != 0) {
-			packetSender.writeSectionHeader("server_messages", this.serverMessages.size());
+			packetSender.startSection("server_messages");
+			packetSender.write(this.serverMessages.size());
 			for (String s : this.serverMessages) {
 				packetSender.write(s.length());
 				packetSender.write(s);
@@ -142,7 +149,8 @@ public class GameServer extends Server {
 		}
 
 		if (this.footsteps.size() != 0) {
-			packetSender.writeSectionHeader("footsteps", this.footsteps.size());
+			packetSender.startSection("footsteps");
+			packetSender.write(this.footsteps.size());
 			for (Pair<Integer, Pair<Integer, float[]>> p : this.footsteps) {
 				packetSender.write(p.first);
 				packetSender.write(p.second.first);
@@ -162,65 +170,69 @@ public class GameServer extends Server {
 	}
 
 	@Override
-	public void readPacket(PacketListener packetListener, int clientID) throws IOException {
-		while (packetListener.hasMoreBytes()) {
-			String sectionName = packetListener.readSectionHeader();
-			int elementAmt = packetListener.getSectionElementAmt();
+	public void readSection(PacketListener packetListener, int clientID) throws IOException {
+		switch (packetListener.getSectionName()) {
+		case "pos": {
+			float[] arr = packetListener.readNFloats(3);
+			playerPositions.put(clientID, new Vec3(arr[0], arr[1], arr[2]));
+			break;
+		}
 
-			switch (sectionName) {
-			case "pos":
-				float[] arr = packetListener.readNFloats(3);
-				playerPositions.put(clientID, new Vec3(arr[0], arr[1], arr[2]));
-				break;
-
-			case "bullet_rays":
-				for (int i = 0; i < elementAmt; i++) {
-					int playerID = packetListener.readInt();
-					int weaponID = packetListener.readInt();
-					Vec3 ray_origin = packetListener.readVec3();
-					Vec3 ray_dir = packetListener.readVec3();
-					this.bulletRays.add(new Pair<Integer, Pair<Integer, Vec3[]>>(playerID, new Pair<Integer, Vec3[]>(weaponID, new Vec3[] { ray_origin, ray_dir })));
-				}
-				break;
-
-			case "damage_sources":
-				for (int i = 0; i < elementAmt; i++) {
-					int playerID = packetListener.readInt();
-					int receiverID = packetListener.readInt();
-					int damage = packetListener.readInt();
-					int aggressorLifeID = packetListener.readInt();
-					int receiverLifeID = packetListener.readInt();
-					if (this.playerLifeIDs.get(clientID) != aggressorLifeID || this.playerLifeIDs.get(receiverID) != receiverLifeID) {
-						//the aggressor damaged the receivers past life. 
-						continue;
-					}
-					this.damageSources.add(new Pair<Integer, int[]>(playerID, new int[] { receiverID, damage, aggressorLifeID, receiverLifeID }));
-				}
-				break;
-
-			case "respawn":
-				int health = packetListener.readInt();
-				int lifeID = packetListener.readInt();
-				this.playerHealths.put(clientID, health);
-				this.playerLifeIDs.put(clientID, lifeID);
-				break;
-
-			case "set_nickname":
-				int nickLength = packetListener.readInt();
-				String nickname = packetListener.readString(nickLength);
-				this.serverMessages.add(this.playerNicknames.get(clientID) + " changed their name to " + nickname);
-				this.playerNicknames.put(clientID, nickname);
-				break;
-
-			case "footsteps":
-				for (int i = 0; i < elementAmt; i++) {
-					int sourceClientID = packetListener.readInt();
-					int footstepType = packetListener.readInt();
-					float[] coords = packetListener.readNFloats(3);
-					this.footsteps.add(new Pair<Integer, Pair<Integer, float[]>>(sourceClientID, new Pair<Integer, float[]>(footstepType, coords)));
-				}
-				break;
+		case "bullet_rays": {
+			int elementAmt = packetListener.readInt();
+			for (int i = 0; i < elementAmt; i++) {
+				int playerID = packetListener.readInt();
+				int weaponID = packetListener.readInt();
+				Vec3 ray_origin = packetListener.readVec3();
+				Vec3 ray_dir = packetListener.readVec3();
+				this.bulletRays.add(new Pair<Integer, Pair<Integer, Vec3[]>>(playerID, new Pair<Integer, Vec3[]>(weaponID, new Vec3[] { ray_origin, ray_dir })));
 			}
+			break;
+		}
+
+		case "damage_sources": {
+			int elementAmt = packetListener.readInt();
+			for (int i = 0; i < elementAmt; i++) {
+				int playerID = packetListener.readInt();
+				int receiverID = packetListener.readInt();
+				int damage = packetListener.readInt();
+				int aggressorLifeID = packetListener.readInt();
+				int receiverLifeID = packetListener.readInt();
+				if (this.playerLifeIDs.get(clientID) != aggressorLifeID || this.playerLifeIDs.get(receiverID) != receiverLifeID) {
+					//the aggressor damaged the receivers past life. 
+					continue;
+				}
+				this.damageSources.add(new Pair<Integer, int[]>(playerID, new int[] { receiverID, damage, aggressorLifeID, receiverLifeID }));
+			}
+			break;
+		}
+
+		case "respawn": {
+			int health = packetListener.readInt();
+			int lifeID = packetListener.readInt();
+			this.playerHealths.put(clientID, health);
+			this.playerLifeIDs.put(clientID, lifeID);
+			break;
+		}
+
+		case "set_nickname": {
+			int nickLength = packetListener.readInt();
+			String nickname = packetListener.readString(nickLength);
+			this.serverMessages.add(this.playerNicknames.get(clientID) + " changed their name to " + nickname);
+			this.playerNicknames.put(clientID, nickname);
+			break;
+		}
+
+		case "footsteps": {
+			int elementAmt = packetListener.readInt();
+			for (int i = 0; i < elementAmt; i++) {
+				int sourceClientID = packetListener.readInt();
+				int footstepType = packetListener.readInt();
+				float[] coords = packetListener.readNFloats(3);
+				this.footsteps.add(new Pair<Integer, Pair<Integer, float[]>>(sourceClientID, new Pair<Integer, float[]>(footstepType, coords)));
+			}
+			break;
+		}
 		}
 	}
 

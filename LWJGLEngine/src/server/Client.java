@@ -79,13 +79,19 @@ public abstract class Client implements Runnable {
 				this.disconnect();
 			}
 
-			while (this.packetListener.nextPacket()) {
+			while (this.packetListener.nextSection()) {
 				try {
-					this.ID = this.packetListener.readInt();
-					this.readPacket(this.packetListener);
+					switch (this.packetListener.getSectionName()) {
+					case "_base_server_": {
+						this.ID = this.packetListener.readInt();
+						break;
+					}
+					}
+					this.readSection(this.packetListener);
 				}
 				catch (IOException e) {
 					System.err.println("Error when communicating with server");
+					System.err.println("Section name : " + this.packetListener.getSectionName());
 					e.printStackTrace();
 				}
 
@@ -104,13 +110,11 @@ public abstract class Client implements Runnable {
 		}
 	}
 
-	// use the packet sender to write a packet. The parent class will flush it for
-	// you
+	// use the packet sender to write a packet. The parent class will flush it for you
 	public abstract void writePacket(PacketSender packetSender);
 
-	// use the packet listener to read in the packet. The parent class has already
-	// polled the next packet
-	public abstract void readPacket(PacketListener packetListener) throws IOException;
+	// use the packet listener to read in the next section. The parent class has already polled the next section
+	public abstract void readSection(PacketListener packetListener) throws IOException;
 
 	public boolean connect(String ip, int port) {
 		this.ip = ip;

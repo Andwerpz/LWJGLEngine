@@ -77,13 +77,14 @@ public class GameClient extends Client {
 
 	@Override
 	public void writePacket(PacketSender packetSender) {
-		packetSender.writeSectionHeader("pos", 1);
+		packetSender.startSection("pos");
 		packetSender.write(pos.x);
 		packetSender.write(pos.y);
 		packetSender.write(pos.z);
 
 		if (this.outBulletRays.size() != 0) {
-			packetSender.writeSectionHeader("bullet_rays", this.outBulletRays.size());
+			packetSender.startSection("bullet_rays");
+			packetSender.write(this.outBulletRays.size());
 			for (Pair<Integer, Pair<Integer, Vec3[]>> p : this.outBulletRays) {
 				packetSender.write(this.ID);
 				packetSender.write(p.second.first);
@@ -94,7 +95,8 @@ public class GameClient extends Client {
 		}
 
 		if (this.outDamageSources.size() != 0) {
-			packetSender.writeSectionHeader("damage_sources", this.outDamageSources.size());
+			packetSender.startSection("damage_sources");
+			packetSender.write(this.outDamageSources.size());
 			for (Pair<Integer, int[]> p : this.outDamageSources) {
 				packetSender.write(p.first);
 				packetSender.write(p.second);
@@ -103,7 +105,8 @@ public class GameClient extends Client {
 		}
 
 		if (this.outFootsteps.size() != 0) {
-			packetSender.writeSectionHeader("footsteps", this.outFootsteps.size());
+			packetSender.startSection("footsteps");
+			packetSender.write(this.outFootsteps.size());
 			for (Pair<Integer, Pair<Integer, float[]>> p : this.outFootsteps) {
 				packetSender.write(p.first);
 				packetSender.write(p.second.first);
@@ -113,14 +116,14 @@ public class GameClient extends Client {
 		}
 
 		if (this.writeRespawn) {
-			packetSender.writeSectionHeader("respawn", 1);
+			packetSender.startSection("respawn");
 			packetSender.write(this.writeRespawnHealth);
 			packetSender.write(this.lifeID);
 			this.writeRespawn = false;
 		}
 
 		if (this.writeNickname) {
-			packetSender.writeSectionHeader("set_nickname", 1);
+			packetSender.startSection("set_nickname");
 			packetSender.write(this.nickname.length());
 			packetSender.write(this.nickname);
 			this.writeNickname = false;
@@ -128,88 +131,100 @@ public class GameClient extends Client {
 	}
 
 	@Override
-	public void readPacket(PacketListener packetListener) throws IOException {
-		while (packetListener.hasMoreBytes()) {
-			String sectionName = packetListener.readSectionHeader();
-			int elementAmt = packetListener.getSectionElementAmt();
-
-			switch (sectionName) {
-			case "player_positions":
-				for (int i = 0; i < elementAmt; i++) {
-					int playerID = packetListener.readInt();
-					float[] arr = packetListener.readNFloats(3);
-					this.playerPositions.put(playerID, new Vec3(arr[0], arr[1], arr[2]));
-				}
-				break;
-
-			case "player_healths":
-				for (int i = 0; i < elementAmt; i++) {
-					int playerID = packetListener.readInt();
-					int playerHealth = packetListener.readInt();
-					this.playerHealths.put(playerID, playerHealth);
-				}
-				break;
-
-			case "player_life_ids":
-				for (int i = 0; i < elementAmt; i++) {
-					int playerID = packetListener.readInt();
-					int lifeID = packetListener.readInt();
-					this.playerLifeIDs.put(playerID, lifeID);
-				}
-				break;
-
-			case "killfeed":
-				for (int i = 0; i < elementAmt; i++) {
-					int aggressorNickLength = packetListener.readInt();
-					String aggressorNick = packetListener.readString(aggressorNickLength);
-					int receiverNickLength = packetListener.readInt();
-					String receiverNick = packetListener.readString(receiverNickLength);
-					this.killfeed.add(new Pair<String, String>(aggressorNick, receiverNick));
-				}
-				break;
-
-			case "disconnect":
-				for (int i = 0; i < elementAmt; i++) {
-					int playerID = packetListener.readInt();
-					this.playerPositions.remove(playerID);
-					this.playerHealths.remove(playerID);
-					this.playerLifeIDs.remove(playerID);
-					this.disconnectedPlayers.add(playerID);
-				}
-				break;
-
-			case "bullet_rays":
-				for (int i = 0; i < elementAmt; i++) {
-					int playerID = packetListener.readInt();
-					int weaponID = packetListener.readInt();
-					Vec3 ray_origin = packetListener.readVec3();
-					Vec3 ray_dir = packetListener.readVec3();
-					this.inBulletRays.add(new Pair<Integer, Pair<Integer, Vec3[]>>(playerID, new Pair<Integer, Vec3[]>(weaponID, new Vec3[] { ray_origin, ray_dir })));
-				}
-				break;
-
-			case "should_respawn":
-				this.respawnPos = packetListener.readVec3();
-				this.shouldRespawn = true;
-				break;
-
-			case "server_messages":
-				for (int i = 0; i < elementAmt; i++) {
-					int sLength = packetListener.readInt();
-					String s = packetListener.readString(sLength);
-					this.serverMessages.add(s);
-				}
-				break;
-
-			case "footsteps":
-				for (int i = 0; i < elementAmt; i++) {
-					int sourceClientID = packetListener.readInt();
-					int footstepType = packetListener.readInt();
-					float[] footstepPos = packetListener.readNFloats(3);
-					this.inFootsteps.add(new Pair<Integer, Pair<Integer, float[]>>(sourceClientID, new Pair<Integer, float[]>(footstepType, footstepPos)));
-				}
-				break;
+	public void readSection(PacketListener packetListener) throws IOException {
+		switch (packetListener.getSectionName()) {
+		case "player_positions": {
+			int elementAmt = packetListener.readInt();
+			for (int i = 0; i < elementAmt; i++) {
+				int playerID = packetListener.readInt();
+				float[] arr = packetListener.readNFloats(3);
+				this.playerPositions.put(playerID, new Vec3(arr[0], arr[1], arr[2]));
 			}
+			break;
+		}
+
+		case "player_healths": {
+			int elementAmt = packetListener.readInt();
+			for (int i = 0; i < elementAmt; i++) {
+				int playerID = packetListener.readInt();
+				int playerHealth = packetListener.readInt();
+				this.playerHealths.put(playerID, playerHealth);
+			}
+			break;
+		}
+
+		case "player_life_ids": {
+			int elementAmt = packetListener.readInt();
+			for (int i = 0; i < elementAmt; i++) {
+				int playerID = packetListener.readInt();
+				int lifeID = packetListener.readInt();
+				this.playerLifeIDs.put(playerID, lifeID);
+			}
+			break;
+		}
+
+		case "killfeed": {
+			int elementAmt = packetListener.readInt();
+			for (int i = 0; i < elementAmt; i++) {
+				int aggressorNickLength = packetListener.readInt();
+				String aggressorNick = packetListener.readString(aggressorNickLength);
+				int receiverNickLength = packetListener.readInt();
+				String receiverNick = packetListener.readString(receiverNickLength);
+				this.killfeed.add(new Pair<String, String>(aggressorNick, receiverNick));
+			}
+			break;
+		}
+
+		case "disconnect": {
+			int elementAmt = packetListener.readInt();
+			for (int i = 0; i < elementAmt; i++) {
+				int playerID = packetListener.readInt();
+				this.playerPositions.remove(playerID);
+				this.playerHealths.remove(playerID);
+				this.playerLifeIDs.remove(playerID);
+				this.disconnectedPlayers.add(playerID);
+			}
+			break;
+		}
+
+		case "bullet_rays": {
+			int elementAmt = packetListener.readInt();
+			for (int i = 0; i < elementAmt; i++) {
+				int playerID = packetListener.readInt();
+				int weaponID = packetListener.readInt();
+				Vec3 ray_origin = packetListener.readVec3();
+				Vec3 ray_dir = packetListener.readVec3();
+				this.inBulletRays.add(new Pair<Integer, Pair<Integer, Vec3[]>>(playerID, new Pair<Integer, Vec3[]>(weaponID, new Vec3[] { ray_origin, ray_dir })));
+			}
+			break;
+		}
+
+		case "should_respawn": {
+			this.respawnPos = packetListener.readVec3();
+			this.shouldRespawn = true;
+			break;
+		}
+
+		case "server_messages": {
+			int elementAmt = packetListener.readInt();
+			for (int i = 0; i < elementAmt; i++) {
+				int sLength = packetListener.readInt();
+				String s = packetListener.readString(sLength);
+				this.serverMessages.add(s);
+			}
+			break;
+		}
+
+		case "footsteps": {
+			int elementAmt = packetListener.readInt();
+			for (int i = 0; i < elementAmt; i++) {
+				int sourceClientID = packetListener.readInt();
+				int footstepType = packetListener.readInt();
+				float[] footstepPos = packetListener.readNFloats(3);
+				this.inFootsteps.add(new Pair<Integer, Pair<Integer, float[]>>(sourceClientID, new Pair<Integer, float[]>(footstepType, footstepPos)));
+			}
+			break;
+		}
 		}
 	}
 

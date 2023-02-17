@@ -16,6 +16,16 @@ import java.util.HashSet;
 
 public abstract class Server implements Runnable {
 
+	//TODO refactor client - server communications so that it's more modular. 
+	//sections should be fed one by one into the child class, and include the name of the section,
+	//length of the section in bytes, and the byte array making up the payload. 
+
+	//packet sender should automatically count how many bytes each section has, 
+	//should call packetSender.endSection() to mark the end of another section. 
+
+	//maybe as convenience, if you call packetSender.startSection(sectionName), it'll end the current
+	//active section and start a new one. And when you send the packet, it'll end the current section. 
+
 	public static HashSet<Server> servers = new HashSet<>();
 
 	private boolean isRunning = true;
@@ -124,9 +134,9 @@ public abstract class Server implements Runnable {
 				continue;
 			}
 
-			while (this.packetListeners.get(ID).nextPacket()) {
+			while (this.packetListeners.get(ID).nextSection()) {
 				try {
-					this.readPacket(this.packetListeners.get(ID), ID);
+					this.readSection(this.packetListeners.get(ID), ID);
 					if (this.clientCommunicationErrorCounter.containsKey(ID)) {
 						this.clientCommunicationErrorCounter.remove(ID);
 					}
@@ -134,6 +144,7 @@ public abstract class Server implements Runnable {
 				catch (IOException e) {
 					//something went wrong with communicating with the client. 
 					System.err.println("Error when communicating with client " + ID);
+					System.err.println("Section name : " + this.packetListeners.get(ID).getSectionName());
 					this.clientCommunicationErrorCounter.put(ID, this.clientCommunicationErrorCounter.getOrDefault(ID, 0) + 1);
 					if (this.clientCommunicationErrorCounter.get(ID) >= 3) {
 						System.err.println("Force disconnect client " + ID + " due to too many errors during communication");
@@ -167,6 +178,7 @@ public abstract class Server implements Runnable {
 		for (int ID : this.clientIDs) {
 			Socket s = this.clientSockets.get(ID);
 			try {
+				this.packetSender.startSection("_base_server_");
 				this.packetSender.write(ID);
 				this.writePacket(this.packetSender, ID);
 				this.packetSender.flush(s);
@@ -203,8 +215,8 @@ public abstract class Server implements Runnable {
 	// run once after all packets to clients have been sent. 
 	public abstract void writePacketEND();
 
-	// use the packet listener to read in the packet. The parent class has already polled the next packet
-	public abstract void readPacket(PacketListener packetListener, int clientID) throws IOException;
+	// use the packet listener to read in the next section. The parent class has already polled the next section
+	public abstract void readSection(PacketListener packetListener, int clientID) throws IOException;
 
 	// so that the child class can do whatever they need to do in the case of connection status change
 	public abstract void _clientConnect(int clientID);

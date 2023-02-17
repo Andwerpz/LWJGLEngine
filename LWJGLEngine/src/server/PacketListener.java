@@ -6,29 +6,35 @@ import java.net.Socket;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
+import util.Pair;
+import util.Vec2;
 import util.Vec3;
 
 public class PacketListener implements Runnable {
+	//each packet starts with an int denoting it's length
+
+	//then, each section starts with a string header, followed by it's length. 
+	//we should read each section in, and the server or client should process each section one by one. 
+
 	private boolean isRunning = true;
 	private Thread thread;
 	private String name;
 
 	private Socket socket; // socket on which to listen for packets
-	private Queue<byte[]> packetQueue;
+	private Queue<Pair<String, byte[]>> sectionQueue;
 
 	private boolean isConnected;
 
 	private long lastPacketTime;
 	private long timeoutMillis = 5000;
 
-	private byte[] packet;
+	private byte[] section;
+	private String sectionName;
 	private int readPtr;
-
-	private int sectionElementAmt;
 
 	public PacketListener(Socket socket, String name) {
 		this.socket = socket;
-		this.packetQueue = new ArrayDeque<>();
+		this.sectionQueue = new ArrayDeque<>();
 		this.name = name;
 		this.isConnected = true;
 		this.lastPacketTime = System.currentTimeMillis();
@@ -48,13 +54,19 @@ public class PacketListener implements Runnable {
 		}
 	}
 
-	public boolean nextPacket() {
-		if (this.packetQueue.size() == 0) {
+	public boolean nextSection() {
+		if (this.sectionQueue.size() == 0) {
 			return false;
 		}
-		this.packet = this.packetQueue.poll();
+		this.section = this.sectionQueue.peek().second;
+		this.sectionName = this.sectionQueue.peek().first;
+		this.sectionQueue.poll();
 		this.readPtr = 0;
 		return true;
+	}
+
+	public String getSectionName() {
+		return this.sectionName;
 	}
 
 	public boolean isConnected() {
@@ -63,11 +75,11 @@ public class PacketListener implements Runnable {
 	}
 
 	public boolean hasMoreBytes() {
-		return this.readPtr < this.packet.length;
+		return this.readPtr < this.section.length;
 	}
 
 	public byte readByte() throws IOException {
-		byte ans = this.packet[this.readPtr];
+		byte ans = this.section[this.readPtr];
 		this.readPtr++;
 		return ans;
 	}
@@ -113,6 +125,10 @@ public class PacketListener implements Runnable {
 		return new Vec3(this.readFloat(), this.readFloat(), this.readFloat());
 	}
 
+	public Vec2 readVec2() throws IOException {
+		return new Vec2(this.readFloat(), this.readFloat());
+	}
+
 	public char readChar() throws IOException {
 		return (char) this.readByte();
 	}
@@ -129,23 +145,36 @@ public class PacketListener implements Runnable {
 		return new String(this.readNChars(len));
 	}
 
-	public String readSectionHeader() throws IOException {
-		int len = this.readInt();
-		String sectionName = this.readString(len);
-		this.sectionElementAmt = this.readInt();
-		return sectionName;
-	}
-
-	public int getSectionElementAmt() {
-		return this.sectionElementAmt;
-	}
-
 	private void listenForPackets() {
 		try {
 			DataInputStream dis = new DataInputStream(this.socket.getInputStream());
 			int packetSize = dis.readInt();
-			this.packetQueue.add(this.readNBytes(packetSize, dis));
-			// System.out.println(this.name + " read packet of size " + packetSize);
+
+			//parse the packet into sections
+			int ptr = 0;
+			while (ptr < packetSize) {
+				int sectionNameLength = this.readInt(dis);
+				ptr += 4;
+
+				char[] cstr = new char[sectionNameLength];
+				for (int i = 0; i < sectionNameLength; i++) {
+					cstr[i] = (char) dis.readByte();
+					ptr += 1;
+				}
+				String sectionName = new String(cstr);
+
+				int sectionContentsLength = this.readInt(dis);
+				ptr += 4;
+
+				byte[] sectionContents = new byte[sectionContentsLength];
+				for (int i = 0; i < sectionContentsLength; i++) {
+					sectionContents[i] = dis.readByte();
+					ptr += 1;
+				}
+
+				this.sectionQueue.add(new Pair<String, byte[]>(sectionName, sectionContents));
+			}
+
 		}
 		catch (IOException e) {
 			// probably closed connection
@@ -155,6 +184,15 @@ public class PacketListener implements Runnable {
 			this.exit();
 		}
 		this.lastPacketTime = System.currentTimeMillis();
+	}
+
+	private int readInt(DataInputStream dis) throws IOException {
+		int ans = 0;
+		for (int i = 0; i < 4; i++) {
+			ans <<= 8;
+			ans |= dis.readByte() & 0xFF;
+		}
+		return ans;
 	}
 
 	private byte[] readNBytes(int n, DataInputStream dis) throws IOException {
