@@ -53,6 +53,10 @@ public class Vec2 {
 		this.y = y;
 	}
 
+	public void set(double x, double y) {
+		set((float) x, (float) y);
+	}
+
 	public Vec2 set(Vec2 v) {
 		x = v.x;
 		y = v.y;
