@@ -216,8 +216,7 @@ public class GameServer extends Server {
 		}
 
 		case "set_nickname": {
-			int nickLength = packetListener.readInt();
-			String nickname = packetListener.readString(nickLength);
+			String nickname = packetListener.readString();
 			this.serverMessages.add(this.playerNicknames.get(clientID) + " changed their name to " + nickname);
 			this.playerNicknames.put(clientID, nickname);
 			break;

@@ -166,10 +166,8 @@ public class GameClient extends Client {
 		case "killfeed": {
 			int elementAmt = packetListener.readInt();
 			for (int i = 0; i < elementAmt; i++) {
-				int aggressorNickLength = packetListener.readInt();
-				String aggressorNick = packetListener.readString(aggressorNickLength);
-				int receiverNickLength = packetListener.readInt();
-				String receiverNick = packetListener.readString(receiverNickLength);
+				String aggressorNick = packetListener.readString();
+				String receiverNick = packetListener.readString();
 				this.killfeed.add(new Pair<String, String>(aggressorNick, receiverNick));
 			}
 			break;
@@ -208,8 +206,7 @@ public class GameClient extends Client {
 		case "server_messages": {
 			int elementAmt = packetListener.readInt();
 			for (int i = 0; i < elementAmt; i++) {
-				int sLength = packetListener.readInt();
-				String s = packetListener.readString(sLength);
+				String s = packetListener.readString();
 				this.serverMessages.add(s);
 			}
 			break;

@@ -109,6 +109,15 @@ public class PacketListener implements Runnable {
 		return ans;
 	}
 
+	public long readLong() throws IOException {
+		long ans = 0;
+		for (int i = 0; i < 8; i++) {
+			ans <<= 8;
+			ans |= this.readByte() & 0xFF;
+		}
+		return ans;
+	}
+
 	public float readFloat() throws IOException {
 		return Float.intBitsToFloat(this.readInt());
 	}
@@ -141,7 +150,14 @@ public class PacketListener implements Runnable {
 		return ans;
 	}
 
-	public String readString(int len) throws IOException {
+	/**
+	 * First reads an int, len, then reads a string of size len. 
+	 * @param len
+	 * @return
+	 * @throws IOException
+	 */
+	public String readString() throws IOException {
+		int len = this.readInt();
 		return new String(this.readNChars(len));
 	}
 
