@@ -11,14 +11,18 @@ public abstract class Shape {
 	public float radius;
 	public final Mat2 u = new Mat2();
 
+	public float area;
+
 	public Shape() {
 
 	}
 
+	public void initialize() {
+		this.computeMass(body.density);
+	}
+
 	@Override
 	public abstract Shape clone();
-
-	public abstract void initialize();
 
 	public abstract void computeMass(float density);
 

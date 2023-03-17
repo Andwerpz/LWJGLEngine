@@ -26,8 +26,8 @@ public class Polygon extends Shape {
 		set(v);
 	}
 
-	public Polygon(float hw, float hh) {
-		setBox(hw, hh);
+	public Polygon(float width, float height) {
+		setBox(width / 2, height / 2);
 	}
 
 	@Override
@@ -95,6 +95,7 @@ public class Polygon extends Shape {
 			vertices[i].subi(c);
 		}
 
+		this.area = area;
 		body.mass = density * area;
 		body.invMass = (body.mass != 0.0f) ? 1.0f / body.mass : 0.0f;
 		body.inertia = I * density;

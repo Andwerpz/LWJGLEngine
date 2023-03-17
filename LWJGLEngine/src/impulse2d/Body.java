@@ -8,11 +8,12 @@ public class Body {
 	public final Vec2 force = new Vec2();
 	public float angularVelocity;
 	public float torque;
-	public float orient;
+	public float orient; //rotation rads
+	public float density;
 	public float mass, invMass, inertia, invInertia;
 	public float staticFriction;
 	public float dynamicFriction;
-	public float restitution;
+	public float restitution; //amount of kinetic energy retained when colliding
 	public final Shape shape;
 
 	public Body(Shape shape, double x, double y) {
@@ -27,6 +28,7 @@ public class Body {
 		staticFriction = 0.5f;
 		dynamicFriction = 0.3f;
 		restitution = 0.2f;
+		density = 1f;
 
 		shape.body = this;
 		shape.initialize();
@@ -45,6 +47,19 @@ public class Body {
 		angularVelocity += invInertia * Vec2.cross(contactVector, impulse);
 	}
 
+	public void setRestitution(float restitution) {
+		this.restitution = restitution;
+	}
+
+	public void setDensity(float density) {
+		this.shape.computeMass(density);
+	}
+
+	public void setMass(float mass) {
+		float density = mass / shape.area;
+		this.setDensity(density);
+	}
+
 	public void setStatic() {
 		inertia = 0.0f;
 		invInertia = 0.0f;
@@ -55,5 +70,13 @@ public class Body {
 	public void setOrient(float radians) {
 		orient = radians;
 		shape.setOrient(radians);
+	}
+
+	public void setPosition(Vec2 position) {
+		this.position.set(position);
+	}
+
+	public void setVelocity(Vec2 vel) {
+		this.velocity.set(vel);
 	}
 }

@@ -9,18 +9,46 @@ import java.util.ArrayList;
 import util.Vec2;
 
 public class ImpulseScene {
-	public float dt = 1f / 60f;
-	public int iterations = 4;
-	public ArrayList<Body> bodies;
-	public ArrayList<Manifold> contacts;
+	private float dt = 1f / 60f;
+	private int iterations = 4;
+	private ArrayList<Body> bodies;
+	private ArrayList<Manifold> contacts;
 
-	public boolean fillBodies = true;
-	public boolean doGravity = true;
-	public boolean doCollision = true;
+	//adds a force in the -y direction every iteration
+	private boolean doGravity = true;
+
+	//allows things to collide with each other; pretty much the whole point of this object
+	private boolean doCollision = true;
+
+	//simulates the scene as if it were placed on top of some surface, like a table. 
+	//this means that all objects passively have friction applied to their velocities. 
+	// TODO for now, static friction is not accounted for, only dynamic friction. 
+	private boolean simulateOnSurface = false;
+	private float surfaceFrictionCoefficient = 1;
 
 	public ImpulseScene() {
 		bodies = new ArrayList<>();
 		contacts = new ArrayList<>();
+	}
+
+	public void setDoGravity(boolean b) {
+		this.doGravity = b;
+	}
+
+	public void setDoCollision(boolean b) {
+		this.doCollision = b;
+	}
+
+	public void setSimulateOnSurface(boolean b) {
+		this.simulateOnSurface = b;
+	}
+
+	public void setSurfaceFrictionCoefficient(float f) {
+		this.surfaceFrictionCoefficient = f;
+	}
+
+	public void setIterations(int iterations) {
+		this.iterations = iterations;
 	}
 
 	public void tick() {
@@ -81,10 +109,18 @@ public class ImpulseScene {
 		}
 	}
 
-	public Body add(Shape shape, int x, int y) {
-		Body b = new Body(shape, x, y);
-		bodies.add(b);
+	public Body addBody(Shape s, float x, float y) {
+		Body b = new Body(s, x, y);
+		this.bodies.add(b);
 		return b;
+	}
+
+	public void addBody(Body b) {
+		this.bodies.add(b);
+	}
+
+	public void removeBody(Body b) {
+		this.bodies.remove(b);
 	}
 
 	public void integrateForces(Body b, float dt) {
@@ -104,6 +140,30 @@ public class ImpulseScene {
 			b.velocity.addsi(ImpulseMath.GRAVITY, dts);
 		}
 		b.angularVelocity += b.torque * b.invInertia * dts;
+
+		if (this.simulateOnSurface) {
+			//apply friction to velocity and angular velocity.
+			if (b.velocity.lengthSq() > ImpulseMath.EPSILON) {
+				Vec2 friction = new Vec2(b.velocity);
+				friction.setLength(-this.surfaceFrictionCoefficient);
+				b.velocity.addsi(friction, dts);
+
+				if (b.velocity.dot(friction) > 0) {
+					//velocity has reversed direction, just set velocity to 0
+					b.velocity.set(0, 0);
+				}
+			}
+
+			if (Math.abs(b.angularVelocity) > ImpulseMath.EPSILON) {
+				float friction = b.angularVelocity / Math.abs(b.angularVelocity);
+				//i have no idea how to do angular friction, i'll just bs it here, but TODO, fix. 
+				b.angularVelocity -= friction * this.surfaceFrictionCoefficient * dts;
+				if (b.angularVelocity * friction < 0) {
+					b.angularVelocity = 0;
+				}
+			}
+		}
+
 	}
 
 	public void integrateVelocity(Body b, float dt) {
@@ -124,66 +184,4 @@ public class ImpulseScene {
 
 		integrateForces(b, dt);
 	}
-
-	//	public void draw(Graphics g) {
-	//		Graphics2D g2d = (Graphics2D) g;
-	//
-	//		// transform to real space
-	//		AffineTransform realSpaceTransform = new AffineTransform();
-	//		realSpaceTransform.scale(1.0, -1.0);
-	//		realSpaceTransform.translate(0, -MainPanel.HEIGHT);
-	//
-	//		g2d.transform(realSpaceTransform);
-	//
-	//		for (Body b : bodies) {
-	//			Vec2 pos = b.position;
-	//			if(b.shape instanceof Circle) {
-	//				if(this.fillBodies) {
-	//					g.fillOval((int) (pos.x - b.shape.radius), (int) (pos.y - b.shape.radius),
-	//							(int) (b.shape.radius * 2), (int) (b.shape.radius * 2));
-	//				}
-	//				else {
-	//					g.drawOval((int) (pos.x - b.shape.radius), (int) (pos.y - b.shape.radius),
-	//							(int) (b.shape.radius * 2), (int) (b.shape.radius * 2));
-	//
-	//					Vec2 facing = new Vec2(0, b.shape.radius);
-	//					facing.rotate(b.orient);
-	//
-	//					Vec2 a = new Vec2(b.position.x, b.position.y);
-	//					Vec2 aFacing = a.add(facing);
-	//
-	//					g.drawLine((int) a.x, (int) a.y, (int) aFacing.x, (int) aFacing.y);
-	//				}
-	//			}
-	//			else if(b.shape instanceof Polygon) {
-	//				Polygon p = (Polygon) b.shape;
-	//
-	//				int[] cx = new int[p.vertexCount];
-	//				int[] cy = new int[p.vertexCount];
-	//				for (int i = 0; i < p.vertexCount; i++) {
-	//					Vec2 v = new Vec2(p.vertices[i]);
-	//					b.shape.u.muli(v);
-	//					v.addi(b.position);
-	//					cx[i] = (int) v.x;
-	//					cy[i] = (int) v.y;
-	//				}
-	//
-	//				if(this.fillBodies) {
-	//					g.fillPolygon(cx, cy, p.vertexCount);
-	//				}
-	//				else {
-	//					g.drawOval((int) (b.position.x - 3), (int) (b.position.y - 3), 6, 6);
-	//					g.drawPolygon(cx, cy, p.vertexCount);
-	//				}
-	//			}
-	//		}
-	//
-	//		// transform back to screen space
-	//		try {
-	//			g2d.transform(realSpaceTransform.createInverse());
-	//		} catch (NoninvertibleTransformException e) {
-	//			// TODO Auto-generated catch block
-	//			e.printStackTrace();
-	//		}
-	//	}
 }

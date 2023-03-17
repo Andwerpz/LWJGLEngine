@@ -12,13 +12,9 @@ public class Circle extends Shape {
 	}
 
 	@Override
-	public void initialize() {
-		computeMass(1.0f);
-	}
-
-	@Override
 	public void computeMass(float density) {
-		body.mass = ImpulseMath.PI * radius * radius * density;
+		this.area = ImpulseMath.PI * radius * radius;
+		body.mass = this.area * density;
 		body.invMass = (body.mass != 0.0f) ? 1.0f / body.mass : 0.0f;
 		body.inertia = body.mass * radius * radius;
 		body.invInertia = (body.inertia != 0.0f) ? 1.0f / body.inertia : 0.0f;
