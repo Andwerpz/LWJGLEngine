@@ -17,8 +17,8 @@ import model.Model;
 import player.Camera;
 import scene.Light;
 import scene.Scene;
-import util.Mat4;
-import util.Vec3;
+import v10.math.Mat4;
+import v10.math.Vec3;
 
 public class PerspectiveScreen extends Screen {
 	// renders the scene with a perspective projection matrix.

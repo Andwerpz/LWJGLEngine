@@ -6,6 +6,8 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import graphics.Material;
+import v10.math.Mat4;
+import v10.math.Vec3;
 
 import java.nio.ByteOrder;
 

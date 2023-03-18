@@ -1,6 +1,6 @@
 package impulse2d;
 
-import util.Mat2;
+import v10.math.Mat2;
 
 public abstract class Shape {
 	public enum Type {

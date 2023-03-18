@@ -7,9 +7,9 @@ import java.nio.DoubleBuffer;
 import org.lwjgl.BufferUtils;
 
 import main.Main;
-import util.Mat4;
-import util.Vec2;
-import util.Vec3;
+import v10.math.Mat4;
+import v10.math.Vec2;
+import v10.math.Vec3;
 
 public class Camera {
 
@@ -56,7 +56,7 @@ public class Camera {
 		up = new Vec3(0, 1, 0);
 		pos = new Vec3(0, 0, 0);
 	}
-	
+
 	public void setProjectionMatrix(Mat4 m) {
 		this.projectionMatrix = m;
 	}

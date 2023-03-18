@@ -20,11 +20,11 @@ import model.Model;
 import scene.Scene;
 import ui.Text;
 import ui.UIElement;
-import util.FontUtils;
-import util.GraphicsTools;
-import util.Mat4;
-import util.Vec3;
-import util.Vec4;
+import v10.graphics.FontUtils;
+import v10.graphics.GraphicsTools;
+import v10.math.Mat4;
+import v10.math.Vec3;
+import v10.math.Vec4;
 
 public class Button extends Input {
 	// the button isn't responsible for checking if it is pressed, another class, probably ButtonManager

@@ -6,7 +6,7 @@ import static org.lwjgl.opengl.GL30.*;
 import graphics.Framebuffer;
 import graphics.Shader;
 import graphics.Texture;
-import util.MathUtils;
+import v10.math.MathUtils;
 
 public class LoadScreen extends Screen {
 

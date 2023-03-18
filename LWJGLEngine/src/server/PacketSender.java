@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import util.Vec2;
-import util.Vec3;
+import v10.math.Vec2;
+import v10.math.Vec3;
 
 public class PacketSender {
 	// packets always start with an int denoting the length of the packet

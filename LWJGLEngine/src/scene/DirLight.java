@@ -2,7 +2,7 @@ package scene;
 
 import graphics.Framebuffer;
 import graphics.Shader;
-import util.Vec3;
+import v10.math.Vec3;
 
 public class DirLight extends Light {
 

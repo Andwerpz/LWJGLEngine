@@ -4,8 +4,8 @@ import static org.lwjgl.opengl.GL11.*;
 
 import graphics.TextureMaterial;
 import graphics.VertexArray;
-import util.Mat4;
-import util.Vec3;
+import v10.math.Mat4;
+import v10.math.Vec3;
 
 public class Line extends Model {
 	// you can render any line with a linear scaling of the line (0, 0, 0) to (1, 1,

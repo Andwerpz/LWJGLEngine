@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import graphics.Shader;
-import util.Vec3;
+import v10.math.Vec3;
 
 public abstract class Light {
 
@@ -27,14 +27,14 @@ public abstract class Light {
 	}
 
 	public static void addLight(int scene, Light l) {
-		if(lights.get(scene) == null) {
+		if (lights.get(scene) == null) {
 			lights.put(scene, new ArrayList<Light>());
 		}
 		lights.get(scene).add(l);
 	}
 
 	public static void removeLightsFromScene(int scene) {
-		if(lights.get(scene) != null) {
+		if (lights.get(scene) != null) {
 			lights.get(scene).clear();
 		}
 	}

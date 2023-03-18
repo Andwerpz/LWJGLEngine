@@ -50,13 +50,13 @@ import ui.Text;
 import ui.UIElement;
 import ui.UIFilledRectangle;
 import util.BufferUtils;
-import util.FontUtils;
-import util.Mat4;
-import util.MathUtils;
-import util.NetworkingUtils;
-import util.Pair;
-import util.Vec3;
-import util.Vec4;
+import v10.graphics.FontUtils;
+import v10.math.Mat4;
+import v10.math.MathUtils;
+import v10.networking.NetworkingUtils;
+import v10.misc.Pair;
+import v10.math.Vec3;
+import v10.math.Vec4;
 
 public class GameState extends State {
 

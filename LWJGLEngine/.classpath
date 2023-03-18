@@ -165,5 +165,6 @@
 	<classpathentry exported="true" kind="lib" path="C:/Program Files/lwjgl3/lwjgl-zstd-javadoc.jar"/>
 	<classpathentry exported="true" kind="lib" path="C:/Program Files/lwjgl3/lwjgl-zstd-natives-windows.jar"/>
 	<classpathentry exported="true" kind="lib" path="C:/Program Files/lwjgl3/lwjgl-zstd-sources.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/MyUtils"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

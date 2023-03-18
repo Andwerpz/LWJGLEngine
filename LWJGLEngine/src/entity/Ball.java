@@ -4,8 +4,8 @@ import java.util.ArrayList;
 
 import model.AssetManager;
 import model.Model;
-import util.Mat4;
-import util.Vec3;
+import v10.math.Mat4;
+import v10.math.Vec3;
 
 public class Ball extends Entity {
 

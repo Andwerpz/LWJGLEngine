@@ -28,8 +28,8 @@ import server.Server;
 import state.MainMenuState;
 import state.StateManager;
 import ui.UIElement;
-import util.FontUtils;
-import util.Mat4;
+import v10.graphics.FontUtils;
+import v10.math.Mat4;
 
 import static org.lwjgl.opengl.GL.*;
 

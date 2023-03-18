@@ -9,8 +9,8 @@ import graphics.TextureMaterial;
 import main.Main;
 import model.FilledRectangle;
 import model.Model;
-import util.Mat4;
-import util.Vec2;
+import v10.math.Mat4;
+import v10.math.Vec2;
 
 public abstract class UIElement extends Entity {
 	//am i overengineering ui element alignment? no i am not. Maybe i should make it so that less boilerplate is required. 

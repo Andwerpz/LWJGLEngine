@@ -17,7 +17,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWKeyCallback;
 
 import main.Main;
-import util.Vec2;
+import v10.math.Vec2;
 
 public class KeyboardInput extends GLFWKeyCallback {
 
@@ -25,10 +25,10 @@ public class KeyboardInput extends GLFWKeyCallback {
 
 	@Override
 	public void invoke(long window, int key, int scancode, int action, int mods) {
-		if(action == GLFW_PRESS) {
+		if (action == GLFW_PRESS) {
 			Main.main.keyPressed(key);
 		}
-		else if(action == GLFW_RELEASE) {
+		else if (action == GLFW_RELEASE) {
 			Main.main.keyReleased(key);
 		}
 		keys[key] = action != GLFW.GLFW_RELEASE;

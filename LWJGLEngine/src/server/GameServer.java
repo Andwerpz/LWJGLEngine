@@ -9,11 +9,11 @@ import entity.Capsule;
 import graphics.Material;
 import model.Model;
 import state.GameState;
-import util.Mat4;
-import util.MathUtils;
-import util.Pair;
-import util.Vec3;
-import util.Vec4;
+import v10.math.Mat4;
+import v10.math.MathUtils;
+import v10.misc.Pair;
+import v10.math.Vec3;
+import v10.math.Vec4;
 
 public class GameServer extends Server {
 

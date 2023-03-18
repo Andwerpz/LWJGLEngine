@@ -17,8 +17,8 @@ import java.util.HashMap;
 
 import input.MouseInput;
 import util.BufferUtils;
-import util.Vec2;
-import util.Vec3;
+import v10.math.Vec2;
+import v10.math.Vec3;
 import main.Main;
 import model.Model;
 

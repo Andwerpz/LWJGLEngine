@@ -1,6 +1,6 @@
 package impulse2d;
 
-import util.Vec2;
+import v10.math.Vec2;
 
 public class Body {
 	public final Vec2 position = new Vec2();

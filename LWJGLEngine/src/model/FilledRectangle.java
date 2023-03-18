@@ -4,8 +4,8 @@ import static org.lwjgl.opengl.GL11.*;
 
 import graphics.TextureMaterial;
 import graphics.VertexArray;
-import util.Mat4;
-import util.Vec3;
+import v10.math.Mat4;
+import v10.math.Vec3;
 
 public class FilledRectangle extends Model {
 	// as the name suggests, this rectangle is indeed filled

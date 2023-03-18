@@ -8,10 +8,10 @@ import java.nio.FloatBuffer;
 import javax.imageio.ImageIO;
 
 import util.BufferUtils;
-import util.FileUtils;
-import util.GraphicsTools;
-import util.MathUtils;
-import util.Vec3;
+import v10.file.FileUtils;
+import v10.graphics.GraphicsTools;
+import v10.math.MathUtils;
+import v10.math.Vec3;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;

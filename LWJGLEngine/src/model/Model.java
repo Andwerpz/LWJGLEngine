@@ -33,13 +33,13 @@ import graphics.Material;
 import graphics.Shader;
 import graphics.Texture;
 import graphics.VertexArray;
-import util.FileUtils;
-import util.GraphicsTools;
-import util.Mat4;
-import util.SystemUtils;
-import util.TargaReader;
-import util.Vec2;
-import util.Vec3;
+import v10.file.FileUtils;
+import v10.graphics.GraphicsTools;
+import v10.math.Mat4;
+import v10.file.SystemUtils;
+import v10.file.TargaReader;
+import v10.math.Vec2;
+import v10.math.Vec3;
 
 public class Model {
 	// always instanced rendering

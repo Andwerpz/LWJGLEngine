@@ -13,10 +13,10 @@ import java.util.HashSet;
 import model.Model;
 import scene.Scene;
 import util.BufferUtils;
-import util.Mat4;
-import util.Pair;
-import util.Vec2;
-import util.Vec3;
+import v10.math.Mat4;
+import v10.math.Vec2;
+import v10.math.Vec3;
+import v10.misc.Pair;
 
 public class VertexArray {
 

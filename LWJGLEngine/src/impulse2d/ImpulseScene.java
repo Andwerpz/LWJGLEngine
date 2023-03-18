@@ -6,7 +6,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.util.ArrayList;
 
-import util.Vec2;
+import v10.math.Vec2;
 
 public class ImpulseScene {
 	private float dt = 1f / 60f;

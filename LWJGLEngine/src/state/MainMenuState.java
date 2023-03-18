@@ -22,10 +22,10 @@ import screen.PerspectiveScreen;
 import screen.Screen;
 import screen.UIScreen;
 import ui.UIElement;
-import util.FontUtils;
-import util.Mat4;
-import util.MathUtils;
-import util.Vec3;
+import v10.graphics.FontUtils;
+import v10.math.Mat4;
+import v10.math.MathUtils;
+import v10.math.Vec3;
 
 public class MainMenuState extends State {
 

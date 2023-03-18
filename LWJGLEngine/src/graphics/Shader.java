@@ -5,9 +5,10 @@ import static org.lwjgl.opengl.GL20.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import util.Mat4;
+import util.BufferUtils;
 import util.ShaderUtils;
-import util.Vec3;
+import v10.math.Mat4;
+import v10.math.Vec3;
 
 public class Shader {
 
@@ -121,7 +122,7 @@ public class Shader {
 	public void setUniformMat4(String name, Mat4 mat) {
 		if (!enabled)
 			enable();
-		glUniformMatrix4fv(getUniform(name), false, mat.toFloatBuffer());
+		glUniformMatrix4fv(getUniform(name), false, BufferUtils.createFloatBuffer(new Mat4[] { mat }));
 	}
 
 	public void enable() {

@@ -8,7 +8,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWMouseButtonCallback;
 
 import main.Main;
-import util.Vec2;
+import v10.math.Vec2;
 
 public class MouseInput extends GLFWMouseButtonCallback {
 
@@ -19,10 +19,10 @@ public class MouseInput extends GLFWMouseButtonCallback {
 
 	@Override
 	public void invoke(long window, int key, int action, int mods) {
-		if(action == GLFW_PRESS) {
+		if (action == GLFW_PRESS) {
 			Main.main.mousePressed(key);
 		}
-		else if(action == GLFW_RELEASE) {
+		else if (action == GLFW_RELEASE) {
 			Main.main.mouseReleased(key);
 		}
 		buttons[key] = action == GLFW_PRESS;

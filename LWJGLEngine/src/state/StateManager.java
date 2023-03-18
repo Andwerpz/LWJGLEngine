@@ -12,7 +12,7 @@ import main.Main;
 import model.Model;
 import player.Player;
 import screen.ScreenQuad;
-import util.Vec3;
+import v10.math.Vec3;
 
 public class StateManager {
 

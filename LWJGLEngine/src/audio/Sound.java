@@ -10,8 +10,8 @@ import java.util.HashSet;
 import org.lwjgl.BufferUtils;
 
 import model.Model;
-import util.FileUtils;
-import util.Vec3;
+import v10.file.FileUtils;
+import v10.math.Vec3;
 
 public class Sound {
 

@@ -6,8 +6,8 @@ import java.awt.Color;
 
 import org.lwjgl.assimp.AIColor4D;
 
-import util.Vec3;
-import util.Vec4;
+import v10.math.Vec3;
+import v10.math.Vec4;
 
 public class Material {
 

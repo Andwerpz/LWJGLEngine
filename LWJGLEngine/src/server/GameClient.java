@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import util.Pair;
-import util.Vec3;
+import v10.misc.Pair;
+import v10.math.Vec3;
 
 public class GameClient extends Client {
 

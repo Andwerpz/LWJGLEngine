@@ -7,8 +7,8 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import util.BufferUtils;
-import util.GraphicsTools;
-import util.Vec3;
+import v10.graphics.GraphicsTools;
+import v10.math.Vec3;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;

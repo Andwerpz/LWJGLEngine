@@ -5,7 +5,7 @@ import graphics.Texture;
 import scene.Scene;
 import screen.LoadScreen;
 import screen.Screen;
-import util.MathUtils;
+import v10.math.MathUtils;
 
 public class LoadState extends State {
 

@@ -1,7 +1,7 @@
 package impulse2d;
 
-import util.Mat2;
-import util.Vec2;
+import v10.math.Mat2;
+import v10.math.Vec2;
 
 public class CollisionPolygonPolygon implements CollisionCallback {
 	public static final CollisionPolygonPolygon instance = new CollisionPolygonPolygon();

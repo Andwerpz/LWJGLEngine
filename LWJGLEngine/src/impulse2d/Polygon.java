@@ -2,7 +2,7 @@ package impulse2d;
 
 import java.util.ArrayList;
 
-import util.Vec2;
+import v10.math.Vec2;
 
 public class Polygon extends Shape {
 	public static final int MAX_POLY_VERTEX_COUNT = 64;

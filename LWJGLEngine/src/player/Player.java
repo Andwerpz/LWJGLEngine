@@ -15,10 +15,10 @@ import scene.Light;
 import scene.PointLight;
 import scene.Scene;
 import scene.SpotLight;
-import util.Mat4;
-import util.MathUtils;
-import util.Vec2;
-import util.Vec3;
+import v10.math.Mat4;
+import v10.math.MathUtils;
+import v10.math.Vec2;
+import v10.math.Vec3;
 
 public class Player extends Entity {
 

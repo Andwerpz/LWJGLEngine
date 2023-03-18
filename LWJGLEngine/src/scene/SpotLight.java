@@ -1,7 +1,7 @@
 package scene;
 
 import graphics.Shader;
-import util.Vec3;
+import v10.math.Vec3;
 
 public class SpotLight extends Light {
 
