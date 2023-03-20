@@ -20,8 +20,8 @@ public class SplashState extends State {
 		nextState = next;
 	}
 
-	public SplashState(StateManager sm) {
-		super(sm);
+	public SplashState() {
+
 	}
 
 	@Override

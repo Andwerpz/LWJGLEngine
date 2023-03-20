@@ -29,9 +29,7 @@ public class LoadState extends State {
 
 	private float alpha;
 
-	public LoadState(StateManager sm, State nextState) {
-		super(sm);
-
+	public LoadState(State nextState) {
 		this.nextState = nextState;
 		init();
 	}

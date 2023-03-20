@@ -28,7 +28,8 @@ public class StateManager {
 		this.buildBuffers();
 
 		this.activeState = null;
-		this.loadState = new LoadState(this, new SplashState(this));
+		this.loadState = new LoadState(new SplashState());
+		this.loadState.setStateManager(this);
 	}
 
 	public void buildBuffers() {
@@ -43,10 +44,10 @@ public class StateManager {
 
 	// trigger a load screen
 	public void switchState(State nextState) {
-		if (this.loadState != null && !this.loadState.isFinishedLoading()) {
-			return;
+		if (this.loadState == null || this.loadState.isFinishedLoading()) {
+			this.loadState = new LoadState(nextState);
+			this.loadState.setStateManager(this);
 		}
-		this.loadState = new LoadState(this, nextState);
 	}
 
 	public void update() {
@@ -67,6 +68,7 @@ public class StateManager {
 				this.activeState.kill();
 			}
 			this.activeState = this.loadState.getNextState();
+			this.activeState.setStateManager(this);
 		}
 	}
 

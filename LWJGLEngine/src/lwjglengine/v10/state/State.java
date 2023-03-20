@@ -20,7 +20,7 @@ public abstract class State {
 		this.sm = null;
 	}
 
-	public State(StateManager sm) {
+	public void setStateManager(StateManager sm) {
 		this.sm = sm;
 	}
 
