@@ -118,7 +118,6 @@ public class Main implements Runnable {
 		System.out.println("OpenGL : " + glGetString(GL_VERSION));
 
 		// INIT
-		FontUtils.loadFonts();
 		Shader.init();
 		AssetManager.init();
 		Scene.init();
