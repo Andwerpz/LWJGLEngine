@@ -29,8 +29,6 @@ public class StateManager {
 
 		this.activeState = null;
 		this.loadState = new LoadState(this, new SplashState(this));
-		//this.loadState = new LoadState(this, new MainMenuState(this));
-		//this.loadState = new LoadState(this, new LobbyState(this));
 	}
 
 	public void buildBuffers() {
@@ -45,7 +43,7 @@ public class StateManager {
 
 	// trigger a load screen
 	public void switchState(State nextState) {
-		if (!this.loadState.isFinishedLoading()) {
+		if (this.loadState != null && !this.loadState.isFinishedLoading()) {
 			return;
 		}
 		this.loadState = new LoadState(this, nextState);

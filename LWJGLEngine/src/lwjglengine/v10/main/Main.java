@@ -20,12 +20,11 @@ import lwjglengine.v10.input.KeyboardInput;
 import lwjglengine.v10.input.MouseInput;
 import lwjglengine.v10.input.ScrollInput;
 import lwjglengine.v10.model.AssetManager;
+import lwjglengine.v10.networking.Client;
+import lwjglengine.v10.networking.Server;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.Screen;
 import lwjglengine.v10.screen.ScreenQuad;
-import lwjglengine.v10.server.Client;
-import lwjglengine.v10.server.Server;
-import lwjglengine.v10.state.MainMenuState;
 import lwjglengine.v10.state.StateManager;
 import lwjglengine.v10.ui.UIElement;
 import myutils.v10.graphics.FontUtils;
@@ -59,10 +58,15 @@ public class Main implements Runnable {
 	public int lastSecondUpdates = 0;
 	public int lastSecondFrames = 0;
 
-	private StateManager sm;
+	public StateManager sm;
 
 	private long audioContext;
 	private long audioDevice;
+
+	public static void main(String[] args) {
+		Main main = new Main();
+		main.start();
+	}
 
 	public void start() {
 		running = true;
@@ -159,7 +163,7 @@ public class Main implements Runnable {
 
 	@Override
 	public void run() {
-		init();
+		this.init();
 
 		long lastTime = System.nanoTime();
 		long lastUpdateTime = System.nanoTime();

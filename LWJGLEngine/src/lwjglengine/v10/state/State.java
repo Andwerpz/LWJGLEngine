@@ -16,6 +16,10 @@ public abstract class State {
 
 	protected StateManager sm;
 
+	public State() {
+		this.sm = null;
+	}
+
 	public State(StateManager sm) {
 		this.sm = sm;
 	}

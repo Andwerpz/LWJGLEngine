@@ -1,4 +1,4 @@
-package lwjglengine.v10.server;
+package lwjglengine.v10.networking;
 
 import java.io.DataInputStream;
 import java.io.IOException;

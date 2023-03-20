@@ -14,6 +14,12 @@ public class SplashState extends State {
 	private static final long TIME_ON_SCREEN = 2; // in seconds
 	private long startTime;
 
+	private static State nextState; //what state loads after the splash screen
+
+	public static void setNextState(State next) {
+		nextState = next;
+	}
+
 	public SplashState(StateManager sm) {
 		super(sm);
 	}
@@ -33,7 +39,10 @@ public class SplashState extends State {
 	public void update() {
 		long timeElapsed = System.currentTimeMillis() - this.startTime;
 		if (timeElapsed / 1000L > TIME_ON_SCREEN) {
-			this.sm.switchState(new MainMenuState(this.sm));
+			if (nextState.sm == null) {
+				nextState.sm = this.sm;
+			}
+			this.sm.switchState(nextState);
 		}
 	}
 
