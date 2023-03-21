@@ -12,6 +12,7 @@ import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.Model;
 import lwjglengine.v10.player.Camera;
 import myutils.v10.math.Mat4;
+import myutils.v10.math.Vec2;
 
 public class UIScreen extends Screen {
 	// higher values of z will go over lower values.
@@ -38,6 +39,9 @@ public class UIScreen extends Screen {
 	//this allows buttons to work better, as the button background will be drawn over the text,
 	//but in other cases where you want proper depth ids, you should turn this off. 
 	private boolean reverseDepthColorID = true;
+
+	private Vec2 viewportOffset; //where the bottom left corner is
+	private float viewportWidth, viewportHeight;
 
 	private float left, right, bottom, top, near, far;
 
@@ -73,34 +77,66 @@ public class UIScreen extends Screen {
 		this.colorIDBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.colorIDBuffer.isComplete();
 
-		this.left = 0;
-		this.right = Main.windowWidth;
-		this.bottom = 0;
-		this.top = Main.windowHeight;
+		this.viewportOffset = new Vec2(0);
+		this.viewportWidth = Main.windowWidth;
+		this.viewportHeight = Main.windowHeight;
+
+		this.calculateBounds();
 		this.near = -1000;
 		this.far = 1000;
 
 		this.camera = new Camera(Mat4.orthographic(left, right, bottom, top, near, far));
 	}
 
-	public void setLeft(float f) {
-		this.left = f;
+	private void calculateBounds() {
+		this.left = this.viewportOffset.x;
+		this.right = this.viewportOffset.x + this.viewportWidth;
+		this.bottom = this.viewportOffset.y;
+		this.top = this.viewportOffset.y + this.viewportHeight;
+
 		this.updateCamera();
+	}
+
+	public void setLeft(float f) {
+		this.viewportOffset.x = f;
+		this.viewportWidth = this.right - f;
+		this.calculateBounds();
 	}
 
 	public void setRight(float f) {
-		this.right = f;
-		this.updateCamera();
+		this.viewportWidth = f - this.left;
+		this.calculateBounds();
 	}
 
 	public void setBottom(float f) {
-		this.bottom = f;
-		this.updateCamera();
+		this.viewportOffset.y = f;
+		this.viewportHeight = this.top - f;
+		this.calculateBounds();
 	}
 
 	public void setTop(float f) {
-		this.top = f;
-		this.updateCamera();
+		this.viewportHeight = f - this.bottom;
+		this.calculateBounds();
+	}
+
+	public void setViewportWidth(float w) {
+		this.viewportWidth = w;
+		this.calculateBounds();
+	}
+
+	public void setViewportHeight(float h) {
+		this.viewportHeight = h;
+		this.calculateBounds();
+	}
+
+	public void setViewportOffset(Vec2 v) {
+		this.viewportOffset.set(v);
+		this.calculateBounds();
+	}
+
+	public void incrementViewportOffset(Vec2 v) {
+		this.viewportOffset.addi(v);
+		this.calculateBounds();
 	}
 
 	public void setNear(float f) {
@@ -114,6 +150,9 @@ public class UIScreen extends Screen {
 	}
 
 	private void updateCamera() {
+		if (this.camera == null) {
+			return;
+		}
 		this.camera.setProjectionMatrix(Mat4.orthographic(left, right, bottom, top, near, far));
 	}
 
