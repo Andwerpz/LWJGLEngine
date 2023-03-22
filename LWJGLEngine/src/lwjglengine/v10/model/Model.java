@@ -99,6 +99,14 @@ public class Model {
 		init();
 	}
 
+	public Model(VertexArray mesh) {
+		this.meshes = new ArrayList<VertexArray>(Arrays.asList(mesh));
+		this.defaultMaterials = new ArrayList<Material>(Arrays.asList(DEFAULT_MATERIAL));
+		this.textureMaterials = new ArrayList<TextureMaterial>(Arrays.asList(TextureMaterial.defaultTextureMaterial()));
+
+		init();
+	}
+
 	public Model(VertexArray mesh, TextureMaterial material) {
 		this.meshes = new ArrayList<VertexArray>(Arrays.asList(mesh));
 		this.defaultMaterials = new ArrayList<Material>(Arrays.asList(DEFAULT_MATERIAL));
