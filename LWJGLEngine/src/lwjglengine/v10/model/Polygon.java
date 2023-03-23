@@ -17,10 +17,14 @@ public class Polygon extends Model {
 	// simple polygons are polygons that don't have holes and don't intersect themselves. 
 
 	public Polygon(ArrayList<Vec2> points) {
-		super(createMesh(points));
+		super(createMesh(points, 1));
+	}
+	
+	public Polygon(ArrayList<Vec2> points, float uvMult) {
+		super(createMesh(points, uvMult));
 	}
 
-	private static VertexArray createMesh(ArrayList<Vec2> points) {
+	private static VertexArray createMesh(ArrayList<Vec2> points, float uvMult) {
 		if (!MathUtils.isSimplePolygon(points)) {
 			System.err.println("CAN'T RENDER NON-SIMPLE POLYGON");
 			return null;
@@ -37,8 +41,8 @@ public class Polygon extends Model {
 			vertices[i * 3 + 1] = points.get(i).y;
 			vertices[i * 3 + 2] = 0;
 
-			uvs[i * 2 + 0] = points.get(i).x;
-			uvs[i * 2 + 1] = points.get(i).y;
+			uvs[i * 2 + 0] = points.get(i).x * uvMult;
+			uvs[i * 2 + 1] = points.get(i).y * uvMult;
 		}
 
 		boolean clockwise = !MathUtils.isCounterClockwiseWinding(points);

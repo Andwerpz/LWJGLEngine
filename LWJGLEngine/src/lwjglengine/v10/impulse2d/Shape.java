@@ -19,6 +19,7 @@ public abstract class Shape {
 
 	public void initialize() {
 		this.computeMass(body.density);
+		this.setOrient(0);
 	}
 
 	@Override

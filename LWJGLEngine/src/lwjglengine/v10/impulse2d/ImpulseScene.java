@@ -51,6 +51,10 @@ public class ImpulseScene {
 		this.iterations = iterations;
 	}
 
+	public void setDT(float dt) {
+		this.dt = dt;
+	}
+
 	public void tick() {
 		if (doCollision) {
 			// Generate new collision info
@@ -124,11 +128,6 @@ public class ImpulseScene {
 	}
 
 	public void integrateForces(Body b, float dt) {
-		//		if(b->im == 0.0f)
-		//			return;
-		//		b->velocity += (b->force * b->im + gravity) * (dt / 2.0f);
-		//		b->angularVelocity += b->torque * b->iI * (dt / 2.0f);
-
 		if (b.invMass == 0.0f) {
 			return;
 		}
@@ -167,13 +166,6 @@ public class ImpulseScene {
 	}
 
 	public void integrateVelocity(Body b, float dt) {
-		//		if(b->im == 0.0f)
-		//			return;
-		//		b->position += b->velocity * dt;
-		//		b->orient += b->angularVelocity * dt;
-		//		b->SetOrient( b->orient );
-		//		IntegrateForces( b, dt );
-
 		if (b.invMass == 0.0f) {
 			return;
 		}
