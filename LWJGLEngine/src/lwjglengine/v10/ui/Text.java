@@ -226,6 +226,10 @@ public class Text extends UIElement {
 		this.align();
 	}
 
+	public int getTextWidth() {
+		return this.textWidth;
+	}
+
 	public void setTextWrapping(boolean b) {
 		this.textWrapping = b;
 		this.align();
