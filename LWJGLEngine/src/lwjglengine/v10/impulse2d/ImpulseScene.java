@@ -56,6 +56,15 @@ public class ImpulseScene {
 	}
 
 	public void tick() {
+		// Clear all forces
+		for (int i = 0; i < bodies.size(); ++i) {
+			Body b = bodies.get(i);
+			b.force.set(0, 0);
+			b.torque = 0;
+			b.forceSum = 0;
+			b.forceMax = 0;
+		}
+
 		if (doCollision) {
 			// Generate new collision info
 			contacts.clear();
@@ -104,13 +113,6 @@ public class ImpulseScene {
 		for (int i = 0; i < contacts.size(); ++i) {
 			contacts.get(i).positionalCorrection();
 		}
-
-		// Clear all forces
-		for (int i = 0; i < bodies.size(); ++i) {
-			Body b = bodies.get(i);
-			b.force.set(0, 0);
-			b.torque = 0;
-		}
 	}
 
 	public Body addBody(Shape s, float x, float y) {
@@ -146,7 +148,6 @@ public class ImpulseScene {
 				Vec2 friction = new Vec2(b.velocity);
 				friction.setLength(-this.surfaceFrictionCoefficient);
 				b.velocity.addsi(friction, dts);
-
 				if (b.velocity.dot(friction) > 0) {
 					//velocity has reversed direction, just set velocity to 0
 					b.velocity.set(0, 0);
@@ -162,7 +163,6 @@ public class ImpulseScene {
 				}
 			}
 		}
-
 	}
 
 	public void integrateVelocity(Body b, float dt) {

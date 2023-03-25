@@ -16,6 +16,9 @@ public class Body {
 	public float restitution; //amount of kinetic energy retained when colliding
 	public final Shape shape;
 
+	public float forceSum; //records the sum of all forces exerted onto this body in the previous tick
+	public float forceMax; //records the magnitude of the maximum magnitude force exerted onto this body in the previous tick
+
 	public Body(Shape shape, double x, double y) {
 		this.shape = shape;
 
@@ -35,8 +38,10 @@ public class Body {
 	}
 
 	public void applyForce(Vec2 f) {
-		// force += f;
 		force.addi(f);
+
+		this.forceSum += f.length();
+		this.forceMax = Math.max(this.forceMax, f.length());
 	}
 
 	public void applyImpulse(Vec2 impulse, Vec2 contactVector) {
@@ -45,6 +50,9 @@ public class Body {
 
 		velocity.addi(impulse.mul(invMass));
 		angularVelocity += invInertia * Vec2.cross(contactVector, impulse);
+
+		this.forceSum += impulse.length();
+		this.forceMax = Math.max(this.forceMax, impulse.length());
 	}
 
 	public void setRestitution(float restitution) {
