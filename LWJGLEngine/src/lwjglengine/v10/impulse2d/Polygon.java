@@ -89,7 +89,6 @@ public class Polygon extends Shape {
 		c.muli(1.0f / area);
 
 		// Translate vertices to centroid (make the centroid (0, 0) for the polygon in model space)
-		// Not really necessary, but I like doing this anyway
 		for (int i = 0; i < vertexCount; ++i) {
 			vertices[i].subi(c);
 		}
