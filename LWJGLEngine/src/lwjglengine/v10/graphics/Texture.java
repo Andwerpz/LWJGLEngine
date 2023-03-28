@@ -139,11 +139,17 @@ public class Texture {
 
 	public static int[] getDataFromImage(BufferedImage img, int loadOptions, int[] outWH) {
 		int[] pixels = null;
-		BufferedImage image = GraphicsTools.copyImage(img);
+
+		//convert image to proper format
+		BufferedImage image = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		image.getGraphics().drawImage(img, 0, 0, null);
+		image.getGraphics().dispose();
+
 		if ((loadOptions & HORIZONTAL_FLIP_BIT) != 0)
 			image = GraphicsTools.horizontalFlip(image);
 		if ((loadOptions & VERTICAL_FLIP_BIT) != 0)
 			image = GraphicsTools.verticalFlip(image);
+
 		int width = image.getWidth();
 		int height = image.getHeight();
 		outWH[0] = image.getWidth();
