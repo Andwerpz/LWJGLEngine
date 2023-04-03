@@ -4,28 +4,19 @@ import static org.lwjgl.glfw.GLFW.*;
 
 import java.util.ArrayList;
 
-import lwjglengine.v10.entity.Capsule;
-import lwjglengine.v10.entity.Entity;
 import lwjglengine.v10.input.KeyboardInput;
 import lwjglengine.v10.input.MouseInput;
-import lwjglengine.v10.main.Main;
-import lwjglengine.v10.model.AssetManager;
 import lwjglengine.v10.model.Model;
-import lwjglengine.v10.scene.Light;
-import lwjglengine.v10.scene.PointLight;
-import lwjglengine.v10.scene.Scene;
-import lwjglengine.v10.scene.SpotLight;
-import myutils.v10.math.Mat4;
 import myutils.v10.math.MathUtils;
 import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
 
-public class Player extends Entity {
+public class PlayerInputController {
 
 	public static float jumpVel = 0.12f;
 	public static float airMoveSpeed = 0.0005f;
 	public static float airFriction = 0.99f;
-	public static Vec3 cameraVec = new Vec3(0f, 0.9f, 0f);
+	public static Vec3 cameraVec = new Vec3(0f, 0f, 0f);
 
 	public static float groundMoveSpeed = 0.012f;
 	public static float groundFriction = 0.8f;
@@ -35,13 +26,12 @@ public class Player extends Entity {
 	private static float runningSpeed = 0.05f;
 	private static float walkingSpeed = 0.02f; //TBD
 
-	private static float noclipSpeed = 0.05f;
+	private static float noclipSpeed = 0.3f;
 	private static float noclipFriction = 0.7f;
 
-	public Vec3 pos, vel;
-	public float radius = 0.33f;
-	public float height = 1f;
-	public int scene;
+	private Vec3 pos, vel;
+	private float radius = 0.33f;
+	private float height = 1f;
 	private boolean onGround = false;
 	private Vec3 groundNormal = new Vec3(0);
 
@@ -52,21 +42,16 @@ public class Player extends Entity {
 
 	Vec2 mouse;
 
-	public float camXRot;
-	public float camYRot;
-	public float camZRot;
+	private float camXRot;
+	private float camYRot;
+	private float camZRot;
 
-	public Player(Vec3 pos, int scene) {
+	public PlayerInputController(Vec3 pos) {
 		super();
-		this.scene = scene;
 		this.pos = new Vec3(pos);
 		this.vel = new Vec3(0);
 		mouse = MouseInput.getMousePos();
 	}
-
-	@Override
-	protected void _kill() {
-	};
 
 	public Vec3 getBottom() {
 		return new Vec3(this.pos);
@@ -80,11 +65,45 @@ public class Player extends Entity {
 		return this.radius;
 	}
 
+	public float getCamXRot() {
+		return this.camXRot;
+	}
+
+	public float getCamYRot() {
+		return this.camYRot;
+	}
+
+	public float getCamZRot() {
+		return this.camZRot;
+	}
+
+	public Vec3 getFacing() {
+		Vec3 facing = new Vec3(0, 0, -1);
+		facing.rotateX(this.camXRot);
+		facing.rotateY(this.camYRot);
+		return facing;
+	}
+
+	public void setCamXRot(float f) {
+		this.camXRot = f;
+	}
+
+	public void setCamYRot(float f) {
+		this.camYRot = f;
+	}
+
+	public void setCamZRot(float f) {
+		this.camZRot = f;
+	}
+
+	public Vec3 getPos() {
+		return this.pos;
+	}
+
 	public void setAcceptPlayerInputs(boolean b) {
 		this.acceptPlayerInputs = b;
 	}
 
-	@Override
 	public void update() {
 		// ROTATION
 		Vec2 nextMouse = MouseInput.getMousePos();
@@ -152,7 +171,7 @@ public class Player extends Entity {
 
 	}
 
-	private void move() {
+	private void move_collision(int scene) {
 		// -- UPDATE POSITON --
 		if (onGround) {
 			this.vel.x *= groundFriction;
@@ -164,13 +183,13 @@ public class Player extends Entity {
 		}
 		this.pos.addi(vel);
 
-		this.groundCheck();
+		this.groundCheck(scene);
 
 		// -- GRAVITY --
 		if (!onGround) {
 			this.vel.addi(new Vec3(0, -gravity, 0));
 		}
-		resolveCollisions();
+		resolveCollisions(scene);
 
 		// -- PLAYER INPUTS --
 		if (this.acceptPlayerInputs) {
@@ -207,13 +226,13 @@ public class Player extends Entity {
 				}
 			}
 			this.vel.addi(inputAccel);
-			resolveCollisions();
+			resolveCollisions(scene);
 		}
 
 	}
 
 	// check if on the ground, and if so, then compute the ground normal
-	private void groundCheck() {
+	private void groundCheck(int scene) {
 		this.hasLanded = true;
 		if (-this.vel.y < landingSpeed) {
 			this.hasLanded = false;
@@ -237,7 +256,7 @@ public class Player extends Entity {
 		groundNormal.normalize();
 	}
 
-	private void resolveCollisions() {
+	private void resolveCollisions(int scene) {
 		Vec3 capsule_bottom = pos.add(new Vec3(0, 0, 0));
 		Vec3 capsule_top = pos.add(new Vec3(0, height, 0));
 

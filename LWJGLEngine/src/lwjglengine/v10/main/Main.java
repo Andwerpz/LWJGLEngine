@@ -25,7 +25,9 @@ import lwjglengine.v10.networking.Server;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.Screen;
 import lwjglengine.v10.screen.ScreenQuad;
+import lwjglengine.v10.state.SplashState;
 import lwjglengine.v10.state.StateManager;
+import lwjglengine.v10.state.TestState;
 import lwjglengine.v10.ui.UIElement;
 import myutils.v10.graphics.FontUtils;
 import myutils.v10.math.Mat4;
@@ -66,6 +68,8 @@ public class Main implements Runnable {
 	public static void main(String[] args) {
 		Main main = new Main();
 		main.start();
+
+		SplashState.setNextState(new TestState());
 	}
 
 	public void start() {

@@ -10,7 +10,6 @@ import lwjglengine.v10.graphics.Texture;
 import lwjglengine.v10.input.Input;
 import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.Model;
-import lwjglengine.v10.player.Player;
 import lwjglengine.v10.screen.ScreenQuad;
 import myutils.v10.math.Vec3;
 
