@@ -4,6 +4,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_P;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_C;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_T;
 
 import java.awt.Color;
 
@@ -37,15 +38,15 @@ public class TestState extends State {
 
 		this.pic = new PlayerInputController(new Vec3(0, 50, 0));
 
-		this.pic.setPos(new Vec3(93.494865f, 118.98625f, -126.06695f));
-
 		//set up the scene
 		Material lightMaterial = new Material(new Vec3(1));
-		lightMaterial.setEmissive(new Vec4(1, 1, 1, 3f));
+		lightMaterial.setEmissive(new Vec4(1, 1, 1, 10f));
 
-		this.raytracingScreen.addSphere(new Vec3(0, 0, -400), 200, lightMaterial); //'sun'
+		int edgeSize = 0;
+		float radius = 5f;
+		float gap = 5;
 
-		int edgeSize = 5;
+		float edgeLength = (radius * 2 + gap) * (edgeSize - 1);
 
 		for (int i = 0; i < edgeSize; i++) {
 			for (int j = 0; j < edgeSize; j++) {
@@ -53,9 +54,67 @@ public class TestState extends State {
 				m.setSmoothness((1.0f / (edgeSize - 1)) * i);
 				m.setSpecularProbability((1.0f / (edgeSize - 1)) * j);
 
-				this.raytracingScreen.addSphere(new Vec3(i * 21, j * 21, 0), 10, m);
+				this.raytracingScreen.addSphere(new Vec3(i * (radius * 2 + gap) - edgeLength / 2.0f, 5, j * (radius * 2 + gap) - edgeLength / 2.0f), radius, m);
 			}
 		}
+
+		Material whiteMaterial = new Material(new Vec3(1, 1, 1));
+		Material grayMaterial = new Material(Color.GRAY);
+		Material blueMaterial = new Material(Color.BLUE);
+		Material greenMaterial = new Material(Color.GREEN);
+		Material redMaterial = new Material(Color.RED);
+		Material sphereMaterial = new Material(Color.RED);
+
+		sphereMaterial.setSmoothness(1f);
+		sphereMaterial.setSpecularProbability(0.2f);
+
+		redMaterial.setSmoothness(1);
+		redMaterial.setSpecularProbability(0.95f);
+
+		blueMaterial.setSmoothness(1);
+		blueMaterial.setSpecularProbability(0.95f);
+
+		whiteMaterial.setSmoothness(1);
+		whiteMaterial.setSpecularProbability(1f);
+
+		Vec3 v0 = new Vec3(-50, 0, -50);
+		Vec3 v1 = new Vec3(-50, 0, 50);
+		Vec3 v2 = new Vec3(50, 0, 50);
+		Vec3 v3 = new Vec3(50, 0, -50);
+		Vec3 v4 = new Vec3(-50, 100, -50);
+		Vec3 v5 = new Vec3(-50, 100, 50);
+		Vec3 v6 = new Vec3(50, 100, 50);
+		Vec3 v7 = new Vec3(50, 100, -50);
+
+		//floor
+		this.raytracingScreen.addTriangle(v0, v1, v2, whiteMaterial);
+		this.raytracingScreen.addTriangle(v0, v2, v3, whiteMaterial);
+
+		//ceiling
+		this.raytracingScreen.addTriangle(v5, v4, v6, whiteMaterial);
+		this.raytracingScreen.addTriangle(v6, v4, v7, whiteMaterial);
+
+		//back wall
+		this.raytracingScreen.addTriangle(v0, v3, v7, whiteMaterial);
+		this.raytracingScreen.addTriangle(v0, v7, v4, whiteMaterial);
+
+		//left wall
+		this.raytracingScreen.addTriangle(v1, v0, v4, whiteMaterial);
+		this.raytracingScreen.addTriangle(v1, v4, v5, whiteMaterial);
+
+		//right wall
+		this.raytracingScreen.addTriangle(v2, v7, v3, whiteMaterial);
+		this.raytracingScreen.addTriangle(v2, v6, v7, whiteMaterial);
+
+		//front wall
+		this.raytracingScreen.addTriangle(v2, v1, v5, whiteMaterial);
+		this.raytracingScreen.addTriangle(v2, v5, v6, whiteMaterial);
+
+		//ceiling light
+		this.raytracingScreen.addSphere(new Vec3(0, 100, 0), 10f, lightMaterial);
+
+		//big ball
+		this.raytracingScreen.addSphere(new Vec3(0, 50, 0), 30, sphereMaterial);
 	}
 
 	@Override
@@ -134,6 +193,10 @@ public class TestState extends State {
 
 		case GLFW_KEY_R:
 			this.raytracingScreen.setRenderMode(RaytracingScreen.RENDER_MODE_RENDER);
+			break;
+
+		case GLFW_KEY_T:
+			this.raytracingScreen.setRenderMode(RaytracingScreen.RENDER_MODE_DISPLAY_PREV_RENDER);
 			break;
 		}
 	}

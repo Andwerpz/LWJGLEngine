@@ -83,6 +83,7 @@ public class Shader {
 		Shader.PARTICLE.setUniform1i("enableTexScaling", 1);
 
 		Shader.RAYTRACING.setUniform1i("render_tex_0", 0);
+		Shader.RAYTRACING.setUniform1i("skybox_tex", 1);
 	}
 
 	public int getUniform(String name) {

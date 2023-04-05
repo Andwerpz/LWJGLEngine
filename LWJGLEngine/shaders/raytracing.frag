@@ -2,6 +2,7 @@
 layout (location = 0) out vec4 out_tex_0;
 
 uniform sampler2D render_tex_0;
+uniform samplerCube skybox_tex;
 
 uniform vec3 camera_pos;
 //uniform vec3 sun_dir;
@@ -38,11 +39,23 @@ layout(std140, binding = 0) readonly buffer Spheres {
 	Sphere spheres[];
 };
 
+struct Triangle {
+	vec4 a;
+	vec4 b;
+	vec4 c;
+	Material material;
+};
+
+uniform int numTriangles;
+layout(std140, binding = 1) readonly buffer Triangles {
+	Triangle triangles[];
+};
+
 uniform int numRenderedFrames;
 uniform int windowWidth;
 uniform int windowHeight;
 
-uint rngState = uint(gl_FragCoord.x * windowWidth) * windowWidth + uint(gl_FragCoord.y * windowHeight) + numRenderedFrames * 18381391;
+uint rngState = uint(gl_FragCoord.x * windowWidth) * windowWidth * 13 + uint(gl_FragCoord.y * windowHeight) * 1203 + numRenderedFrames * 1838411;
 //https://www.shadertoy.com/view/XlGcRh
 float randomValue() {
 	rngState = rngState * 747796405 + 2891336453;
@@ -116,9 +129,65 @@ HitInfo raySphere(Ray ray, Sphere sphere) {
 	return ret;
 }
 
+HitInfo rayTriangle(Ray ray, Triangle triangle) {
+	HitInfo ret = createHitInfo();
+	
+	vec3 t0 = triangle.a.xyz;
+	vec3 t1 = triangle.b.xyz;
+	vec3 t2 = triangle.c.xyz;
+	
+	vec3 d0 = normalize(t1 - t0);
+	vec3 d1 = normalize(t2 - t1);
+	vec3 d2 = normalize(t0 - t2);
+	
+	vec3 plane_origin = t0;
+	vec3 plane_normal = normalize(cross(d0, d1));
+	
+	if(dot(plane_normal, ray.dir) > 0) {
+		//ray dir and plane normal are facing in the same direction, so we shouldn't be able to see this 
+		return ret;
+	}
+
+	//calculate intersection point between ray and plane defined by triangle
+	float ray_dirStepRatio = dot(plane_normal, ray.dir);	// for each step in ray_dir, you go ray_dirStepRatio steps towards the plane
+	// in plane_normal
+	if (ray_dirStepRatio == 0) {
+		// ray is parallel to plane, no intersection
+		return ret;
+	}
+	
+	float t = dot(plane_origin - ray.origin, plane_normal) / ray_dirStepRatio;
+	if (t < 0) {
+		// the plane intersection is behind the ray origin
+		return ret;
+	}
+	
+	vec3 plane_intersect = ray.origin + (ray.dir * t);
+
+	// now, we just have to make sure that the intersection point is inside the triangle.
+	vec3 n0 = cross(d0, plane_normal);
+	vec3 n1 = cross(d1, plane_normal);
+	vec3 n2 = cross(d2, plane_normal);
+	
+	if(dot(n0, t0 - plane_intersect) < 0 || dot(n1, t1 - plane_intersect) < 0 || dot(n2, t2 - plane_intersect) < 0) {
+		//intersection point is outside of the triangle
+		return ret;
+	}
+	
+	ret.didHit = true;
+	ret.dist = t;	//ray.dir has to be normalized on function call for this to work
+	ret.hitPoint = plane_intersect;
+	ret.hitNormal = plane_normal;
+	ret.hitMaterial = triangle.material;
+
+	return ret;
+}
+
 HitInfo calculateRayCollision(Ray ray) {
 	HitInfo closestHit = createHitInfo();
 	closestHit.dist = 10000000;	//very large number
+	
+	ray.dir = normalize(ray.dir);
 	
 	for(int i = 0; i < numSpheres; i++) {
 		HitInfo hit = raySphere(ray, spheres[i]);
@@ -127,10 +196,23 @@ HitInfo calculateRayCollision(Ray ray) {
 		}
 	}
 	
+	for(int i = 0; i < numTriangles; i++){
+		HitInfo hit = rayTriangle(ray, triangles[i]);
+		if(hit.didHit && hit.dist < closestHit.dist) {
+			closestHit = hit;
+		}
+	}	
+	
 	return closestHit;
 }
 
 uniform int maxBounceCount;
+
+uniform vec3 sunDir;	//which direction do you have to face to see the sun
+uniform float sunStrength; //how big and powerful is the sun? owo
+
+uniform float ambientStrength;
+
 vec3 traceRay(Ray ray) {
 	vec3 incomingLight = vec3(0);
 	vec3 rayColor = vec3(1);
@@ -156,12 +238,20 @@ vec3 traceRay(Ray ray) {
 			rayColor *= mix(m.diffuse.xyz, m.specular.xyz, isSpecularBounce);
 		}
 		else {
+			//sample skybox texture
+			vec3 emittedLight = texture(skybox_tex, ray.dir).xyz * ambientStrength;	//skybox 'emits' ambient light
+			
+			vec3 sunLight = max(0, (dot(ray.dir, sunDir) - 0.99) * sunStrength) * vec3(1);
+			emittedLight += sunLight;
+			
+			incomingLight += emittedLight * rayColor;
 			break;
 		}
 	}	
 	
 	return incomingLight;
 }
+
 uniform int numRaysPerPixel;
 uniform float blurStrength;
 uniform float defocusStrength;

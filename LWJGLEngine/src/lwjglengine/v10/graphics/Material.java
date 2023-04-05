@@ -17,6 +17,7 @@ public class Material {
 	private float shininess; // also known as specular exponent
 	private float smoothness = 0; //between 0 and 1, 0 is like ceramic, and 1 is mirror
 	private float specularProbability = 0; //between 0 and 1, probability of ray bouncing specularly off of the surface. 
+	private float metallic = 0; //0 is not metal (dielectric) and 1 is metal
 
 	public static Material defaultMaterial() {
 		return new Material(new Vec3(1f), new Vec3(1), 64f);
@@ -93,6 +94,12 @@ public class Material {
 		this.diffuse.x = diffuse.x;
 		this.diffuse.y = diffuse.y;
 		this.diffuse.z = diffuse.z;
+	}
+
+	public void setSpecular(Vec3 specular) {
+		this.specular.x = specular.x;
+		this.specular.y = specular.y;
+		this.specular.z = specular.z;
 	}
 
 	public void setAlpha(float alpha) {

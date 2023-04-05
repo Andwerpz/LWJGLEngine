@@ -16,11 +16,13 @@ import static org.lwjgl.opengl.GL46.*;
 
 import java.util.ArrayList;
 
+import lwjglengine.v10.graphics.Cubemap;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.graphics.Shader;
 import lwjglengine.v10.graphics.Texture;
 import lwjglengine.v10.main.Main;
+import lwjglengine.v10.model.AssetManager;
 import lwjglengine.v10.player.Camera;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.util.BufferUtils;
@@ -29,12 +31,13 @@ import myutils.v10.math.Vec3;
 public class RaytracingScreen extends Screen {
 	//raytracing, wowee, very nice
 
-	//two modes:
 	//Preview Mode - camera can move around, and minimal rays are sent
 	//Render Mode - camera cannot move around, and previous frames get blended with new frames to create the render
+	//Display Prev Render Mode - look at the previous render, and tweak postprocessing stuff.
 
 	public static final int RENDER_MODE_PREVIEW = 0;
 	public static final int RENDER_MODE_RENDER = 1;
+	public static final int RENDER_MODE_DISPLAY_PREV_RENDER = 2;
 
 	private int renderMode = RENDER_MODE_PREVIEW;
 
@@ -62,10 +65,29 @@ public class RaytracingScreen extends Screen {
 	private int maxBounceCount;
 	private int numRaysPerPixel;
 
-	private float blurStrength; //good to keep at 1.5 for free antialiasing
+	private float blurStrength; //good to keep around 1 to 5 for antialiasing
 
 	private float defocusStrength;
 	private float focusDist;
+
+	private float ambientStrength;
+	private float sunStrength;
+	private Vec3 sunDir;
+
+	private Cubemap skybox;
+
+	//more bounces have drastically diminishing returns along with drastically increasing 
+	//render times
+	private static int previewMaxBounceCount = 5;
+	private static int renderMaxBounceCount = 10;
+
+	//increase number of rays per pixel while rendering to speed it up?
+	//downside is lower fps
+	private static int previewNumRaysPerPixel = 1;
+	private static int renderNumRaysPerPixel = 20;
+
+	//how bright is the final render?
+	private float exposure;
 
 	public RaytracingScreen() {
 
@@ -115,10 +137,16 @@ public class RaytracingScreen extends Screen {
 
 		this.numRenderedFrames = 0;
 
-		this.blurStrength = 1.5f;
+		this.blurStrength = 3f;
 
 		this.defocusStrength = 0f;
 		this.focusDist = 30f;
+
+		this.skybox = AssetManager.getSkybox("lake_skybox");
+
+		this.ambientStrength = 0;
+		this.sunStrength = 0;
+		this.sunDir = new Vec3(1, 1, 0.4f);
 
 		this.buildObjectBuffers();
 	}
@@ -160,9 +188,39 @@ public class RaytracingScreen extends Screen {
 			}
 			sphereData[i * sizeofSphere + 19] = 0;
 		}
-
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, this.sphereBuffer);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, BufferUtils.createFloatBuffer(sphereData), GL_STATIC_DRAW);
+
+		int sizeofTriangle = 12 + 16;
+		float[] triangleData = new float[this.triangles.size() * sizeofTriangle];
+		for (int i = 0; i < this.triangles.size(); i++) {
+			Triangle t = this.triangles.get(i);
+			triangleData[i * sizeofTriangle + 0] = t.a.x;
+			triangleData[i * sizeofTriangle + 1] = t.a.y;
+			triangleData[i * sizeofTriangle + 2] = t.a.z;
+			triangleData[i * sizeofTriangle + 3] = 0;
+			triangleData[i * sizeofTriangle + 4] = t.b.x;
+			triangleData[i * sizeofTriangle + 5] = t.b.y;
+			triangleData[i * sizeofTriangle + 6] = t.b.z;
+			triangleData[i * sizeofTriangle + 7] = 0;
+			triangleData[i * sizeofTriangle + 8] = t.c.x;
+			triangleData[i * sizeofTriangle + 9] = t.c.y;
+			triangleData[i * sizeofTriangle + 10] = t.c.z;
+			triangleData[i * sizeofTriangle + 11] = 0;
+			float[] matArr = t.material.toFloatArr();
+			for (int j = 0; j < matArr.length; j++) {
+				triangleData[i * sizeofTriangle + 12 + j] = matArr[j];
+			}
+			triangleData[i * sizeofTriangle + 27] = 0;
+		}
+
+		System.out.println("START");
+		for (int i = 0; i < triangleData.length; i++) {
+			System.out.println(triangleData[i]);
+		}
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, this.triangleBuffer);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, BufferUtils.createFloatBuffer(triangleData), GL_STATIC_DRAW);
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
@@ -173,19 +231,13 @@ public class RaytracingScreen extends Screen {
 		this.buildObjectBuffers();
 	}
 
-	@Override
-	public void render(Framebuffer outputBuffer) {
-		//render
-		renderBuffer.bind();
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this.sphereBuffer);
-		//glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this.triangleBuffer);	//TODO
+	public void addTriangle(Vec3 a, Vec3 b, Vec3 c, Material material) {
+		Triangle t = new Triangle(a, b, c, material);
+		this.triangles.add(t);
+		this.buildObjectBuffers();
+	}
 
-		this.prevRenderColorMap.bind(GL_TEXTURE0);
-
+	private void setRaytracingShaderUniforms() {
 		Vec3 cameraRight = this.camera.getFacing().cross(this.camera.getUp());
 		Vec3 cameraUp = this.camera.getFacing().cross(cameraRight);
 
@@ -194,6 +246,7 @@ public class RaytracingScreen extends Screen {
 		Shader.RAYTRACING.setUniformMat4("pr_matrix", this.camera.getProjectionMatrix());
 		Shader.RAYTRACING.setUniform3f("camera_pos", this.camera.getPos());
 		Shader.RAYTRACING.setUniform1i("numSpheres", this.spheres.size());
+		Shader.RAYTRACING.setUniform1i("numTriangles", this.triangles.size());
 		Shader.RAYTRACING.setUniform1i("maxBounceCount", this.maxBounceCount);
 		Shader.RAYTRACING.setUniform1i("numRaysPerPixel", this.numRaysPerPixel);
 		Shader.RAYTRACING.setUniform1i("numRenderedFrames", this.numRenderedFrames);
@@ -204,32 +257,88 @@ public class RaytracingScreen extends Screen {
 		Shader.RAYTRACING.setUniform1f("focusDist", this.focusDist);
 		Shader.RAYTRACING.setUniform3f("cameraRight", cameraRight);
 		Shader.RAYTRACING.setUniform3f("cameraUp", cameraUp);
-		skyboxCube.render();
+		Shader.RAYTRACING.setUniform3f("sunDir", this.sunDir.normalize());
+		Shader.RAYTRACING.setUniform1f("sunStrength", this.sunStrength);
+		Shader.RAYTRACING.setUniform1f("ambientStrength", this.ambientStrength);
+	}
 
-		//render to prev buffer
-		prevRenderBuffer.bind();
-		glClear(GL_COLOR_BUFFER_BIT);
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		this.renderColorMap.bind(GL_TEXTURE0);
-		Shader.SPLASH.enable();
-		Shader.SPLASH.setUniform1f("alpha", 1f);
-		screenQuad.render();
+	@Override
+	public void render(Framebuffer outputBuffer) {
 
-		//render new render to output
-		outputBuffer.bind();
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		this.renderColorMap.bind(GL_TEXTURE0);
-		Shader.SPLASH.enable();
-		Shader.SPLASH.setUniform1f("alpha", 1f);
-		screenQuad.render();
-
-		this.numRenderedFrames++;
-		if (this.renderMode != RENDER_MODE_RENDER) {
+		switch (this.renderMode) {
+		case RENDER_MODE_PREVIEW: {
 			this.numRenderedFrames = 0;
+
+			//render
+			outputBuffer.bind();
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this.sphereBuffer);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this.triangleBuffer);
+			this.setRaytracingShaderUniforms();
+			Shader.RAYTRACING.enable();
+			this.prevRenderColorMap.bind(GL_TEXTURE0);
+			this.skybox.bind(GL_TEXTURE1);
+			skyboxCube.render();
+			break;
+		}
+
+		case RENDER_MODE_RENDER: {
+			//render
+			renderBuffer.bind();
+			glDisable(GL_DEPTH_TEST);
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this.sphereBuffer);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this.triangleBuffer);
+			this.setRaytracingShaderUniforms();
+			Shader.RAYTRACING.enable();
+			this.prevRenderColorMap.bind(GL_TEXTURE0);
+			this.skybox.bind(GL_TEXTURE1);
+			skyboxCube.render();
+
+			this.numRenderedFrames++;
+
+			//render to prev buffer
+			prevRenderBuffer.bind();
+			glClear(GL_COLOR_BUFFER_BIT);
+			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			this.renderColorMap.bind(GL_TEXTURE0);
+			Shader.SPLASH.enable();
+			Shader.SPLASH.setUniform1f("alpha", 1f);
+			screenQuad.render();
+
+			//render new render to output
+			outputBuffer.bind();
+			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			this.renderColorMap.bind(GL_TEXTURE0);
+			Shader.SPLASH.enable();
+			Shader.SPLASH.setUniform1f("alpha", 1f);
+			screenQuad.render();
+
+			this.numRenderedFrames++;
+			break;
+		}
+
+		case RENDER_MODE_DISPLAY_PREV_RENDER: {
+			//render prev render to output
+			outputBuffer.bind();
+			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			this.prevRenderColorMap.bind(GL_TEXTURE0);
+			Shader.SPLASH.enable();
+			Shader.SPLASH.setUniform1f("alpha", 1f);
+			screenQuad.render();
+			break;
+		}
 		}
 	}
 
@@ -237,14 +346,15 @@ public class RaytracingScreen extends Screen {
 		this.renderMode = renderMode;
 
 		switch (this.renderMode) {
+		case RENDER_MODE_DISPLAY_PREV_RENDER:
 		case RENDER_MODE_PREVIEW:
-			this.maxBounceCount = 5;
-			this.numRaysPerPixel = 1;
+			this.maxBounceCount = previewMaxBounceCount;
+			this.numRaysPerPixel = previewNumRaysPerPixel;
 			break;
 
 		case RENDER_MODE_RENDER:
-			this.maxBounceCount = 100;
-			this.numRaysPerPixel = 20;
+			this.maxBounceCount = renderMaxBounceCount;
+			this.numRaysPerPixel = renderNumRaysPerPixel;
 			break;
 		}
 	}
