@@ -31,6 +31,8 @@ import myutils.v10.math.Vec3;
 public class RaytracingScreen extends Screen {
 	//raytracing, wowee, very nice
 
+	//TODO read triangles in from attached raytracing scene. 
+
 	//Preview Mode - camera can move around, and minimal rays are sent
 	//Render Mode - camera cannot move around, and previous frames get blended with new frames to create the render
 	//Display Prev Render Mode - look at the previous render, and tweak postprocessing stuff.
@@ -48,8 +50,18 @@ public class RaytracingScreen extends Screen {
 	private Framebuffer prevRenderBuffer;
 	private Texture prevRenderColorMap;
 
+	//after doing raytracing, saves the hdr image to be postprocessed
 	private Framebuffer outputBuffer;
 	private Texture outputColorMap;
+
+	private Framebuffer postprocessHDRBuffer;
+	private Texture postprocessHDRMap;
+
+	private Framebuffer postprocessBloomBuffer;
+	private Texture postprocessBloomMap;
+
+	private Framebuffer postprocessTempBuffer;
+	private Texture postprocessTempMap;
 
 	private int raytracingScene;
 
@@ -93,7 +105,7 @@ public class RaytracingScreen extends Screen {
 	private float gamma;
 
 	//smudging bright areas with gaussian blur
-	private float bloomStrength;
+	private float bloomThreshold; //how bright does a pixel have to be to be blurred?
 
 	public RaytracingScreen() {
 
@@ -127,6 +139,24 @@ public class RaytracingScreen extends Screen {
 		this.outputBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.outputColorMap.getID());
 		this.outputBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.outputBuffer.isComplete();
+
+		this.postprocessHDRBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
+		this.postprocessHDRMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.postprocessHDRBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.postprocessHDRMap.getID());
+		this.postprocessHDRBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
+		this.postprocessHDRBuffer.isComplete();
+
+		this.postprocessBloomBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
+		this.postprocessBloomMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.postprocessBloomBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.postprocessBloomMap.getID());
+		this.postprocessBloomBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
+		this.postprocessBloomBuffer.isComplete();
+
+		this.postprocessTempBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
+		this.postprocessTempMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.postprocessTempBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.postprocessTempMap.getID());
+		this.postprocessTempBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
+		this.postprocessTempBuffer.isComplete();
 
 		this.skyboxCube = new SkyboxCube();
 
@@ -162,6 +192,8 @@ public class RaytracingScreen extends Screen {
 
 		this.exposure = 1;
 		this.gamma = 1;
+
+		this.bloomThreshold = 2.5f;
 
 		this.buildObjectBuffers();
 	}
@@ -231,11 +263,6 @@ public class RaytracingScreen extends Screen {
 				triangleData[i * sizeofTriangle + 12 + j] = matArr[j];
 			}
 			triangleData[i * sizeofTriangle + 27] = 0;
-		}
-
-		System.out.println("START");
-		for (int i = 0; i < triangleData.length; i++) {
-			System.out.println(triangleData[i]);
 		}
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, this.triangleBuffer);
@@ -370,15 +397,58 @@ public class RaytracingScreen extends Screen {
 		}
 
 		// -- RENDER TO OUTPUT --
-		outputBuffer.bind();
+		//extract bright pixels
+		this.postprocessBloomBuffer.bind();
+		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		this.outputColorMap.bind(GL_TEXTURE0);
-		Shader.RAYTRACING_POSTPROCESSING.enable();
-		Shader.RAYTRACING_POSTPROCESSING.setUniform1f("exposure", this.exposure);
-		Shader.RAYTRACING_POSTPROCESSING.setUniform1f("gamma", this.gamma);
+		Shader.RAYTRACING_EXTRACT_BLOOM.enable();
+		Shader.RAYTRACING_EXTRACT_BLOOM.setUniform1f("bloomThreshold", this.bloomThreshold);
 		screenQuad.render();
+
+		Shader.GAUSSIAN_BLUR.enable();
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		for (int i = 0; i < 5; i++) {
+			//blur horizontally
+			this.postprocessTempBuffer.bind();
+			this.postprocessBloomMap.bind(GL_TEXTURE0);
+			Shader.GAUSSIAN_BLUR.setUniform1i("horizontal", 1);
+			screenQuad.render();
+
+			//blur vertically
+			this.postprocessBloomBuffer.bind();
+			this.postprocessTempMap.bind(GL_TEXTURE0);
+			Shader.GAUSSIAN_BLUR.setUniform1i("horizontal", 0);
+			screenQuad.render();
+		}
+
+		//do postprocessing
+		this.postprocessHDRBuffer.bind();
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		this.outputColorMap.bind(GL_TEXTURE0);
+		this.postprocessBloomMap.bind(GL_TEXTURE1);
+		Shader.RAYTRACING_HDR.enable();
+		Shader.RAYTRACING_HDR.setUniform1f("exposure", this.exposure);
+		Shader.RAYTRACING_HDR.setUniform1f("gamma", this.gamma);
+		screenQuad.render();
+
+		//render to output
+		outputBuffer.bind();
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		this.postprocessHDRMap.bind(GL_TEXTURE0);
+		Shader.SPLASH.enable();
+		Shader.SPLASH.setUniform1f("alpha", 1f);
+		screenQuad.render();
+
 	}
 
 	public void setRenderMode(int renderMode) {

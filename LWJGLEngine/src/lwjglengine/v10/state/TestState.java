@@ -45,7 +45,7 @@ public class TestState extends State {
 		Material lightMaterial = new Material(new Vec3(1));
 		lightMaterial.setEmissive(new Vec4(1, 1, 1, 10f));
 
-		int edgeSize = 0;
+		int edgeSize = 5;
 		float radius = 5f;
 		float gap = 5;
 
@@ -68,8 +68,8 @@ public class TestState extends State {
 		Material redMaterial = new Material(Color.RED);
 		Material sphereMaterial = new Material(Color.WHITE);
 
-		sphereMaterial.setSmoothness(0f);
-		sphereMaterial.setSpecularProbability(0f);
+		sphereMaterial.setSmoothness(1f);
+		sphereMaterial.setSpecularProbability(0.3f);
 
 		//		redMaterial.setSmoothness(1);
 		//		redMaterial.setSpecularProbability(0.95f);
