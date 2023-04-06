@@ -14,7 +14,7 @@ public class Shader {
 
 	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS;
 	public static Shader IMG_POST_PROCESS, SPLASH, OVERWRITE_ALPHA, DECAL, RENDER_BUFFER;
-	public static Shader PARTICLE, RAYTRACING;
+	public static Shader PARTICLE, RAYTRACING, RAYTRACING_POSTPROCESSING;
 
 	private boolean enabled = false;
 
@@ -38,6 +38,7 @@ public class Shader {
 		DECAL = new Shader("/decal.vert", "/decal.frag");
 		PARTICLE = new Shader("/particle.vert", "/particle.frag");
 		RAYTRACING = new Shader("/raytracing.vert", "/raytracing.frag");
+		RAYTRACING_POSTPROCESSING = new Shader("/raytracing_postprocessing.vert", "/raytracing_postprocessing.frag");
 
 		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
 		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
@@ -84,6 +85,8 @@ public class Shader {
 
 		Shader.RAYTRACING.setUniform1i("render_tex_0", 0);
 		Shader.RAYTRACING.setUniform1i("skybox_tex", 1);
+
+		Shader.RAYTRACING_POSTPROCESSING.setUniform1i("tex_color", 0);
 	}
 
 	public int getUniform(String name) {

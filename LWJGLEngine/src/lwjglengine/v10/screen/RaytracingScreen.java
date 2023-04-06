@@ -48,6 +48,9 @@ public class RaytracingScreen extends Screen {
 	private Framebuffer prevRenderBuffer;
 	private Texture prevRenderColorMap;
 
+	private Framebuffer outputBuffer;
+	private Texture outputColorMap;
+
 	private int raytracingScene;
 
 	private float fov;
@@ -86,8 +89,11 @@ public class RaytracingScreen extends Screen {
 	private static int previewNumRaysPerPixel = 1;
 	private static int renderNumRaysPerPixel = 20;
 
-	//how bright is the final render?
 	private float exposure;
+	private float gamma;
+
+	//smudging bright areas with gaussian blur
+	private float bloomStrength;
 
 	public RaytracingScreen() {
 
@@ -115,6 +121,12 @@ public class RaytracingScreen extends Screen {
 		this.prevRenderBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.prevRenderColorMap.getID());
 		this.prevRenderBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.prevRenderBuffer.isComplete();
+
+		this.outputBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
+		this.outputColorMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.outputBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.outputColorMap.getID());
+		this.outputBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
+		this.outputBuffer.isComplete();
 
 		this.skyboxCube = new SkyboxCube();
 
@@ -148,6 +160,9 @@ public class RaytracingScreen extends Screen {
 		this.sunStrength = 0;
 		this.sunDir = new Vec3(1, 1, 0.4f);
 
+		this.exposure = 1;
+		this.gamma = 1;
+
 		this.buildObjectBuffers();
 	}
 
@@ -163,6 +178,10 @@ public class RaytracingScreen extends Screen {
 			return;
 		}
 		this.camera.setFacing(facing);
+	}
+
+	public void incrementExposure(float inc) {
+		this.exposure += inc;
 	}
 
 	private void buildObjectBuffers() {
@@ -264,13 +283,14 @@ public class RaytracingScreen extends Screen {
 
 	@Override
 	public void render(Framebuffer outputBuffer) {
-
+		// -- RENDER SCENE --
+		//at the end, the hdr output should be in prevRenderColorMap
 		switch (this.renderMode) {
 		case RENDER_MODE_PREVIEW: {
 			this.numRenderedFrames = 0;
 
 			//render
-			outputBuffer.bind();
+			renderBuffer.bind();
 			glDisable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
 			glDisable(GL_BLEND);
@@ -282,6 +302,16 @@ public class RaytracingScreen extends Screen {
 			this.prevRenderColorMap.bind(GL_TEXTURE0);
 			this.skybox.bind(GL_TEXTURE1);
 			skyboxCube.render();
+
+			this.outputBuffer.bind();
+			glClear(GL_COLOR_BUFFER_BIT);
+			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			this.renderColorMap.bind(GL_TEXTURE0);
+			Shader.SPLASH.enable();
+			Shader.SPLASH.setUniform1f("alpha", 1f);
+			screenQuad.render();
 			break;
 		}
 
@@ -313,8 +343,8 @@ public class RaytracingScreen extends Screen {
 			Shader.SPLASH.setUniform1f("alpha", 1f);
 			screenQuad.render();
 
-			//render new render to output
-			outputBuffer.bind();
+			this.outputBuffer.bind();
+			glClear(GL_COLOR_BUFFER_BIT);
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -322,14 +352,12 @@ public class RaytracingScreen extends Screen {
 			Shader.SPLASH.enable();
 			Shader.SPLASH.setUniform1f("alpha", 1f);
 			screenQuad.render();
-
-			this.numRenderedFrames++;
 			break;
 		}
 
 		case RENDER_MODE_DISPLAY_PREV_RENDER: {
-			//render prev render to output
-			outputBuffer.bind();
+			this.outputBuffer.bind();
+			glClear(GL_COLOR_BUFFER_BIT);
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -340,6 +368,17 @@ public class RaytracingScreen extends Screen {
 			break;
 		}
 		}
+
+		// -- RENDER TO OUTPUT --
+		outputBuffer.bind();
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		this.outputColorMap.bind(GL_TEXTURE0);
+		Shader.RAYTRACING_POSTPROCESSING.enable();
+		Shader.RAYTRACING_POSTPROCESSING.setUniform1f("exposure", this.exposure);
+		Shader.RAYTRACING_POSTPROCESSING.setUniform1f("gamma", this.gamma);
+		screenQuad.render();
 	}
 
 	public void setRenderMode(int renderMode) {

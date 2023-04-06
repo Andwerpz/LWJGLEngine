@@ -6,6 +6,9 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_C;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_T;
 
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_O;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_L;
+
 import java.awt.Color;
 
 import lwjglengine.v10.graphics.Framebuffer;
@@ -63,19 +66,19 @@ public class TestState extends State {
 		Material blueMaterial = new Material(Color.BLUE);
 		Material greenMaterial = new Material(Color.GREEN);
 		Material redMaterial = new Material(Color.RED);
-		Material sphereMaterial = new Material(Color.RED);
+		Material sphereMaterial = new Material(Color.WHITE);
 
-		sphereMaterial.setSmoothness(1f);
-		sphereMaterial.setSpecularProbability(0.2f);
+		sphereMaterial.setSmoothness(0f);
+		sphereMaterial.setSpecularProbability(0f);
 
-		redMaterial.setSmoothness(1);
-		redMaterial.setSpecularProbability(0.95f);
+		//		redMaterial.setSmoothness(1);
+		//		redMaterial.setSpecularProbability(0.95f);
+		//
+		//		blueMaterial.setSmoothness(1);
+		//		blueMaterial.setSpecularProbability(0.95f);
 
-		blueMaterial.setSmoothness(1);
-		blueMaterial.setSpecularProbability(0.95f);
-
-		whiteMaterial.setSmoothness(1);
-		whiteMaterial.setSpecularProbability(1f);
+		//whiteMaterial.setSmoothness(1);
+		//whiteMaterial.setSpecularProbability(1f);
 
 		Vec3 v0 = new Vec3(-50, 0, -50);
 		Vec3 v1 = new Vec3(-50, 0, 50);
@@ -87,24 +90,24 @@ public class TestState extends State {
 		Vec3 v7 = new Vec3(50, 100, -50);
 
 		//floor
-		this.raytracingScreen.addTriangle(v0, v1, v2, whiteMaterial);
-		this.raytracingScreen.addTriangle(v0, v2, v3, whiteMaterial);
+		this.raytracingScreen.addTriangle(v0, v1, v2, greenMaterial);
+		this.raytracingScreen.addTriangle(v0, v2, v3, greenMaterial);
 
 		//ceiling
 		this.raytracingScreen.addTriangle(v5, v4, v6, whiteMaterial);
 		this.raytracingScreen.addTriangle(v6, v4, v7, whiteMaterial);
 
 		//back wall
-		this.raytracingScreen.addTriangle(v0, v3, v7, whiteMaterial);
-		this.raytracingScreen.addTriangle(v0, v7, v4, whiteMaterial);
+		this.raytracingScreen.addTriangle(v0, v3, v7, grayMaterial);
+		this.raytracingScreen.addTriangle(v0, v7, v4, grayMaterial);
 
 		//left wall
-		this.raytracingScreen.addTriangle(v1, v0, v4, whiteMaterial);
-		this.raytracingScreen.addTriangle(v1, v4, v5, whiteMaterial);
+		this.raytracingScreen.addTriangle(v1, v0, v4, blueMaterial);
+		this.raytracingScreen.addTriangle(v1, v4, v5, blueMaterial);
 
 		//right wall
-		this.raytracingScreen.addTriangle(v2, v7, v3, whiteMaterial);
-		this.raytracingScreen.addTriangle(v2, v6, v7, whiteMaterial);
+		this.raytracingScreen.addTriangle(v2, v7, v3, redMaterial);
+		this.raytracingScreen.addTriangle(v2, v6, v7, redMaterial);
 
 		//front wall
 		this.raytracingScreen.addTriangle(v2, v1, v5, whiteMaterial);
@@ -197,6 +200,14 @@ public class TestState extends State {
 
 		case GLFW_KEY_T:
 			this.raytracingScreen.setRenderMode(RaytracingScreen.RENDER_MODE_DISPLAY_PREV_RENDER);
+			break;
+
+		case GLFW_KEY_O:
+			this.raytracingScreen.incrementExposure(0.1f);
+			break;
+
+		case GLFW_KEY_L:
+			this.raytracingScreen.incrementExposure(-0.1f);
 			break;
 		}
 	}
