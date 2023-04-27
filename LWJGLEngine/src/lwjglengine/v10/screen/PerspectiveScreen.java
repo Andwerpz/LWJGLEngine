@@ -65,7 +65,6 @@ public class PerspectiveScreen extends Screen {
 
 	private Texture skyboxColorMap; // RGB: color
 
-	private SkyboxCube skyboxCube;
 	private boolean renderSkybox = false;
 
 	private boolean renderDecals = false;
@@ -85,14 +84,28 @@ public class PerspectiveScreen extends Screen {
 
 	@Override
 	public void buildBuffers() {
-		this.skyboxCube = new SkyboxCube();
+		if (this.geometryBuffer != null) {
+			this.geometryBuffer.kill();
+		}
+		if (this.playermodelBuffer != null) {
+			this.playermodelBuffer.kill();
+		}
+		if (this.lightingBuffer != null) {
+			this.lightingBuffer.kill();
+		}
+		if (this.skyboxBuffer != null) {
+			this.skyboxBuffer.kill();
+		}
+		if (this.shadowBuffer != null) {
+			this.shadowBuffer.kill();
+		}
 
-		this.geometryBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.geometryPositionMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-		this.geometryNormalMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-		this.geometrySpecularMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-		this.geometryColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-		this.geometryColorIDMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.geometryBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.geometryPositionMap = new Texture(GL_RGBA32F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
+		this.geometryNormalMap = new Texture(GL_RGBA32F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
+		this.geometrySpecularMap = new Texture(GL_RGBA32F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
+		this.geometryColorMap = new Texture(GL_RGBA, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
+		this.geometryColorIDMap = new Texture(GL_RGBA, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.geometryPositionMap.getID());
 		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this.geometryNormalMap.getID());
 		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, this.geometrySpecularMap.getID());
@@ -102,7 +115,7 @@ public class PerspectiveScreen extends Screen {
 		this.geometryBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
 		this.geometryBuffer.isComplete();
 
-		this.playermodelBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
+		this.playermodelBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
 		this.playermodelBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.geometryPositionMap.getID());
 		this.playermodelBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this.geometryNormalMap.getID());
 		this.playermodelBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, this.geometrySpecularMap.getID());
@@ -110,27 +123,27 @@ public class PerspectiveScreen extends Screen {
 		this.playermodelBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, this.geometryColorIDMap.getID());
 		this.playermodelBuffer.addDepthBuffer();
 		this.playermodelBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
-		this.playermodelBuffer.addDepthBuffer();
+		this.playermodelBuffer.isComplete();
 
-		this.lightingBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.lightingColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_UNSIGNED_BYTE);
-		this.lightingBrightnessMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.lightingBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.lightingColorMap = new Texture(GL_RGBA, this.screenWidth, this.screenHeight, GL_RGBA, GL_UNSIGNED_BYTE);
+		this.lightingBrightnessMap = new Texture(GL_RGBA16F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.lightingBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.lightingColorMap.getID());
 		this.lightingBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this.lightingBrightnessMap.getID());
 		this.lightingBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 });
 		this.lightingBuffer.isComplete();
 
-		this.shadowBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.shadowDepthMap = new Texture(GL_DEPTH_COMPONENT, Main.windowWidth, Main.windowHeight, GL_DEPTH_COMPONENT, GL_FLOAT);
-		this.shadowBackfaceMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.shadowBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.shadowDepthMap = new Texture(GL_DEPTH_COMPONENT, this.screenWidth, this.screenHeight, GL_DEPTH_COMPONENT, GL_FLOAT);
+		this.shadowBackfaceMap = new Texture(GL_RGBA16F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.shadowDepthMap.getID());
 		this.shadowBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.shadowBackfaceMap.getID());
 		this.shadowBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.shadowBuffer.isComplete();
 		this.shadowCubemap = new Cubemap(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
 
-		this.skyboxBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.skyboxColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.skyboxBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.skyboxColorMap = new Texture(GL_RGBA, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.skyboxBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.skyboxColorMap.getID());
 		this.skyboxBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.skyboxBuffer.isComplete();
@@ -145,7 +158,7 @@ public class PerspectiveScreen extends Screen {
 			cameraFacing = this.camera.getFacing();
 		}
 
-		this.camera = new Camera((float) Math.toRadians(this.worldFOV), Main.windowWidth, Main.windowHeight, NEAR, FAR);
+		this.camera = new Camera((float) Math.toRadians(this.worldFOV), this.screenWidth, this.screenHeight, NEAR, FAR);
 		this.camera.setPos(cameraPos);
 		this.camera.setFacing(cameraFacing);
 
@@ -156,7 +169,7 @@ public class PerspectiveScreen extends Screen {
 		float cameraFOV = degrees;
 		Vec3 cameraPos = this.camera.getPos();
 		Vec3 cameraFacing = this.camera.getFacing();
-		this.camera = new Camera((float) Math.toRadians(cameraFOV), Main.windowWidth, Main.windowHeight, NEAR, FAR);
+		this.camera = new Camera((float) Math.toRadians(cameraFOV), this.screenWidth, this.screenHeight, NEAR, FAR);
 		this.camera.setPos(cameraPos);
 		this.camera.setFacing(cameraFacing);
 	}
@@ -208,7 +221,7 @@ public class PerspectiveScreen extends Screen {
 	}
 
 	@Override
-	public void render(Framebuffer outputBuffer) {
+	protected void _render(Framebuffer outputBuffer) {
 		// -- GEOMETRY -- : render 3d perspective to geometry buffer
 		geometryBuffer.bind();
 		glEnable(GL_DEPTH_TEST);
@@ -360,7 +373,7 @@ public class PerspectiveScreen extends Screen {
 
 					// render shadow map
 					shadowBuffer.bind();
-					glViewport(0, 0, Main.windowWidth, Main.windowHeight);
+					glViewport(0, 0, this.screenWidth, this.screenHeight);
 					glEnable(GL_DEPTH_TEST);
 					glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 					glDisable(GL_BLEND);
@@ -428,7 +441,7 @@ public class PerspectiveScreen extends Screen {
 
 				// render lit scene
 				lightingBuffer.bind();
-				glViewport(0, 0, Main.windowWidth, Main.windowHeight);
+				glViewport(0, 0, this.screenWidth, this.screenHeight);
 				glDisable(GL_DEPTH_TEST);
 				glEnable(GL_BLEND);
 
@@ -464,15 +477,20 @@ public class PerspectiveScreen extends Screen {
 
 		// -- SKYBOX -- : we'll use this texture in the post-processing step
 		if (this.renderSkybox) {
-			skyboxBuffer.bind();
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glDisable(GL_CULL_FACE);
-			glDisable(GL_BLEND);
-			Shader.SKYBOX.enable();
-			Shader.SKYBOX.setUniformMat4("vw_matrix", this.camera.getViewMatrix());
-			Shader.SKYBOX.setUniformMat4("pr_matrix", this.camera.getProjectionMatrix());
-			Scene.skyboxes.get(this.world_scene).bind(GL_TEXTURE0);
-			skyboxCube.render();
+			if (Scene.skyboxes.containsKey(this.world_scene)) {
+				skyboxBuffer.bind();
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				glDisable(GL_CULL_FACE);
+				glDisable(GL_BLEND);
+				Shader.SKYBOX.enable();
+				Shader.SKYBOX.setUniformMat4("vw_matrix", this.camera.getViewMatrix());
+				Shader.SKYBOX.setUniformMat4("pr_matrix", this.camera.getProjectionMatrix());
+				Scene.skyboxes.get(this.world_scene).bind(GL_TEXTURE0);
+				SkyboxCube.skyboxCube.render();
+			}
+			else {
+				System.err.println("NO SKYBOX ENTRY FOR SCENE " + this.world_scene);
+			}
 		}
 
 		outputBuffer.bind();

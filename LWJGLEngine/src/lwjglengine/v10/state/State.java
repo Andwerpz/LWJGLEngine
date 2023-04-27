@@ -24,6 +24,7 @@ public abstract class State {
 		this.sm = sm;
 	}
 
+	@Deprecated //use Scene.clearScene() instead
 	protected void clearScene(int scene) {
 		UIElement.removeAllUIElementsFromScene(scene);
 		Model.removeInstancesFromScene(scene);

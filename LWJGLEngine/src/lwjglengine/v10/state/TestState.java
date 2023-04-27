@@ -14,14 +14,19 @@ import java.awt.Color;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.main.Main;
+import lwjglengine.v10.model.AssetManager;
 import lwjglengine.v10.player.PlayerInputController;
+import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.RaytracingScreen;
+import lwjglengine.v10.window.AdjustableWindow;
+import lwjglengine.v10.window.RootWindow;
+import lwjglengine.v10.window.Window;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
 
 public class TestState extends State {
 
-	private static final int RAYTRACING_SCENE = 0;
+	private final int RAYTRACING_SCENE = Scene.generateScene();
 
 	private RaytracingScreen raytracingScreen;
 
@@ -33,11 +38,17 @@ public class TestState extends State {
 
 	@Override
 	public void load() {
-		Main.lockCursor();
-		this.clearScene(RAYTRACING_SCENE);
+		//Main.lockCursor();
+
+		Window w1 = new AdjustableWindow(120, 10, Main.windowWidth / 2, Main.windowHeight / 2, this.sm.getRootWindow());
+		Window w2 = new AdjustableWindow(10, 10, 200, 200, this.sm.getRootWindow());
+
+		Window w3 = new AdjustableWindow(10, 10, 200, 200, w1);
 
 		this.raytracingScreen = new RaytracingScreen();
 		this.raytracingScreen.setRenderMode(RaytracingScreen.RENDER_MODE_PREVIEW);
+
+		Scene.skyboxes.put(RAYTRACING_SCENE, AssetManager.getSkybox("lake_skybox"));
 
 		this.pic = new PlayerInputController(new Vec3(0, 50, 0));
 
@@ -123,6 +134,7 @@ public class TestState extends State {
 	@Override
 	public void kill() {
 		this.raytracingScreen.kill();
+		Scene.removeScene(RAYTRACING_SCENE);
 	}
 
 	@Override
@@ -135,8 +147,8 @@ public class TestState extends State {
 
 	@Override
 	public void render(Framebuffer outputBuffer) {
-		this.raytracingScreen.setRaytracingScene(RAYTRACING_SCENE);
-		this.raytracingScreen.render(outputBuffer);
+		//this.raytracingScreen.setRaytracingScene(RAYTRACING_SCENE);
+		//this.raytracingScreen.render(outputBuffer);
 	}
 
 	@Override

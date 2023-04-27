@@ -52,16 +52,22 @@ public class UIScreen extends Screen {
 	@Override
 	protected void _kill() {
 		this.geometryBuffer.kill();
+		this.colorIDBuffer.kill();
 	}
 
 	@Override
 	public void buildBuffers() {
-		this.geometryBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.geometryPositionMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-		this.geometryNormalMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-		this.geometrySpecularMap = new Texture(GL_RGBA16F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-		this.geometryColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
-		this.geometryColorIDMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		if (this.geometryBuffer != null) {
+			this.geometryBuffer.kill();
+			this.colorIDBuffer.kill();
+		}
+
+		this.geometryBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.geometryPositionMap = new Texture(GL_RGBA16F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
+		this.geometryNormalMap = new Texture(GL_RGBA16F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
+		this.geometrySpecularMap = new Texture(GL_RGBA16F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
+		this.geometryColorMap = new Texture(GL_RGBA, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
+		this.geometryColorIDMap = new Texture(GL_RGBA, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.geometryPositionMap.getID());
 		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this.geometryNormalMap.getID());
 		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, this.geometrySpecularMap.getID());
@@ -71,15 +77,15 @@ public class UIScreen extends Screen {
 		this.geometryBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 });
 		this.geometryBuffer.isComplete();
 
-		this.colorIDBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.colorIDMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.colorIDBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.colorIDMap = new Texture(GL_RGBA, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.colorIDBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.colorIDMap.getID());
 		this.colorIDBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.colorIDBuffer.isComplete();
 
 		this.viewportOffset = new Vec2(0);
-		this.viewportWidth = Main.windowWidth;
-		this.viewportHeight = Main.windowHeight;
+		this.viewportWidth = this.screenWidth;
+		this.viewportHeight = this.screenHeight;
 
 		this.calculateBounds();
 		this.near = -1000;
@@ -160,8 +166,9 @@ public class UIScreen extends Screen {
 		this.ui_scene = scene;
 	}
 
+	//assumes that the ui screen covers the entire screen
 	public long getEntityIDAtMouse() {
-		long modelInstanceID = Model.convertRGBToID(colorIDBuffer.sampleColorAtPoint((int) MouseInput.getMousePos().x, (int) MouseInput.getMousePos().y, GL_COLOR_ATTACHMENT0));
+		long modelInstanceID = Model.convertRGBToID(colorIDBuffer.sampleColorAtPoint((int) MouseInput.getMousePos().x, (int) (this.screenHeight - MouseInput.getMousePos().y), GL_COLOR_ATTACHMENT0));
 		long entityID = Entity.getEntityIDFromModelID(modelInstanceID);
 		return entityID;
 	}
@@ -180,7 +187,7 @@ public class UIScreen extends Screen {
 	}
 
 	@Override
-	public void render(Framebuffer outputBuffer) {
+	protected void _render(Framebuffer outputBuffer) {
 		if (this.clearColorIDBufferOnRender) {
 			this.clearColorIDBuffer();
 		}

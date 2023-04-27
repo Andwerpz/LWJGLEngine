@@ -8,8 +8,7 @@ import myutils.v10.math.Mat4;
 import myutils.v10.math.Vec3;
 
 public class Line extends Model {
-	// you can render any line with a linear scaling of the line (0, 0, 0) to (1, 1,
-	// 1).
+	// you can render any line with a linear scaling of the line (0, 0, 0) to (1, 1, 1).
 
 	public static Line line = new Line();
 
@@ -23,8 +22,7 @@ public class Line extends Model {
 
 		float[] uvs = new float[] { 0, 0, 1, 1, };
 
-		int[] indices = new int[] { 0, 1, 0, // 3 points since everything has to be a triangle
-		};
+		int[] indices = new int[] { 0, 1, 0, };// 3 points since everything has to be a triangle
 
 		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_LINES));
 		this.defaultMaterials.add(DEFAULT_MATERIAL);

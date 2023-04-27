@@ -125,8 +125,7 @@ public class Framebuffer {
 		this.bind();
 		glReadBuffer(attachmentID);
 		ByteBuffer pixels = BufferUtils.createByteBuffer(4);
-		Vec2 mousePos = MouseInput.getMousePos();
-		glReadPixels((int) mousePos.x, (int) (Main.windowHeight - mousePos.y), 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+		glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 		return new Vec3((pixels.get(0) & 0xFF), (pixels.get(1) & 0xFF), (pixels.get(2) & 0xFF));
 	}
 

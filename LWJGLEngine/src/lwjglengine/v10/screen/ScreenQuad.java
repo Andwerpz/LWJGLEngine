@@ -10,12 +10,14 @@ import lwjglengine.v10.graphics.VertexArray;
 import lwjglengine.v10.main.Main;
 import lwjglengine.v10.scene.Scene;
 import myutils.v10.math.Mat4;
+import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
 
 public class ScreenQuad {
-
 	// a quad that covers the entire screen in normalized device coords (NDC)
-	// used for post-processing
+	// used for rendering buffers to the screen
+
+	public static ScreenQuad screenQuad = new ScreenQuad();
 
 	private VertexArray mesh;
 
@@ -34,22 +36,13 @@ public class ScreenQuad {
 		this.mesh.updateInstances(mat4Map, materialMap, Scene.FRAMEBUFFER_SCENE);
 	}
 
-	public void render(int xOffset, int yOffset, int width, int height) {
-		Mat4 modelMat4 = Mat4.scale((float) width / Main.windowWidth, (float) height / Main.windowHeight, 1);
-		modelMat4.muli(Mat4.translate(new Vec3((float) (xOffset - Main.windowWidth + width) / Main.windowWidth, (float) (yOffset - Main.windowHeight + height) / Main.windowHeight, 0)));
+	//if you want to manipulate the screen quad to render to different portions of the screen; dont do it this way
 
-		HashMap<Long, Mat4> mat4Map = new HashMap<>();
-		mat4Map.put((long) 0, modelMat4);
-		HashMap<Long, Material> materialMap = new HashMap<>();
-		materialMap.put((long) 0, Material.defaultMaterial());
-
-		this.mesh.updateInstances(mat4Map, materialMap, Scene.FRAMEBUFFER_SCENE);
-
-		this.mesh.render(Scene.FRAMEBUFFER_SCENE);
-	}
+	//use glViewport(xOffset, yOffset, width, height) instead. 
+	//much easier
 
 	public void render() {
-		this.render(0, 0, Main.windowWidth, Main.windowHeight);
+		this.mesh.render(Scene.FRAMEBUFFER_SCENE);
 	}
 
 }

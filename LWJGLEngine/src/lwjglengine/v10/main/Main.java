@@ -65,6 +65,8 @@ public class Main implements Runnable {
 	private long audioContext;
 	private long audioDevice;
 
+	private static boolean cursorLocked = false;
+
 	public static void main(String[] args) {
 		Main main = new Main();
 		main.start();
@@ -124,7 +126,6 @@ public class Main implements Runnable {
 		// INIT
 		Shader.init();
 		AssetManager.init();
-		Scene.init();
 		this.sm = new StateManager();
 
 		Main.main = this;
@@ -157,11 +158,17 @@ public class Main implements Runnable {
 	}
 
 	public static void lockCursor() {
+		cursorLocked = true;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 
 	public static void unlockCursor() {
+		cursorLocked = false;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+
+	public static boolean isCursorLocked() {
+		return cursorLocked;
 	}
 
 	@Override

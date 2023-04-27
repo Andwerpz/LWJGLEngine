@@ -67,8 +67,6 @@ public class RaytracingScreen extends Screen {
 
 	private float fov;
 
-	private SkyboxCube skyboxCube;
-
 	private ArrayList<Sphere> spheres;
 	private ArrayList<Triangle> triangles;
 
@@ -88,8 +86,6 @@ public class RaytracingScreen extends Screen {
 	private float ambientStrength;
 	private float sunStrength;
 	private Vec3 sunDir;
-
-	private Cubemap skybox;
 
 	//more bounces have drastically diminishing returns along with drastically increasing 
 	//render times
@@ -118,47 +114,60 @@ public class RaytracingScreen extends Screen {
 	@Override
 	protected void _kill() {
 		this.renderBuffer.kill();
+		this.prevRenderBuffer.kill();
+		this.outputBuffer.kill();
 	}
 
 	@Override
 	public void buildBuffers() {
-		this.renderBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.renderColorMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+
+		if (this.renderBuffer != null) {
+			this.renderBuffer.kill();
+			this.prevRenderBuffer.kill();
+			this.outputBuffer.kill();
+		}
+
+		this.renderBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.renderColorMap = new Texture(GL_RGBA32F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.renderBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.renderColorMap.getID());
 		this.renderBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.renderBuffer.isComplete();
 
-		this.prevRenderBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.prevRenderColorMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.prevRenderBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.prevRenderColorMap = new Texture(GL_RGBA32F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.prevRenderBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.prevRenderColorMap.getID());
 		this.prevRenderBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.prevRenderBuffer.isComplete();
 
-		this.outputBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.outputColorMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.outputBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.outputColorMap = new Texture(GL_RGBA32F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.outputBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.outputColorMap.getID());
 		this.outputBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.outputBuffer.isComplete();
 
-		this.postprocessHDRBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.postprocessHDRMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.postprocessHDRBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.postprocessHDRMap = new Texture(GL_RGBA32F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.postprocessHDRBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.postprocessHDRMap.getID());
 		this.postprocessHDRBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.postprocessHDRBuffer.isComplete();
 
-		this.postprocessBloomBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.postprocessBloomMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.postprocessBloomBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.postprocessBloomMap = new Texture(GL_RGBA32F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
+		glBindTexture(GL_TEXTURE_2D, this.postprocessBloomMap.getID());
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		this.postprocessBloomBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.postprocessBloomMap.getID());
 		this.postprocessBloomBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.postprocessBloomBuffer.isComplete();
 
-		this.postprocessTempBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
-		this.postprocessTempMap = new Texture(GL_RGBA32F, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
+		this.postprocessTempBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.postprocessTempMap = new Texture(GL_RGBA32F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
+		glBindTexture(GL_TEXTURE_2D, this.postprocessTempMap.getID());
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		this.postprocessTempBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.postprocessTempMap.getID());
 		this.postprocessTempBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.postprocessTempBuffer.isComplete();
-
-		this.skyboxCube = new SkyboxCube();
 
 		this.fov = 90f;
 
@@ -170,7 +179,7 @@ public class RaytracingScreen extends Screen {
 			cameraFacing = this.camera.getFacing();
 		}
 
-		this.camera = new Camera((float) Math.toRadians(this.fov), Main.windowWidth, Main.windowHeight, 0.1f, 200f);
+		this.camera = new Camera((float) Math.toRadians(this.fov), this.screenWidth, this.screenHeight, 0.1f, 200f);
 		this.camera.setPos(cameraPos);
 		this.camera.setFacing(cameraFacing);
 
@@ -183,8 +192,6 @@ public class RaytracingScreen extends Screen {
 
 		this.defocusStrength = 0f;
 		this.focusDist = 30f;
-
-		this.skybox = AssetManager.getSkybox("lake_skybox");
 
 		this.ambientStrength = 0;
 		this.sunStrength = 0;
@@ -296,8 +303,8 @@ public class RaytracingScreen extends Screen {
 		Shader.RAYTRACING.setUniform1i("maxBounceCount", this.maxBounceCount);
 		Shader.RAYTRACING.setUniform1i("numRaysPerPixel", this.numRaysPerPixel);
 		Shader.RAYTRACING.setUniform1i("numRenderedFrames", this.numRenderedFrames);
-		Shader.RAYTRACING.setUniform1i("windowWidth", Main.windowWidth);
-		Shader.RAYTRACING.setUniform1i("windowHeight", Main.windowHeight);
+		Shader.RAYTRACING.setUniform1i("windowWidth", this.screenWidth);
+		Shader.RAYTRACING.setUniform1i("windowHeight", this.screenHeight);
 		Shader.RAYTRACING.setUniform1f("blurStrength", this.blurStrength); //for antialiasing
 		Shader.RAYTRACING.setUniform1f("defocusStrength", this.defocusStrength);
 		Shader.RAYTRACING.setUniform1f("focusDist", this.focusDist);
@@ -309,7 +316,14 @@ public class RaytracingScreen extends Screen {
 	}
 
 	@Override
-	public void render(Framebuffer outputBuffer) {
+	protected void _render(Framebuffer outputBuffer) {
+
+		//pre-render checks
+		if (!Scene.skyboxes.containsKey(this.raytracingScene)) {
+			System.err.println("NO SKYBOX ENTRY FOR RAYTRACING SCENE " + this.raytracingScene);
+			return;
+		}
+
 		// -- RENDER SCENE --
 		//at the end, the hdr output should be in prevRenderColorMap
 		switch (this.renderMode) {
@@ -327,8 +341,8 @@ public class RaytracingScreen extends Screen {
 			this.setRaytracingShaderUniforms();
 			Shader.RAYTRACING.enable();
 			this.prevRenderColorMap.bind(GL_TEXTURE0);
-			this.skybox.bind(GL_TEXTURE1);
-			skyboxCube.render();
+			Scene.skyboxes.get(this.raytracingScene).bind(GL_TEXTURE1);
+			SkyboxCube.skyboxCube.render();
 
 			this.outputBuffer.bind();
 			glClear(GL_COLOR_BUFFER_BIT);
@@ -354,8 +368,8 @@ public class RaytracingScreen extends Screen {
 			this.setRaytracingShaderUniforms();
 			Shader.RAYTRACING.enable();
 			this.prevRenderColorMap.bind(GL_TEXTURE0);
-			this.skybox.bind(GL_TEXTURE1);
-			skyboxCube.render();
+			Scene.skyboxes.get(this.raytracingScene).bind(GL_TEXTURE1);
+			SkyboxCube.skyboxCube.render();
 
 			this.numRenderedFrames++;
 

@@ -11,7 +11,7 @@ public class SplashState extends State {
 
 	private SplashScreen splashScreen;
 
-	private static final long TIME_ON_SCREEN = 2; // in seconds
+	private static final long TIME_ON_SCREEN_MILLIS = 1500;
 	private long startTime;
 
 	private static State nextState; //what state loads after the splash screen
@@ -38,7 +38,7 @@ public class SplashState extends State {
 	@Override
 	public void update() {
 		long timeElapsed = System.currentTimeMillis() - this.startTime;
-		if (timeElapsed / 1000L > TIME_ON_SCREEN) {
+		if (timeElapsed > TIME_ON_SCREEN_MILLIS) {
 			if (nextState.sm == null) {
 				nextState.sm = this.sm;
 			}
@@ -48,7 +48,7 @@ public class SplashState extends State {
 
 	@Override
 	public void render(Framebuffer outputBuffer) {
-		this.splashScreen.render(outputBuffer);
+		this.splashScreen._render(outputBuffer);
 	}
 
 	@Override

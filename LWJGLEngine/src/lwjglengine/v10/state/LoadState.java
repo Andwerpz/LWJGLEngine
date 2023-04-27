@@ -16,8 +16,8 @@ public class LoadState extends State {
 	public static final int TRANSITIONING_OUT = 2;
 	public static final int FINISHED = 3;
 
-	public static final long TRANSITION_IN_DURATION = 1;
-	public static final long TRANSITION_OUT_DURATION = 1;
+	public static final long TRANSITION_IN_DURATION_MILLIS = 700;
+	public static final long TRANSITION_OUT_DURATION_MILLIS = 700;
 
 	private long startTime, endTime;
 
@@ -38,7 +38,7 @@ public class LoadState extends State {
 		this.alpha = 0;
 		this.state = TRANSITIONING_IN;
 		this.startTime = System.currentTimeMillis();
-		this.endTime = startTime + TRANSITION_IN_DURATION * 1000L;
+		this.endTime = startTime + TRANSITION_IN_DURATION_MILLIS;
 	}
 
 	public float getAlpha() {
@@ -67,21 +67,22 @@ public class LoadState extends State {
 	public void update() {
 		long curTime = System.currentTimeMillis();
 		if (this.state == TRANSITIONING_IN) {
-			this.alpha = MathUtils.interpolate(0, 0, 1, TRANSITION_IN_DURATION * 1000f, curTime - startTime);
+			this.alpha = MathUtils.interpolate(0, 0, 1, TRANSITION_IN_DURATION_MILLIS, curTime - startTime);
 			if (curTime > endTime) {
 				alpha = 1;
 				this.state = READY_TO_LOAD;
 			}
 		}
 		else if (this.state == READY_TO_LOAD) {
+			this.sm.rootWindow.killAllChildren();
 			this.nextState.load();
 			this.finishedLoading = true;
 			this.state = TRANSITIONING_OUT;
 			this.startTime = System.currentTimeMillis();
-			this.endTime = startTime + TRANSITION_OUT_DURATION * 1000L;
+			this.endTime = startTime + TRANSITION_OUT_DURATION_MILLIS;
 		}
 		else if (this.state == TRANSITIONING_OUT) {
-			this.alpha = MathUtils.interpolate(1, 0, 0, TRANSITION_OUT_DURATION * 1000f, curTime - startTime);
+			this.alpha = MathUtils.interpolate(1, 0, 0, TRANSITION_OUT_DURATION_MILLIS, curTime - startTime);
 			if (curTime > endTime) {
 				alpha = 0;
 				this.state = FINISHED;
@@ -95,7 +96,7 @@ public class LoadState extends State {
 
 	@Override
 	public void render(Framebuffer outputBuffer) {
-		loadScreen.render(outputBuffer);
+		loadScreen._render(outputBuffer);
 	}
 
 	@Override

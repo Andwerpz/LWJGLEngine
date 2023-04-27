@@ -8,20 +8,28 @@ import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Shader;
 import lwjglengine.v10.graphics.Texture;
 import lwjglengine.v10.input.Input;
+import lwjglengine.v10.input.MouseInput;
 import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.Model;
 import lwjglengine.v10.screen.ScreenQuad;
+import lwjglengine.v10.window.RootWindow;
+import lwjglengine.v10.window.Window;
+import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
 
 public class StateManager {
 
+	//TODO :
+	//maybe, for each state, keep track of the scenes belonging to the state. Then, when the state is switched
+	//to a new state, remove all the scenes from the old state. 
+
 	protected Framebuffer outputBuffer;
 	protected Texture outputColorMap;
 
-	private ScreenQuad screenQuad;
-
 	public State activeState;
 	public LoadState loadState;
+
+	public RootWindow rootWindow;
 
 	public StateManager() {
 		this.buildBuffers();
@@ -29,10 +37,14 @@ public class StateManager {
 		this.activeState = null;
 		this.loadState = new LoadState(new SplashState());
 		this.loadState.setStateManager(this);
+
+		this.rootWindow = new RootWindow();
 	}
 
 	public void buildBuffers() {
-		this.screenQuad = new ScreenQuad();
+		if (this.outputBuffer != null) {
+			this.outputBuffer.kill();
+		}
 
 		this.outputBuffer = new Framebuffer(Main.windowWidth, Main.windowHeight);
 		this.outputColorMap = new Texture(GL_RGBA, Main.windowWidth, Main.windowHeight, GL_RGBA, GL_FLOAT);
@@ -54,6 +66,8 @@ public class StateManager {
 			this.activeState.update();
 		}
 
+		this.rootWindow.update();
+
 		if (this.loadState != null) {
 			this.loadState.update();
 		}
@@ -74,9 +88,13 @@ public class StateManager {
 	public void render() {
 		outputBuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT);
+
 		if (this.activeState != null) {
 			this.activeState.render(outputBuffer);
 		}
+
+		this.rootWindow.render(outputBuffer);
+
 		if (this.loadState != null) {
 			this.loadState.render(outputBuffer);
 		}
@@ -89,7 +107,11 @@ public class StateManager {
 
 		Shader.IMG_POST_PROCESS.enable();
 		this.outputColorMap.bind(GL_TEXTURE0);
-		screenQuad.render();
+		ScreenQuad.screenQuad.render();
+	}
+
+	public Window getRootWindow() {
+		return this.rootWindow;
 	}
 
 	public void kill() {
@@ -102,6 +124,10 @@ public class StateManager {
 			return;
 		}
 		activeState.mousePressed(button);
+
+		Vec2 mousePos = MouseInput.getMousePos();
+		this.rootWindow.selectWindow((int) mousePos.x, (int) (Main.windowHeight - mousePos.y), false);
+		this.rootWindow.mousePressed(button);
 	}
 
 	public void mouseReleased(int button) {
@@ -109,6 +135,8 @@ public class StateManager {
 			return;
 		}
 		activeState.mouseReleased(button);
+
+		this.rootWindow.mouseReleased(button);
 	}
 
 	public void mouseScrolled(float wheelOffset, float smoothOffset) {

@@ -52,7 +52,7 @@ public abstract class UIElement extends Entity {
 
 	//you can bind other ui elements to this one to align them to the bounding box of this ui element
 	//when you re-align this ui element, any elements that are bound to this one will be re-aligned. 
-	private ArrayList<UIElement> boundElements;
+	protected ArrayList<UIElement> childElements;
 
 	private boolean isBound = false;
 	private UIElement parentElement;
@@ -92,6 +92,8 @@ public abstract class UIElement extends Entity {
 	protected float x, y; //reference coordinates for drawing
 	protected float z; //needed as float for layering purposes
 
+	//maybe should be an int??
+	//easing only works if it's a float
 	protected float width, height;
 
 	//if true, will automatically stretch the width and/or height so that 
@@ -99,7 +101,7 @@ public abstract class UIElement extends Entity {
 	private boolean fillWidth, fillHeight;
 	private float fillWidthMargin, fillHeightMargin;
 
-	//denotes the bottom left point of the bounding rectangle for this ui element
+	//denotes the bottom left point of the bounding rectangle for this ui element, relative to the parent element's bottom left point
 	//we want this to be int as opposed to float to not get any weird interpixel sampling issues
 	//on ui elements that are constantly being resized tho, you might want them to remain as floats. 
 	protected float alignedX, alignedY;
@@ -139,20 +141,19 @@ public abstract class UIElement extends Entity {
 
 		this.scene = scene;
 
-		this.boundElements = new ArrayList<>();
+		this.childElements = new ArrayList<>();
 
 		this.shouldAlign = true;
 
 		UIElement.uiElements.add(this);
-		//UIElement.shouldAlignUIElements = true;	TODO decide if we need this
 	}
 
 	@Override
 	protected void _kill() {
 		this.unbind();
 		uiElements.remove(this);
-		for (int i = 0; i < this.boundElements.size(); i += 0) {
-			UIElement e = this.boundElements.get(i);
+		for (int i = 0; i < this.childElements.size(); i += 0) {
+			UIElement e = this.childElements.get(i);
 			e.kill();
 		}
 		this.__kill();
@@ -488,7 +489,7 @@ public abstract class UIElement extends Entity {
 		this.alignFrame();
 		this.alignContents();
 
-		for (UIElement e : this.boundElements) {
+		for (UIElement e : this.childElements) {
 			e.align();
 		}
 	}
@@ -583,7 +584,7 @@ public abstract class UIElement extends Entity {
 	public void setZ(float z) {
 		this.z = z;
 
-		for (UIElement e : this.boundElements) {
+		for (UIElement e : this.childElements) {
 			e.setZ(this.z + depthSpacing);
 		}
 	}
@@ -596,7 +597,7 @@ public abstract class UIElement extends Entity {
 
 		this.isBound = true;
 		this.parentElement = e;
-		e.boundElements.add(this);
+		e.childElements.add(this);
 
 		this.setZ(this.z + depthSpacing);
 	}
@@ -604,7 +605,7 @@ public abstract class UIElement extends Entity {
 	//if this element has a parent element, it unbinds itself
 	public void unbind() {
 		if (this.isBound()) {
-			this.getParent().boundElements.remove(this);
+			this.getParent().childElements.remove(this);
 			this.isBound = false;
 			this.parentElement = null;
 		}

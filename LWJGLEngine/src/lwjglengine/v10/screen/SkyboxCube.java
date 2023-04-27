@@ -13,6 +13,8 @@ import myutils.v10.math.Mat4;
 
 public class SkyboxCube {
 
+	public static SkyboxCube skyboxCube = new SkyboxCube();
+
 	private VertexArray mesh;
 
 	public SkyboxCube() {
