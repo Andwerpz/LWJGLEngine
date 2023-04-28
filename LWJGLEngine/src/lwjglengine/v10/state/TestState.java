@@ -40,10 +40,13 @@ public class TestState extends State {
 	public void load() {
 		//Main.lockCursor();
 
-		Window w1 = new AdjustableWindow(120, 10, Main.windowWidth / 2, Main.windowHeight / 2, this.sm.getRootWindow());
-		Window w2 = new AdjustableWindow(10, 10, 200, 200, this.sm.getRootWindow());
+		Window w1 = new AdjustableWindow(120, 10, Main.windowWidth / 2, Main.windowHeight / 2, "Test window 1", this.sm.getRootWindow());
+		Window w2 = new AdjustableWindow(10, 10, 200, 200, "ABCDEFG abcdefg", this.sm.getRootWindow());
 
-		Window w3 = new AdjustableWindow(10, 10, 200, 200, w1);
+		Window w3 = new AdjustableWindow(10, 10, 200, 200, "Test nest window 1", w1);
+		Window w4 = new AdjustableWindow(220, 10, 200, 200, "nesting window owo", w1);
+
+		Window w5 = new AdjustableWindow(30, 10, 100, 100, "We can nest twice??!?!", w4);
 
 		this.raytracingScreen = new RaytracingScreen();
 		this.raytracingScreen.setRenderMode(RaytracingScreen.RENDER_MODE_PREVIEW);

@@ -10,6 +10,7 @@ import lwjglengine.v10.entity.Entity;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.graphics.Texture;
 import lwjglengine.v10.graphics.TextureMaterial;
+import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.FilledRectangle;
 import lwjglengine.v10.model.Model;
 import myutils.v10.graphics.FontUtils;
@@ -23,6 +24,8 @@ public class Text extends UIElement {
 
 	// width of text is fixed, text will be cut off if it grows too wide.
 
+	//TODO figure out how to fix transparency issues when text size becomes small
+
 	private int textWidth, textMaxHeight;
 	private int textSampleAscent, textSampleDescent;
 
@@ -34,10 +37,21 @@ public class Text extends UIElement {
 	private boolean textWrapping = false;
 	private int lineSpacing = 3; //in pixels
 
+	//if draw background is true, then the texture background will not be transparent, instead
+	//replaced with a solid rectangle of the specified color. 
+	private Color backgroundColor = Color.WHITE;
+	private boolean drawBackground = false;
+
 	public Text(float x, float y, String text, int fontSize, Material material, int scene) {
 		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
 		Font derivedFont = new Font("Dialogue", Font.PLAIN, fontSize);
 		this.init(GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material);
+	}
+
+	public Text(float x, float y, String text, int fontSize, Color color, int scene) {
+		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
+		Font derivedFont = new Font("Dialogue", Font.PLAIN, fontSize);
+		this.init(GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, new Material(color));
 	}
 
 	public Text(float x, float y, String text, Font font, int fontSize, Material material, int scene) {
@@ -101,6 +115,11 @@ public class Text extends UIElement {
 		this.width = width;
 		this.height = this.textMaxHeight;
 
+		this.alignContentInsteadOfFrame = true;
+		this.contentWidth = this.width;
+		this.contentHeight = this.textSampleAscent;
+		this.contentYOffset = this.textSampleDescent;
+
 		BufferedImage img = GraphicsTools.generateTextImage(text, font, Color.WHITE, (int) this.width);
 		Texture texture = new Texture(img, Texture.VERTICAL_FLIP_BIT);
 		this.textTextureMaterial = new TextureMaterial(texture);
@@ -116,10 +135,24 @@ public class Text extends UIElement {
 		this.setTextureMaterial(new TextureMaterial(this.generateAlignedTexture()));
 	}
 
+	public void setBackgroundColor(Color c) {
+		this.backgroundColor = c;
+	}
+
+	public void setDrawBackground(boolean b) {
+		this.drawBackground = b;
+	}
+
 	private Texture generateAlignedTexture() {
 		BufferedImage img = new BufferedImage((int) this.width, (int) this.height, BufferedImage.TYPE_INT_ARGB);
 		Graphics g = img.getGraphics();
 		GraphicsTools.enableAntialiasing(g);
+
+		if (this.drawBackground) {
+			g.setColor(this.backgroundColor);
+			g.fillRect(0, 0, (int) this.width, (int) this.height);
+		}
+
 		g.setFont(font);
 		g.setColor(Color.WHITE);
 

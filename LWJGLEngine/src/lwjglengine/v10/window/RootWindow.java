@@ -26,9 +26,8 @@ public class RootWindow extends Window {
 		super(0, 0, Main.windowWidth, Main.windowHeight, null);
 
 		this.uiScreen = new UIScreen();
-		this.uiScreen.setScreenDimensions(this.width, this.height);
 
-		this.backgroundRect = new UIFilledRectangle(0, 0, 0, this.width, this.height, BACKGROUND_SCENE);
+		this.backgroundRect = new UIFilledRectangle(0, 0, 0, this.getWidth(), this.getHeight(), BACKGROUND_SCENE);
 		this.backgroundRect.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
 		this.backgroundRect.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 		this.backgroundRect.setMaterial(new Material(new Vec4(0)));
@@ -39,6 +38,11 @@ public class RootWindow extends Window {
 	protected void _kill() {
 		Scene.removeScene(BACKGROUND_SCENE);
 		this.uiScreen.kill();
+	}
+
+	@Override
+	protected void _resize() {
+		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
 	}
 
 	public void killAllChildren() {
@@ -54,9 +58,14 @@ public class RootWindow extends Window {
 	}
 
 	@Override
-	protected void _render(Framebuffer outputBuffer) {
+	protected void _renderContent(Framebuffer outputBuffer) {
 		this.uiScreen.setUIScene(BACKGROUND_SCENE);
 		this.uiScreen.render(outputBuffer);
+	}
+
+	@Override
+	protected void _renderOverlay(Framebuffer outputBuffer) {
+
 	}
 
 	@Override

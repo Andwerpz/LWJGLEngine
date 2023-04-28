@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Shader;
 import lwjglengine.v10.graphics.Texture;
+import lwjglengine.v10.input.MouseInput;
 import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.FilledRectangle;
 import lwjglengine.v10.model.Model;
@@ -21,6 +22,7 @@ import lwjglengine.v10.screen.UIScreen;
 import lwjglengine.v10.ui.UIFilledRectangle;
 import lwjglengine.v10.util.BufferUtils;
 import myutils.v10.math.Mat4;
+import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
 
 public abstract class Window {
@@ -44,10 +46,14 @@ public abstract class Window {
 
 	private final int ROOT_UI_SCENE = Scene.generateScene();
 
-	protected int width, height;
+	private int width, height;
 
-	//offset from specified 
-	protected int xOffset, yOffset;
+	//offset from specified parent window
+	private int xOffset, yOffset;
+
+	//offset from GLFW window
+	//useful for determining where the mouse is
+	private int globalXOffset, globalYOffset;
 
 	private int alignedX, alignedY;
 
@@ -71,6 +77,9 @@ public abstract class Window {
 		this.parentWindow = parentWindow;
 		if (this.parentWindow != null) {
 			this.parentWindow.childWindows.add(this);
+
+			this.globalXOffset = xOffset;
+			this.globalYOffset = yOffset;
 		}
 
 		this.horizontalAlignStyle = FROM_LEFT;
@@ -85,6 +94,8 @@ public abstract class Window {
 		this.rootUIElement = new UIFilledRectangle(0, 0, 0, this.width, this.height, ROOT_UI_SCENE);
 
 		this.buildBuffers();
+
+		this.updateGlobalOffset();
 
 		this.align();
 	}
@@ -102,6 +113,23 @@ public abstract class Window {
 	}
 
 	protected abstract void _kill();
+
+	private void resize(int width, int height) {
+		this.width = width;
+		this.height = height;
+
+		this._resize();
+
+		this.rootUIElement.setWidth(this.width);
+		this.rootUIElement.setHeight(this.height);
+
+		this.align();
+
+		this.buildBuffers();
+
+	}
+
+	protected abstract void _resize();
 
 	private void buildBuffers() {
 		if (this.colorBuffer != null) {
@@ -165,6 +193,83 @@ public abstract class Window {
 		}
 	}
 
+	public int getWidth() {
+		return this.width;
+	}
+
+	public int getHeight() {
+		return this.height;
+	}
+
+	public int getXOffset() {
+		return this.xOffset;
+	}
+
+	public int getYOffset() {
+		return this.yOffset;
+	}
+
+	public void setWidth(int w) {
+		this.resize(w, this.height);
+	}
+
+	public void setHeight(int h) {
+		this.resize(this.width, h);
+	}
+
+	public void setDimensions(int w, int h) {
+		this.resize(w, h);
+	}
+
+	public void setXOffset(int offset) {
+		this.setOffset(offset, this.yOffset);
+	}
+
+	public void setYOffset(int offset) {
+		this.setOffset(this.xOffset, offset);
+	}
+
+	public void setOffset(int xOffset, int yOffset) {
+		this.xOffset = xOffset;
+		this.yOffset = yOffset;
+		this.align();
+		this.updateGlobalOffset();
+	}
+
+	private void updateGlobalOffset() {
+		this.globalXOffset = this.xOffset;
+		this.globalYOffset = this.yOffset;
+
+		if (this.parentWindow != null) {
+			this.globalXOffset += this.parentWindow.globalXOffset;
+			this.globalYOffset += this.parentWindow.globalYOffset;
+		}
+
+		for (Window w : this.childWindows) {
+			w.updateGlobalOffset();
+		}
+	}
+
+	/**
+	 * Returns where the mouse is relative to the top left corner of the window
+	 * @return
+	 */
+	protected Vec2 getRelativeMousePos() {
+		Vec2 mousePos = MouseInput.getMousePos();
+
+		mousePos.x -= this.globalXOffset;
+
+		mousePos.y = Main.windowHeight - mousePos.y;
+		mousePos.y -= this.globalYOffset;
+		mousePos.y = this.height - mousePos.y;
+
+		return mousePos;
+	}
+
+	public boolean isSelected() {
+		return this.isSelected;
+	}
+
 	public void update() {
 		this._update();
 
@@ -182,13 +287,15 @@ public abstract class Window {
 		this.colorBuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		this._render(this.colorBuffer);
+		this._renderContent(this.colorBuffer);
 
 		//render child windows back to front. 
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
 			Window w = this.childWindows.get(i);
 			w.render(this.colorBuffer);
 		}
+
+		this._renderOverlay(this.colorBuffer);
 
 		//render whatever we have to the output buffer
 		int parentWidth = Main.windowWidth;
@@ -215,7 +322,13 @@ public abstract class Window {
 	 * Render everything specific to this window
 	 * @param outputBuffer
 	 */
-	protected abstract void _render(Framebuffer outputBuffer);
+	protected abstract void _renderContent(Framebuffer outputBuffer);
+
+	/**
+	 * If you want to render something over the other windows, here's where to do it. 
+	 * @param outputBuffer
+	 */
+	protected abstract void _renderOverlay(Framebuffer outputBuffer);
 
 	//what do when selected?
 	protected abstract void selected();

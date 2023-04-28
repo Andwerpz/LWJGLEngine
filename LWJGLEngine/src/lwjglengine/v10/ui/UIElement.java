@@ -92,9 +92,21 @@ public abstract class UIElement extends Entity {
 	protected float x, y; //reference coordinates for drawing
 	protected float z; //needed as float for layering purposes
 
+	//dimensions of the frame
 	//maybe should be an int??
 	//easing only works if it's a float
 	protected float width, height;
+
+	//if the frame doesn't hug the outside of the content, then there might be some discrepancy between content and frame dimensions. 
+	//be careful, as these fields aren't updated as you update width and height. 
+	protected float contentWidth, contentHeight;
+
+	//offset of the content relative to the bottom left corner of the frame. 
+	protected float contentXOffset, contentYOffset;
+
+	//if true, alignment will instead use the content dimensions, and 
+	//subtract content offset from aligned offset after finished aligning. 
+	protected boolean alignContentInsteadOfFrame = false;
 
 	//if true, will automatically stretch the width and/or height so that 
 	//width = parent.width - margin * 2, same for height. 
@@ -131,6 +143,12 @@ public abstract class UIElement extends Entity {
 
 		this.width = width;
 		this.height = height;
+
+		this.contentWidth = width;
+		this.contentHeight = height;
+
+		this.contentXOffset = 0;
+		this.contentYOffset = 0;
 
 		this.boundingRect = boundingRect;
 
@@ -373,13 +391,20 @@ public abstract class UIElement extends Entity {
 			this.height = parentHeight - this.fillHeightMargin * 2;
 		}
 
+		float width = this.width;
+		float height = this.height;
+		if (this.alignContentInsteadOfFrame) {
+			width = this.contentWidth;
+			height = this.contentHeight;
+		}
+
 		switch (this.horizontalAlignContent) {
 		case ALIGN_CENTER:
-			this.alignedX = (this.x - this.width / 2);
+			this.alignedX = (this.x - width / 2);
 			break;
 
 		case ALIGN_RIGHT:
-			this.alignedX = (this.x - this.width);
+			this.alignedX = (this.x - width);
 			break;
 
 		case ALIGN_LEFT:
@@ -389,16 +414,21 @@ public abstract class UIElement extends Entity {
 
 		switch (this.verticalAlignContent) {
 		case ALIGN_CENTER:
-			this.alignedY = (this.y - this.height / 2);
+			this.alignedY = (this.y - height / 2);
 			break;
 
 		case ALIGN_TOP:
-			this.alignedY = (this.y - this.height);
+			this.alignedY = (this.y - height);
 			break;
 
 		case ALIGN_BOTTOM:
 			this.alignedY = (this.y);
 			break;
+		}
+
+		if (this.alignContentInsteadOfFrame) {
+			this.alignedX -= this.contentXOffset;
+			this.alignedY -= this.contentYOffset;
 		}
 
 		if (this.clampAlignedCoordinatesToInt) {

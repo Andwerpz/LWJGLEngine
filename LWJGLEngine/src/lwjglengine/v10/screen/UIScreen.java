@@ -168,7 +168,18 @@ public class UIScreen extends Screen {
 
 	//assumes that the ui screen covers the entire screen
 	public long getEntityIDAtMouse() {
-		long modelInstanceID = Model.convertRGBToID(colorIDBuffer.sampleColorAtPoint((int) MouseInput.getMousePos().x, (int) (this.screenHeight - MouseInput.getMousePos().y), GL_COLOR_ATTACHMENT0));
+		Vec2 mousePos = MouseInput.getMousePos();
+		return getEntityIDAtCoord((int) mousePos.x, (int) (this.screenHeight - mousePos.y));
+	}
+
+	/**
+	 * Coordinate is relative to the bottom left corner
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public long getEntityIDAtCoord(int x, int y) {
+		long modelInstanceID = Model.convertRGBToID(colorIDBuffer.sampleColorAtPoint(x, y, GL_COLOR_ATTACHMENT0));
 		long entityID = Entity.getEntityIDFromModelID(modelInstanceID);
 		return entityID;
 	}
