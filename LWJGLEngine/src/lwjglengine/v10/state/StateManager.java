@@ -3,6 +3,8 @@ package lwjglengine.v10.state;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.*;
 
+import org.lwjgl.glfw.GLFW;
+
 import lwjglengine.v10.entity.Entity;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Shader;
@@ -135,7 +137,6 @@ public class StateManager {
 			return;
 		}
 		activeState.mouseReleased(button);
-
 		this.rootWindow.mouseReleased(button);
 	}
 
@@ -144,13 +145,17 @@ public class StateManager {
 			return;
 		}
 		activeState.mouseScrolled(wheelOffset, smoothOffset);
+		this.rootWindow.mouseScrolled(wheelOffset, smoothOffset);
 	}
 
 	public void keyPressed(int key) {
 		if (activeState == null) {
 			return;
 		}
+
 		activeState.keyPressed(key);
+		this.rootWindow.keyPressed(key);
+
 		Input.inputsKeyPressed(key);
 	}
 
@@ -158,7 +163,10 @@ public class StateManager {
 		if (activeState == null) {
 			return;
 		}
+
 		activeState.keyReleased(key);
+		this.rootWindow.keyReleased(key);
+
 		Input.inputsKeyReleased(key);
 	}
 

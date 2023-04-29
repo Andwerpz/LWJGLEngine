@@ -21,7 +21,6 @@ import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.graphics.Shader;
 import lwjglengine.v10.graphics.Texture;
-import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.AssetManager;
 import lwjglengine.v10.player.Camera;
 import lwjglengine.v10.scene.Scene;
@@ -104,7 +103,23 @@ public class RaytracingScreen extends Screen {
 	private float bloomThreshold; //how bright does a pixel have to be to be blurred?
 
 	public RaytracingScreen() {
+		this.fov = 90f;
 
+		this.numRenderedFrames = 0;
+
+		this.blurStrength = 3f;
+
+		this.defocusStrength = 0f;
+		this.focusDist = 30f;
+
+		this.ambientStrength = 1;
+		this.sunStrength = 0;
+		this.sunDir = new Vec3(1, 1, 0.4f);
+
+		this.exposure = 1;
+		this.gamma = 1;
+
+		this.bloomThreshold = 2.5f;
 	}
 
 	public void setRaytracingScene(int scene) {
@@ -116,15 +131,23 @@ public class RaytracingScreen extends Screen {
 		this.renderBuffer.kill();
 		this.prevRenderBuffer.kill();
 		this.outputBuffer.kill();
+		this.postprocessTempBuffer.kill();
+		this.postprocessBloomBuffer.kill();
+		this.postprocessHDRBuffer.kill();
 	}
 
 	@Override
 	public void buildBuffers() {
 
+		System.out.println("BUILDING BUFFERS : " + this.screenWidth + " " + this.screenHeight);
+
 		if (this.renderBuffer != null) {
 			this.renderBuffer.kill();
 			this.prevRenderBuffer.kill();
 			this.outputBuffer.kill();
+			this.postprocessTempBuffer.kill();
+			this.postprocessBloomBuffer.kill();
+			this.postprocessHDRBuffer.kill();
 		}
 
 		this.renderBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
@@ -169,8 +192,6 @@ public class RaytracingScreen extends Screen {
 		this.postprocessTempBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.postprocessTempBuffer.isComplete();
 
-		this.fov = 90f;
-
 		Vec3 cameraPos = new Vec3();
 		Vec3 cameraFacing = new Vec3(0, 0, -1);
 
@@ -183,26 +204,8 @@ public class RaytracingScreen extends Screen {
 		this.camera.setPos(cameraPos);
 		this.camera.setFacing(cameraFacing);
 
-		this.spheres = new ArrayList<>();
-		this.triangles = new ArrayList<>();
-
-		this.numRenderedFrames = 0;
-
-		this.blurStrength = 3f;
-
-		this.defocusStrength = 0f;
-		this.focusDist = 30f;
-
-		this.ambientStrength = 0;
-		this.sunStrength = 0;
-		this.sunDir = new Vec3(1, 1, 0.4f);
-
-		this.exposure = 1;
-		this.gamma = 1;
-
-		this.bloomThreshold = 2.5f;
-
 		this.buildObjectBuffers();
+
 	}
 
 	public void setCameraPos(Vec3 pos) {
@@ -224,6 +227,11 @@ public class RaytracingScreen extends Screen {
 	}
 
 	private void buildObjectBuffers() {
+		if (this.spheres == null) {
+			this.spheres = new ArrayList<>();
+			this.triangles = new ArrayList<>();
+		}
+
 		if (this.sphereBuffer == -1) {
 			this.sphereBuffer = glGenBuffers();
 		}
@@ -480,6 +488,10 @@ public class RaytracingScreen extends Screen {
 			this.numRaysPerPixel = renderNumRaysPerPixel;
 			break;
 		}
+	}
+
+	public int getRenderMode() {
+		return this.renderMode;
 	}
 
 }

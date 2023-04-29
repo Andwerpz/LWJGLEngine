@@ -58,13 +58,13 @@ public class RootWindow extends Window {
 	}
 
 	@Override
-	protected void _renderContent(Framebuffer outputBuffer) {
+	protected void renderContent(Framebuffer outputBuffer) {
 		this.uiScreen.setUIScene(BACKGROUND_SCENE);
 		this.uiScreen.render(outputBuffer);
 	}
 
 	@Override
-	protected void _renderOverlay(Framebuffer outputBuffer) {
+	protected void renderOverlay(Framebuffer outputBuffer) {
 
 	}
 

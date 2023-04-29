@@ -26,14 +26,15 @@ import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
 
 public abstract class Window {
-	//Few things needing solved:
-	// - be able to move and adjust window
-	// - draw window border
-	// - should the window have it's own scene, and use UIScreen to render, or should it render itself?
-	// - be able to align windows relative to each other
+	//A window should be a container for rendering. 
+	//should be relatively modular. 
 
-	//implemented
-	// - transparent / transluscent windows?
+	//how should this class interact with states?
+	//should the state call upon this class, or should this class be a container for the state?
+
+	//perhaps we need to do away with the notion of a state. 
+
+	//the problem is that how are we going to decide when to put up a loading screen without states?
 
 	public static final int FROM_LEFT = 0;
 	public static final int FROM_RIGHT = 1;
@@ -118,8 +119,6 @@ public abstract class Window {
 		this.width = width;
 		this.height = height;
 
-		this._resize();
-
 		this.rootUIElement.setWidth(this.width);
 		this.rootUIElement.setHeight(this.height);
 
@@ -127,6 +126,7 @@ public abstract class Window {
 
 		this.buildBuffers();
 
+		this._resize();
 	}
 
 	protected abstract void _resize();
@@ -209,6 +209,14 @@ public abstract class Window {
 		return this.yOffset;
 	}
 
+	public int getGlobalXOffset() {
+		return this.globalXOffset;
+	}
+
+	public int getGlobalYOffset() {
+		return this.globalYOffset;
+	}
+
 	public void setWidth(int w) {
 		this.resize(w, this.height);
 	}
@@ -287,7 +295,7 @@ public abstract class Window {
 		this.colorBuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		this._renderContent(this.colorBuffer);
+		this.renderContent(this.colorBuffer);
 
 		//render child windows back to front. 
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
@@ -295,16 +303,9 @@ public abstract class Window {
 			w.render(this.colorBuffer);
 		}
 
-		this._renderOverlay(this.colorBuffer);
+		this.renderOverlay(this.colorBuffer);
 
 		//render whatever we have to the output buffer
-		int parentWidth = Main.windowWidth;
-		int parentHeight = Main.windowHeight;
-		if (this.parentWindow != null) {
-			parentWidth = this.parentWindow.width;
-			parentHeight = this.parentWindow.height;
-		}
-
 		colorBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
@@ -322,13 +323,13 @@ public abstract class Window {
 	 * Render everything specific to this window
 	 * @param outputBuffer
 	 */
-	protected abstract void _renderContent(Framebuffer outputBuffer);
+	protected abstract void renderContent(Framebuffer outputBuffer);
 
 	/**
 	 * If you want to render something over the other windows, here's where to do it. 
 	 * @param outputBuffer
 	 */
-	protected abstract void _renderOverlay(Framebuffer outputBuffer);
+	protected abstract void renderOverlay(Framebuffer outputBuffer);
 
 	//what do when selected?
 	protected abstract void selected();

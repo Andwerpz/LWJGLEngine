@@ -2,8 +2,11 @@ package lwjglengine.v10.window;
 
 import java.awt.Color;
 
+import org.lwjgl.glfw.GLFW;
+
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
+import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.Line;
 import lwjglengine.v10.model.Model;
 import lwjglengine.v10.scene.Scene;
@@ -14,9 +17,12 @@ import lwjglengine.v10.ui.UIFilledRectangle;
 import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
 
-public class AdjustableWindow extends Window {
+public abstract class AdjustableWindow extends Window {
 
-	//TODO implement snapping to windows that are children of the same parent. 
+	//TODO 
+	// - implement snapping to windows that are children of the same parent. 
+	// - allow dragging child windows out of parent windows, or dragging windows into windows. 
+	// - add an x on the top right corner so we can close windows 
 
 	private final int BACKGROUND_SCENE = Scene.generateScene();
 	private final int TITLE_BAR_SCENE = Scene.generateScene();
@@ -24,12 +30,17 @@ public class AdjustableWindow extends Window {
 
 	private UIScreen uiScreen;
 
-	private int titleBarHeight = 25;
+	private static int titleBarHeight = 25;
 	private UIFilledRectangle titleBarRect;
 
 	private String title;
 	private int titleLeftMargin = 5;
 	private Text titleBarText;
+	private Material deselectedTitleTextMaterial = new Material(new Vec3((float) (205 / 255.0)));
+	private Material selectedTitleTextMaterial = new Material(new Vec3((float) (255 / 255.0)));
+
+	//content is always going to be aligned to the bottom. 
+	private int contentWidth, contentHeight;
 
 	private UIFilledRectangle backgroundRect;
 
@@ -44,7 +55,7 @@ public class AdjustableWindow extends Window {
 	private Material selectedBorderMaterial = new Material(new Vec3((float) (65 / 255.0)));
 
 	private int minWidth = 50;
-	private int minHeight = this.titleBarHeight + 10;
+	private int minHeight = titleBarHeight + 10;
 
 	//if an edge is grabbed, then the title bar cannot be grabbed, and vice versa
 	private boolean titleBarGrabbed = false;
@@ -57,8 +68,18 @@ public class AdjustableWindow extends Window {
 	private boolean bottomEdgeGrabbed = false;
 	private boolean topEdgeGrabbed = false;
 
-	public AdjustableWindow(int xOffset, int yOffset, int width, int height, String title, Window parentWindow) {
-		super(xOffset, yOffset, width, height, parentWindow);
+	//this is true if mouse was pressed, and none of the things were grabbed. 
+	private boolean contentSelected = false;
+
+	protected boolean allowInputIfContentNotSelected = false;
+	protected boolean allowUpdateIfContentNotSelected = true;
+	protected boolean allowRenderIfContentNotSelected = true;
+
+	public AdjustableWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window parentWindow) {
+		super(xOffset, yOffset, contentWidth, contentHeight + titleBarHeight, parentWindow);
+
+		this.contentWidth = contentWidth;
+		this.contentHeight = contentHeight;
 
 		this.uiScreen = new UIScreen();
 
@@ -70,7 +91,7 @@ public class AdjustableWindow extends Window {
 		this.backgroundRect.setMaterial(this.deselectedBackgroundMaterial);
 		this.backgroundRect.bind(this.rootUIElement);
 
-		this.titleBarRect = new UIFilledRectangle(0, 0, -9, this.getWidth(), this.titleBarHeight, TITLE_BAR_SCENE);
+		this.titleBarRect = new UIFilledRectangle(0, 0, -9, this.getWidth(), titleBarHeight, TITLE_BAR_SCENE);
 		this.titleBarRect.setFillWidth(true);
 		this.titleBarRect.setFillWidthMargin(0);
 		this.titleBarRect.setMaterial(this.titleBarMaterial);
@@ -79,7 +100,7 @@ public class AdjustableWindow extends Window {
 		this.titleBarRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 
 		this.title = title;
-		this.titleBarText = new Text(this.titleLeftMargin, 0, this.title, 12, Color.WHITE, TITLE_BAR_SCENE);
+		this.titleBarText = new Text(this.titleLeftMargin, 0, this.title, 12, this.deselectedTitleTextMaterial, TITLE_BAR_SCENE);
 		this.titleBarText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.titleBarText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.titleBarText.setBackgroundColor(new Color(this.titleBarMaterial.getDiffuse().x, this.titleBarMaterial.getDiffuse().y, this.titleBarMaterial.getDiffuse().z));
@@ -121,6 +142,18 @@ public class AdjustableWindow extends Window {
 		for (int i = 0; i < 4; i++) {
 			Model.updateInstance(this.windowBorder[i], this.isSelected() ? this.selectedBorderMaterial : this.deselectedBorderMaterial);
 		}
+
+		this.__resize();
+	}
+
+	protected abstract void __resize();
+
+	protected int getContentWidth() {
+		return this.contentWidth;
+	}
+
+	protected int getContentHeight() {
+		return this.contentHeight;
 	}
 
 	@Override
@@ -169,16 +202,35 @@ public class AdjustableWindow extends Window {
 			int newYOffset = this.getYOffset() - ((int) (this.getRelativeMousePos().y) - this.titleBarGrabMouseY);
 			this.setOffset(newXOffset, newYOffset);
 		}
+
+		//check if top of window goes above screen. If so, clamp window top to top of screen
+		{
+			int windowTop = this.getYOffset() + this.getHeight();
+			if (windowTop > this.parentWindow.getHeight()) {
+				int diff = this.parentWindow.getHeight() - windowTop;
+				this.setYOffset(this.getYOffset() + diff);
+			}
+		}
+
+		if (this.contentSelected || this.allowUpdateIfContentNotSelected) {
+			this.__update();
+		}
 	}
 
+	protected abstract void __update();
+
 	@Override
-	protected void _renderContent(Framebuffer outputBuffer) {
+	protected void renderContent(Framebuffer outputBuffer) {
 		this.uiScreen.setUIScene(BACKGROUND_SCENE);
 		this.uiScreen.render(outputBuffer);
+
+		if (this.contentSelected || this.allowRenderIfContentNotSelected) {
+			this._renderContent(outputBuffer);
+		}
 	}
 
 	@Override
-	protected void _renderOverlay(Framebuffer outputBuffer) {
+	protected void renderOverlay(Framebuffer outputBuffer) {
 		this.uiScreen.setUIScene(TITLE_BAR_SCENE);
 		this.uiScreen.render(outputBuffer);
 
@@ -189,22 +241,36 @@ public class AdjustableWindow extends Window {
 		this.uiScreen.render(outputBuffer);
 	}
 
-	//protected abstract void __render(Framebuffer outputBuffer);
+	protected abstract void _renderContent(Framebuffer outputBuffer);
 
 	@Override
 	protected void selected() {
+		this.titleBarText.setMaterial(this.selectedTitleTextMaterial);
 		this.backgroundRect.setMaterial(this.selectedBackgroundMaterial);
 		for (int i = 0; i < 4; i++) {
 			Model.updateInstance(this.windowBorder[i], this.selectedBorderMaterial);
 		}
 	}
 
+	protected abstract void contentSelected();
+
 	@Override
 	protected void deselected() {
+		this.titleBarText.setMaterial(this.deselectedTitleTextMaterial);
 		this.backgroundRect.setMaterial(this.deselectedBackgroundMaterial);
 		for (int i = 0; i < 4; i++) {
 			Model.updateInstance(this.windowBorder[i], this.deselectedBorderMaterial);
 		}
+
+		this.contentSelected = false;
+
+		this.contentDeselected();
+	}
+
+	protected abstract void contentDeselected();
+
+	protected boolean isContentSelected() {
+		return this.contentSelected;
 	}
 
 	private boolean canGrabLeftEdge() {
@@ -239,7 +305,21 @@ public class AdjustableWindow extends Window {
 				this.titleBarGrabMouseY = (int) this.getRelativeMousePos().y;
 			}
 		}
+
+		//if we've been selected, and none of the edges are grabbed, then we should select the content
+		if (!(this.titleBarGrabbed || this.leftEdgeGrabbed || this.rightEdgeGrabbed || this.bottomEdgeGrabbed || this.topEdgeGrabbed)) {
+			if (!this.contentSelected) {
+				this.contentSelected();
+			}
+			this.contentSelected = true;
+		}
+
+		if (this.contentSelected || this.allowInputIfContentNotSelected) {
+			this.__mousePressed(button);
+		}
 	}
+
+	protected abstract void __mousePressed(int button);
 
 	@Override
 	protected void _mouseReleased(int button) {
@@ -248,24 +328,46 @@ public class AdjustableWindow extends Window {
 		this.bottomEdgeGrabbed = false;
 		this.topEdgeGrabbed = false;
 		this.titleBarGrabbed = false;
+
+		if (this.contentSelected || this.allowInputIfContentNotSelected) {
+			this.__mouseReleased(button);
+		}
 	}
+
+	protected abstract void __mouseReleased(int button);
 
 	@Override
 	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
-		// TODO Auto-generated method stub
-
+		if (this.contentSelected || this.allowInputIfContentNotSelected) {
+			this.__mouseScrolled(wheelOffset, smoothOffset);
+		}
 	}
+
+	protected abstract void __mouseScrolled(float wheelOffset, float smoothOffset);
 
 	@Override
 	protected void _keyPressed(int key) {
-		// TODO Auto-generated method stub
+		if (key == GLFW.GLFW_KEY_ESCAPE) {
+			if (this.contentSelected) {
+				this.contentDeselected();
+			}
+			this.contentSelected = false;
+		}
 
+		if (this.contentSelected || this.allowInputIfContentNotSelected) {
+			this.__keyPressed(key);
+		}
 	}
+
+	protected abstract void __keyPressed(int key);
 
 	@Override
 	protected void _keyReleased(int key) {
-		// TODO Auto-generated method stub
-
+		if (this.contentSelected || this.allowInputIfContentNotSelected) {
+			this.__keyReleased(key);
+		}
 	}
+
+	protected abstract void __keyReleased(int key);
 
 }
