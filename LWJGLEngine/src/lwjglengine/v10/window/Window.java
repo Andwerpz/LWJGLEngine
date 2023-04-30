@@ -24,6 +24,7 @@ import lwjglengine.v10.util.BufferUtils;
 import myutils.v10.math.Mat4;
 import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
+import myutils.v10.misc.Pair;
 
 public abstract class Window {
 	//A window should be a container for rendering. 
@@ -36,6 +37,9 @@ public abstract class Window {
 
 	//the problem is that how are we going to decide when to put up a loading screen without states?
 
+	//TODO
+	// - drop shadow?
+
 	public static final int FROM_LEFT = 0;
 	public static final int FROM_RIGHT = 1;
 	public static final int FROM_TOP = 2;
@@ -44,6 +48,9 @@ public abstract class Window {
 	public static final int FROM_CENTER_RIGHT = 5;
 	public static final int FROM_CENTER_TOP = 6;
 	public static final int FROM_CENTER_BOTTOM = 7;
+
+	//requests come in the form <child, new parent>
+	public static ArrayList<Pair<Window, Window>> renestRequests = new ArrayList<>();
 
 	private final int ROOT_UI_SCENE = Scene.generateScene();
 
@@ -77,11 +84,11 @@ public abstract class Window {
 
 		this.parentWindow = parentWindow;
 		if (this.parentWindow != null) {
-			this.parentWindow.childWindows.add(this);
-
-			this.globalXOffset = xOffset;
-			this.globalYOffset = yOffset;
+			this.parentWindow.addChild(this);
 		}
+
+		this.globalXOffset = xOffset;
+		this.globalYOffset = yOffset;
 
 		this.horizontalAlignStyle = FROM_LEFT;
 		this.verticalAlignStyle = FROM_BOTTOM;
@@ -105,6 +112,10 @@ public abstract class Window {
 		this.colorBuffer.kill();
 		this.rootUIElement.kill();
 		Scene.removeScene(ROOT_UI_SCENE);
+
+		if (this.parentWindow != null) {
+			this.parentWindow.removeChild(this);
+		}
 
 		this._kill();
 
@@ -141,6 +152,24 @@ public abstract class Window {
 		this.colorBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.colorTexture.getID());
 		this.colorBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.colorBuffer.isComplete();
+	}
+
+	public void addChild(Window w) {
+		this.childWindows.add(0, w);
+		w.parentWindow = this;
+		w.updateGlobalOffset();
+	}
+
+	public void removeChild(Window w) {
+		this.childWindows.remove(w);
+		w.parentWindow = null;
+	}
+
+	public void switchParent(Window newParent) {
+		if (this.parentWindow != null) {
+			this.parentWindow.removeChild(this);
+		}
+		newParent.addChild(this);
 	}
 
 	public void align() {
@@ -274,6 +303,66 @@ public abstract class Window {
 		return mousePos;
 	}
 
+	/**
+	 * Returns where the mouse is, but clamped to this window. 
+	 * @return
+	 */
+	protected Vec2 getRelativeMousePosClampedToWindow() {
+		int mouseX = (int) this.getRelativeMousePos().x;
+		int mouseY = (int) this.getRelativeMousePos().y;
+
+		if (mouseX < 0) {
+			mouseX = 0;
+		}
+		else if (mouseX > this.width) {
+			mouseX = this.width;
+		}
+		if (mouseY < 0) {
+			mouseY = 0;
+		}
+		else if (mouseY > this.height) {
+			mouseY = this.height;
+		}
+
+		return new Vec2(mouseX, mouseY);
+	}
+
+	/**
+	 * Returns where the mouse is, but if the mouse is outside of the parent window, then it clamps the position so that 
+	 * it is inside the parent window and the current window. 
+	 * 
+	 * Note that the returned position can still be outside of the current window
+	 * 
+	 * Behaves just like getRelativeMousePos() in the case where there is no parent window
+	 * @return
+	 */
+	protected Vec2 getRelativeMousePosClampedToParent() {
+		if (this.parentWindow == null) {
+			return this.getRelativeMousePos();
+		}
+
+		int mouseX = (int) this.getRelativeMousePos().x;
+		int mouseY = (int) this.getRelativeMousePos().y;
+
+		int parentMouseX = (int) (this.parentWindow.getRelativeMousePos().x);
+		int parentMouseY = (int) (this.parentWindow.getRelativeMousePos().y);
+
+		if (parentMouseX < 0) {
+			mouseX -= parentMouseX;
+		}
+		else if (parentMouseX > this.parentWindow.getWidth()) {
+			mouseX += this.parentWindow.getWidth() - parentMouseX;
+		}
+		if (parentMouseY < 0) {
+			mouseY -= parentMouseY;
+		}
+		else if (parentMouseY > this.parentWindow.getHeight()) {
+			mouseY += this.parentWindow.getHeight() - parentMouseY;
+		}
+
+		return new Vec2(mouseX, mouseY);
+	}
+
 	public boolean isSelected() {
 		return this.isSelected;
 	}
@@ -281,7 +370,9 @@ public abstract class Window {
 	public void update() {
 		this._update();
 
-		for (Window w : this.childWindows) {
+		//go in descending order, because windows might choose to re-nest. 
+		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
+			Window w = this.childWindows.get(i);
 			w.update();
 		}
 	}

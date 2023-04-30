@@ -39,8 +39,11 @@ public class Text extends UIElement {
 
 	//if draw background is true, then the texture background will not be transparent, instead
 	//replaced with a solid rectangle of the specified color. 
+	//might be useful when trying to fix antialiasing issues with thin texts behind solid background colors. 
 	private Color backgroundColor = Color.WHITE;
 	private boolean drawBackground = false;
+
+	private boolean doAntialiasing = true;
 
 	public Text(float x, float y, String text, int fontSize, Material material, int scene) {
 		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
@@ -143,10 +146,17 @@ public class Text extends UIElement {
 		this.drawBackground = b;
 	}
 
+	public void setDoAntialiasing(boolean b) {
+		this.doAntialiasing = b;
+	}
+
 	private Texture generateAlignedTexture() {
 		BufferedImage img = new BufferedImage((int) this.width, (int) this.height, BufferedImage.TYPE_INT_ARGB);
 		Graphics g = img.getGraphics();
-		GraphicsTools.enableAntialiasing(g);
+
+		if (this.doAntialiasing) {
+			GraphicsTools.enableAntialiasing(g);
+		}
 
 		if (this.drawBackground) {
 			g.setColor(this.backgroundColor);

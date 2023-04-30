@@ -122,6 +122,12 @@ public class RaytracingWindow extends AdjustableWindow {
 	}
 
 	@Override
+	protected void __kill() {
+		this.raytracingScreen.kill();
+		Scene.removeScene(RAYTRACING_SCENE);
+	}
+
+	@Override
 	protected void __resize() {
 		if (this.raytracingScreen != null) {
 			this.raytracingScreen.setScreenDimensions(this.getContentWidth(), this.getContentHeight());

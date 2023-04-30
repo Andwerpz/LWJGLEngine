@@ -6,6 +6,8 @@ import org.lwjgl.glfw.GLFW;
 
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
+import lwjglengine.v10.input.KeyboardInput;
+import lwjglengine.v10.input.MouseInput;
 import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.Line;
 import lwjglengine.v10.model.Model;
@@ -16,12 +18,11 @@ import lwjglengine.v10.ui.UIElement;
 import lwjglengine.v10.ui.UIFilledRectangle;
 import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
+import myutils.v10.math.Vec4;
 
 public abstract class AdjustableWindow extends Window {
-
 	//TODO 
 	// - implement snapping to windows that are children of the same parent. 
-	// - allow dragging child windows out of parent windows, or dragging windows into windows. 
 	// - add an x on the top right corner so we can close windows 
 
 	private final int BACKGROUND_SCENE = Scene.generateScene();
@@ -30,7 +31,7 @@ public abstract class AdjustableWindow extends Window {
 
 	private UIScreen uiScreen;
 
-	private static int titleBarHeight = 25;
+	private static int titleBarHeight = 24;
 	private UIFilledRectangle titleBarRect;
 
 	private String title;
@@ -41,6 +42,7 @@ public abstract class AdjustableWindow extends Window {
 
 	//content is always going to be aligned to the bottom. 
 	private int contentWidth, contentHeight;
+	protected UIFilledRectangle contentRootUIElement;
 
 	private UIFilledRectangle backgroundRect;
 
@@ -83,6 +85,16 @@ public abstract class AdjustableWindow extends Window {
 
 		this.uiScreen = new UIScreen();
 
+		this.contentRootUIElement = new UIFilledRectangle(0, 0, -20, this.contentWidth, this.contentHeight, BACKGROUND_SCENE);
+		this.contentRootUIElement.setFillWidth(true);
+		this.contentRootUIElement.setFillWidthMargin(0);
+		this.contentRootUIElement.setFillHeight(true);
+		this.contentRootUIElement.setFillHeightMargin(titleBarHeight / 2);
+		this.contentRootUIElement.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
+		this.contentRootUIElement.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
+		this.contentRootUIElement.setMaterial(new Material(new Vec4(0)));
+		this.contentRootUIElement.bind(this.rootUIElement);
+
 		this.backgroundRect = new UIFilledRectangle(0, 0, -10, this.getWidth(), this.getHeight(), BACKGROUND_SCENE);
 		this.backgroundRect.setFillWidth(true);
 		this.backgroundRect.setFillHeight(true);
@@ -101,10 +113,9 @@ public abstract class AdjustableWindow extends Window {
 
 		this.title = title;
 		this.titleBarText = new Text(this.titleLeftMargin, 0, this.title, 12, this.deselectedTitleTextMaterial, TITLE_BAR_SCENE);
+		this.titleBarText.setDoAntialiasing(false);
 		this.titleBarText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.titleBarText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-		this.titleBarText.setBackgroundColor(new Color(this.titleBarMaterial.getDiffuse().x, this.titleBarMaterial.getDiffuse().y, this.titleBarMaterial.getDiffuse().z));
-		this.titleBarText.setDrawBackground(true);
 		this.titleBarText.bind(this.titleBarRect);
 
 		this.windowBorder = new long[4];
@@ -118,10 +129,17 @@ public abstract class AdjustableWindow extends Window {
 		Scene.removeScene(BACKGROUND_SCENE);
 		Scene.removeScene(TITLE_BAR_SCENE);
 		Scene.removeScene(BORDER_SCENE);
+
+		this.__kill();
 	}
+
+	protected abstract void __kill();
 
 	@Override
 	protected void _resize() {
+		this.contentWidth = this.getWidth();
+		this.contentHeight = this.getHeight() - titleBarHeight;
+
 		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
 
 		this.uiScreen.setViewportWidth(this.getWidth());
@@ -156,32 +174,78 @@ public abstract class AdjustableWindow extends Window {
 		return this.contentHeight;
 	}
 
+	/**
+	 * Returns where the mouse is, but if the mouse is outside of the parent window, then it clamps the position so that 
+	 * it is inside the parent window and the current window. 
+	 * 
+	 * Note that the returned position can still be outside of the current window
+	 * 
+	 * Behaves just like getRelativeMousePos() in the case where there is no parent window
+	 * 
+	 * Note that this method clamps to the content, not the bounds of the window
+	 * @return
+	 */
+	protected Vec2 getRelativeMousePosClampedToParentContent() {
+		if (this.parentWindow == null) {
+			return this.getRelativeMousePos();
+		}
+
+		if (!(this.parentWindow instanceof AdjustableWindow)) {
+			return this.getRelativeMousePosClampedToParent();
+		}
+
+		int mouseX = (int) this.getRelativeMousePos().x;
+		int mouseY = (int) this.getRelativeMousePos().y;
+
+		int parentMouseX = (int) (this.parentWindow.getRelativeMousePos().x);
+		int parentMouseY = (int) (this.parentWindow.getRelativeMousePos().y);
+
+		if (parentMouseX < 0) {
+			mouseX -= parentMouseX;
+		}
+		else if (parentMouseX > this.parentWindow.getWidth()) {
+			mouseX += this.parentWindow.getWidth() - parentMouseX;
+		}
+		if (parentMouseY < titleBarHeight) {
+			mouseY += titleBarHeight - parentMouseY;
+		}
+		else if (parentMouseY > this.parentWindow.getHeight()) {
+			mouseY += this.parentWindow.getHeight() - parentMouseY;
+		}
+
+		return new Vec2(mouseX, mouseY);
+	}
+
 	@Override
 	protected void _update() {
+		//update size and / or offset if the edges are grabbed
 		{
+			int mouseX = (int) this.getRelativeMousePosClampedToParentContent().x;
+			int mouseY = (int) this.getRelativeMousePosClampedToParentContent().y;
+
 			int newWidth = this.getWidth();
 			int newHeight = this.getHeight();
 
 			int newXOffset = this.getXOffset();
 			int newYOffset = this.getYOffset();
 			if (this.leftEdgeGrabbed) {
-				newXOffset += (int) this.getRelativeMousePos().x;
-				newWidth -= (int) this.getRelativeMousePos().x;
+				newXOffset += mouseX;
+				newWidth -= mouseX;
 				if (newWidth < this.minWidth) {
 					newWidth = this.minWidth;
 					newXOffset = this.getXOffset() - (this.minWidth - this.getWidth());
 				}
 			}
 			if (this.rightEdgeGrabbed) {
-				newWidth = (int) this.getRelativeMousePos().x;
+				newWidth = mouseX;
 				newWidth = Math.max(newWidth, this.minWidth);
 			}
 			if (this.topEdgeGrabbed) {
-				newHeight -= (int) this.getRelativeMousePos().y;
+				newHeight -= mouseY;
 				newHeight = Math.max(newHeight, this.minHeight);
 			}
 			if (this.bottomEdgeGrabbed) {
-				newHeight = (int) this.getRelativeMousePos().y;
+				newHeight = mouseY;
 				newYOffset += this.getHeight() - newHeight;
 				if (newHeight < this.minHeight) {
 					newHeight = this.minHeight;
@@ -197,17 +261,61 @@ public abstract class AdjustableWindow extends Window {
 			}
 		}
 
+		//update offset if the title bar is grabbed
 		if (this.titleBarGrabbed) {
-			int newXOffset = this.getXOffset() + ((int) (this.getRelativeMousePos().x) - this.titleBarGrabMouseX);
-			int newYOffset = this.getYOffset() - ((int) (this.getRelativeMousePos().y) - this.titleBarGrabMouseY);
+			//nesting and un-nesting
+			if (KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL)) {
+				//check if we should un-nest
+				if (this.parentWindow.parentWindow != null) {
+					int pMouseX = (int) this.parentWindow.getRelativeMousePos().x;
+					int pMouseY = (int) this.parentWindow.getRelativeMousePos().y;
+
+					if (pMouseX < 0 || pMouseY < 0 || pMouseX > this.parentWindow.getWidth() || pMouseY > this.parentWindow.getHeight()) {
+						//we should un-nest
+						this.switchParent(this.parentWindow.parentWindow);
+					}
+				}
+
+				//check if we should nest
+				{
+					int pMouseX = (int) this.parentWindow.getRelativeMousePos().x;
+					int pMouseY = (int) this.parentWindow.getRelativeMousePos().y;
+
+					pMouseY = this.parentWindow.getHeight() - pMouseY;
+
+					for (Window w : this.parentWindow.childWindows) {
+						if (w == this) {
+							continue;
+						}
+						//check if mouse is inside this window
+						int left = w.getXOffset();
+						int right = w.getXOffset() + w.getWidth();
+						int bottom = w.getYOffset();
+						int top = w.getYOffset() + w.getHeight();
+						if (left <= pMouseX && pMouseX <= right && bottom <= pMouseY && pMouseY <= top) {
+							this.switchParent(w);
+							break;
+						}
+					}
+				}
+			}
+			int mouseX = (int) this.getRelativeMousePosClampedToParentContent().x;
+			int mouseY = (int) this.getRelativeMousePosClampedToParentContent().y;
+
+			int newXOffset = this.getXOffset() + (mouseX - this.titleBarGrabMouseX);
+			int newYOffset = this.getYOffset() - (mouseY - this.titleBarGrabMouseY);
 			this.setOffset(newXOffset, newYOffset);
 		}
 
-		//check if top of window goes above screen. If so, clamp window top to top of screen
+		//check if top of window goes above content portion of parent screen. If so, clamp window top to top of content. 
 		{
 			int windowTop = this.getYOffset() + this.getHeight();
-			if (windowTop > this.parentWindow.getHeight()) {
-				int diff = this.parentWindow.getHeight() - windowTop;
+			int parentHeight = this.parentWindow.getHeight();
+			if (this.parentWindow instanceof AdjustableWindow) {
+				parentHeight = ((AdjustableWindow) this.parentWindow).getContentHeight();
+			}
+			if (windowTop > parentHeight) {
+				int diff = parentHeight - windowTop;
 				this.setYOffset(this.getYOffset() + diff);
 			}
 		}
@@ -242,6 +350,12 @@ public abstract class AdjustableWindow extends Window {
 	}
 
 	protected abstract void _renderContent(Framebuffer outputBuffer);
+
+	public void setTitle(String title) {
+		this.title = title;
+		this.titleBarText.setText(this.title);
+		this.titleBarText.setWidth(this.titleBarText.getTextWidth());
+	}
 
 	@Override
 	protected void selected() {

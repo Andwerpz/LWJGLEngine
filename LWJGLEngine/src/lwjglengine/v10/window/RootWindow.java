@@ -14,7 +14,8 @@ import myutils.v10.math.Vec4;
 
 public class RootWindow extends Window {
 	//the base window
-	//should this be singleton?
+
+	//this should always be the base window; some other windows depend on the fact that they are not the base window. 
 
 	private final int BACKGROUND_SCENE = Scene.generateScene();
 

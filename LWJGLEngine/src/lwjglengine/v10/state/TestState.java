@@ -19,6 +19,7 @@ import lwjglengine.v10.player.PlayerInputController;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.RaytracingScreen;
 import lwjglengine.v10.window.AdjustableWindow;
+import lwjglengine.v10.window.FileExplorerWindow;
 import lwjglengine.v10.window.RaytracingWindow;
 import lwjglengine.v10.window.RootWindow;
 import lwjglengine.v10.window.Window;
@@ -49,8 +50,10 @@ public class TestState extends State {
 		//
 		//		Window w5 = new AdjustableWindow(30, 10, 100, 100, "We can nest twice??!?!", w4);
 
-		Window w1 = new RaytracingWindow(0, 0, Main.windowWidth / 2, Main.windowHeight / 2, "Raytracing Window", this.sm.getRootWindow());
-		//Window w2 = new RaytracingWindow(Main.windowWidth / 2, Main.windowHeight / 2, Main.windowWidth / 2, Main.windowHeight / 2, "Raytracing Window", this.sm.getRootWindow());
+		Window w1 = new RaytracingWindow(20, 20, 400, 400, "Raytracing Window", this.sm.getRootWindow());
+		Window w2 = new RaytracingWindow(10, 10, 200, 200, "Raytracing Window", w1);
+
+		Window fileExplorer = new FileExplorerWindow(20, 20, 400, 300, this.sm.getRootWindow());
 
 		//		this.raytracingScreen = new RaytracingScreen();
 		//		this.raytracingScreen.setRenderMode(RaytracingScreen.RENDER_MODE_PREVIEW);
