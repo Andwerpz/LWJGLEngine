@@ -178,6 +178,11 @@ public abstract class UIElement extends Entity {
 	protected void _kill() {
 		this.unbind();
 		uiElements.remove(this);
+
+		if (this.hasCustomBoundingRect) {
+			this.boundingRect.kill();
+		}
+
 		for (int i = 0; i < this.childElements.size(); i += 0) {
 			UIElement e = this.childElements.get(i);
 			e.kill();
@@ -282,6 +287,10 @@ public abstract class UIElement extends Entity {
 	}
 
 	public void setDimensions(float width, float height) {
+		if (this.width == width && this.height == height) {
+			return;
+		}
+
 		this.width = width;
 		this.height = height;
 		this.shouldAlign = true;

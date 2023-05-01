@@ -32,7 +32,6 @@ public class Text extends UIElement {
 	private int textWidth, textMaxHeight;
 	private int textSampleAscent, textSampleDescent;
 
-	private TextureMaterial textTextureMaterial;
 	private String text;
 	private Font font;
 	private int fontSize;
@@ -128,9 +127,9 @@ public class Text extends UIElement {
 
 		BufferedImage img = GraphicsTools.generateTextImage(text, font, Color.WHITE, (int) this.width);
 		Texture texture = new Texture(img, Texture.VERTICAL_FLIP_BIT);
-		this.textTextureMaterial = new TextureMaterial(texture);
+		TextureMaterial textTextureMaterial = new TextureMaterial(texture);
 
-		this.setTextureMaterial(this.textTextureMaterial);
+		this.setTextureMaterial(textTextureMaterial);
 		this.setMaterial(textMaterial);
 
 		this.setContentAlignmentStyle(ALIGN_LEFT, ALIGN_BOTTOM);

@@ -18,21 +18,27 @@ public abstract class Entity {
 
 	// K : Entity ID
 	// V : Entity
-	public static HashMap<Long, Entity> entities = new HashMap<>();
+	private static HashMap<Long, Entity> entities = new HashMap<>();
 
 	// K : Model Instance ID
 	// V : Entity ID
-	public static HashMap<Long, Long> modelToEntityID = new HashMap<>();
+	private static HashMap<Long, Long> modelToEntityID = new HashMap<>();
 
 	// never equal to 0
 	private long ID;
 
 	protected HashSet<Long> modelInstanceIDs; // holds all model instance IDs associated with this entity
 
+	private boolean isAlive = true;
+
 	public Entity() {
 		this.ID = Entity.generateNewID();
 		this.modelInstanceIDs = new HashSet<>();
 		Entity.entities.put(this.ID, this);
+	}
+
+	public static int getNumEntities() {
+		return entities.size();
 	}
 
 	private static long generateNewID() {
@@ -90,10 +96,16 @@ public abstract class Entity {
 		return Entity.modelToEntityID.get(modelID) == null ? 0 : Entity.modelToEntityID.get(modelID);
 	}
 
+	public boolean isAlive() {
+		return this.isAlive;
+	}
+
 	// _kill() is ran at the end, so if you have any models you can kill them here.
 	protected abstract void _kill();
 
 	public void kill() {
+		this.isAlive = false;
+
 		// remove all model instances
 		for (long id : this.modelInstanceIDs) {
 			modelToEntityID.remove(id);

@@ -126,6 +126,14 @@ public class Model {
 		models.add(this);
 	}
 
+	public static int getNumInstances() {
+		return modelInstanceIDs.size();
+	}
+
+	public static int getNumModels() {
+		return models.size();
+	}
+
 	public static long generateNewID() {
 		long ans = 0;
 		while (ans == 0 || modelInstanceIDs.contains(ans)) {

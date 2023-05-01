@@ -7,8 +7,12 @@ import java.util.Arrays;
 
 import javax.swing.filechooser.FileSystemView;
 
+import org.lwjgl.glfw.GLFW;
+
+import lwjglengine.v10.entity.Entity;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
+import lwjglengine.v10.model.Model;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.UIScreen;
 import lwjglengine.v10.ui.Text;
@@ -19,6 +23,9 @@ import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
 
 public class FileExplorerWindow extends AdjustableWindow {
+
+	//TODO
+	// - Only render directory and folder entries that are visible. 
 
 	private final int DIRECTORY_BACKGROUND_SCENE = Scene.generateScene();
 	private final int DIRECTORY_SELECTION_RECT_SCENE = Scene.generateScene();
@@ -33,9 +40,13 @@ public class FileExplorerWindow extends AdjustableWindow {
 	private UIFilledRectangle topBarRect;
 	public static Material topBarMaterial = new Material(new Vec3((float) (20 / 255.0)));
 
-	private int directoryWidth = 300;
+	private static int directoryMinWidth = 75;
+	private int directoryWidth = 200;
 	private UIFilledRectangle directoryRect;
 	public static Material directoryMaterial = new Material(new Vec3((float) (20 / 255.0)));
+
+	public static int directoryGrabTolerancePx = 4;
+	private boolean directoryGrabbed = false;
 
 	private UIFilledRectangle folderRect;
 	public static Material folderMaterial = new Material(new Vec3((float) (40 / 255.0)));
@@ -47,6 +58,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 	private DirectoryEntry rootDirectoryEntry;
 
 	private long hoveredDirectoryEntryID = -1;
+	private long hoveredSectionID = -1;
 
 	public FileExplorerWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, Window parentWindow) {
 		super(xOffset, yOffset, contentWidth, contentHeight, "File Explorer", parentWindow);
@@ -55,7 +67,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 		this.uiScreen = new UIScreen();
 
-		this.directoryRect = new UIFilledRectangle(0, 0, 0, this.directoryWidth, this.getContentHeight(), DIRECTORY_BACKGROUND_SCENE);
+		this.directoryRect = new UIFilledRectangle(0, topBarHeight, 0, this.directoryWidth, this.getContentHeight() - topBarHeight - bottomBarHeight, DIRECTORY_BACKGROUND_SCENE);
 		this.directoryRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		this.directoryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		this.directoryRect.setFillHeight(true);
@@ -63,7 +75,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 		this.directoryRect.setMaterial(directoryMaterial);
 		this.directoryRect.bind(this.contentRootUIElement);
 
-		this.folderRect = new UIFilledRectangle(0, 0, 0, this.getWidth() - this.directoryWidth, this.getContentHeight(), FOLDER_SCENE);
+		this.folderRect = new UIFilledRectangle(0, topBarHeight, 0, this.getWidth() - this.directoryWidth, this.getContentHeight() - topBarHeight - bottomBarHeight, FOLDER_SCENE);
 		this.folderRect.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 		this.folderRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
 		this.folderRect.setFillHeight(true);
@@ -120,6 +132,15 @@ public class FileExplorerWindow extends AdjustableWindow {
 	@Override
 	protected void __update() {
 		this.rootDirectoryEntry.update();
+
+		//update directory width
+		if (this.directoryGrabbed) {
+			int newDirectoryWidth = (int) this.getRelativeMousePos().x;
+			newDirectoryWidth = Math.max(newDirectoryWidth, directoryMinWidth);
+			this.directoryWidth = newDirectoryWidth;
+			this.directoryRect.setWidth(this.directoryWidth);
+			this.folderRect.setWidth(this.getWidth() - this.directoryWidth);
+		}
 	}
 
 	@Override
@@ -129,6 +150,10 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 		this.uiScreen.setUIScene(DIRECTORY_BACKGROUND_SCENE);
 		this.uiScreen.render(outputBuffer);
+		if (this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY) == this.directoryRect.getID()) {
+			this.hoveredSectionID = this.directoryRect.getID();
+		}
+
 		this.uiScreen.setUIScene(DIRECTORY_SELECTION_RECT_SCENE);
 		this.uiScreen.render(outputBuffer);
 
@@ -140,10 +165,21 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 		this.uiScreen.setUIScene(FOLDER_SCENE);
 		this.uiScreen.render(outputBuffer);
+		if (this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY) == this.folderRect.getID()) {
+			this.hoveredSectionID = this.folderRect.getID();
+		}
+
 		this.uiScreen.setUIScene(TOP_BAR_SCENE);
 		this.uiScreen.render(outputBuffer);
+		if (this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY) == this.topBarRect.getID()) {
+			this.hoveredSectionID = this.topBarRect.getID();
+		}
+
 		this.uiScreen.setUIScene(BOTTOM_BAR_SCENE);
 		this.uiScreen.render(outputBuffer);
+		if (this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY) == this.bottomBarRect.getID()) {
+			this.hoveredSectionID = this.bottomBarRect.getID();
+		}
 	}
 
 	@Override
@@ -160,24 +196,36 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 	@Override
 	protected void __mousePressed(int button) {
-		this.rootDirectoryEntry.selected(this.hoveredDirectoryEntryID);
+		int mouseX = (int) this.getRelativeMousePosClampedToWindow().x;
+		int mouseY = (int) this.getRelativeMousePosClampedToWindow().y;
 
-		DirectoryEntry e = this.rootDirectoryEntry.getSelected();
-		if (e != null) {
-			if (e.isExpanded()) {
-				e.collapse();
-			}
-			else {
-				e.expand();
-			}
-			this.rootDirectoryEntry.align();
+		//see if user is trying to drag the directory window
+		if (Math.abs(this.directoryWidth - mouseX) <= directoryGrabTolerancePx) {
+			this.directoryGrabbed = true;
+			return;
 		}
+
+		if (this.hoveredSectionID == this.directoryRect.getID()) {
+			//select the directory entry
+			this.rootDirectoryEntry.selected(this.hoveredDirectoryEntryID);
+
+			DirectoryEntry e = this.rootDirectoryEntry.getSelected();
+			if (e != null) {
+				if (e.isExpanded()) {
+					e.collapse();
+				}
+				else {
+					e.expand();
+				}
+				this.rootDirectoryEntry.align();
+			}
+		}
+
 	}
 
 	@Override
 	protected void __mouseReleased(int button) {
-		// TODO Auto-generated method stub
-
+		this.directoryGrabbed = false;
 	}
 
 	@Override
@@ -188,8 +236,20 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 	@Override
 	protected void __keyPressed(int key) {
-		// TODO Auto-generated method stub
+		switch (key) {
+		case GLFW.GLFW_KEY_E:
+			System.out.println("NUM ENTITIES : " + Entity.getNumEntities());
+			break;
 
+		case GLFW.GLFW_KEY_M:
+			System.out.println("NUM MODEL INSTANCES : " + Model.getNumInstances());
+			System.out.println("NUM MODELS : " + Model.getNumModels());
+			break;
+
+		case GLFW.GLFW_KEY_C:
+			System.out.println("NUM ENTRIES : " + this.rootDirectoryEntry.count());
+			break;
+		}
 	}
 
 	@Override
@@ -201,7 +261,6 @@ public class FileExplorerWindow extends AdjustableWindow {
 }
 
 class DirectoryEntry {
-
 	private static int entryHeight = 16;
 	private static int entryXOffsetInterval = 10;
 	private static int entryXOffsetBase = 5;
@@ -224,15 +283,15 @@ class DirectoryEntry {
 	private UIElement rootUIElement;
 
 	private boolean isExpanded = false;
-
 	private boolean isDisplayed = false;
+	private boolean isVisible = false; //every time we align, we check if this entry is visible. 
 
-	private UIElement entryBaseUIElement;
+	private UIElement entryBaseUIElement = null;
 
 	private String path;
 
 	private String filename;
-	private Text entryText;
+	private Text entryText = null;
 
 	private int xOffset, yOffset;
 
@@ -277,7 +336,7 @@ class DirectoryEntry {
 			return;
 		}
 
-		this.align(FileExplorerWindow.topBarHeight - entryHeight);
+		this.align(-entryHeight);
 	}
 
 	//aligns this subtree of directory entries
@@ -289,8 +348,41 @@ class DirectoryEntry {
 		int totalHeight = entryHeight;
 
 		this.yOffset = yOffset;
-		this.entryBaseUIElement.setYOffset(this.yOffset);
-		this.entryText.setXOffset(this.xOffset);
+
+		//check if this thing is visible
+		this.isVisible = false;
+		if (-entryHeight <= this.yOffset && this.yOffset <= this.rootUIElement.getHeight()) {
+			this.isVisible = true;
+		}
+
+		if (this.isVisible) {
+			if (this.entryBaseUIElement == null) {
+				this.entryBaseUIElement = new UIFilledRectangle(0, this.yOffset, 0, 0, entryHeight, this.selectionScene);
+				this.entryBaseUIElement.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+				this.entryBaseUIElement.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+				this.entryBaseUIElement.setFillWidth(true);
+				this.entryBaseUIElement.setFillWidthMargin(0);
+				this.entryBaseUIElement.setMaterial(defaultEntryMaterial);
+				this.entryBaseUIElement.bind(this.rootUIElement);
+
+				this.entryText = new Text(0, 0, this.filename + "         ", 12, Color.WHITE, this.textScene);
+				this.entryText.setDoAntialiasing(false);
+				this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
+				this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
+				this.entryText.setMaterial(new Material(Color.WHITE));
+				this.entryText.bind(this.entryBaseUIElement);
+			}
+			this.entryBaseUIElement.setYOffset(this.yOffset);
+			this.entryText.setXOffset(this.xOffset);
+		}
+		else {
+			if (this.entryBaseUIElement != null) {
+				this.entryText.kill();
+				this.entryBaseUIElement.kill();
+				this.entryText = null;
+				this.entryBaseUIElement = null;
+			}
+		}
 
 		if (this.isExpanded) {
 			for (DirectoryEntry e : this.children) {
@@ -327,23 +419,7 @@ class DirectoryEntry {
 		if (this.isDisplayed) {
 			return;
 		}
-		System.out.println("DISPLAY ENTRY : " + this.filename);
 		this.isDisplayed = true;
-
-		this.entryBaseUIElement = new UIFilledRectangle(0, this.yOffset, 0, 0, entryHeight, this.selectionScene);
-		this.entryBaseUIElement.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
-		this.entryBaseUIElement.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
-		this.entryBaseUIElement.setFillWidth(true);
-		this.entryBaseUIElement.setFillWidthMargin(0);
-		this.entryBaseUIElement.setMaterial(defaultEntryMaterial);
-		this.entryBaseUIElement.bind(this.rootUIElement);
-
-		this.entryText = new Text(0, 0, this.filename + "         ", 12, Color.WHITE, this.textScene);
-		this.entryText.setDoAntialiasing(false);
-		this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
-		this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-		this.entryText.setMaterial(new Material(Color.WHITE));
-		this.entryText.bind(this.entryBaseUIElement);
 
 		if (this.isExpanded) {
 			for (DirectoryEntry e : this.children) {
@@ -357,14 +433,17 @@ class DirectoryEntry {
 		if (!this.isDisplayed) {
 			return;
 		}
-		System.out.println("HIDE ENTRY : " + this.filename);
 
 		this.isDisplayed = false;
-		this.entryText.kill();
-		this.entryText = null;
+		this.isVisible = false;
 
-		this.entryBaseUIElement.kill();
-		this.entryBaseUIElement = null;
+		if (this.entryBaseUIElement != null) {
+			this.entryText.kill();
+			this.entryText = null;
+
+			this.entryBaseUIElement.kill();
+			this.entryBaseUIElement = null;
+		}
 
 		if (this.children != null) {
 			for (DirectoryEntry e : this.children) {
@@ -452,7 +531,10 @@ class DirectoryEntry {
 	public void update() {
 
 		//set background material
-		if (this.isDisplayed) {
+		if (this.isVisible) {
+			if (!this.entryBaseUIElement.isAlive()) {
+				System.err.println("UIELEMENT ID : " + this.entryBaseUIElement.getID() + " IS NOT ALIVE!!!");
+			}
 			if (this.isSelected) {
 				this.entryBaseUIElement.setMaterial(selectedEntryMaterial);
 			}
@@ -476,11 +558,13 @@ class DirectoryEntry {
 			return;
 		}
 
-		if (entityID == this.entryBaseUIElement.getID()) {
-			this.isHovered = true;
-		}
-		else {
-			this.isHovered = false;
+		if (this.isVisible) {
+			if (entityID == this.entryBaseUIElement.getID()) {
+				this.isHovered = true;
+			}
+			else {
+				this.isHovered = false;
+			}
 		}
 
 		if (this.children != null) {
@@ -496,11 +580,13 @@ class DirectoryEntry {
 			return;
 		}
 
-		if (entityID == this.entryBaseUIElement.getID()) {
-			this.isSelected = true;
-		}
-		else {
-			this.isSelected = false;
+		if (this.isVisible) {
+			if (entityID == this.entryBaseUIElement.getID()) {
+				this.isSelected = true;
+			}
+			else {
+				this.isSelected = false;
+			}
 		}
 
 		if (this.children != null) {
@@ -525,6 +611,16 @@ class DirectoryEntry {
 			}
 		}
 		return null;
+	}
+
+	public int count() {
+		int ans = 1;
+		if (this.children != null) {
+			for (DirectoryEntry e : this.children) {
+				ans += e.count();
+			}
+		}
+		return ans;
 	}
 
 }

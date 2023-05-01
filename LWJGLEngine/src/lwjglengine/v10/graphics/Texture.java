@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.util.HashSet;
 
 import javax.imageio.ImageIO;
 
