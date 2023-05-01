@@ -24,7 +24,10 @@ public class Text extends UIElement {
 
 	// width of text is fixed, text will be cut off if it grows too wide.
 
-	//TODO figure out how to fix transparency issues when text size becomes small
+	//TODO 
+	// - figure out how to fix transparency issues when text size becomes small
+	// - with string "C:" with color set to white, font Dialogue, plain, size 12, the texture fails to generate. 
+	//   - to fix, you just add a bunch of spaces to the string, so "C:        " works. 
 
 	private int textWidth, textMaxHeight;
 	private int textSampleAscent, textSampleDescent;
@@ -135,7 +138,9 @@ public class Text extends UIElement {
 
 	@Override
 	protected void _alignContents() {
-		this.setTextureMaterial(new TextureMaterial(this.generateAlignedTexture()));
+		if (this.changedContentAlignmentStyle || this.changedDimensions) {
+			this.setTextureMaterial(new TextureMaterial(this.generateAlignedTexture()));
+		}
 	}
 
 	public void setBackgroundColor(Color c) {
@@ -151,6 +156,8 @@ public class Text extends UIElement {
 	}
 
 	private Texture generateAlignedTexture() {
+		System.out.println("CREATE TEXT TEXTURE : " + this.text);
+
 		BufferedImage img = new BufferedImage((int) this.width, (int) this.height, BufferedImage.TYPE_INT_ARGB);
 		Graphics g = img.getGraphics();
 
@@ -163,7 +170,7 @@ public class Text extends UIElement {
 			g.fillRect(0, 0, (int) this.width, (int) this.height);
 		}
 
-		g.setFont(font);
+		g.setFont(this.font);
 		g.setColor(Color.WHITE);
 
 		String[] a = this.text.split(" ");
@@ -180,7 +187,7 @@ public class Text extends UIElement {
 				alignedX = (int) this.width - this.textWidth;
 			}
 
-			g.drawString(text, alignedX, this.textSampleAscent);
+			g.drawString(this.text, alignedX, this.textSampleAscent);
 
 			return new Texture(img, Texture.VERTICAL_FLIP_BIT);
 		}

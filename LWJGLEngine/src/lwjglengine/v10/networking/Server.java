@@ -26,6 +26,8 @@ public abstract class Server implements Runnable {
 	//maybe as convenience, if you call packetSender.startSection(sectionName), it'll end the current
 	//active section and start a new one. And when you send the packet, it'll end the current section. 
 
+	//note - i think i already did this while doing discord games clone; before using, just check to make sure. 
+
 	public static HashSet<Server> servers = new HashSet<>();
 
 	private boolean isRunning = true;

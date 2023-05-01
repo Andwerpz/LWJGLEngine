@@ -56,8 +56,11 @@ public abstract class AdjustableWindow extends Window {
 	private Material deselectedBorderMaterial = new Material(new Vec3((float) (55 / 255.0)));
 	private Material selectedBorderMaterial = new Material(new Vec3((float) (65 / 255.0)));
 
-	private int minWidth = 50;
-	private int minHeight = titleBarHeight + 10;
+	private static int defaultMinWidth = 50;
+	private static int defaultMinHeight = titleBarHeight * 2;
+
+	private int minWidth = defaultMinWidth;
+	private int minHeight = defaultMinHeight;
 
 	//if an edge is grabbed, then the title bar cannot be grabbed, and vice versa
 	private boolean titleBarGrabbed = false;
@@ -172,6 +175,23 @@ public abstract class AdjustableWindow extends Window {
 
 	protected int getContentHeight() {
 		return this.contentHeight;
+	}
+
+	public void setMinWidth(int width) {
+		this.setMinDimensions(width, this.minHeight);
+	}
+
+	public void setMinHeight(int height) {
+		this.setMinDimensions(this.minWidth, height);
+	}
+
+	public void setMinDimensions(int width, int height) {
+		this.minWidth = Math.max(defaultMinWidth, width);
+		this.minHeight = Math.max(defaultMinHeight, height + titleBarHeight);
+
+		if (this.getWidth() < this.minWidth || this.getHeight() < this.minHeight) {
+			this.setDimensions(Math.max(this.getWidth(), this.minWidth), Math.max(this.getHeight(), this.minHeight));
+		}
 	}
 
 	/**

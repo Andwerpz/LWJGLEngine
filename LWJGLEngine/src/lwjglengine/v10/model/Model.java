@@ -408,6 +408,20 @@ public class Model {
 		Model.updateInstance(ID, material, 0);
 	}
 
+	public static Material getMaterial(long ID, int index) {
+		Model model = IDtoModel.get(ID);
+		int scene = IDtoScene.get(ID);
+		if (model.materials.get(scene).get(ID).size() <= index) {
+			System.err.println("Failed to retrieve material at index " + index);
+			return null;
+		}
+		return model.materials.get(scene).get(ID).get(index);
+	}
+
+	public static Material getMaterial(long ID) {
+		return getMaterial(ID, 0);
+	}
+
 	public static void activateCollisionMesh(long ID) {
 		if (!modelInstanceIDs.contains(ID)) {
 			return;

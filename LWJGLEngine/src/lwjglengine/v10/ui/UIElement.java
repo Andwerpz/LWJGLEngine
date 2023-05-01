@@ -121,6 +121,14 @@ public abstract class UIElement extends Entity {
 
 	protected float rotationRads;
 
+	//flags to let child classes know what changed when aligning
+	//helps prevent un-necessary texture creations. 
+	protected boolean changedOffset = false;
+	protected boolean changedFrameAlignmentStyle = false;
+	protected boolean changedContentAlignmentStyle = false;
+	protected boolean changedDimensions = false;
+	protected boolean changedRotationRads = false;
+
 	public UIElement(float xOffset, float yOffset, float z, float width, float height, int scene) {
 		this.init(xOffset, yOffset, z, width, height, FilledRectangle.DEFAULT_RECTANGLE, scene);
 	}
@@ -219,12 +227,14 @@ public abstract class UIElement extends Entity {
 		this.horizontalAlignFrame = horizontalAlign;
 		this.verticalAlignFrame = verticalAlign;
 		this.shouldAlign = true;
+		this.changedFrameAlignmentStyle = true;
 	}
 
 	public void setFrameAlignmentOffset(float xOffset, float yOffset) {
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
 		this.shouldAlign = true;
+		this.changedOffset = true;
 	}
 
 	public void setXOffset(float xOffset) {
@@ -260,21 +270,28 @@ public abstract class UIElement extends Entity {
 		this.horizontalAlignContent = horizontalAlign;
 		this.verticalAlignContent = verticalAlign;
 		this.shouldAlign = true;
+		this.changedContentAlignmentStyle = true;
 	}
 
 	public void setWidth(float width) {
-		this.width = width;
-		this.shouldAlign = true;
+		this.setDimensions(width, this.height);
 	}
 
 	public void setHeight(float height) {
+		this.setDimensions(this.width, height);
+	}
+
+	public void setDimensions(float width, float height) {
+		this.width = width;
 		this.height = height;
 		this.shouldAlign = true;
+		this.changedDimensions = true;
 	}
 
 	public void setRotationRads(float rads) {
 		this.rotationRads = rads;
 		this.shouldAlign = true;
+		this.changedRotationRads = true;
 	}
 
 	public void setFillWidth(boolean b) {
@@ -306,7 +323,14 @@ public abstract class UIElement extends Entity {
 	}
 
 	public void setMaterial(Material m) {
+		if (this.getMaterial() == m) {
+			return;
+		}
 		this.updateModelInstance(this.modelID, m);
+	}
+
+	public Material getMaterial() {
+		return Model.getMaterial(this.modelID);
 	}
 
 	public void setTextureMaterial(TextureMaterial m) {
@@ -437,6 +461,12 @@ public abstract class UIElement extends Entity {
 		}
 
 		this._alignContents();
+
+		this.changedOffset = false;
+		this.changedFrameAlignmentStyle = false;
+		this.changedContentAlignmentStyle = false;
+		this.changedDimensions = false;
+		this.changedRotationRads = false;
 
 		this.modelMat4 = this.getScaleMat4().muli(this.getTranslateMat4());
 
