@@ -19,20 +19,26 @@ import lwjglengine.v10.ui.Text;
 import lwjglengine.v10.ui.UIElement;
 import lwjglengine.v10.ui.UIFilledRectangle;
 import myutils.v11.file.FileUtils;
+import myutils.v10.math.MathUtils;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
 
 public class FileExplorerWindow extends AdjustableWindow {
 
-	//TODO
-	// - Only render directory and folder entries that are visible. 
-
 	private final int DIRECTORY_BACKGROUND_SCENE = Scene.generateScene();
-	private final int DIRECTORY_SELECTION_RECT_SCENE = Scene.generateScene();
+	private final int DIRECTORY_SELECTION_SCENE = Scene.generateScene();
 	private final int DIRECTORY_TEXT_SCENE = Scene.generateScene();
+
 	private final int FOLDER_SCENE = Scene.generateScene();
+	private final int FOLDER_SELECTION_SCENE = Scene.generateScene();
+	private final int FOLDER_TEXT_SCENE = Scene.generateScene();
+
 	private final int TOP_BAR_SCENE = Scene.generateScene();
 	private final int BOTTOM_BAR_SCENE = Scene.generateScene();
+
+	public static int entryHeight = 16;
+	public static int entryXOffsetInterval = 10;
+	public static int entryXOffsetBase = 5;
 
 	private UIScreen uiScreen;
 
@@ -56,6 +62,12 @@ public class FileExplorerWindow extends AdjustableWindow {
 	public static Material bottomBarMaterial = new Material(new Vec3((float) (20 / 255.0)));
 
 	private DirectoryEntry rootDirectoryEntry;
+	private int directoryYOffset = 0;
+
+	private DirectoryEntry selectedDirectoryEntry = null;
+
+	private ArrayList<FolderEntry> folderEntries;
+	private int folderYOffset = 0;
 
 	private long hoveredDirectoryEntryID = -1;
 	private long hoveredSectionID = -1;
@@ -70,16 +82,12 @@ public class FileExplorerWindow extends AdjustableWindow {
 		this.directoryRect = new UIFilledRectangle(0, topBarHeight, 0, this.directoryWidth, this.getContentHeight() - topBarHeight - bottomBarHeight, DIRECTORY_BACKGROUND_SCENE);
 		this.directoryRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		this.directoryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
-		this.directoryRect.setFillHeight(true);
-		this.directoryRect.setFillHeightMargin(0);
 		this.directoryRect.setMaterial(directoryMaterial);
 		this.directoryRect.bind(this.contentRootUIElement);
 
 		this.folderRect = new UIFilledRectangle(0, topBarHeight, 0, this.getWidth() - this.directoryWidth, this.getContentHeight() - topBarHeight - bottomBarHeight, FOLDER_SCENE);
 		this.folderRect.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 		this.folderRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
-		this.folderRect.setFillHeight(true);
-		this.folderRect.setFillHeightMargin(0);
 		this.folderRect.setMaterial(folderMaterial);
 		this.folderRect.bind(this.contentRootUIElement);
 
@@ -99,10 +107,12 @@ public class FileExplorerWindow extends AdjustableWindow {
 		this.bottomBarRect.setMaterial(bottomBarMaterial);
 		this.bottomBarRect.bind(this.contentRootUIElement);
 
-		this.rootDirectoryEntry = new DirectoryEntry(null, "", "", this.directoryRect, DIRECTORY_SELECTION_RECT_SCENE, DIRECTORY_TEXT_SCENE);
+		this.rootDirectoryEntry = new DirectoryEntry(null, "", "", this.directoryRect, DIRECTORY_SELECTION_SCENE, DIRECTORY_TEXT_SCENE);
 		this.rootDirectoryEntry.display();
 		this.rootDirectoryEntry.expand();
-		this.rootDirectoryEntry.align();
+		this.rootDirectoryEntry.align(this.directoryYOffset);
+
+		this.folderEntries = new ArrayList<>();
 
 		this.__resize();
 	}
@@ -110,10 +120,12 @@ public class FileExplorerWindow extends AdjustableWindow {
 	@Override
 	protected void __kill() {
 		this.uiScreen.kill();
-		Scene.removeScene(FOLDER_SCENE);
 		Scene.removeScene(DIRECTORY_BACKGROUND_SCENE);
-		Scene.removeScene(DIRECTORY_SELECTION_RECT_SCENE);
+		Scene.removeScene(DIRECTORY_SELECTION_SCENE);
 		Scene.removeScene(DIRECTORY_TEXT_SCENE);
+		Scene.removeScene(FOLDER_SCENE);
+		Scene.removeScene(FOLDER_SELECTION_SCENE);
+		Scene.removeScene(FOLDER_TEXT_SCENE);
 		Scene.removeScene(TOP_BAR_SCENE);
 		Scene.removeScene(BOTTOM_BAR_SCENE);
 	}
@@ -126,6 +138,16 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 		if (this.folderRect != null) {
 			this.folderRect.setWidth(this.getWidth() - this.directoryWidth);
+			this.folderRect.setHeight(this.getContentHeight() - topBarHeight - bottomBarHeight);
+
+			this.setFolderYOffset(this.folderYOffset);
+		}
+
+		if (this.directoryRect != null) {
+			this.directoryRect.setHeight(this.getContentHeight() - topBarHeight - bottomBarHeight);
+
+			//realign entries
+			this.setDirectoryYOffset(this.directoryYOffset);
 		}
 	}
 
@@ -154,12 +176,10 @@ public class FileExplorerWindow extends AdjustableWindow {
 			this.hoveredSectionID = this.directoryRect.getID();
 		}
 
-		this.uiScreen.setUIScene(DIRECTORY_SELECTION_RECT_SCENE);
+		this.uiScreen.setUIScene(DIRECTORY_SELECTION_SCENE);
 		this.uiScreen.render(outputBuffer);
-
 		this.hoveredDirectoryEntryID = this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY);
 		this.rootDirectoryEntry.hovered(this.hoveredDirectoryEntryID);
-
 		this.uiScreen.setUIScene(DIRECTORY_TEXT_SCENE);
 		this.uiScreen.render(outputBuffer);
 
@@ -168,6 +188,11 @@ public class FileExplorerWindow extends AdjustableWindow {
 		if (this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY) == this.folderRect.getID()) {
 			this.hoveredSectionID = this.folderRect.getID();
 		}
+
+		this.uiScreen.setUIScene(FOLDER_SELECTION_SCENE);
+		this.uiScreen.render(outputBuffer);
+		this.uiScreen.setUIScene(FOLDER_TEXT_SCENE);
+		this.uiScreen.render(outputBuffer);
 
 		this.uiScreen.setUIScene(TOP_BAR_SCENE);
 		this.uiScreen.render(outputBuffer);
@@ -179,6 +204,56 @@ public class FileExplorerWindow extends AdjustableWindow {
 		this.uiScreen.render(outputBuffer);
 		if (this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY) == this.bottomBarRect.getID()) {
 			this.hoveredSectionID = this.bottomBarRect.getID();
+		}
+	}
+
+	private void setDirectoryYOffset(int newYOffset) {
+		int directoryEntryTotalHeight = this.rootDirectoryEntry.countDisplayed() * entryHeight;
+
+		int minYOffset = 0;
+		int maxYOffset = (int) (directoryEntryTotalHeight - this.directoryRect.getHeight());
+		maxYOffset = Math.max(maxYOffset, 0);
+		this.directoryYOffset = (int) MathUtils.clamp(minYOffset, maxYOffset, newYOffset);
+
+		this.rootDirectoryEntry.align(-this.directoryYOffset);
+	}
+
+	private void setSelectedDirectoryEntry(DirectoryEntry e) {
+		if (e == this.selectedDirectoryEntry) {
+			return;
+		}
+
+		//delete all old ui elements from folder section. 
+		for (FolderEntry entry : this.folderEntries) {
+			entry.kill();
+		}
+		this.folderEntries.clear();
+
+		this.selectedDirectoryEntry = e;
+		if (e == null) {
+			return;
+		}
+
+		String[] fileNames = FileUtils.getAllFilenamesFromDirectory(e.getPath());
+		Arrays.sort(fileNames);
+		for (int i = 0; i < fileNames.length; i++) {
+			FolderEntry entry = new FolderEntry(fileNames[i], this.folderRect, FOLDER_SELECTION_SCENE, FOLDER_TEXT_SCENE);
+			this.folderEntries.add(entry);
+		}
+
+		this.setFolderYOffset(0);
+	}
+
+	private void setFolderYOffset(int newYOffset) {
+		int folderEntryTotalHeight = this.folderEntries.size() * entryHeight;
+
+		int minYOffset = 0;
+		int maxYOffset = (int) (folderEntryTotalHeight - this.folderRect.getHeight());
+		maxYOffset = Math.max(maxYOffset, 0);
+		this.folderYOffset = (int) (MathUtils.clamp(minYOffset, maxYOffset, newYOffset));
+
+		for (int i = 0; i < this.folderEntries.size(); i++) {
+			this.folderEntries.get(i).align(i * entryHeight - this.folderYOffset);
 		}
 	}
 
@@ -210,6 +285,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 			this.rootDirectoryEntry.selected(this.hoveredDirectoryEntryID);
 
 			DirectoryEntry e = this.rootDirectoryEntry.getSelected();
+			this.setSelectedDirectoryEntry(e);
 			if (e != null) {
 				if (e.isExpanded()) {
 					e.collapse();
@@ -217,8 +293,13 @@ public class FileExplorerWindow extends AdjustableWindow {
 				else {
 					e.expand();
 				}
-				this.rootDirectoryEntry.align();
+				this.rootDirectoryEntry.align(this.directoryYOffset);
 			}
+
+			this.setDirectoryYOffset(this.directoryYOffset);
+		}
+		else if (this.hoveredSectionID == this.folderRect.getID()) {
+			//TODO select stuff
 		}
 
 	}
@@ -230,26 +311,17 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 	@Override
 	protected void __mouseScrolled(float wheelOffset, float smoothOffset) {
-		// TODO Auto-generated method stub
-
+		if (this.hoveredSectionID == this.directoryRect.getID()) {
+			this.setDirectoryYOffset(this.directoryYOffset - (int) (smoothOffset) * entryHeight);
+		}
+		else if (this.hoveredSectionID == this.folderRect.getID()) {
+			this.setFolderYOffset(this.folderYOffset - (int) (smoothOffset) * entryHeight);
+		}
 	}
 
 	@Override
 	protected void __keyPressed(int key) {
-		switch (key) {
-		case GLFW.GLFW_KEY_E:
-			System.out.println("NUM ENTITIES : " + Entity.getNumEntities());
-			break;
 
-		case GLFW.GLFW_KEY_M:
-			System.out.println("NUM MODEL INSTANCES : " + Model.getNumInstances());
-			System.out.println("NUM MODELS : " + Model.getNumModels());
-			break;
-
-		case GLFW.GLFW_KEY_C:
-			System.out.println("NUM ENTRIES : " + this.rootDirectoryEntry.count());
-			break;
-		}
 	}
 
 	@Override
@@ -260,14 +332,67 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 }
 
-class DirectoryEntry {
-	private static int entryHeight = 16;
-	private static int entryXOffsetInterval = 10;
-	private static int entryXOffsetBase = 5;
+class FolderEntry {
 
-	public static Material defaultEntryMaterial = new Material(new Vec3((float) (20 / 255.0)));
-	public static Material hoveredEntryMaterial = new Material(new Vec3((float) (30 / 255.0)));
-	public static Material selectedEntryMaterial = new Material(new Vec3((float) (40 / 255.0)));
+	//TODO 
+	// - only render if visible. Do visibility check on align() call. 
+	// - implement hover and select
+
+	public static Material defaultFolderEntryMaterial = new Material(new Vec3((float) (40 / 255.0)));
+	public static Material hoveredFolderEntryMaterial = new Material(new Vec3((float) (50 / 255.0)));
+	public static Material selectedFolderEntryMaterial = new Material(new Vec3((float) (60 / 255.0)));
+
+	private boolean isHovered = false;
+	private boolean isSelected = false;
+
+	private UIElement rootUIElement;
+	private UIElement entryBaseUIElement = null;
+
+	private String filename;
+	private Text entryText = null;
+
+	private int selectionScene, textScene;
+
+	public FolderEntry(String filename, UIElement rootUIElement, int selectionScene, int textScene) {
+		this.filename = filename;
+		this.rootUIElement = rootUIElement;
+		this.selectionScene = selectionScene;
+		this.textScene = textScene;
+
+		this.entryBaseUIElement = new UIFilledRectangle(0, 0, 0, this.rootUIElement.getWidth(), FileExplorerWindow.entryHeight, this.selectionScene);
+		this.entryBaseUIElement.setFillWidth(true);
+		this.entryBaseUIElement.setFillWidthMargin(0);
+		this.entryBaseUIElement.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+		this.entryBaseUIElement.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+		this.entryBaseUIElement.setMaterial(defaultFolderEntryMaterial);
+		this.entryBaseUIElement.bind(this.rootUIElement);
+
+		this.entryText = new Text(FileExplorerWindow.entryXOffsetBase, 0, this.filename, 12, Color.WHITE, this.textScene);
+		this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
+		this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
+		this.entryText.setDoAntialiasing(false);
+		this.entryText.bind(this.entryBaseUIElement);
+	}
+
+	public void kill() {
+		this.entryBaseUIElement.kill();
+		this.entryText.kill();
+	}
+
+	public String getFilename() {
+		return this.filename;
+	}
+
+	public void align(int yOffset) {
+		this.entryBaseUIElement.setYOffset(yOffset);
+	}
+
+}
+
+class DirectoryEntry {
+	public static Material defaultDirectoryEntryMaterial = new Material(new Vec3((float) (20 / 255.0)));
+	public static Material hoveredDirectoryEntryMaterial = new Material(new Vec3((float) (30 / 255.0)));
+	public static Material selectedDirectoryEntryMaterial = new Material(new Vec3((float) (40 / 255.0)));
 
 	private boolean isHovered = false;
 	private boolean isSelected = false;
@@ -302,10 +427,10 @@ class DirectoryEntry {
 		this.yOffset = 0;
 
 		if (this.parent != null) {
-			this.xOffset = this.parent.xOffset + entryXOffsetInterval;
+			this.xOffset = this.parent.xOffset + FileExplorerWindow.entryXOffsetInterval;
 		}
 		else {
-			this.xOffset = entryXOffsetBase - entryXOffsetInterval;
+			this.xOffset = FileExplorerWindow.entryXOffsetBase - FileExplorerWindow.entryXOffsetInterval;
 		}
 
 		this.path = path;
@@ -330,46 +455,45 @@ class DirectoryEntry {
 		return new DirectoryEntry(parent, path, filename, rootUIElement, selectionScene, textScene);
 	}
 
-	public void align() {
+	public void align(int offset) {
 		if (this.parent != null) {
 			System.err.println("TRIED TO ALIGN DIRECTORY ENTRY THAT IS NOT ROOT");
 			return;
 		}
 
-		this.align(-entryHeight);
+		this._align(-FileExplorerWindow.entryHeight + offset);
 	}
 
 	//aligns this subtree of directory entries
 	//returns the height of this subtree
-	private int align(int yOffset) {
+	private int _align(int yOffset) {
 		if (!this.isDisplayed) {
 			return 0;
 		}
-		int totalHeight = entryHeight;
+		int totalHeight = FileExplorerWindow.entryHeight;
 
 		this.yOffset = yOffset;
 
 		//check if this thing is visible
 		this.isVisible = false;
-		if (-entryHeight <= this.yOffset && this.yOffset <= this.rootUIElement.getHeight()) {
+		if (-FileExplorerWindow.entryHeight <= this.yOffset && this.yOffset <= this.rootUIElement.getHeight()) {
 			this.isVisible = true;
 		}
 
 		if (this.isVisible) {
 			if (this.entryBaseUIElement == null) {
-				this.entryBaseUIElement = new UIFilledRectangle(0, this.yOffset, 0, 0, entryHeight, this.selectionScene);
+				this.entryBaseUIElement = new UIFilledRectangle(0, this.yOffset, 0, 0, FileExplorerWindow.entryHeight, this.selectionScene);
 				this.entryBaseUIElement.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				this.entryBaseUIElement.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 				this.entryBaseUIElement.setFillWidth(true);
 				this.entryBaseUIElement.setFillWidthMargin(0);
-				this.entryBaseUIElement.setMaterial(defaultEntryMaterial);
+				this.entryBaseUIElement.setMaterial(defaultDirectoryEntryMaterial);
 				this.entryBaseUIElement.bind(this.rootUIElement);
 
 				this.entryText = new Text(0, 0, this.filename + "         ", 12, Color.WHITE, this.textScene);
 				this.entryText.setDoAntialiasing(false);
 				this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 				this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				this.entryText.setMaterial(new Material(Color.WHITE));
 				this.entryText.bind(this.entryBaseUIElement);
 			}
 			this.entryBaseUIElement.setYOffset(this.yOffset);
@@ -386,7 +510,7 @@ class DirectoryEntry {
 
 		if (this.isExpanded) {
 			for (DirectoryEntry e : this.children) {
-				totalHeight += e.align(yOffset + totalHeight);
+				totalHeight += e._align(yOffset + totalHeight);
 			}
 		}
 
@@ -536,13 +660,13 @@ class DirectoryEntry {
 				System.err.println("UIELEMENT ID : " + this.entryBaseUIElement.getID() + " IS NOT ALIVE!!!");
 			}
 			if (this.isSelected) {
-				this.entryBaseUIElement.setMaterial(selectedEntryMaterial);
+				this.entryBaseUIElement.setMaterial(selectedDirectoryEntryMaterial);
 			}
 			else if (this.isHovered) {
-				this.entryBaseUIElement.setMaterial(hoveredEntryMaterial);
+				this.entryBaseUIElement.setMaterial(hoveredDirectoryEntryMaterial);
 			}
 			else {
-				this.entryBaseUIElement.setMaterial(defaultEntryMaterial);
+				this.entryBaseUIElement.setMaterial(defaultDirectoryEntryMaterial);
 			}
 		}
 
@@ -566,6 +690,9 @@ class DirectoryEntry {
 				this.isHovered = false;
 			}
 		}
+		else {
+			this.isHovered = false;
+		}
 
 		if (this.children != null) {
 			for (DirectoryEntry e : this.children) {
@@ -587,6 +714,9 @@ class DirectoryEntry {
 			else {
 				this.isSelected = false;
 			}
+		}
+		else {
+			this.isSelected = false;
 		}
 
 		if (this.children != null) {
@@ -618,6 +748,24 @@ class DirectoryEntry {
 		if (this.children != null) {
 			for (DirectoryEntry e : this.children) {
 				ans += e.count();
+			}
+		}
+		return ans;
+	}
+
+	public int countDisplayed() {
+		if (!this.isDisplayed) {
+			return 0;
+		}
+
+		int ans = 0;
+		if (this.parent != null) {
+			//don't count the root entry
+			ans++;
+		}
+		if (this.children != null) {
+			for (DirectoryEntry e : this.children) {
+				ans += e.countDisplayed();
 			}
 		}
 		return ans;
