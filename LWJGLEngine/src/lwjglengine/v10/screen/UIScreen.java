@@ -66,7 +66,7 @@ public class UIScreen extends Screen {
 		this.geometryPositionMap = new Texture(GL_RGBA16F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.geometryNormalMap = new Texture(GL_RGBA16F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.geometrySpecularMap = new Texture(GL_RGBA16F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
-		this.geometryColorMap = new Texture(GL_RGBA, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
+		this.geometryColorMap = new Texture(GL_RGBA16F, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.geometryColorIDMap = new Texture(GL_RGBA, this.screenWidth, this.screenHeight, GL_RGBA, GL_FLOAT);
 		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.geometryPositionMap.getID());
 		this.geometryBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this.geometryNormalMap.getID());
@@ -229,7 +229,6 @@ public class UIScreen extends Screen {
 		Shader.SPLASH.enable();
 		Shader.SPLASH.setUniform1f("alpha", 1f);
 		geometryColorMap.bind(GL_TEXTURE0);
-		//geometryColorIDMap.bind(GL_TEXTURE0);
 		screenQuad.render();
 
 		// -- RENDER PROPER UI HITBOXES --
@@ -260,18 +259,6 @@ public class UIScreen extends Screen {
 		Shader.SPLASH.setUniform1f("alpha", 1f);
 		geometryColorIDMap.bind(GL_TEXTURE0);
 		screenQuad.render();
-
-		//		// -- RENDER TO OUTPUT --
-		//		outputBuffer.bind();
-		//		glDisable(GL_DEPTH_TEST);
-		//		glEnable(GL_BLEND);
-		//		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		//
-		//		Shader.SPLASH.enable();
-		//		Shader.SPLASH.setUniform1f("alpha", 1f);
-		//		geometryColorMap.bind(GL_TEXTURE0);
-		//		geometryColorIDMap.bind(GL_TEXTURE0);
-		//		screenQuad.render();
 
 	}
 

@@ -47,6 +47,8 @@ public class Text extends UIElement {
 
 	private boolean doAntialiasing = true;
 
+	private boolean changedText = false;
+
 	public Text(float x, float y, String text, int fontSize, Material material, int scene) {
 		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
 		Font derivedFont = new Font("Dialogue", Font.PLAIN, fontSize);
@@ -137,8 +139,9 @@ public class Text extends UIElement {
 
 	@Override
 	protected void _alignContents() {
-		if (this.changedContentAlignmentStyle || this.changedDimensions) {
+		if (this.changedContentAlignmentStyle || this.changedDimensions || this.changedText) {
 			this.setTextureMaterial(new TextureMaterial(this.generateAlignedTexture()));
+			this.changedText = false;
 		}
 	}
 
@@ -271,6 +274,8 @@ public class Text extends UIElement {
 		this.text = text;
 		this.textWidth = GraphicsTools.calculateTextWidth(this.text, this.font);
 		this.height = this.calculateHeight();
+
+		this.changedText = true;
 
 		this.align();
 	}

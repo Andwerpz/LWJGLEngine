@@ -99,12 +99,12 @@ public class TextField extends Input {
 
 	private boolean textWrapping = false;
 
-	public TextField(float x, float y, float width, float height, String sID, String hintText, Font font, int fontSize, int scene) {
-		super(x, y, 0, width, height, sID, scene);
-		this.init(hintText, FontUtils.deriveSize(fontSize, font));
+	public TextField(float x, float y, float width, float height, String sID, String hintText, Font font, int fontSize, int selectionScene, int textScene) {
+		super(x, y, 0, width, height, sID, selectionScene);
+		this.init(hintText, FontUtils.deriveSize(fontSize, font), textScene);
 	}
 
-	private void init(String hintText, Font font) {
+	private void init(String hintText, Font font, int textScene) {
 		this.font = font;
 
 		this.setFrameAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
@@ -122,7 +122,7 @@ public class TextField extends Input {
 		float textWidth = this.width - (textLeftMargin + textRightMargin);
 		textWidth = Math.max(textWidth, 1);
 
-		this.fieldText = new Text(textLeftMargin, 0, z + depthSpacing, textWidth, hintText, font, this.hintTextMaterial, this.scene);
+		this.fieldText = new Text(textLeftMargin, 0, z + depthSpacing, textWidth, hintText, font, this.hintTextMaterial, textScene);
 		this.fieldText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.fieldText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.fieldText.bind(this);
@@ -154,7 +154,6 @@ public class TextField extends Input {
 		if (this.currentMaterial != nextMaterial) {
 			this.currentMaterial = nextMaterial;
 			this.setMaterial(this.currentMaterial);
-			//this.updateModelInstance(this.fieldInnerID, this.currentMaterial);
 		}
 
 		// -- TEXT --
@@ -206,6 +205,35 @@ public class TextField extends Input {
 		this.text = text;
 	}
 
+	public Text getTextUIElement() {
+		return this.fieldText;
+	}
+
+	public void setReleasedMaterial(Material m) {
+		this.releasedMaterial = m;
+	}
+
+	public void setHoveredMaterial(Material m) {
+		this.hoveredMaterial = m;
+	}
+
+	public void setPressedMaterial(Material m) {
+		this.pressedMaterial = m;
+	}
+
+	public void setSelectedMaterial(Material m) {
+		this.selectedMaterial = m;
+	}
+
+	public void setTextMaterial(Material m) {
+		this.textMaterial = m;
+	}
+
+	public void setHintTextMaterial(Material m) {
+		this.hintTextMaterial = m;
+	}
+
+	@Override
 	public void keyPressed(int key) {
 		if (this.clicked) {
 			pressedKeys.add(key);
@@ -248,6 +276,7 @@ public class TextField extends Input {
 		}
 	}
 
+	@Override
 	public void keyReleased(int key) {
 		if (this.clicked) {
 			if (pressedKeys.contains(key)) {

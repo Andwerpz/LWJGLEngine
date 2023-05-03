@@ -9,7 +9,7 @@ uniform float alpha;
 void main() {
 	vec3 result = vec3(texture(tex_color, frag_uv).rgb);
 	float texAlpha = texture(tex_color, frag_uv).a;
-	color = vec4(result, texAlpha * alpha);
+	color = vec4(result, alpha * texAlpha);
 }
 
 

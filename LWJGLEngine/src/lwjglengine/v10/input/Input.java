@@ -2,24 +2,42 @@ package lwjglengine.v10.input;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import lwjglengine.v10.entity.Entity;
+import lwjglengine.v10.model.FilledRectangle;
 import lwjglengine.v10.ui.UIElement;
 
 public abstract class Input extends UIElement {
+	//the scene in this refers to the selection scene. 
+
+	//children of input will request their own decorative scenes. 
+
+	//TODO 
+	// - maybe make it so that we don't have to manually call the pressed released hovered etc functions. 
 
 	private static HashMap<String, Input> inputs = new HashMap<>();
 	private static HashMap<Long, String> entityToStringID = new HashMap<>();
 	private static HashMap<String, Long> stringToEntityID = new HashMap<>();
+
+	private static HashMap<Integer, HashSet<Input>> sceneToInput = new HashMap<>();
 
 	protected boolean pressed, hovered, clicked;
 	protected boolean mouseEntered, mouseExited;
 
 	private String sID;
 
+	public Input(float x, float y, float z, float width, float height, String sID, FilledRectangle baseRect, int scene) {
+		super(x, y, z, width, height, baseRect, scene);
+		this.init(sID);
+	}
+
 	public Input(float x, float y, float z, float width, float height, String sID, int scene) {
 		super(x, y, z, width, height, scene);
+		this.init(sID);
+	}
 
+	private void init(String sID) {
 		this.sID = sID;
 
 		this.pressed = false;
@@ -39,6 +57,10 @@ public abstract class Input extends UIElement {
 			long entityID = stringToEntityID.get(this.sID);
 			entityToStringID.remove(entityID);
 			stringToEntityID.remove(this.sID);
+			sceneToInput.get(this.getScene()).remove(this);
+			if (sceneToInput.get(this.getScene()).size() == 0) {
+				sceneToInput.remove(this.getScene());
+			}
 		}
 		this.___kill();
 	}
@@ -103,6 +125,11 @@ public abstract class Input extends UIElement {
 		inputs.put(id, input);
 		entityToStringID.put(input.getID(), id);
 		stringToEntityID.put(id, input.getID());
+
+		if (sceneToInput.get(input.getScene()) == null) {
+			sceneToInput.put(input.getScene(), new HashSet<>());
+		}
+		sceneToInput.get(input.getScene()).add(input);
 	}
 
 	public static Input getInput(String id) {
@@ -114,20 +141,20 @@ public abstract class Input extends UIElement {
 		return b == null ? false : b.isClicked();
 	}
 
-	public static String getClicked() {
+	public static String getClicked(int scene) {
 		for (String s : inputs.keySet()) {
 			Input i = inputs.get(s);
-			if (i.isClicked()) {
+			if (i.isClicked() && i.getScene() == scene) {
 				return s;
 			}
 		}
 		return "";
 	}
 
-	public static String getHovered() {
+	public static String getHovered(int scene) {
 		for (String s : inputs.keySet()) {
 			Input i = inputs.get(s);
-			if (i.isHovered()) {
+			if (i.isHovered() && i.getScene() == scene) {
 				return s;
 			}
 		}
@@ -154,7 +181,10 @@ public abstract class Input extends UIElement {
 	protected abstract void __update();
 
 	public static void inputsHovered(long entityID, int scene) {
-		for (Input b : inputs.values()) {
+		if (sceneToInput.get(scene) == null) {
+			return;
+		}
+		for (Input b : sceneToInput.get(scene)) {
 			b.hovered(entityID, scene);
 		}
 	}
@@ -168,25 +198,34 @@ public abstract class Input extends UIElement {
 	}
 
 	public static void inputsReleased(long entityID, int scene) {
-		for (Input b : inputs.values()) {
+		if (sceneToInput.get(scene) == null) {
+			return;
+		}
+		for (Input b : sceneToInput.get(scene)) {
 			b.released(entityID, scene);
 		}
 	}
 
-	public static void inputsKeyPressed(int key) {
-		for (Input b : inputs.values()) {
-			if (b instanceof TextField) {
-				((TextField) b).keyPressed(key);
-			}
+	public static void inputsKeyPressed(int key, int scene) {
+		if (sceneToInput.get(scene) == null) {
+			return;
+		}
+		for (Input b : sceneToInput.get(scene)) {
+			b.keyPressed(key);
 		}
 	}
 
-	public static void inputsKeyReleased(int key) {
-		for (Input b : inputs.values()) {
-			if (b instanceof TextField) {
-				((TextField) b).keyReleased(key);
-			}
+	public abstract void keyPressed(int key);
+
+	public static void inputsKeyReleased(int key, int scene) {
+		if (sceneToInput.get(scene) == null) {
+			return;
+		}
+		for (Input b : sceneToInput.get(scene)) {
+			b.keyReleased(key);
 		}
 	}
+
+	public abstract void keyReleased(int key);
 
 }

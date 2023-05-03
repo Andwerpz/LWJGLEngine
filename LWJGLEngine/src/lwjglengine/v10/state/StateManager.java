@@ -155,8 +155,6 @@ public class StateManager {
 
 		activeState.keyPressed(key);
 		this.rootWindow.keyPressed(key);
-
-		Input.inputsKeyPressed(key);
 	}
 
 	public void keyReleased(int key) {
@@ -166,8 +164,6 @@ public class StateManager {
 
 		activeState.keyReleased(key);
 		this.rootWindow.keyReleased(key);
-
-		Input.inputsKeyReleased(key);
 	}
 
 }

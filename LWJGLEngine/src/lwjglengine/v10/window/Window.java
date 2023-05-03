@@ -38,6 +38,7 @@ public abstract class Window {
 	//the problem is that how are we going to decide when to put up a loading screen without states?
 
 	//TODO
+	// - currently have issue with transparent things. 
 	// - drop shadow?
 
 	public static final int FROM_LEFT = 0;
@@ -79,6 +80,9 @@ public abstract class Window {
 	//there should only be 1 window selected at a time. 
 	private boolean isSelected = false;
 
+	//if this thing is dead, then it is not alive
+	private boolean isAlive = true;
+
 	public Window(int xOffset, int yOffset, int width, int height, Window parentWindow) {
 		this.childWindows = new ArrayList<>();
 
@@ -109,6 +113,8 @@ public abstract class Window {
 	}
 
 	public void kill() {
+		this.isAlive = false;
+
 		this.colorBuffer.kill();
 		this.rootUIElement.kill();
 		Scene.removeScene(ROOT_UI_SCENE);
@@ -148,7 +154,7 @@ public abstract class Window {
 		}
 
 		this.colorBuffer = new Framebuffer(this.width, this.height);
-		this.colorTexture = new Texture(GL_RGBA32F, this.width, this.height, GL_RGBA, GL_FLOAT, GL_NEAREST);
+		this.colorTexture = new Texture(GL_RGBA, this.width, this.height, GL_RGBA, GL_FLOAT);
 		this.colorBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.colorTexture.getID());
 		this.colorBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.colorBuffer.isComplete();

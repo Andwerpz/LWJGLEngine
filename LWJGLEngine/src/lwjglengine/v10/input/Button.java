@@ -15,6 +15,7 @@ import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.graphics.Texture;
 import lwjglengine.v10.graphics.TextureMaterial;
 import lwjglengine.v10.graphics.VertexArray;
+import lwjglengine.v10.input.Input;
 import lwjglengine.v10.model.FilledRectangle;
 import lwjglengine.v10.model.Model;
 import lwjglengine.v10.scene.Scene;
@@ -37,13 +38,18 @@ public class Button extends Input {
 	private Material pressedTextMaterial, releasedTextMaterial, hoveredTextMaterial;
 	private Material currentMaterial;
 
-	public Button(float x, float y, float width, float height, String sID, String text, Font font, int fontSize, int scene) {
-		super(x, y, 0, width, height, sID, scene);
-		this.init(text, FontUtils.deriveSize(fontSize, font));
+	public Button(float x, float y, float width, float height, String sID, String text, Font font, int fontSize, FilledRectangle baseRect, int selectionScene, int textScene) {
+		super(x, y, 0, width, height, sID, baseRect, selectionScene);
+		this.init(text, FontUtils.deriveSize(fontSize, font), textScene);
+	}
+
+	public Button(float x, float y, float width, float height, String sID, String text, Font font, int fontSize, int selectionScene, int textScene) {
+		super(x, y, 0, width, height, sID, selectionScene);
+		this.init(text, FontUtils.deriveSize(fontSize, font), textScene);
 	}
 
 	// text size should already be included in the font
-	private void init(String text, Font font) {
+	private void init(String text, Font font, int textScene) {
 		this.setFrameAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 
 		this.horizontalAlignContent = UIElement.ALIGN_LEFT;
@@ -52,7 +58,7 @@ public class Button extends Input {
 		this.pressedTextMaterial = new Material(Color.YELLOW);
 		this.releasedTextMaterial = new Material(Color.WHITE);
 
-		this.buttonText = new Text(0, 0, this.z + depthSpacing, text, font, this.releasedTextMaterial, scene);
+		this.buttonText = new Text(0, 0, this.z + depthSpacing, text, font, this.releasedTextMaterial, textScene);
 		this.buttonText.setFrameAlignmentStyle(UIElement.FROM_CENTER_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.buttonText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 		this.buttonText.bind(this);
@@ -96,6 +102,34 @@ public class Button extends Input {
 			this.currentMaterial = nextMaterial;
 			this.setMaterial(nextMaterial);
 		}
+	}
+
+	public Text getButtonText() {
+		return this.buttonText;
+	}
+
+	public void setPressedMaterial(Material m) {
+		this.pressedMaterial = m;
+	}
+
+	public void setHoveredMaterial(Material m) {
+		this.hoveredMaterial = m;
+	}
+
+	public void setReleasedMaterial(Material m) {
+		this.releasedMaterial = m;
+	}
+
+	@Override
+	public void keyPressed(int key) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void keyReleased(int key) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

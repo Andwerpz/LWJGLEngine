@@ -291,8 +291,8 @@ public abstract class UIElement extends Entity {
 			return;
 		}
 
-		this.width = width;
-		this.height = height;
+		this.width = Math.max(width, 0);
+		this.height = Math.max(height, 0);
 		this.shouldAlign = true;
 		this.changedDimensions = true;
 	}
