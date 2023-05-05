@@ -111,13 +111,13 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 		this.uiScreen = new UIScreen();
 
-		this.directoryRect = new UIFilledRectangle(0, topBarHeight, 0, this.directoryWidth, this.getContentHeight() - topBarHeight - bottomBarHeight, DIRECTORY_BACKGROUND_SCENE);
+		this.directoryRect = new UIFilledRectangle(0, topBarHeight, 0, this.directoryWidth, this.getHeight() - topBarHeight - bottomBarHeight, DIRECTORY_BACKGROUND_SCENE);
 		this.directoryRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		this.directoryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		this.directoryRect.setMaterial(directoryMaterial);
 		this.directoryRect.bind(this.contentRootUIElement);
 
-		this.folderRect = new UIFilledRectangle(0, topBarHeight, 0, this.getWidth() - this.directoryWidth, this.getContentHeight() - topBarHeight - bottomBarHeight, FOLDER_SCENE);
+		this.folderRect = new UIFilledRectangle(0, topBarHeight, 0, this.getWidth() - this.directoryWidth, this.getHeight() - topBarHeight - bottomBarHeight, FOLDER_SCENE);
 		this.folderRect.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 		this.folderRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
 		this.folderRect.setMaterial(folderMaterial);
@@ -211,18 +211,18 @@ public class FileExplorerWindow extends AdjustableWindow {
 	@Override
 	protected void __resize() {
 		if (this.uiScreen != null) {
-			this.uiScreen.setScreenDimensions(this.getContentWidth(), this.getContentHeight());
+			this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
 		}
 
 		if (this.folderRect != null) {
 			this.folderRect.setWidth(this.getWidth() - this.directoryWidth);
-			this.folderRect.setHeight(this.getContentHeight() - topBarHeight - bottomBarHeight);
+			this.folderRect.setHeight(this.getHeight() - topBarHeight - bottomBarHeight);
 
 			this.setFolderYOffset(this.folderYOffset);
 		}
 
 		if (this.directoryRect != null) {
-			this.directoryRect.setHeight(this.getContentHeight() - topBarHeight - bottomBarHeight);
+			this.directoryRect.setHeight(this.getHeight() - topBarHeight - bottomBarHeight);
 
 			//realign entries
 			this.setDirectoryYOffset(this.directoryYOffset);
@@ -252,7 +252,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 		//update directory width
 		if (this.directoryGrabbed) {
-			int newDirectoryWidth = (int) this.getRelativeMousePos().x;
+			int newDirectoryWidth = (int) this.getWindowMousePos().x;
 			newDirectoryWidth = Math.max(newDirectoryWidth, directoryMinWidth);
 			this.directoryWidth = newDirectoryWidth;
 			this.directoryRect.setWidth(this.directoryWidth);
@@ -262,54 +262,54 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 	@Override
 	protected void _renderContent(Framebuffer outputBuffer) {
-		int mouseX = (int) this.getRelativeMousePos().x;
-		int mouseY = (int) this.getRelativeMousePos().y;
+		int mouseX = (int) this.getWindowMousePos().x;
+		int mouseY = (int) this.getWindowMousePos().y;
 
 		this.uiScreen.setUIScene(DIRECTORY_BACKGROUND_SCENE);
 		this.uiScreen.render(outputBuffer);
-		if (this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY) == this.directoryRect.getID()) {
+		if (this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.directoryRect.getID()) {
 			this.hoveredSectionID = this.directoryRect.getID();
 		}
 
 		this.uiScreen.setUIScene(DIRECTORY_SELECTION_SCENE);
 		this.uiScreen.render(outputBuffer);
-		this.hoveredDirectoryEntryID = this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY);
+		this.hoveredDirectoryEntryID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
 		this.uiScreen.setUIScene(DIRECTORY_TEXT_SCENE);
 		this.uiScreen.render(outputBuffer);
 
 		this.uiScreen.setUIScene(FOLDER_SCENE);
 		this.uiScreen.render(outputBuffer);
-		if (this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY) == this.folderRect.getID()) {
+		if (this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.folderRect.getID()) {
 			this.hoveredSectionID = this.folderRect.getID();
 		}
 
 		this.uiScreen.setUIScene(FOLDER_SELECTION_SCENE);
 		this.uiScreen.render(outputBuffer);
-		this.hoveredFolderEntryID = this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY);
+		this.hoveredFolderEntryID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
 		this.uiScreen.setUIScene(FOLDER_TEXT_SCENE);
 		this.uiScreen.render(outputBuffer);
 
 		this.uiScreen.setUIScene(TOP_BAR_SCENE);
 		this.uiScreen.render(outputBuffer);
-		if (this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY) == this.topBarRect.getID()) {
+		if (this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.topBarRect.getID()) {
 			this.hoveredSectionID = this.topBarRect.getID();
 		}
 
 		this.uiScreen.setUIScene(TOP_BAR_SELECTION_SCENE);
 		this.uiScreen.render(outputBuffer);
-		this.hoveredTopBarID = this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY);
+		this.hoveredTopBarID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
 		this.uiScreen.setUIScene(TOP_BAR_TEXT_SCENE);
 		this.uiScreen.render(outputBuffer);
 
 		this.uiScreen.setUIScene(BOTTOM_BAR_SCENE);
 		this.uiScreen.render(outputBuffer);
-		if (this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY) == this.bottomBarRect.getID()) {
+		if (this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.bottomBarRect.getID()) {
 			this.hoveredSectionID = this.bottomBarRect.getID();
 		}
 
 		this.uiScreen.setUIScene(BOTTOM_BAR_SELECTION_SCENE);
 		this.uiScreen.render(outputBuffer);
-		this.hoveredBottomBarID = this.uiScreen.getEntityIDAtCoord(mouseX, this.getHeight() - mouseY);
+		this.hoveredBottomBarID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
 		this.uiScreen.setUIScene(BOTTOM_BAR_TEXT_SCENE);
 		this.uiScreen.render(outputBuffer);
 
@@ -449,8 +449,8 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 	@Override
 	protected void __mousePressed(int button) {
-		int mouseX = (int) this.getRelativeMousePosClampedToWindow().x;
-		int mouseY = (int) this.getRelativeMousePosClampedToWindow().y;
+		int mouseX = (int) this.getWindowMousePos().x;
+		int mouseY = (int) this.getWindowMousePos().y;
 
 		//see if user is trying to drag the directory window
 		if (Math.abs(this.directoryWidth - mouseX) <= directoryGrabTolerancePx) {

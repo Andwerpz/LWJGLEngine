@@ -169,7 +169,7 @@ public class UIScreen extends Screen {
 	//assumes that the ui screen covers the entire screen
 	public long getEntityIDAtMouse() {
 		Vec2 mousePos = MouseInput.getMousePos();
-		return getEntityIDAtCoord((int) mousePos.x, (int) (this.screenHeight - mousePos.y));
+		return getEntityIDAtCoord((int) (mousePos.x), (int) (mousePos.y));
 	}
 
 	/**

@@ -111,7 +111,7 @@ public class PlayerInputController {
 
 		if (this.acceptPlayerInputs) {
 			camYRot += Math.toRadians(delta.x / 10f);
-			camXRot += Math.toRadians(delta.y / 10f);
+			camXRot -= Math.toRadians(delta.y / 10f);
 			mouse = nextMouse;
 		}
 

@@ -22,6 +22,7 @@ import lwjglengine.v10.screen.UIScreen;
 import lwjglengine.v10.ui.UIFilledRectangle;
 import lwjglengine.v10.util.BufferUtils;
 import myutils.v10.math.Mat4;
+import myutils.v10.math.MathUtils;
 import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
 import myutils.v10.misc.Pair;
@@ -253,11 +254,11 @@ public abstract class Window {
 	}
 
 	public void setWidth(int w) {
-		this.resize(w, this.height);
+		this.setDimensions(w, this.height);
 	}
 
 	public void setHeight(int h) {
-		this.resize(this.width, h);
+		this.setDimensions(this.width, h);
 	}
 
 	public void setDimensions(int w, int h) {
@@ -297,14 +298,11 @@ public abstract class Window {
 	 * Returns where the mouse is relative to the top left corner of the window
 	 * @return
 	 */
-	protected Vec2 getRelativeMousePos() {
+	protected Vec2 getWindowMousePos() {
 		Vec2 mousePos = MouseInput.getMousePos();
 
 		mousePos.x -= this.globalXOffset;
-
-		mousePos.y = Main.windowHeight - mousePos.y;
 		mousePos.y -= this.globalYOffset;
-		mousePos.y = this.height - mousePos.y;
 
 		return mousePos;
 	}
@@ -313,9 +311,9 @@ public abstract class Window {
 	 * Returns where the mouse is, but clamped to this window. 
 	 * @return
 	 */
-	protected Vec2 getRelativeMousePosClampedToWindow() {
-		int mouseX = (int) this.getRelativeMousePos().x;
-		int mouseY = (int) this.getRelativeMousePos().y;
+	protected Vec2 getWindowMousePosClampedToWindow() {
+		int mouseX = (int) this.getWindowMousePos().x;
+		int mouseY = (int) this.getWindowMousePos().y;
 
 		if (mouseX < 0) {
 			mouseX = 0;
@@ -342,16 +340,16 @@ public abstract class Window {
 	 * Behaves just like getRelativeMousePos() in the case where there is no parent window
 	 * @return
 	 */
-	protected Vec2 getRelativeMousePosClampedToParent() {
+	protected Vec2 getWindowMousePosClampedToParentWindow() {
 		if (this.parentWindow == null) {
-			return this.getRelativeMousePos();
+			return this.getWindowMousePos();
 		}
 
-		int mouseX = (int) this.getRelativeMousePos().x;
-		int mouseY = (int) this.getRelativeMousePos().y;
+		int mouseX = (int) this.getWindowMousePos().x;
+		int mouseY = (int) this.getWindowMousePos().y;
 
-		int parentMouseX = (int) (this.parentWindow.getRelativeMousePos().x);
-		int parentMouseY = (int) (this.parentWindow.getRelativeMousePos().y);
+		int parentMouseX = (int) (this.parentWindow.getWindowMousePos().x);
+		int parentMouseY = (int) (this.parentWindow.getWindowMousePos().y);
 
 		if (parentMouseX < 0) {
 			mouseX -= parentMouseX;

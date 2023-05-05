@@ -11,8 +11,10 @@ public abstract class State {
 
 	// rendering might consist of multiple overlaid screens
 
-	protected Framebuffer outputBuffer;
-	protected Texture outputColorMap;
+	//protected Framebuffer outputBuffer;
+	//protected Texture outputColorMap;
+
+	protected int bufferWidth, bufferHeight;
 
 	protected StateManager sm;
 

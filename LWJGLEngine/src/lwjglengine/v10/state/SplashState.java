@@ -5,11 +5,10 @@ import lwjglengine.v10.graphics.Texture;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.Screen;
 import lwjglengine.v10.screen.ScreenQuad;
-import lwjglengine.v10.screen.SplashScreen;
 
 public class SplashState extends State {
 
-	private SplashScreen splashScreen;
+	//this state just has to render nothing. Root window is going to render logo
 
 	private static final long TIME_ON_SCREEN_MILLIS = 1500;
 	private long startTime;
@@ -26,13 +25,12 @@ public class SplashState extends State {
 
 	@Override
 	public void load() {
-		this.splashScreen = new SplashScreen();
 		this.startTime = System.currentTimeMillis();
 	}
 
 	@Override
 	public void kill() {
-		this.splashScreen.kill();
+
 	}
 
 	@Override
@@ -48,7 +46,7 @@ public class SplashState extends State {
 
 	@Override
 	public void render(Framebuffer outputBuffer) {
-		this.splashScreen._render(outputBuffer);
+
 	}
 
 	@Override

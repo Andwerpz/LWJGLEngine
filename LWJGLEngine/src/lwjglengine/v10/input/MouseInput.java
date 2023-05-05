@@ -32,12 +32,17 @@ public class MouseInput extends GLFWMouseButtonCallback {
 		return buttons[button];
 	}
 
+	/**
+	 * Returns the mouse position relative to the bottom left corner of the screen. 
+	 * @return
+	 */
 	public static Vec2 getMousePos() {
 		DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
 		DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
 		glfwGetCursorPos(Main.window, xBuffer, yBuffer);
 		double x = xBuffer.get(0);
 		double y = yBuffer.get(0);
+		y = Main.windowHeight - y;
 		return new Vec2(x, y);
 	}
 

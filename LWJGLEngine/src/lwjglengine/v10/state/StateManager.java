@@ -21,6 +21,10 @@ import myutils.v10.math.Vec3;
 
 public class StateManager {
 
+	//state manager now can belong inside of a window?
+
+	//TODO need to have resize buffer functions now
+
 	//TODO :
 	//maybe, for each state, keep track of the scenes belonging to the state. Then, when the state is switched
 	//to a new state, remove all the scenes from the old state. 
@@ -128,7 +132,7 @@ public class StateManager {
 		activeState.mousePressed(button);
 
 		Vec2 mousePos = MouseInput.getMousePos();
-		this.rootWindow.selectWindow((int) mousePos.x, (int) (Main.windowHeight - mousePos.y), false);
+		this.rootWindow.selectWindow((int) (mousePos.x), (int) (mousePos.y), false);
 		this.rootWindow.mousePressed(button);
 	}
 

@@ -130,7 +130,7 @@ public class RaytracingWindow extends AdjustableWindow {
 	@Override
 	protected void __resize() {
 		if (this.raytracingScreen != null) {
-			this.raytracingScreen.setScreenDimensions(this.getContentWidth(), this.getContentHeight());
+			this.raytracingScreen.setScreenDimensions(this.getWidth(), this.getHeight());
 		}
 	}
 
