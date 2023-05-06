@@ -42,10 +42,13 @@ public class TestState extends State {
 		//
 		//		Window w5 = new AdjustableWindow(30, 10, 100, 100, "We can nest twice??!?!", w4);
 
-		Window w1 = new RaytracingWindow(20, 20, 400, 400, "Raytracing Window", this.sm.getRootWindow());
+		//Window w1 = new RaytracingWindow(20, 20, 400, 400, "Raytracing Window", this.sm.getRootWindow());
 		//Window w2 = new RaytracingWindow(10, 10, 200, 200, "Raytracing Window", w1);
 
-		Window fileExplorer = new FileExplorerWindow(20, 20, 400, 300, this.sm.getRootWindow());
+		//Window fileExplorer = new FileExplorerWindow(20, 20, 400, 300, this.sm.getRootWindow());
+
+		Window fileExplorer = new AdjustableWindow(20, 20, 400, 400, "File Explorer", new FileExplorerWindow(), this.sm.getRootWindow());
+		Window raytracer = new AdjustableWindow(200, 30, 400, 400, "Raytracing", new RaytracingWindow(), this.sm.getRootWindow());
 	}
 
 	@Override

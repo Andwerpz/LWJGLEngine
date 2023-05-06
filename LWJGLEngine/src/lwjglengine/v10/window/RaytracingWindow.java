@@ -7,6 +7,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_O;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_P;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_T;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 
 import java.awt.Color;
 
@@ -20,7 +21,7 @@ import lwjglengine.v10.screen.RaytracingScreen;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
 
-public class RaytracingWindow extends AdjustableWindow {
+public class RaytracingWindow extends Window {
 
 	private final int RAYTRACING_SCENE = Scene.generateScene();
 
@@ -28,10 +29,18 @@ public class RaytracingWindow extends AdjustableWindow {
 
 	private PlayerInputController pic;
 
-	public RaytracingWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window parentWindow) {
-		super(xOffset, yOffset, contentWidth, contentHeight, title, parentWindow);
+	public RaytracingWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, Window parentWindow) {
+		super(xOffset, yOffset, contentWidth, contentHeight, parentWindow);
+		this.init();
+	}
 
-		this.allowUpdateIfContentNotSelected = false;
+	public RaytracingWindow() {
+		super(0, 0, 400, 400, null);
+		this.init();
+	}
+
+	private void init() {
+		this.setUpdateWhenNotSelected(false);
 
 		this.raytracingScreen = new RaytracingScreen();
 		this.raytracingScreen.setRenderMode(RaytracingScreen.RENDER_MODE_PREVIEW);
@@ -69,15 +78,6 @@ public class RaytracingWindow extends AdjustableWindow {
 
 		sphereMaterial.setSmoothness(1f);
 		sphereMaterial.setSpecularProbability(0.3f);
-
-		//		redMaterial.setSmoothness(1);
-		//		redMaterial.setSpecularProbability(0.95f);
-		//
-		//		blueMaterial.setSmoothness(1);
-		//		blueMaterial.setSpecularProbability(0.95f);
-
-		//whiteMaterial.setSmoothness(1);
-		//whiteMaterial.setSpecularProbability(1f);
 
 		Vec3 v0 = new Vec3(-50, 0, -50);
 		Vec3 v1 = new Vec3(-50, 0, 50);
@@ -118,24 +118,24 @@ public class RaytracingWindow extends AdjustableWindow {
 		//big ball
 		this.raytracingScreen.addSphere(new Vec3(0, 50, 0), 30, sphereMaterial);
 
-		this.__resize();
+		this._resize();
 	}
 
 	@Override
-	protected void __kill() {
+	protected void _kill() {
 		this.raytracingScreen.kill();
 		Scene.removeScene(RAYTRACING_SCENE);
 	}
 
 	@Override
-	protected void __resize() {
+	protected void _resize() {
 		if (this.raytracingScreen != null) {
 			this.raytracingScreen.setScreenDimensions(this.getWidth(), this.getHeight());
 		}
 	}
 
 	@Override
-	protected void __update() {
+	protected void _update() {
 		this.pic.update();
 
 		this.raytracingScreen.setCameraPos(this.pic.getPos());
@@ -143,41 +143,49 @@ public class RaytracingWindow extends AdjustableWindow {
 	}
 
 	@Override
-	protected void _renderContent(Framebuffer outputBuffer) {
+	protected void renderContent(Framebuffer outputBuffer) {
 		this.raytracingScreen.setRaytracingScene(RAYTRACING_SCENE);
 		this.raytracingScreen.render(outputBuffer);
 	}
 
 	@Override
-	protected void contentSelected() {
+	protected void renderOverlay(Framebuffer outputBuffer) {
+
+	}
+
+	@Override
+	protected void selected() {
 		if (this.raytracingScreen.getRenderMode() == RaytracingScreen.RENDER_MODE_PREVIEW) {
 			Main.lockCursor();
 		}
 	}
 
 	@Override
-	protected void contentDeselected() {
+	protected void deselected() {
 		Main.unlockCursor();
 	}
 
 	@Override
-	protected void __mousePressed(int button) {
+	protected void _mousePressed(int button) {
 
 	}
 
 	@Override
-	protected void __mouseReleased(int button) {
+	protected void _mouseReleased(int button) {
 
 	}
 
 	@Override
-	protected void __mouseScrolled(float wheelOffset, float smoothOffset) {
+	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
 
 	}
 
 	@Override
-	protected void __keyPressed(int key) {
+	protected void _keyPressed(int key) {
 		switch (key) {
+		case GLFW_KEY_ESCAPE:
+			this.deselect();
+			break;
 		case GLFW_KEY_E:
 			//			Vec3 center = new Vec3(0);
 			//			center.x = (float) (Math.random() * 100 - 50);
@@ -233,7 +241,7 @@ public class RaytracingWindow extends AdjustableWindow {
 	}
 
 	@Override
-	protected void __keyReleased(int key) {
+	protected void _keyReleased(int key) {
 		// TODO Auto-generated method stub
 
 	}

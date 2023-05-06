@@ -140,7 +140,9 @@ public class Text extends UIElement {
 	@Override
 	protected void _alignContents() {
 		if (this.changedContentAlignmentStyle || this.changedDimensions || this.changedText) {
-			this.setTextureMaterial(new TextureMaterial(this.generateAlignedTexture()));
+			if (!(this.width <= 0)) {
+				this.setTextureMaterial(new TextureMaterial(this.generateAlignedTexture()));
+			}
 			this.changedText = false;
 		}
 	}

@@ -20,7 +20,7 @@ import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
 
-public abstract class AdjustableWindow extends Window {
+public class AdjustableWindow extends Window {
 	//TODO 
 	// - implement snapping to windows that are children of the same parent. 
 	// - add an x on the top right corner so we can close windows 
@@ -29,6 +29,8 @@ public abstract class AdjustableWindow extends Window {
 	private final int BACKGROUND_SCENE = Scene.generateScene();
 	private final int TITLE_BAR_SCENE = Scene.generateScene();
 	private final int BORDER_SCENE = Scene.generateScene();
+
+	private Window contentWindow;
 
 	private UIScreen uiScreen;
 
@@ -68,14 +70,13 @@ public abstract class AdjustableWindow extends Window {
 	private long titleBarSceneMouseEntityID = -1;
 	private int titleBarGrabMouseX, titleBarGrabMouseY;
 
-	private int edgeGrabTolerancePx = 5; //how many pixels away from the edge can you be to still grab it?
+	//how many pixels away from the edge can you be to still grab it?
+	//the edges are grabbed from the outside
+	private int edgeGrabTolerancePx = 10;
 	private boolean leftEdgeGrabbed = false;
 	private boolean rightEdgeGrabbed = false;
 	private boolean bottomEdgeGrabbed = false;
 	private boolean topEdgeGrabbed = false;
-
-	//this is true if mouse was pressed, and none of the things were grabbed. 
-	private boolean contentSelected = false;
 
 	protected boolean allowInputIfContentNotSelected = false;
 	protected boolean allowUpdateIfContentNotSelected = true;
@@ -87,16 +88,22 @@ public abstract class AdjustableWindow extends Window {
 
 	private boolean isFullscreen = false;
 
-	public AdjustableWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window parentWindow) {
+	public AdjustableWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window contentWindow, Window parentWindow) {
 		super(xOffset, yOffset, contentWidth, contentHeight + titleBarHeight, parentWindow);
+
+		this.contentWindow = contentWindow;
+		this.contentWindow.switchParent(this);
+
+		this.contentWindow.setDimensions(contentWidth, contentHeight);
+		this.contentWindow.setOffset(0, 0);
+
+		this.setAllowModifyingChildren(false);
 
 		this.uiScreen = new UIScreen();
 
 		this.contentRootUIElement = new UIFilledRectangle(0, 0, -20, this.getContentWidth(), this.getContentHeight(), BACKGROUND_SCENE);
 		this.contentRootUIElement.setFillWidth(true);
 		this.contentRootUIElement.setFillWidthMargin(0);
-		this.contentRootUIElement.setFillHeight(true);
-		this.contentRootUIElement.setFillHeightMargin(titleBarHeight / 2);
 		this.contentRootUIElement.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
 		this.contentRootUIElement.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 		this.contentRootUIElement.setMaterial(new Material(new Vec4(0)));
@@ -136,11 +143,7 @@ public abstract class AdjustableWindow extends Window {
 		Scene.removeScene(BACKGROUND_SCENE);
 		Scene.removeScene(TITLE_BAR_SCENE);
 		Scene.removeScene(BORDER_SCENE);
-
-		this.__kill();
 	}
-
-	protected abstract void __kill();
 
 	public void setFullscreen(boolean b) {
 		if (this.isFullscreen == b) {
@@ -170,7 +173,7 @@ public abstract class AdjustableWindow extends Window {
 			this.contentHeight = this.getHeight() - titleBarHeight;
 		}
 
-		//TODO set the dimensions of the child window
+		this.contentWindow.setDimensions(this.contentWidth, this.contentHeight);
 
 		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
 
@@ -189,14 +192,12 @@ public abstract class AdjustableWindow extends Window {
 		this.windowBorder[2] = Line.addLine(this.getWidth(), 0, this.getWidth(), this.getHeight(), BORDER_SCENE);
 		this.windowBorder[3] = Line.addLine(0, this.getHeight(), this.getWidth(), this.getHeight(), BORDER_SCENE);
 
+		this.contentRootUIElement.setHeight(this.getContentHeight());
+
 		for (int i = 0; i < 4; i++) {
 			Model.updateInstance(this.windowBorder[i], this.isSelected() ? this.selectedBorderMaterial : this.deselectedBorderMaterial);
 		}
-
-		this.__resize();
 	}
-
-	protected abstract void __resize();
 
 	public int getContentWidth() {
 		return this.contentWidth;
@@ -273,37 +274,54 @@ public abstract class AdjustableWindow extends Window {
 			//nesting and un-nesting
 			if (KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL)) {
 				//check if we should un-nest
-				if (this.parentWindow.parentWindow != null) {
-					int pMouseX = (int) this.parentWindow.getWindowMousePos().x;
-					int pMouseY = (int) this.parentWindow.getWindowMousePos().y;
-
-					if (pMouseX < 0 || pMouseY < 0 || pMouseX > this.parentWindow.getWidth() || pMouseY > this.parentWindow.getHeight()) {
-						//we should un-nest
-						this.switchParent(this.parentWindow.parentWindow);
-					}
-				}
-
-				//check if we should nest
 				{
-					int pMouseX = (int) this.parentWindow.getWindowMousePos().x;
-					int pMouseY = (int) this.parentWindow.getWindowMousePos().y;
+					//find furthest window that we can un-nest to
+					Window curParent = this.parentWindow;
+					while (curParent.parentWindow != null) {
+						int pMouseX = (int) curParent.getWindowMousePos().x;
+						int pMouseY = (int) curParent.getWindowMousePos().y;
 
-					pMouseY = this.parentWindow.getHeight() - pMouseY;
-
-					for (Window w : this.parentWindow.childWindows) {
-						if (w == this) {
-							continue;
+						if (pMouseX < 0 || pMouseY < 0 || pMouseX > curParent.getWidth() || pMouseY > curParent.getHeight()) {
+							//we should un-nest
+							curParent = curParent.parentWindow;
 						}
-						//check if mouse is inside this window
-						int left = w.getXOffset();
-						int right = w.getXOffset() + w.getWidth();
-						int bottom = w.getYOffset();
-						int top = w.getYOffset() + w.getHeight();
-						if (left <= pMouseX && pMouseX <= right && bottom <= pMouseY && pMouseY <= top) {
-							this.switchParent(w);
+						else {
 							break;
 						}
 					}
+					this.switchParent(curParent);
+				}
+
+				//check if we should nest
+				//find deepest window that we can nest to
+				{
+					Window curParent = this.parentWindow;
+					while (true) {
+						int pMouseX = (int) curParent.getWindowMousePos().x;
+						int pMouseY = (int) curParent.getWindowMousePos().y;
+
+						boolean foundNewParent = false;
+						for (Window w : curParent.childWindows) {
+							if (w == this) {
+								continue;
+							}
+
+							//check if mouse is inside this window
+							int left = w.getXOffset();
+							int right = w.getXOffset() + w.getWidth();
+							int bottom = w.getYOffset();
+							int top = w.getYOffset() + w.getHeight();
+							if (left <= pMouseX && pMouseX <= right && bottom <= pMouseY && pMouseY <= top) {
+								foundNewParent = true;
+								curParent = w;
+								break;
+							}
+						}
+						if (!foundNewParent) {
+							break;
+						}
+					}
+					this.switchParent(curParent);
 				}
 			}
 			int mouseX = (int) this.getWindowMousePosClampedToParentWindow().x;
@@ -326,22 +344,12 @@ public abstract class AdjustableWindow extends Window {
 				this.setYOffset(this.getYOffset() + diff);
 			}
 		}
-
-		if (this.contentSelected || this.allowUpdateIfContentNotSelected) {
-			this.__update();
-		}
 	}
-
-	protected abstract void __update();
 
 	@Override
 	protected void renderContent(Framebuffer outputBuffer) {
 		this.uiScreen.setUIScene(BACKGROUND_SCENE);
 		this.uiScreen.render(outputBuffer);
-
-		if (this.contentSelected || this.allowRenderIfContentNotSelected) {
-			this._renderContent(outputBuffer);
-		}
 	}
 
 	@Override
@@ -356,12 +364,18 @@ public abstract class AdjustableWindow extends Window {
 		this.uiScreen.render(outputBuffer);
 	}
 
-	protected abstract void _renderContent(Framebuffer outputBuffer);
-
 	public void setTitle(String title) {
 		this.title = title;
 		this.titleBarText.setText(this.title);
 		this.titleBarText.setWidth(this.titleBarText.getTextWidth());
+	}
+
+	@Override
+	protected boolean isWindowClicked(int x, int y) {
+		if (super.isWindowClicked(x, y)) {
+			return true;
+		}
+		return this.canGrabLeftEdge() || this.canGrabRightEdge() || this.canGrabTopEdge() || this.canGrabBottomEdge();
 	}
 
 	@Override
@@ -373,8 +387,6 @@ public abstract class AdjustableWindow extends Window {
 		}
 	}
 
-	protected abstract void contentSelected();
-
 	@Override
 	protected void deselected() {
 		this.titleBarText.setMaterial(this.deselectedTitleTextMaterial);
@@ -382,32 +394,30 @@ public abstract class AdjustableWindow extends Window {
 		for (int i = 0; i < 4; i++) {
 			Model.updateInstance(this.windowBorder[i], this.deselectedBorderMaterial);
 		}
-
-		this.contentSelected = false;
-
-		this.contentDeselected();
-	}
-
-	protected abstract void contentDeselected();
-
-	protected boolean isContentSelected() {
-		return this.contentSelected;
 	}
 
 	private boolean canGrabLeftEdge() {
-		return Math.abs((int) (this.getWindowMousePos().x)) <= this.edgeGrabTolerancePx;
+		int mx = (int) this.getWindowMousePos().x;
+		int my = (int) this.getWindowMousePos().y;
+		return -this.edgeGrabTolerancePx < mx && mx <= 0 && -this.edgeGrabTolerancePx <= my && my <= this.edgeGrabTolerancePx + this.getHeight();
 	}
 
 	private boolean canGrabRightEdge() {
-		return Math.abs((int) (this.getWindowMousePos().x - this.getWidth())) <= this.edgeGrabTolerancePx;
+		int mx = this.getWidth() - (int) this.getWindowMousePos().x;
+		int my = (int) this.getWindowMousePos().y;
+		return -this.edgeGrabTolerancePx < mx && mx <= 0 && -this.edgeGrabTolerancePx <= my && my <= this.edgeGrabTolerancePx + this.getHeight();
 	}
 
 	private boolean canGrabBottomEdge() {
-		return Math.abs((int) (this.getWindowMousePos().y)) <= this.edgeGrabTolerancePx;
+		int my = (int) this.getWindowMousePos().y;
+		int mx = (int) this.getWindowMousePos().x;
+		return -this.edgeGrabTolerancePx < my && my <= 0 && this.edgeGrabTolerancePx <= mx && mx <= this.edgeGrabTolerancePx + this.getWidth();
 	}
 
 	private boolean canGrabTopEdge() {
-		return Math.abs((int) (this.getWindowMousePos().y - this.getHeight())) <= this.edgeGrabTolerancePx;
+		int my = this.getHeight() - (int) this.getWindowMousePos().y;
+		int mx = (int) this.getWindowMousePos().x;
+		return -this.edgeGrabTolerancePx < my && my <= 0 && this.edgeGrabTolerancePx <= mx && mx <= this.edgeGrabTolerancePx + this.getWidth();
 	}
 
 	@Override
@@ -426,21 +436,7 @@ public abstract class AdjustableWindow extends Window {
 				this.titleBarGrabMouseY = (int) this.getWindowMousePos().y;
 			}
 		}
-
-		//if we've been selected, and none of the edges are grabbed, then we should select the content
-		if (!(this.titleBarGrabbed || this.leftEdgeGrabbed || this.rightEdgeGrabbed || this.bottomEdgeGrabbed || this.topEdgeGrabbed)) {
-			if (!this.contentSelected) {
-				this.contentSelected();
-			}
-			this.contentSelected = true;
-		}
-
-		if (this.contentSelected || this.allowInputIfContentNotSelected) {
-			this.__mousePressed(button);
-		}
 	}
-
-	protected abstract void __mousePressed(int button);
 
 	@Override
 	protected void _mouseReleased(int button) {
@@ -449,46 +445,21 @@ public abstract class AdjustableWindow extends Window {
 		this.bottomEdgeGrabbed = false;
 		this.topEdgeGrabbed = false;
 		this.titleBarGrabbed = false;
-
-		if (this.contentSelected || this.allowInputIfContentNotSelected) {
-			this.__mouseReleased(button);
-		}
 	}
-
-	protected abstract void __mouseReleased(int button);
 
 	@Override
 	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
-		if (this.contentSelected || this.allowInputIfContentNotSelected) {
-			this.__mouseScrolled(wheelOffset, smoothOffset);
-		}
-	}
 
-	protected abstract void __mouseScrolled(float wheelOffset, float smoothOffset);
+	}
 
 	@Override
 	protected void _keyPressed(int key) {
-		if (key == GLFW.GLFW_KEY_ESCAPE) {
-			if (this.contentSelected) {
-				this.contentDeselected();
-			}
-			this.contentSelected = false;
-		}
 
-		if (this.contentSelected || this.allowInputIfContentNotSelected) {
-			this.__keyPressed(key);
-		}
 	}
-
-	protected abstract void __keyPressed(int key);
 
 	@Override
 	protected void _keyReleased(int key) {
-		if (this.contentSelected || this.allowInputIfContentNotSelected) {
-			this.__keyReleased(key);
-		}
-	}
 
-	protected abstract void __keyReleased(int key);
+	}
 
 }

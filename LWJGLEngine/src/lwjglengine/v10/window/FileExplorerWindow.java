@@ -27,7 +27,7 @@ import myutils.v10.math.MathUtils;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
 
-public class FileExplorerWindow extends AdjustableWindow {
+public class FileExplorerWindow extends Window {
 	//TODO 
 	// - figure out how other things are going to call this one, and retrieve the submitted file
 	// - qol
@@ -103,25 +103,25 @@ public class FileExplorerWindow extends AdjustableWindow {
 
 	private File submittedFile = null;
 
-	public FileExplorerWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, Window parentWindow) {
-		super(xOffset, yOffset, contentWidth, contentHeight, "File Explorer", parentWindow);
+	public FileExplorerWindow() {
+		super(0, 0, 300, 400, null);
+		this.init();
+	}
 
-		this.setMinHeight(topBarHeight + bottomBarHeight + 20);
-		this.setMinWidth(300);
-
+	private void init() {
 		this.uiScreen = new UIScreen();
 
 		this.directoryRect = new UIFilledRectangle(0, topBarHeight, 0, this.directoryWidth, this.getHeight() - topBarHeight - bottomBarHeight, DIRECTORY_BACKGROUND_SCENE);
 		this.directoryRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		this.directoryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		this.directoryRect.setMaterial(directoryMaterial);
-		this.directoryRect.bind(this.contentRootUIElement);
+		this.directoryRect.bind(this.rootUIElement);
 
 		this.folderRect = new UIFilledRectangle(0, topBarHeight, 0, this.getWidth() - this.directoryWidth, this.getHeight() - topBarHeight - bottomBarHeight, FOLDER_SCENE);
 		this.folderRect.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 		this.folderRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
 		this.folderRect.setMaterial(folderMaterial);
-		this.folderRect.bind(this.contentRootUIElement);
+		this.folderRect.bind(this.rootUIElement);
 
 		this.topBarRect = new UIFilledRectangle(0, 0, 0, this.getWidth(), topBarHeight, TOP_BAR_SCENE);
 		this.topBarRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
@@ -129,7 +129,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 		this.topBarRect.setFillWidth(true);
 		this.topBarRect.setFillWidthMargin(0);
 		this.topBarRect.setMaterial(topBarMaterial);
-		this.topBarRect.bind(this.contentRootUIElement);
+		this.topBarRect.bind(this.rootUIElement);
 
 		this.bottomBarRect = new UIFilledRectangle(0, 0, 0, this.getWidth(), topBarHeight, BOTTOM_BAR_SCENE);
 		this.bottomBarRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
@@ -137,7 +137,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 		this.bottomBarRect.setFillWidth(true);
 		this.bottomBarRect.setFillWidthMargin(0);
 		this.bottomBarRect.setMaterial(bottomBarMaterial);
-		this.bottomBarRect.bind(this.contentRootUIElement);
+		this.bottomBarRect.bind(this.rootUIElement);
 
 		this.rootDirectoryEntry = new DirectoryEntry(null, "", "", this.directoryRect, DIRECTORY_SELECTION_SCENE, DIRECTORY_TEXT_SCENE);
 		this.rootDirectoryEntry.display();
@@ -185,11 +185,11 @@ public class FileExplorerWindow extends AdjustableWindow {
 		this.bottomBarSubmitFileButton.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 		this.bottomBarSubmitFileButton.bind(this.bottomBarRect);
 
-		this.__resize();
+		this._resize();
 	}
 
 	@Override
-	protected void __kill() {
+	protected void _kill() {
 		this.uiScreen.kill();
 
 		this.rootDirectoryEntry.kill();
@@ -209,7 +209,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 	}
 
 	@Override
-	protected void __resize() {
+	protected void _resize() {
 		if (this.uiScreen != null) {
 			this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
 		}
@@ -238,7 +238,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 	}
 
 	@Override
-	protected void __update() {
+	protected void _update() {
 		Input.inputsHovered(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
 		Input.inputsHovered(this.hoveredBottomBarID, BOTTOM_BAR_SELECTION_SCENE);
 
@@ -261,7 +261,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 	}
 
 	@Override
-	protected void _renderContent(Framebuffer outputBuffer) {
+	protected void renderContent(Framebuffer outputBuffer) {
 		int mouseX = (int) this.getWindowMousePos().x;
 		int mouseY = (int) this.getWindowMousePos().y;
 
@@ -312,6 +312,10 @@ public class FileExplorerWindow extends AdjustableWindow {
 		this.hoveredBottomBarID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
 		this.uiScreen.setUIScene(BOTTOM_BAR_TEXT_SCENE);
 		this.uiScreen.render(outputBuffer);
+	}
+
+	@Override
+	protected void renderOverlay(Framebuffer outputBuffer) {
 
 	}
 
@@ -436,19 +440,17 @@ public class FileExplorerWindow extends AdjustableWindow {
 	}
 
 	@Override
-	protected void contentSelected() {
-		// TODO Auto-generated method stub
+	protected void selected() {
 
 	}
 
 	@Override
-	protected void contentDeselected() {
-		// TODO Auto-generated method stub
+	protected void deselected() {
 
 	}
 
 	@Override
-	protected void __mousePressed(int button) {
+	protected void _mousePressed(int button) {
 		int mouseX = (int) this.getWindowMousePos().x;
 		int mouseY = (int) this.getWindowMousePos().y;
 
@@ -505,7 +507,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 	}
 
 	@Override
-	protected void __mouseReleased(int button) {
+	protected void _mouseReleased(int button) {
 		Input.inputsReleased(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
 		Input.inputsReleased(this.hoveredBottomBarID, BOTTOM_BAR_SELECTION_SCENE);
 
@@ -529,7 +531,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 	}
 
 	@Override
-	protected void __mouseScrolled(float wheelOffset, float smoothOffset) {
+	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
 		if (this.hoveredSectionID == this.directoryRect.getID()) {
 			this.setDirectoryYOffset(this.directoryYOffset - (int) (smoothOffset) * entryHeight);
 		}
@@ -539,7 +541,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 	}
 
 	@Override
-	protected void __keyPressed(int key) {
+	protected void _keyPressed(int key) {
 		Input.inputsKeyPressed(key, TOP_BAR_SELECTION_SCENE);
 
 		if (this.topBarFilterTextField.isClicked()) {
@@ -549,7 +551,7 @@ public class FileExplorerWindow extends AdjustableWindow {
 	}
 
 	@Override
-	protected void __keyReleased(int key) {
+	protected void _keyReleased(int key) {
 		Input.inputsKeyReleased(key, TOP_BAR_SELECTION_SCENE);
 	}
 

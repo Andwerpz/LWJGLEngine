@@ -2,75 +2,81 @@ package lwjglengine.v10.window;
 
 import lwjglengine.v10.graphics.Framebuffer;
 
-public class StateManagerWindow extends AdjustableWindow {
+public class StateManagerWindow extends Window {
 
-	public StateManagerWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window parentWindow) {
-		super(xOffset, yOffset, contentWidth, contentHeight, title, parentWindow);
+	public StateManagerWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, Window parentWindow) {
+		super(xOffset, yOffset, contentWidth, contentHeight, parentWindow);
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
-	protected void __kill() {
+	protected void _kill() {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void __resize() {
+	protected void _resize() {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void __update() {
+	protected void _update() {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void _renderContent(Framebuffer outputBuffer) {
+	protected void renderContent(Framebuffer outputBuffer) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void contentSelected() {
+	protected void renderOverlay(Framebuffer outputBuffer) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void contentDeselected() {
+	protected void selected() {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void __mousePressed(int button) {
+	protected void deselected() {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void __mouseReleased(int button) {
+	protected void _mousePressed(int button) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void __mouseScrolled(float wheelOffset, float smoothOffset) {
+	protected void _mouseReleased(int button) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void __keyPressed(int key) {
+	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected void __keyReleased(int key) {
+	protected void _keyPressed(int key) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	protected void _keyReleased(int key) {
 		// TODO Auto-generated method stub
 
 	}

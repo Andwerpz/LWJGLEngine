@@ -74,6 +74,7 @@ public abstract class Window {
 
 	protected Window parentWindow;
 	protected ArrayList<Window> childWindows;
+	private boolean allowModifyingChildren = true; //allows modification of the childWindows list
 
 	//every ui element on this window should be a child of the root ui element. 
 	protected UIFilledRectangle rootUIElement;
@@ -83,6 +84,9 @@ public abstract class Window {
 
 	//if this thing is dead, then it is not alive
 	private boolean isAlive = true;
+
+	private boolean updateWhenNotSelected = true;
+	private boolean renderWhenNotSelected = true;
 
 	public Window(int xOffset, int yOffset, int width, int height, Window parentWindow) {
 		this.childWindows = new ArrayList<>();
@@ -161,18 +165,51 @@ public abstract class Window {
 		this.colorBuffer.isComplete();
 	}
 
+	public void setUpdateWhenNotSelected(boolean b) {
+		this.updateWhenNotSelected = b;
+	}
+
+	public void setRenderWhenNotSelected(boolean b) {
+		this.renderWhenNotSelected = b;
+	}
+
+	public void setAllowModifyingChildren(boolean b) {
+		this.allowModifyingChildren = b;
+	}
+
+	public boolean isAllowModifyingChildren() {
+		return this.allowModifyingChildren;
+	}
+
 	public void addChild(Window w) {
+		if (!this.allowModifyingChildren) {
+			return;
+		}
 		this.childWindows.add(0, w);
 		w.parentWindow = this;
 		w.updateGlobalOffset();
 	}
 
 	public void removeChild(Window w) {
+		if (!this.allowModifyingChildren) {
+			return;
+		}
 		this.childWindows.remove(w);
 		w.parentWindow = null;
 	}
 
 	public void switchParent(Window newParent) {
+		if (this.parentWindow != null && !this.parentWindow.isAllowModifyingChildren()) {
+			return;
+		}
+		if (!newParent.allowModifyingChildren) {
+			return;
+		}
+
+		if (newParent == this.parentWindow) {
+			return;
+		}
+
 		if (this.parentWindow != null) {
 			this.parentWindow.removeChild(this);
 		}
@@ -251,6 +288,14 @@ public abstract class Window {
 
 	public int getGlobalYOffset() {
 		return this.globalYOffset;
+	}
+
+	public int getAlignedX() {
+		return this.alignedX;
+	}
+
+	public int getAlignedY() {
+		return this.alignedY;
 	}
 
 	public void setWidth(int w) {
@@ -372,9 +417,12 @@ public abstract class Window {
 	}
 
 	public void update() {
-		this._update();
+		if (this.isSelected || this.updateWhenNotSelected) {
+			this._update();
+		}
 
 		//go in descending order, because windows might choose to re-nest. 
+		//when a window is re-nested, it might update twice on that update cycle. Just a thing to keep in mind. 
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
 			Window w = this.childWindows.get(i);
 			w.update();
@@ -390,7 +438,9 @@ public abstract class Window {
 		this.colorBuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		this.renderContent(this.colorBuffer);
+		if (this.isSelected || this.renderWhenNotSelected) {
+			this.renderContent(this.colorBuffer);
+		}
 
 		//render child windows back to front. 
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
@@ -398,7 +448,9 @@ public abstract class Window {
 			w.render(this.colorBuffer);
 		}
 
-		this.renderOverlay(this.colorBuffer);
+		if (this.isSelected || this.renderWhenNotSelected) {
+			this.renderOverlay(this.colorBuffer);
+		}
 
 		//render whatever we have to the output buffer
 		colorBuffer.bind();
@@ -426,27 +478,52 @@ public abstract class Window {
 	 */
 	protected abstract void renderOverlay(Framebuffer outputBuffer);
 
+	protected void select() {
+		if (this.isSelected) {
+			return;
+		}
+
+		this.isSelected = true;
+		this.selected();
+	}
+
+	protected void deselect() {
+		if (!this.isSelected) {
+			return;
+		}
+
+		this.isSelected = false;
+		this.deselected();
+	}
+
 	//what do when selected?
 	protected abstract void selected();
 
 	//what do when deselected?
 	protected abstract void deselected();
 
+	//gives coordinates relative to parent window, returns true if those coordinates are 'inside' this window. 
+	//you can reimplement this if you need
+	protected boolean isWindowClicked(int x, int y) {
+		int x1 = this.alignedX;
+		int x2 = this.alignedX + this.width;
+		int y1 = this.alignedY;
+		int y2 = this.alignedY + this.height;
+		return x1 <= x && x <= x2 && y1 <= y && y <= y2;
+	}
+
 	//relative to bottom left corner
 	//returns -1 if the point doesn't fall onto one of the child windows
 	//returns -2 if the point falls outside of the current window
 	private int getClickedWindowIndex(int x, int y) {
-		if (x < 0 || y < 0 || x > this.width || y > this.height) {
+		if (!this.isWindowClicked(x + this.alignedX, y + this.alignedY)) {
 			return -2;
 		}
 
+		//go in ascending order
 		for (int i = 0; i < this.childWindows.size(); i++) {
 			Window w = this.childWindows.get(i);
-			int x1 = w.alignedX;
-			int x2 = w.alignedX + w.width;
-			int y1 = w.alignedY;
-			int y2 = w.alignedY + w.height;
-			if (x1 <= x && x <= x2 && y1 <= y && y <= y2) {
+			if (w.isWindowClicked(x, y)) {
 				return i;
 			}
 		}
@@ -457,10 +534,7 @@ public abstract class Window {
 	public void selectWindow(int x, int y, boolean covered) {
 		int selectedWindow = getClickedWindowIndex(x, y);
 		if (covered) {
-			if (this.isSelected) {
-				this.deselected();
-				this.isSelected = false;
-			}
+			this.deselect();
 			for (Window w : this.childWindows) {
 				w.selectWindow(x - w.alignedX, y - w.alignedY, true);
 			}
@@ -469,16 +543,10 @@ public abstract class Window {
 
 		//deal with this window
 		if (selectedWindow == -1) {
-			if (!this.isSelected) {
-				this.selected();
-				this.isSelected = true;
-			}
+			this.select();
 		}
 		else {
-			if (this.isSelected) {
-				this.deselected();
-				this.isSelected = false;
-			}
+			this.deselect();
 		}
 
 		//deal with children 
