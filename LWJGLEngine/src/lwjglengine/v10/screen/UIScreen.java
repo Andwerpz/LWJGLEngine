@@ -209,8 +209,7 @@ public class UIScreen extends Screen {
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
-		//glEnable(GL_BLEND);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		glClearDepth(1); // maximum value
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
@@ -224,7 +223,6 @@ public class UIScreen extends Screen {
 		outputBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		Shader.SPLASH.enable();
 		Shader.SPLASH.setUniform1f("alpha", 1f);
@@ -240,8 +238,8 @@ public class UIScreen extends Screen {
 		if (this.reverseDepthColorID) {
 			glDepthFunc(GL_GREATER);
 			glClearDepth(0); // minimum value
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 		}
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
 		Shader.GEOMETRY.enable();
 		Shader.GEOMETRY.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
@@ -253,7 +251,6 @@ public class UIScreen extends Screen {
 		this.colorIDBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		Shader.SPLASH.enable();
 		Shader.SPLASH.setUniform1f("alpha", 1f);

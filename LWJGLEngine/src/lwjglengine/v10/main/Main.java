@@ -15,22 +15,26 @@ import org.lwjgl.openal.ALC;
 import org.lwjgl.openal.ALCCapabilities;
 import org.lwjgl.openal.ALCapabilities;
 
+import lwjglengine.v10.entity.Entity;
+import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Shader;
 import lwjglengine.v10.input.KeyboardInput;
 import lwjglengine.v10.input.MouseInput;
 import lwjglengine.v10.input.ScrollInput;
 import lwjglengine.v10.model.AssetManager;
+import lwjglengine.v10.model.Model;
 import lwjglengine.v10.networking.Client;
 import lwjglengine.v10.networking.Server;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.Screen;
 import lwjglengine.v10.screen.ScreenQuad;
 import lwjglengine.v10.state.SplashState;
-import lwjglengine.v10.state.StateManager;
+import lwjglengine.v10.state.StateManagerWindow;
 import lwjglengine.v10.state.TestState;
 import lwjglengine.v10.ui.UIElement;
 import myutils.v10.graphics.FontUtils;
 import myutils.v10.math.Mat4;
+import myutils.v10.math.Vec2;
 
 import static org.lwjgl.opengl.GL.*;
 
@@ -60,18 +64,18 @@ public class Main implements Runnable {
 	public int lastSecondUpdates = 0;
 	public int lastSecondFrames = 0;
 
-	public StateManager sm;
+	private StateManagerWindow sm;
 
 	private long audioContext;
 	private long audioDevice;
 
 	private static boolean cursorLocked = false;
 
+	private Framebuffer outputBuffer;
+
 	public static void main(String[] args) {
 		Main main = new Main();
 		main.start();
-
-		SplashState.setNextState(new TestState());
 	}
 
 	public void start() {
@@ -126,9 +130,11 @@ public class Main implements Runnable {
 		// INIT
 		Shader.init();
 		AssetManager.init();
-		this.sm = new StateManager();
+		this.sm = new StateManagerWindow();
 
 		Main.main = this;
+
+		this.outputBuffer = new Framebuffer(0);
 	}
 
 	public void toggleFullscreen() {
@@ -151,8 +157,6 @@ public class Main implements Runnable {
 
 		UIElement.shouldAlignUIElements = true;
 
-		Screen.rebuildAllBuffers();
-		this.sm.buildBuffers();
 		glViewport(0, 0, Main.windowWidth, Main.windowHeight);
 		this.fullscreen = !this.fullscreen;
 	}
@@ -227,10 +231,17 @@ public class Main implements Runnable {
 		}
 
 		this.sm.update();
+
+		//normal updating stuff
+		//we want to update this stuff after we modify them in sm.update so that they render correctly. 
+		Entity.updateEntities();
+		Model.updateModels();
 	}
 
 	private void render() {
-		this.sm.render();
+		this.outputBuffer.bind();
+		glClear(GL_COLOR_BUFFER_BIT);
+		this.sm.render(this.outputBuffer);
 
 		glfwSwapBuffers(window);
 
@@ -260,6 +271,8 @@ public class Main implements Runnable {
 	}
 
 	public void mousePressed(int button) {
+		Vec2 mousePos = MouseInput.getMousePos();
+		this.sm.selectWindow((int) mousePos.x, (int) mousePos.y, false);
 		this.sm.mousePressed(button);
 	}
 

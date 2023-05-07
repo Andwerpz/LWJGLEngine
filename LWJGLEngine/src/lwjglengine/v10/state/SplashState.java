@@ -13,11 +13,8 @@ public class SplashState extends State {
 	private static final long TIME_ON_SCREEN_MILLIS = 1500;
 	private long startTime;
 
-	private static State nextState; //what state loads after the splash screen
-
-	public static void setNextState(State next) {
-		nextState = next;
-	}
+	//TODO figure out how to do this D:
+	private State nextState = new TestState(); //what state loads after the splash screen
 
 	public SplashState() {
 
@@ -26,6 +23,11 @@ public class SplashState extends State {
 	@Override
 	public void load() {
 		this.startTime = System.currentTimeMillis();
+	}
+
+	@Override
+	public void buildBuffers() {
+
 	}
 
 	@Override

@@ -6,7 +6,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_C;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_T;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_O;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_L;
 
 import java.awt.Color;
@@ -34,21 +34,16 @@ public class TestState extends State {
 
 	@Override
 	public void load() {
-		//		Window w1 = new AdjustableWindow(120, 10, Main.windowWidth / 2, Main.windowHeight / 2, "Test window 1", this.sm.getRootWindow());
-		//		Window w2 = new AdjustableWindow(10, 10, 200, 200, "ABCDEFG abcdefg", this.sm.getRootWindow());
-		//
-		//		Window w3 = new AdjustableWindow(10, 10, 200, 200, "Test nest window 1", w1);
-		//		Window w4 = new AdjustableWindow(220, 10, 200, 200, "nesting window owo", w1);
-		//
-		//		Window w5 = new AdjustableWindow(30, 10, 100, 100, "We can nest twice??!?!", w4);
+		System.out.println("LOAD : " + this.sm.smID);
 
-		//Window w1 = new RaytracingWindow(20, 20, 400, 400, "Raytracing Window", this.sm.getRootWindow());
-		//Window w2 = new RaytracingWindow(10, 10, 200, 200, "Raytracing Window", w1);
+		Window fileExplorer = new AdjustableWindow(20, 20, 400, 400, "File Explorer", new FileExplorerWindow(), this.sm);
+		Window fileExplore2r = new AdjustableWindow(20, 20, 400, 400, "File Explorer", new FileExplorerWindow(), this.sm);
+		//Window raytracer = new AdjustableWindow(200, 30, 400, 400, "Raytracing", new RaytracingWindow(), this.sm);
+	}
 
-		//Window fileExplorer = new FileExplorerWindow(20, 20, 400, 300, this.sm.getRootWindow());
+	@Override
+	public void buildBuffers() {
 
-		Window fileExplorer = new AdjustableWindow(20, 20, 400, 400, "File Explorer", new FileExplorerWindow(), this.sm.getRootWindow());
-		Window raytracer = new AdjustableWindow(200, 30, 400, 400, "Raytracing", new RaytracingWindow(), this.sm.getRootWindow());
 	}
 
 	@Override
@@ -86,7 +81,9 @@ public class TestState extends State {
 
 	@Override
 	public void keyPressed(int key) {
+		switch (key) {
 
+		}
 	}
 
 	@Override

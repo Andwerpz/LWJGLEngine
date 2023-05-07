@@ -2,6 +2,7 @@ package lwjglengine.v10.screen;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL14.glBlendFuncSeparate;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL21.*;
@@ -332,6 +333,9 @@ public class RaytracingScreen extends Screen {
 			return;
 		}
 
+		//set blend mode
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
 		// -- RENDER SCENE --
 		//at the end, the hdr output should be in prevRenderColorMap
 		switch (this.renderMode) {
@@ -343,7 +347,6 @@ public class RaytracingScreen extends Screen {
 			glDisable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
 			glDisable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this.sphereBuffer);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this.triangleBuffer);
 			this.setRaytracingShaderUniforms();
@@ -356,7 +359,6 @@ public class RaytracingScreen extends Screen {
 			glClear(GL_COLOR_BUFFER_BIT);
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			this.renderColorMap.bind(GL_TEXTURE0);
 			Shader.SPLASH.enable();
 			Shader.SPLASH.setUniform1f("alpha", 1f);
@@ -370,7 +372,6 @@ public class RaytracingScreen extends Screen {
 			glDisable(GL_DEPTH_TEST);
 			glDisable(GL_CULL_FACE);
 			glDisable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, this.sphereBuffer);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, this.triangleBuffer);
 			this.setRaytracingShaderUniforms();
@@ -386,7 +387,6 @@ public class RaytracingScreen extends Screen {
 			glClear(GL_COLOR_BUFFER_BIT);
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			this.renderColorMap.bind(GL_TEXTURE0);
 			Shader.SPLASH.enable();
 			Shader.SPLASH.setUniform1f("alpha", 1f);
@@ -396,7 +396,6 @@ public class RaytracingScreen extends Screen {
 			glClear(GL_COLOR_BUFFER_BIT);
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			this.renderColorMap.bind(GL_TEXTURE0);
 			Shader.SPLASH.enable();
 			Shader.SPLASH.setUniform1f("alpha", 1f);
@@ -409,7 +408,6 @@ public class RaytracingScreen extends Screen {
 			glClear(GL_COLOR_BUFFER_BIT);
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			this.prevRenderColorMap.bind(GL_TEXTURE0);
 			Shader.SPLASH.enable();
 			Shader.SPLASH.setUniform1f("alpha", 1f);
@@ -424,7 +422,6 @@ public class RaytracingScreen extends Screen {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		this.outputColorMap.bind(GL_TEXTURE0);
 		Shader.RAYTRACING_EXTRACT_BLOOM.enable();
 		Shader.RAYTRACING_EXTRACT_BLOOM.setUniform1f("bloomThreshold", this.bloomThreshold);
@@ -433,7 +430,6 @@ public class RaytracingScreen extends Screen {
 		Shader.GAUSSIAN_BLUR.enable();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		for (int i = 0; i < 5; i++) {
 			//blur horizontally
 			this.postprocessTempBuffer.bind();
@@ -453,7 +449,6 @@ public class RaytracingScreen extends Screen {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		this.outputColorMap.bind(GL_TEXTURE0);
 		this.postprocessBloomMap.bind(GL_TEXTURE1);
 		Shader.RAYTRACING_HDR.enable();
@@ -465,7 +460,6 @@ public class RaytracingScreen extends Screen {
 		outputBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		this.postprocessHDRMap.bind(GL_TEXTURE0);
 		Shader.SPLASH.enable();
 		Shader.SPLASH.setUniform1f("alpha", 1f);

@@ -92,7 +92,7 @@ public class AdjustableWindow extends Window {
 		super(xOffset, yOffset, contentWidth, contentHeight + titleBarHeight, parentWindow);
 
 		this.contentWindow = contentWindow;
-		this.contentWindow.switchParent(this);
+		this.contentWindow.setParent(this);
 
 		this.contentWindow.setDimensions(contentWidth, contentHeight);
 		this.contentWindow.setOffset(0, 0);
@@ -289,7 +289,7 @@ public class AdjustableWindow extends Window {
 							break;
 						}
 					}
-					this.switchParent(curParent);
+					this.setParent(curParent);
 				}
 
 				//check if we should nest
@@ -321,7 +321,7 @@ public class AdjustableWindow extends Window {
 							break;
 						}
 					}
-					this.switchParent(curParent);
+					this.setParent(curParent);
 				}
 			}
 			int mouseX = (int) this.getWindowMousePosClampedToParentWindow().x;
@@ -348,20 +348,25 @@ public class AdjustableWindow extends Window {
 
 	@Override
 	protected void renderContent(Framebuffer outputBuffer) {
-		this.uiScreen.setUIScene(BACKGROUND_SCENE);
-		this.uiScreen.render(outputBuffer);
+		if (this.renderBackground) {
+			this.uiScreen.setUIScene(BACKGROUND_SCENE);
+			this.uiScreen.render(outputBuffer);
+		}
 	}
 
 	@Override
 	protected void renderOverlay(Framebuffer outputBuffer) {
-		this.uiScreen.setUIScene(TITLE_BAR_SCENE);
-		this.uiScreen.render(outputBuffer);
+		if (this.renderTopBar) {
+			this.uiScreen.setUIScene(TITLE_BAR_SCENE);
+			this.uiScreen.render(outputBuffer);
+			Vec2 mousePos = this.getWindowMousePos();
+			this.titleBarSceneMouseEntityID = this.uiScreen.getEntityIDAtCoord((int) mousePos.x, (int) (mousePos.y));
+		}
 
-		Vec2 mousePos = this.getWindowMousePos();
-		this.titleBarSceneMouseEntityID = this.uiScreen.getEntityIDAtCoord((int) mousePos.x, (int) (mousePos.y));
-
-		this.uiScreen.setUIScene(BORDER_SCENE);
-		this.uiScreen.render(outputBuffer);
+		if (this.renderBorder) {
+			this.uiScreen.setUIScene(BORDER_SCENE);
+			this.uiScreen.render(outputBuffer);
+		}
 	}
 
 	public void setTitle(String title) {

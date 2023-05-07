@@ -21,7 +21,7 @@ public class LoadState extends State {
 
 	private long startTime, endTime;
 
-	public static LoadScreen loadScreen = new LoadScreen();
+	public LoadScreen loadScreen;
 
 	private boolean finishedLoading = false;
 	private int state;
@@ -31,6 +31,7 @@ public class LoadState extends State {
 
 	public LoadState(State nextState) {
 		this.nextState = nextState;
+		this.loadScreen = new LoadScreen();
 		init();
 	}
 
@@ -59,6 +60,11 @@ public class LoadState extends State {
 	}
 
 	@Override
+	public void buildBuffers() {
+		this.loadScreen.setScreenDimensions(this.bufferWidth, this.bufferHeight);
+	}
+
+	@Override
 	public void kill() {
 
 	}
@@ -74,7 +80,7 @@ public class LoadState extends State {
 			}
 		}
 		else if (this.state == READY_TO_LOAD) {
-			this.sm.rootWindow.killAllChildren();
+			this.sm.killAllChildren();
 			this.nextState.load();
 			this.finishedLoading = true;
 			this.state = TRANSITIONING_OUT;

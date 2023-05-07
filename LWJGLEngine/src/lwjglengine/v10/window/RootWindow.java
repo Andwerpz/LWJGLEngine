@@ -26,7 +26,6 @@ public class RootWindow extends Window {
 	private UIScreen uiScreen;
 
 	private UIFilledRectangle backgroundRect;
-
 	private UIFilledRectangle logoIconRect;
 
 	private boolean renderLogo = true;

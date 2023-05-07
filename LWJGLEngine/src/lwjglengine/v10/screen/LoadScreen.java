@@ -1,6 +1,7 @@
 package lwjglengine.v10.screen;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL14.glBlendFuncSeparate;
 import static org.lwjgl.opengl.GL30.*;
 
 import lwjglengine.v10.graphics.Framebuffer;
@@ -36,7 +37,7 @@ public class LoadScreen extends Screen {
 		outputBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
 		Shader.SPLASH.enable();
 		Shader.SPLASH.setUniform1f("alpha", this.alpha);

@@ -43,6 +43,11 @@ public class Framebuffer {
 		fbo = glGenFramebuffers();
 	}
 
+	public Framebuffer(int framebufferID) {
+		this.fbo = framebufferID;
+		this.buffers = new ArrayList<>();
+	}
+
 	public int getWidth() {
 		return this.width;
 	}

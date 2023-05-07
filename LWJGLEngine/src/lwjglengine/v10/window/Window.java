@@ -88,13 +88,13 @@ public abstract class Window {
 	private boolean updateWhenNotSelected = true;
 	private boolean renderWhenNotSelected = true;
 
+	//for debugging
+	public boolean renderAlpha = false;
+
 	public Window(int xOffset, int yOffset, int width, int height, Window parentWindow) {
 		this.childWindows = new ArrayList<>();
 
-		this.parentWindow = parentWindow;
-		if (this.parentWindow != null) {
-			this.parentWindow.addChild(this);
-		}
+		this.setParent(parentWindow);
 
 		this.globalXOffset = xOffset;
 		this.globalYOffset = yOffset;
@@ -198,11 +198,11 @@ public abstract class Window {
 		w.parentWindow = null;
 	}
 
-	public void switchParent(Window newParent) {
+	public void setParent(Window newParent) {
 		if (this.parentWindow != null && !this.parentWindow.isAllowModifyingChildren()) {
 			return;
 		}
-		if (!newParent.allowModifyingChildren) {
+		if (newParent != null && !newParent.allowModifyingChildren) {
 			return;
 		}
 
@@ -343,7 +343,7 @@ public abstract class Window {
 	 * Returns where the mouse is relative to the top left corner of the window
 	 * @return
 	 */
-	protected Vec2 getWindowMousePos() {
+	public Vec2 getWindowMousePos() {
 		Vec2 mousePos = MouseInput.getMousePos();
 
 		mousePos.x -= this.globalXOffset;
@@ -356,7 +356,7 @@ public abstract class Window {
 	 * Returns where the mouse is, but clamped to this window. 
 	 * @return
 	 */
-	protected Vec2 getWindowMousePosClampedToWindow() {
+	public Vec2 getWindowMousePosClampedToWindow() {
 		int mouseX = (int) this.getWindowMousePos().x;
 		int mouseY = (int) this.getWindowMousePos().y;
 
@@ -385,7 +385,7 @@ public abstract class Window {
 	 * Behaves just like getRelativeMousePos() in the case where there is no parent window
 	 * @return
 	 */
-	protected Vec2 getWindowMousePosClampedToParentWindow() {
+	public Vec2 getWindowMousePosClampedToParentWindow() {
 		if (this.parentWindow == null) {
 			return this.getWindowMousePos();
 		}
@@ -456,10 +456,17 @@ public abstract class Window {
 		colorBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		glViewport(this.alignedX, this.alignedY, this.width, this.height);
-		Shader.SPLASH.enable();
-		Shader.SPLASH.setUniform1f("alpha", 1);
+
+		if (this.renderAlpha) {
+			Shader.RENDER_ALPHA.enable();
+		}
+		else {
+			Shader.SPLASH.enable();
+			Shader.SPLASH.setUniform1f("alpha", 1);
+		}
+
 		this.colorTexture.bind(GL_TEXTURE0);
 		ScreenQuad.screenQuad.render();
 

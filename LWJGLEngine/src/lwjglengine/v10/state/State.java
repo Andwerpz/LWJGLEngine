@@ -5,6 +5,7 @@ import lwjglengine.v10.graphics.Texture;
 import lwjglengine.v10.model.Model;
 import lwjglengine.v10.scene.Light;
 import lwjglengine.v10.ui.UIElement;
+import myutils.v10.math.Vec2;
 
 public abstract class State {
 	// each state manages it's own logic and rendering.
@@ -16,13 +17,13 @@ public abstract class State {
 
 	protected int bufferWidth, bufferHeight;
 
-	protected StateManager sm;
+	protected StateManagerWindow sm;
 
 	public State() {
 		this.sm = null;
 	}
 
-	public void setStateManager(StateManager sm) {
+	public void setStateManager(StateManagerWindow sm) {
 		this.sm = sm;
 	}
 
@@ -33,11 +34,31 @@ public abstract class State {
 		Light.removeLightsFromScene(scene);
 	}
 
+	public void setBufferWidth(int w) {
+		this.setBufferDimensions(w, this.bufferHeight);
+	}
+
+	public void setBufferHeight(int h) {
+		this.setBufferDimensions(this.bufferWidth, h);
+	}
+
+	public void setBufferDimensions(int w, int h) {
+		this.bufferWidth = w;
+		this.bufferHeight = h;
+		this.buildBuffers();
+	}
+
+	public Vec2 getMousePos() {
+		return sm.getWindowMousePos();
+	}
+
 	// model and scene instance relations
 	// before we can add a model instance to a scene, we first must load that model.
 	// load state should load all models associated with the current state, unload
 	// any others, and reset scene instancing
 	public abstract void load(); // this is where all the heavy lifting should be done, not in constructor
+
+	public abstract void buildBuffers();
 
 	public abstract void kill();
 
