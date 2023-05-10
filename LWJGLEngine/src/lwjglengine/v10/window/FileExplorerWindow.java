@@ -105,10 +105,7 @@ public class FileExplorerWindow extends Window {
 
 	public FileExplorerWindow() {
 		super(0, 0, 300, 400, null);
-		this.init();
-	}
 
-	private void init() {
 		this.uiScreen = new UIScreen();
 
 		this.directoryRect = new UIFilledRectangle(0, topBarHeight, 0, this.directoryWidth, this.getHeight() - topBarHeight - bottomBarHeight, DIRECTORY_BACKGROUND_SCENE);
@@ -450,6 +447,18 @@ public class FileExplorerWindow extends Window {
 	}
 
 	@Override
+	protected void subtreeSelected() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	protected void subtreeDeselected() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
 	protected void _mousePressed(int button) {
 		int mouseX = (int) this.getWindowMousePos().x;
 		int mouseY = (int) this.getWindowMousePos().y;
@@ -499,10 +508,10 @@ public class FileExplorerWindow extends Window {
 			}
 		}
 		else if (this.hoveredSectionID == this.topBarRect.getID()) {
-			Input.inputsPressed(this.hoveredTopBarID);
+			Input.inputsPressed(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
 		}
 		else if (this.hoveredSectionID == this.bottomBarRect.getID()) {
-			Input.inputsPressed(this.hoveredBottomBarID);
+			Input.inputsPressed(this.hoveredBottomBarID, BOTTOM_BAR_SELECTION_SCENE);
 		}
 	}
 

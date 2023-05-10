@@ -63,9 +63,9 @@ public class Button extends Input {
 		this.buttonText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 		this.buttonText.bind(this);
 
-		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
-		this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
-		this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.1f));
+		this.pressedMaterial = new Material(new Vec4(1, 1, 1, 0.5f));
+		this.hoveredMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
+		this.releasedMaterial = new Material(new Vec4(1, 1, 1, 0.1f));
 
 		this.setMaterial(this.releasedMaterial);
 

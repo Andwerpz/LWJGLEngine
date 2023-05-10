@@ -270,6 +270,10 @@ public class Main implements Runnable {
 		alcCloseDevice(audioDevice);
 	}
 
+	public static StateManagerWindow getStateManagerWindow() {
+		return main.sm;
+	}
+
 	public void mousePressed(int button) {
 		Vec2 mousePos = MouseInput.getMousePos();
 		this.sm.selectWindow((int) mousePos.x, (int) mousePos.y, false);

@@ -8,6 +8,8 @@ import static org.lwjgl.opengl.GL30.*;
 
 import java.util.ArrayList;
 
+import org.lwjgl.glfw.GLFW;
+
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Shader;
 import lwjglengine.v10.graphics.Texture;
@@ -39,8 +41,8 @@ public abstract class Window {
 	//the problem is that how are we going to decide when to put up a loading screen without states?
 
 	//TODO
-	// - currently have issue with transparent things. 
 	// - drop shadow?
+	// - force select a window?
 
 	public static final int FROM_LEFT = 0;
 	public static final int FROM_RIGHT = 1;
@@ -58,7 +60,7 @@ public abstract class Window {
 
 	private int width, height;
 
-	//offset from specified parent window
+	//offset of bottom left corner from specified parent window's bottom left corner
 	private int xOffset, yOffset;
 
 	//offset from GLFW window
@@ -82,6 +84,9 @@ public abstract class Window {
 	//there should only be 1 window selected at a time. 
 	private boolean isSelected = false;
 
+	//true if this window, or a child of this window is selected. 
+	private boolean isSubtreeSelected = false;
+
 	//if this thing is dead, then it is not alive
 	private boolean isAlive = true;
 
@@ -90,6 +95,13 @@ public abstract class Window {
 
 	//for debugging
 	public boolean renderAlpha = false;
+
+	//if true, right clicking will create a context menu
+	private boolean contextMenuRightClick = false;
+
+	private ArrayList<String> contextMenuOptions;
+
+	private ContextMenuWindow contextMenuWindow = null;
 
 	public Window(int xOffset, int yOffset, int width, int height, Window parentWindow) {
 		this.childWindows = new ArrayList<>();
@@ -165,20 +177,37 @@ public abstract class Window {
 		this.colorBuffer.isComplete();
 	}
 
-	public void setUpdateWhenNotSelected(boolean b) {
+	protected void setContextMenuRightClick(boolean b) {
+		this.contextMenuRightClick = b;
+	}
+
+	protected void setContextMenuOptions(ArrayList<String> options) {
+		this.contextMenuOptions = options;
+	}
+
+	protected void setUpdateWhenNotSelected(boolean b) {
 		this.updateWhenNotSelected = b;
 	}
 
-	public void setRenderWhenNotSelected(boolean b) {
+	//an option on the context menu has been pressed, handle it here. 
+	protected void handleContextMenuAction(String action) {
+		/* keeping it optional to implement */
+	}
+
+	protected void setRenderWhenNotSelected(boolean b) {
 		this.renderWhenNotSelected = b;
 	}
 
-	public void setAllowModifyingChildren(boolean b) {
+	protected void setAllowModifyingChildren(boolean b) {
 		this.allowModifyingChildren = b;
 	}
 
 	public boolean isAllowModifyingChildren() {
 		return this.allowModifyingChildren;
+	}
+
+	public boolean isAlive() {
+		return this.isAlive;
 	}
 
 	public void addChild(Window w) {
@@ -290,6 +319,10 @@ public abstract class Window {
 		return this.globalYOffset;
 	}
 
+	public Vec2 getGlobalOffset() {
+		return new Vec2(this.globalXOffset, this.globalYOffset);
+	}
+
 	public int getAlignedX() {
 		return this.alignedX;
 	}
@@ -350,6 +383,14 @@ public abstract class Window {
 		mousePos.y -= this.globalYOffset;
 
 		return mousePos;
+	}
+
+	/**
+	 * Returns where the mouse is relative to the bottom left corner of the GLFW window
+	 * @return
+	 */
+	public Vec2 getGlobalMousePos() {
+		return this.getWindowMousePos().add(this.getGlobalOffset());
 	}
 
 	/**
@@ -414,6 +455,10 @@ public abstract class Window {
 
 	public boolean isSelected() {
 		return this.isSelected;
+	}
+
+	public boolean isSubtreeSelected() {
+		return this.isSubtreeSelected;
 	}
 
 	public void update() {
@@ -509,6 +554,30 @@ public abstract class Window {
 	//what do when deselected?
 	protected abstract void deselected();
 
+	protected void subtreeSelect() {
+		if (this.isSubtreeSelected) {
+			return;
+		}
+
+		this.isSubtreeSelected = true;
+		this.subtreeSelected();
+	}
+
+	protected void subtreeDeselect() {
+		if (!this.isSubtreeSelected) {
+			return;
+		}
+
+		this.isSubtreeSelected = false;
+		this.subtreeDeselected();
+	}
+
+	//a window of this subtree is selected
+	protected abstract void subtreeSelected();
+
+	//this subtree is now deselected
+	protected abstract void subtreeDeselected();
+
 	//gives coordinates relative to parent window, returns true if those coordinates are 'inside' this window. 
 	//you can reimplement this if you need
 	protected boolean isWindowClicked(int x, int y) {
@@ -542,11 +611,14 @@ public abstract class Window {
 		int selectedWindow = getClickedWindowIndex(x, y);
 		if (covered) {
 			this.deselect();
+			this.subtreeDeselect();
 			for (Window w : this.childWindows) {
 				w.selectWindow(x - w.alignedX, y - w.alignedY, true);
 			}
 			return;
 		}
+
+		this.subtreeSelect();
 
 		//deal with this window
 		if (selectedWindow == -1) {
@@ -574,9 +646,20 @@ public abstract class Window {
 
 	public void mousePressed(int button) {
 		if (this.isSelected) {
-			this._mousePressed(button);
+			if (button == GLFW.GLFW_MOUSE_BUTTON_2 && this.contextMenuRightClick) {
+				//spawn context menu
+				if (this.contextMenuWindow != null && this.contextMenuWindow.isAlive()) {
+					this.contextMenuWindow.kill();
+					this.contextMenuWindow = null;
+				}
+				this.contextMenuWindow = new ContextMenuWindow(this.contextMenuOptions, this);
+			}
+			else {
+				this._mousePressed(button);
+			}
 		}
-		for (Window w : this.childWindows) {
+		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
+			Window w = this.childWindows.get(i);
 			w.mousePressed(button);
 		}
 	}
@@ -587,7 +670,8 @@ public abstract class Window {
 		if (this.isSelected) {
 			this._mouseReleased(button);
 		}
-		for (Window w : this.childWindows) {
+		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
+			Window w = this.childWindows.get(i);
 			w.mouseReleased(button);
 		}
 	}
@@ -598,7 +682,8 @@ public abstract class Window {
 		if (this.isSelected) {
 			this._mouseScrolled(wheelOffset, smoothOffset);
 		}
-		for (Window w : this.childWindows) {
+		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
+			Window w = this.childWindows.get(i);
 			w.mouseScrolled(wheelOffset, smoothOffset);
 		}
 	}
@@ -609,7 +694,8 @@ public abstract class Window {
 		if (this.isSelected) {
 			this._keyPressed(key);
 		}
-		for (Window w : this.childWindows) {
+		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
+			Window w = this.childWindows.get(i);
 			w.keyPressed(key);
 		}
 	}
@@ -620,7 +706,8 @@ public abstract class Window {
 		if (this.isSelected) {
 			this._keyReleased(key);
 		}
-		for (Window w : this.childWindows) {
+		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
+			Window w = this.childWindows.get(i);
 			w.keyReleased(key);
 		}
 	}

@@ -14,6 +14,8 @@ import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER;
 import static org.lwjgl.opengl.GL30.glBindFramebuffer;
 
+import java.util.ArrayList;
+
 import lwjglengine.v10.entity.Entity;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
@@ -28,6 +30,9 @@ import lwjglengine.v10.screen.ScreenQuad;
 import lwjglengine.v10.screen.UIScreen;
 import lwjglengine.v10.ui.UIElement;
 import lwjglengine.v10.ui.UIFilledRectangle;
+import lwjglengine.v10.window.AdjustableWindow;
+import lwjglengine.v10.window.FileExplorerWindow;
+import lwjglengine.v10.window.RaytracingWindow;
 import lwjglengine.v10.window.Window;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
@@ -48,8 +53,6 @@ public class StateManagerWindow extends Window {
 	public State activeState;
 	public LoadState loadState;
 
-	public int smID = (int) (Math.random() * 1000000);
-
 	public StateManagerWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, Window parentWindow) {
 		super(xOffset, yOffset, contentWidth, contentHeight, parentWindow);
 		this.init();
@@ -61,13 +64,9 @@ public class StateManagerWindow extends Window {
 	}
 
 	private void init() {
-		System.out.println("INIT : " + this.smID);
-
 		this.activeState = null;
 		this.loadState = new LoadState(new SplashState());
 		this.loadState.setStateManager(this);
-
-		System.out.println("LOAD STATE : " + this.loadState.sm.smID);
 
 		this.uiScreen = new UIScreen();
 
@@ -86,6 +85,28 @@ public class StateManagerWindow extends Window {
 		this.logoIconRect.setMaterial(new Material(new Vec3(30 / 255.0f)));
 		this.logoIconRect.setTextureMaterial(logoTexture);
 		this.logoIconRect.bind(this.rootUIElement);
+
+		this.setContextMenuRightClick(true);
+
+		ArrayList<String> contextMenuOptions = new ArrayList<>();
+		contextMenuOptions.add("New File Explorer Window");
+		contextMenuOptions.add("New Raytracing Window");
+
+		this.setContextMenuOptions(contextMenuOptions);
+
+	}
+
+	@Override
+	protected void handleContextMenuAction(String action) {
+		switch (action) {
+		case "New File Explorer Window":
+			Window fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "File Explorer", new FileExplorerWindow(), this);
+			break;
+
+		case "New Raytracing Window":
+			Window raytracer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Raytracing", new RaytracingWindow(), this);
+			break;
+		}
 	}
 
 	// trigger a load screen
@@ -138,8 +159,6 @@ public class StateManagerWindow extends Window {
 			}
 			this.activeState = this.loadState.getNextState();
 			this.activeState.setStateManager(this);
-
-			System.out.println("ACTIVE STATE : " + this.activeState.sm.smID);
 		}
 	}
 
@@ -176,6 +195,18 @@ public class StateManagerWindow extends Window {
 
 	@Override
 	protected void deselected() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	protected void subtreeSelected() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	protected void subtreeDeselected() {
 		// TODO Auto-generated method stub
 
 	}

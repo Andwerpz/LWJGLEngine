@@ -127,10 +127,10 @@ public class TextField extends Input {
 		this.fieldText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.fieldText.bind(this);
 
-		this.pressedMaterial = new Material(new Vec4(0, 0, 0, 0.6f));
-		this.hoveredMaterial = new Material(new Vec4(0, 0, 0, 0.3f));
-		this.selectedMaterial = new Material(new Vec4(0, 0, 0, 0.4f));
-		this.releasedMaterial = new Material(new Vec4(0, 0, 0, 0.15f));
+		this.pressedMaterial = new Material(new Vec4(1, 1, 1, 0.5f));
+		this.selectedMaterial = new Material(new Vec4(1, 1, 1, 0.45f));
+		this.hoveredMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
+		this.releasedMaterial = new Material(new Vec4(1, 1, 1, 0.1f));
 
 		this.setMaterial(this.releasedMaterial);
 	}

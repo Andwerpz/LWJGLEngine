@@ -166,6 +166,18 @@ public class RaytracingWindow extends Window {
 	}
 
 	@Override
+	protected void subtreeSelected() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	protected void subtreeDeselected() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
 	protected void _mousePressed(int button) {
 
 	}

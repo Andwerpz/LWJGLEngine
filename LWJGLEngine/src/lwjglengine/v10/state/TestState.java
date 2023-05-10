@@ -21,7 +21,6 @@ import lwjglengine.v10.screen.RaytracingScreen;
 import lwjglengine.v10.window.AdjustableWindow;
 import lwjglengine.v10.window.FileExplorerWindow;
 import lwjglengine.v10.window.RaytracingWindow;
-import lwjglengine.v10.window.RootWindow;
 import lwjglengine.v10.window.Window;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
@@ -34,11 +33,7 @@ public class TestState extends State {
 
 	@Override
 	public void load() {
-		System.out.println("LOAD : " + this.sm.smID);
 
-		Window fileExplorer = new AdjustableWindow(20, 20, 400, 400, "File Explorer", new FileExplorerWindow(), this.sm);
-		Window fileExplore2r = new AdjustableWindow(20, 20, 400, 400, "File Explorer", new FileExplorerWindow(), this.sm);
-		//Window raytracer = new AdjustableWindow(200, 30, 400, 400, "Raytracing", new RaytracingWindow(), this.sm);
 	}
 
 	@Override

@@ -141,6 +141,12 @@ public abstract class Input extends UIElement {
 		return b == null ? false : b.isClicked();
 	}
 
+	/**
+	 * Returns the sID of the input if something was clicked, empty string if otherwise
+	 * @param id
+	 * @return
+	 */
+
 	public static String getClicked(int scene) {
 		for (String s : inputs.keySet()) {
 			Input i = inputs.get(s);
@@ -189,12 +195,13 @@ public abstract class Input extends UIElement {
 		}
 	}
 
-	public static void inputsPressed(long entityID) {
-		String id = entityToStringID.get(entityID);
-		if (id == null) {
+	public static void inputsPressed(long entityID, int scene) {
+		if (sceneToInput.get(scene) == null) {
 			return;
 		}
-		inputs.get(id).pressed(entityID);
+		for (Input b : sceneToInput.get(scene)) {
+			b.pressed(entityID);
+		}
 	}
 
 	public static void inputsReleased(long entityID, int scene) {

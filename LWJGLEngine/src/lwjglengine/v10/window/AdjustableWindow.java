@@ -20,7 +20,7 @@ import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
 
-public class AdjustableWindow extends Window {
+public class AdjustableWindow extends BorderedWindow {
 	//TODO 
 	// - implement snapping to windows that are children of the same parent. 
 	// - add an x on the top right corner so we can close windows 
@@ -138,7 +138,7 @@ public class AdjustableWindow extends Window {
 	}
 
 	@Override
-	protected void _kill() {
+	protected void __kill() {
 		this.uiScreen.kill();
 		Scene.removeScene(BACKGROUND_SCENE);
 		Scene.removeScene(TITLE_BAR_SCENE);
@@ -161,12 +161,12 @@ public class AdjustableWindow extends Window {
 			this.renderBorder = true;
 			this.renderTopBar = true;
 
-			this._resize();
+			this.__resize();
 		}
 	}
 
 	@Override
-	protected void _resize() {
+	protected void __resize() {
 		this.contentWidth = this.getWidth();
 		this.contentHeight = this.getHeight();
 		if (!this.isFullscreen) {
@@ -195,7 +195,7 @@ public class AdjustableWindow extends Window {
 		this.contentRootUIElement.setHeight(this.getContentHeight());
 
 		for (int i = 0; i < 4; i++) {
-			Model.updateInstance(this.windowBorder[i], this.isSelected() ? this.selectedBorderMaterial : this.deselectedBorderMaterial);
+			Model.updateInstance(this.windowBorder[i], this.isSubtreeSelected() ? this.selectedBorderMaterial : this.deselectedBorderMaterial);
 		}
 	}
 
@@ -355,7 +355,7 @@ public class AdjustableWindow extends Window {
 	}
 
 	@Override
-	protected void renderOverlay(Framebuffer outputBuffer) {
+	protected void _renderOverlay(Framebuffer outputBuffer) {
 		if (this.renderTopBar) {
 			this.uiScreen.setUIScene(TITLE_BAR_SCENE);
 			this.uiScreen.render(outputBuffer);
@@ -363,10 +363,10 @@ public class AdjustableWindow extends Window {
 			this.titleBarSceneMouseEntityID = this.uiScreen.getEntityIDAtCoord((int) mousePos.x, (int) (mousePos.y));
 		}
 
-		if (this.renderBorder) {
-			this.uiScreen.setUIScene(BORDER_SCENE);
-			this.uiScreen.render(outputBuffer);
-		}
+		//		if (this.renderBorder) {
+		//			this.uiScreen.setUIScene(BORDER_SCENE);
+		//			this.uiScreen.render(outputBuffer);
+		//		}
 	}
 
 	public void setTitle(String title) {
@@ -385,6 +385,16 @@ public class AdjustableWindow extends Window {
 
 	@Override
 	protected void selected() {
+
+	}
+
+	@Override
+	protected void deselected() {
+
+	}
+
+	@Override
+	protected void _subtreeSelected() {
 		this.titleBarText.setMaterial(this.selectedTitleTextMaterial);
 		this.backgroundRect.setMaterial(this.selectedBackgroundMaterial);
 		for (int i = 0; i < 4; i++) {
@@ -393,7 +403,7 @@ public class AdjustableWindow extends Window {
 	}
 
 	@Override
-	protected void deselected() {
+	protected void _subtreeDeselected() {
 		this.titleBarText.setMaterial(this.deselectedTitleTextMaterial);
 		this.backgroundRect.setMaterial(this.deselectedBackgroundMaterial);
 		for (int i = 0; i < 4; i++) {
