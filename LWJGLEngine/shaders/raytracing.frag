@@ -235,7 +235,11 @@ vec3 traceRay(Ray ray) {
 			
 			vec3 emittedLight = m.emissive.xyz * m.emissive.w;
 			incomingLight += emittedLight * rayColor;
-			rayColor *= mix(m.diffuse.xyz, m.specular.xyz, isSpecularBounce);
+			if(isSpecularBounce) {
+				rayColor *= m.specular.xyz;
+			} else {
+				rayColor *= m.diffuse.xyz;
+			}
 		}
 		else {
 			//sample skybox texture
