@@ -226,6 +226,12 @@ public class AdjustableWindow extends BorderedWindow {
 
 	@Override
 	protected void _update() {
+		//check if this child window is still alive
+		if (!this.contentWindow.isAlive()) {
+			this.kill();
+			return;
+		}
+
 		//update size and / or offset if the edges are grabbed
 		{
 			int mouseX = (int) this.getWindowMousePosClampedToParentWindow().x;
@@ -414,25 +420,25 @@ public class AdjustableWindow extends BorderedWindow {
 	private boolean canGrabLeftEdge() {
 		int mx = (int) this.getWindowMousePos().x;
 		int my = (int) this.getWindowMousePos().y;
-		return -this.edgeGrabTolerancePx < mx && mx <= 0 && -this.edgeGrabTolerancePx <= my && my <= this.edgeGrabTolerancePx + this.getHeight();
+		return -this.edgeGrabTolerancePx <= mx && mx <= 0 && -this.edgeGrabTolerancePx <= my && my <= this.edgeGrabTolerancePx + this.getHeight();
 	}
 
 	private boolean canGrabRightEdge() {
 		int mx = this.getWidth() - (int) this.getWindowMousePos().x;
 		int my = (int) this.getWindowMousePos().y;
-		return -this.edgeGrabTolerancePx < mx && mx <= 0 && -this.edgeGrabTolerancePx <= my && my <= this.edgeGrabTolerancePx + this.getHeight();
+		return -this.edgeGrabTolerancePx <= mx && mx <= 0 && -this.edgeGrabTolerancePx <= my && my <= this.edgeGrabTolerancePx + this.getHeight();
 	}
 
 	private boolean canGrabBottomEdge() {
 		int my = (int) this.getWindowMousePos().y;
 		int mx = (int) this.getWindowMousePos().x;
-		return -this.edgeGrabTolerancePx < my && my <= 0 && this.edgeGrabTolerancePx <= mx && mx <= this.edgeGrabTolerancePx + this.getWidth();
+		return -this.edgeGrabTolerancePx <= my && my <= 0 && -this.edgeGrabTolerancePx <= mx && mx <= this.edgeGrabTolerancePx + this.getWidth();
 	}
 
 	private boolean canGrabTopEdge() {
 		int my = this.getHeight() - (int) this.getWindowMousePos().y;
 		int mx = (int) this.getWindowMousePos().x;
-		return -this.edgeGrabTolerancePx < my && my <= 0 && this.edgeGrabTolerancePx <= mx && mx <= this.edgeGrabTolerancePx + this.getWidth();
+		return -this.edgeGrabTolerancePx <= my && my <= 0 && -this.edgeGrabTolerancePx <= mx && mx <= this.edgeGrabTolerancePx + this.getWidth();
 	}
 
 	@Override

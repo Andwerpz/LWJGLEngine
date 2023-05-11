@@ -32,6 +32,7 @@ import lwjglengine.v10.ui.UIElement;
 import lwjglengine.v10.ui.UIFilledRectangle;
 import lwjglengine.v10.window.AdjustableWindow;
 import lwjglengine.v10.window.FileExplorerWindow;
+import lwjglengine.v10.window.ModelViewerWindow;
 import lwjglengine.v10.window.RaytracingWindow;
 import lwjglengine.v10.window.Window;
 import myutils.v10.math.Vec3;
@@ -91,20 +92,25 @@ public class StateManagerWindow extends Window {
 		ArrayList<String> contextMenuOptions = new ArrayList<>();
 		contextMenuOptions.add("New File Explorer Window");
 		contextMenuOptions.add("New Raytracing Window");
+		contextMenuOptions.add("New Model Viewer Window");
 
 		this.setContextMenuOptions(contextMenuOptions);
 
 	}
 
 	@Override
-	protected void handleContextMenuAction(String action) {
+	public void handleContextMenuAction(String action) {
 		switch (action) {
 		case "New File Explorer Window":
-			Window fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "File Explorer", new FileExplorerWindow(), this);
+			Window fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "File Explorer", new FileExplorerWindow(this), this);
 			break;
 
 		case "New Raytracing Window":
 			Window raytracer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Raytracing", new RaytracingWindow(), this);
+			break;
+
+		case "New Model Viewer Window":
+			Window modelViewer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Model Viewer", new ModelViewerWindow(null), this);
 			break;
 		}
 	}

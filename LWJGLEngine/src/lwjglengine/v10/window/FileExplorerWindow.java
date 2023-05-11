@@ -103,8 +103,12 @@ public class FileExplorerWindow extends Window {
 
 	private File submittedFile = null;
 
-	public FileExplorerWindow() {
+	private Window callbackWindow;
+
+	public FileExplorerWindow(Window callbackWindow) {
 		super(0, 0, 300, 400, null);
+
+		this.callbackWindow = callbackWindow;
 
 		this.uiScreen = new UIScreen();
 
@@ -189,8 +193,6 @@ public class FileExplorerWindow extends Window {
 	protected void _kill() {
 		this.uiScreen.kill();
 
-		this.rootDirectoryEntry.kill();
-
 		Scene.removeScene(DIRECTORY_BACKGROUND_SCENE);
 		Scene.removeScene(DIRECTORY_SELECTION_SCENE);
 		Scene.removeScene(DIRECTORY_TEXT_SCENE);
@@ -254,6 +256,12 @@ public class FileExplorerWindow extends Window {
 			this.directoryWidth = newDirectoryWidth;
 			this.directoryRect.setWidth(this.directoryWidth);
 			this.folderRect.setWidth(this.getWidth() - this.directoryWidth);
+		}
+
+		//check if already selected file
+		if (this.submittedFile != null) {
+			this.callbackWindow.handleLoadedFile(this.submittedFile);
+			this.kill();
 		}
 	}
 

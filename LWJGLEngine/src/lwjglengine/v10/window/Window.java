@@ -6,6 +6,7 @@ import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL30.*;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import org.lwjgl.glfw.GLFW;
@@ -137,12 +138,14 @@ public abstract class Window {
 		Scene.removeScene(ROOT_UI_SCENE);
 
 		if (this.parentWindow != null) {
-			this.parentWindow.removeChild(this);
+			//even if the parent window doesn't allow child modifications, force remove it
+			this.parentWindow.childWindows.remove(this);
 		}
 
 		this._kill();
 
-		for (Window w : this.childWindows) {
+		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
+			Window w = this.childWindows.get(i);
 			w.kill();
 		}
 	}
@@ -190,7 +193,12 @@ public abstract class Window {
 	}
 
 	//an option on the context menu has been pressed, handle it here. 
-	protected void handleContextMenuAction(String action) {
+	public void handleContextMenuAction(String action) {
+		/* keeping it optional to implement */
+	}
+
+	//A file has been loaded in a file explorer window; handle it here. 
+	public void handleLoadedFile(File file) {
 		/* keeping it optional to implement */
 	}
 
@@ -479,7 +487,7 @@ public abstract class Window {
 	//output buffer going to have two texturebuffers attached
 	// - color buffer
 	// - window id buffer
-	public void render(Framebuffer colorBuffer) {
+	public void render(Framebuffer outputBuffer) {
 		this.colorBuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -498,7 +506,7 @@ public abstract class Window {
 		}
 
 		//render whatever we have to the output buffer
-		colorBuffer.bind();
+		outputBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -636,7 +644,7 @@ public abstract class Window {
 		}
 
 		//make the newly selected window the top one
-		if (selectedWindow >= 0) {
+		if (selectedWindow >= 0 && selectedWindow < this.childWindows.size()) {
 			Window w = this.childWindows.get(selectedWindow);
 			this.childWindows.remove(selectedWindow);
 			this.childWindows.add(0, w);

@@ -10,6 +10,8 @@ import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.assimp.Assimp.*;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,7 +35,7 @@ import lwjglengine.v10.graphics.Shader;
 import lwjglengine.v10.graphics.Texture;
 import lwjglengine.v10.graphics.TextureMaterial;
 import lwjglengine.v10.graphics.VertexArray;
-import myutils.v10.file.FileUtils;
+import myutils.v11.file.FileUtils;
 import myutils.v10.graphics.GraphicsTools;
 import myutils.v10.math.Mat4;
 import myutils.v10.file.SystemUtils;
@@ -93,8 +95,10 @@ public class Model {
 		init();
 	}
 
-	public Model(String filepath, String filename) {
-		this.loadModelFile(filepath, filename);
+	public Model(ArrayList<VertexArray> meshes, ArrayList<Material> defaultMaterials, ArrayList<TextureMaterial> textureMaterials) {
+		this.meshes = meshes;
+		this.defaultMaterials = defaultMaterials;
+		this.textureMaterials = textureMaterials;
 
 		init();
 	}
@@ -167,16 +171,22 @@ public class Model {
 	}
 
 	// must have .mtl file to be able to load materials
-	private void loadModelFile(String filepath, String filename) {
-		System.out.println("LOADING MESH: " + filename);
+	// this assumes that all textures are located in the same directory as the actual model
+	public static Model loadModelFile(File file) throws IOException {
+		String filepath = file.getAbsolutePath();
+		String parentFilepath = file.getParent() + "\\";
 
-		this.meshes = new ArrayList<>();
-		this.defaultMaterials = new ArrayList<>();
-		this.textureMaterials = new ArrayList<>();
+		System.out.println("LOADING MESH: " + file.getName());
 
-		String workingDirectory = SystemUtils.getWorkingDirectory();
+		ArrayList<VertexArray> meshes = new ArrayList<>();
+		ArrayList<Material> defaultMaterials = new ArrayList<>();
+		ArrayList<TextureMaterial> textureMaterials = new ArrayList<>();
 
-		AIScene scene = aiImportFile(workingDirectory + "/res" + filepath + filename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+		AIScene scene = aiImportFile(filepath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+
+		if (scene == null) {
+			throw new IOException("Failed to load model " + file.getName());
+		}
 
 		// group meshes with the same material
 		ArrayList<ArrayList<Vec3>> vertices = new ArrayList<>();
@@ -247,7 +257,7 @@ public class Model {
 			}
 
 			System.out.println("vertices: " + vertices.get(i).size() + " | faces: " + (indices.get(i).size() / 3));
-			this.meshes.add(new VertexArray(vArr, uvArr, iArr, GL_TRIANGLES));
+			meshes.add(new VertexArray(vArr, uvArr, iArr, GL_TRIANGLES));
 
 			// load material data
 			AIMaterial AIMat = AIMaterial.create(materials.get(i)); // wrap raw pointer in AIMaterial instance
@@ -275,7 +285,7 @@ public class Model {
 			if (!errorExtractingMaterial) {
 				mat = new Material(diffuseColor, specularColor, shininessColor);
 			}
-			this.defaultMaterials.add(mat);
+			defaultMaterials.add(mat);
 			System.out.println(mat);
 
 			// TextureMaterial
@@ -284,7 +294,11 @@ public class Model {
 			aiGetMaterialTexture(AIMat, aiTextureType_DIFFUSE, 0, path, (IntBuffer) null, null, null, null, null, null);
 			String diffusePath = path.dataString();
 			if (diffusePath != null && diffusePath.length() != 0) {
-				Texture diffuseTexture = new Texture(loadImage(filepath + diffusePath));
+				System.out.println("DIFFUSE TEXTURE : ");
+				System.out.println(parentFilepath);
+				System.out.println(diffusePath);
+				System.out.println(parentFilepath + diffusePath);
+				Texture diffuseTexture = new Texture(loadImage(parentFilepath + diffusePath));
 				material.setTexture(diffuseTexture, TextureMaterial.DIFFUSE);
 			}
 
@@ -293,7 +307,7 @@ public class Model {
 			aiGetMaterialTexture(AIMat, aiTextureType_SPECULAR, 0, path, (IntBuffer) null, null, null, null, null, null);
 			String specularPath = path.dataString();
 			if (specularPath != null && specularPath.length() != 0) {
-				Texture specularTexture = new Texture(loadImage(filepath + specularPath));
+				Texture specularTexture = new Texture(loadImage(parentFilepath + specularPath));
 				material.setTexture(specularTexture, TextureMaterial.SPECULAR);
 			}
 
@@ -302,17 +316,30 @@ public class Model {
 			aiGetMaterialTexture(AIMat, aiTextureType_NORMALS, 0, path, (IntBuffer) null, null, null, null, null, null);
 			String normalsPath = path.dataString();
 			if (normalsPath != null && normalsPath.length() != 0) {
-				Texture normalsTexture = new Texture(loadImage(filepath + normalsPath));
+				Texture normalsTexture = new Texture(loadImage(parentFilepath + normalsPath));
 				material.setTexture(normalsTexture, TextureMaterial.NORMAL);
 			}
 
-			this.textureMaterials.add(material);
+			textureMaterials.add(material);
 		}
 
 		System.out.println("SUCCESS");
+
+		return new Model(meshes, defaultMaterials, textureMaterials);
 	}
 
-	public static BufferedImage loadImage(String path) {
+	public static Model loadModelFile(String filepath) throws IOException {
+		return Model.loadModelFile(FileUtils.loadFile(filepath));
+	}
+
+	public static Model loadModelFileRelative(String relativeFilepath) throws IOException {
+		String workingDirectory = SystemUtils.getWorkingDirectory();
+		String filepath = workingDirectory + "/res" + relativeFilepath;
+
+		return Model.loadModelFile(filepath);
+	}
+
+	public static BufferedImage loadImage(String path) throws IOException {
 		String fileExtension = FileUtils.getFileExtension(path);
 		switch (fileExtension) {
 		case "png":
@@ -325,11 +352,10 @@ public class Model {
 			return GraphicsTools.verticalFlip(FileUtils.loadImage(path));
 
 		case "tga":
-			return TargaReader.getImage(SystemUtils.getWorkingDirectory() + "\\res" + path);
+			return TargaReader.getImage(path);
 		}
 
-		System.err.println("File extension " + fileExtension + " is not supported");
-		return null;
+		throw new IOException("File extension " + fileExtension + " is not supported");
 	}
 
 	public static int getScene(long ID) {

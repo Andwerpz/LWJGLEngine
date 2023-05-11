@@ -34,6 +34,9 @@ public class ContextMenuWindow extends BorderedWindow {
 	//when an option is pressed, call the callback window's handle context menu action function. 
 	private Window callbackWindow;
 
+	//is true after being deselected, or being clicked
+	private boolean shouldClose = false;
+
 	public ContextMenuWindow(ArrayList<String> options, Window callbackWindow) {
 		super((int) Main.getStateManagerWindow().getGlobalMousePos().x, (int) Main.getStateManagerWindow().getGlobalMousePos().y, 100, 100, Main.getStateManagerWindow());
 
@@ -141,6 +144,10 @@ public class ContextMenuWindow extends BorderedWindow {
 	@Override
 	protected void _update() {
 		Input.inputsHovered(this.hoveredInputID, SELECTION_SCENE);
+
+		if (this.shouldClose) {
+			this.kill();
+		}
 	}
 
 	@Override
@@ -163,8 +170,7 @@ public class ContextMenuWindow extends BorderedWindow {
 
 	@Override
 	protected void deselected() {
-		//should just kill itself
-		this.kill();
+		this.shouldClose = true;
 	}
 
 	@Override
@@ -180,7 +186,7 @@ public class ContextMenuWindow extends BorderedWindow {
 
 		if (which != "") {
 			this.callbackWindow.handleContextMenuAction(which.substring(which.indexOf(" ") + 1));
-			this.kill();
+			this.shouldClose = true;
 		}
 	}
 

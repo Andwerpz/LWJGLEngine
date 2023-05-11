@@ -108,14 +108,14 @@ public class PlayerInputController {
 		// ROTATION
 		Vec2 nextMouse = MouseInput.getMousePos();
 		Vec2 delta = nextMouse.sub(mouse);
+		this.mouse = nextMouse;
 
 		if (this.acceptPlayerInputs) {
-			camYRot += Math.toRadians(delta.x / 10f);
-			camXRot -= Math.toRadians(delta.y / 10f);
-			mouse = nextMouse;
+			this.camYRot += Math.toRadians(delta.x / 10f);
+			this.camXRot -= Math.toRadians(delta.y / 10f);
 		}
 
-		camXRot = MathUtils.clamp((float) -(Math.PI - 0.01) / 2f, (float) (Math.PI - 0.01) / 2f, camXRot);
+		this.camXRot = MathUtils.clamp((float) -(Math.PI - 0.01) / 2f, (float) (Math.PI - 0.01) / 2f, camXRot);
 
 		// TRANSLATION
 		move_noclip();

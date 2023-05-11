@@ -4,6 +4,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL13.*;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import lwjglengine.v10.graphics.Cubemap;
@@ -14,6 +15,8 @@ public class AssetManager {
 
 	// when loading, check against the asset manager to make sure you haven't loaded that particular asset before.
 
+	//all paths here should be relative since we're loading from /res?
+
 	public static HashMap<String, Model> models = new HashMap<>();
 	public static HashMap<String, Texture> textures = new HashMap<>();
 	public static HashMap<String, Cubemap> skyboxes = new HashMap<>();
@@ -22,7 +25,7 @@ public class AssetManager {
 
 	// bind all asset names to load paths
 	public static void init() {
-		paths.put("dust2", new String[] { "/dust2/", "dust2_blend.obj" });
+		paths.put("dust2", new String[] { "/dust2/dust2_blend.obj" });
 
 		paths.put("bullet_hole_texture", new String[] { "decal/bullet_hole.png", GL_LINEAR_MIPMAP_LINEAR + "", GL_LINEAR + "", 5 + "" });
 		paths.put("blood_splatter_texture", new String[] { "decal/blood-splatter-png-image-0.png", GL_LINEAR_MIPMAP_LINEAR + "", GL_LINEAR + "", 5 + "" });
@@ -33,7 +36,14 @@ public class AssetManager {
 
 	public static void loadModel(String name) {
 		String[] p = paths.get(name);
-		models.put(name, new Model(p[0], p[1]));
+		Model m = null;
+		try {
+			m = Model.loadModelFileRelative(p[0]);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		models.put(name, m);
 	}
 
 	public static void loadTexture(String name) {
