@@ -33,6 +33,7 @@ import lwjglengine.v10.ui.UIFilledRectangle;
 import lwjglengine.v10.window.AdjustableWindow;
 import lwjglengine.v10.window.FileExplorerWindow;
 import lwjglengine.v10.window.ModelViewerWindow;
+import lwjglengine.v10.window.ProjectManagerWindow;
 import lwjglengine.v10.window.RaytracingWindow;
 import lwjglengine.v10.window.Window;
 import myutils.v10.math.Vec3;
@@ -93,6 +94,7 @@ public class StateManagerWindow extends Window {
 		contextMenuOptions.add("New File Explorer Window");
 		contextMenuOptions.add("New Raytracing Window");
 		contextMenuOptions.add("New Model Viewer Window");
+		contextMenuOptions.add("New Project Manager Window");
 
 		this.setContextMenuOptions(contextMenuOptions);
 
@@ -111,6 +113,10 @@ public class StateManagerWindow extends Window {
 
 		case "New Model Viewer Window":
 			Window modelViewer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Model Viewer", new ModelViewerWindow(null), this);
+			break;
+
+		case "New Project Manager Window":
+			Window projectManager = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Project Manager", new ProjectManagerWindow(), this);
 			break;
 		}
 	}
