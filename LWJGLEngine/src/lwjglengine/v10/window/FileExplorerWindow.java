@@ -260,7 +260,7 @@ public class FileExplorerWindow extends Window {
 
 		//check if already selected file
 		if (this.submittedFile != null) {
-			this.callbackWindow.handleLoadedFile(this.submittedFile);
+			this.callbackWindow.handleFile(this.submittedFile);
 			this.kill();
 		}
 	}
@@ -508,7 +508,7 @@ public class FileExplorerWindow extends Window {
 
 			this.selectedFolderEntry = selectedEntry;
 
-			if (this.selectedFolderEntry != null && !this.selectedFolderEntry.isDirectory()) {
+			if (this.selectedFolderEntry != null) {
 				this.bottomBarSelectedFileText.setText(this.selectedFolderEntry.getFilename() + "         ");
 			}
 			else {
@@ -538,7 +538,7 @@ public class FileExplorerWindow extends Window {
 
 		switch (Input.getClicked(BOTTOM_BAR_SELECTION_SCENE)) {
 		case "btn_submit_file":
-			if (this.selectedFolderEntry != null && !this.selectedFolderEntry.isDirectory()) {
+			if (this.selectedFolderEntry != null) {
 				this.submittedFile = this.selectedFolderEntry.loadFile();
 			}
 			break;

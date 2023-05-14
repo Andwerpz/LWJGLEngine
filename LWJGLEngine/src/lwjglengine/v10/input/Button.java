@@ -37,6 +37,11 @@ public class Button extends Input {
 	private Material pressedMaterial, releasedMaterial, hoveredMaterial;
 	private Material pressedTextMaterial, releasedTextMaterial, hoveredTextMaterial;
 	private Material currentMaterial;
+	
+	public Button(float x, float y, float width, float height, String sID, String text, int fontSize, int selectionScene, int textScene) {
+		super(x, y, 0, width, height, sID, selectionScene);
+		this.init(text, new Font("Dialogue", Font.PLAIN, fontSize), textScene);
+	}
 
 	public Button(float x, float y, float width, float height, String sID, String text, Font font, int fontSize, FilledRectangle baseRect, int selectionScene, int textScene) {
 		super(x, y, 0, width, height, sID, baseRect, selectionScene);

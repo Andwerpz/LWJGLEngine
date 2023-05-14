@@ -54,9 +54,6 @@ public abstract class Window {
 	public static final int FROM_CENTER_TOP = 6;
 	public static final int FROM_CENTER_BOTTOM = 7;
 
-	//requests come in the form <child, new parent>
-	public static ArrayList<Pair<Window, Window>> renestRequests = new ArrayList<>();
-
 	private final int ROOT_UI_SCENE = Scene.generateScene();
 
 	private int width, height;
@@ -151,6 +148,11 @@ public abstract class Window {
 	}
 
 	protected abstract void _kill();
+	
+	public void setAlignmentStyle(int horizontal, int vertical) {
+		this.horizontalAlignStyle = horizontal;
+		this.verticalAlignStyle = vertical;
+	}
 
 	private void resize(int width, int height) {
 		this.width = width;
@@ -198,7 +200,11 @@ public abstract class Window {
 	}
 
 	//A file has been loaded in a file explorer window; handle it here. 
-	public void handleLoadedFile(File file) {
+	public void handleFile(File file) {
+		/* keeping it optional to implement */
+	}
+	
+	public void handleString(String str) {
 		/* keeping it optional to implement */
 	}
 

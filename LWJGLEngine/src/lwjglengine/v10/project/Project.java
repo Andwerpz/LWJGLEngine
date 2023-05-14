@@ -13,9 +13,11 @@ public class Project {
 
 	private static final String PROJECT_FILE_NAME = "project.dat";
 
-	private static final String VERSION_HEADER_10 = "Halfcup Project v1.0";
+	private static final String VERSION_HEADER_10 = "Project v1.0";
 
 	private File projectFile;
+	
+	private String projectName;
 
 	//list of all assets within this thing. 
 	private ArrayList<String> assetNames;
@@ -50,7 +52,7 @@ public class Project {
 		FileWriter fout = new FileWriter(projectFile);
 
 		fout.write(VERSION_HEADER_10 + "\n");
-
+		fout.write(projectName);
 		fout.write("0\n");
 
 		fout.close();
@@ -77,12 +79,14 @@ public class Project {
 		String versionHeader = fin.readLine();
 		switch (versionHeader) {
 		case VERSION_HEADER_10:
-			this.loadProject10(fin);
+			this.loadProject10(fin, file);
 			break;
 		}
 	}
 
-	private void loadProject10(BufferedReader fin) throws IOException {
+	private void loadProject10(BufferedReader fin, File file) throws IOException {
+		this.projectName = fin.readLine();
+		
 		int numAssets = Integer.parseInt(fin.readLine());
 		for (int i = 0; i < numAssets; i++) {
 			this.assetNames.add(fin.readLine());
@@ -95,5 +99,13 @@ public class Project {
 	 */
 	public void updateProjectFile() {
 		//TODO
+	}
+	
+	public ArrayList<String> getAssetNames() {
+		return this.assetNames;
+	}
+	
+	public String getProjectName() {
+		return this.projectName;
 	}
 }

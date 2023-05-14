@@ -69,6 +69,8 @@ public class ModelViewerWindow extends BorderedWindow {
 		Light.addLight(WORLD_SCENE, new DirLight(new Vec3(1, -1, 1), new Vec3(1), 0.4f));
 
 		this.pic = new PlayerInputController(new Vec3(0, 0, -1));
+		this.pic.setCamXRot((float) Math.PI / 4.0f);
+		this.pic.setCamYRot((float) Math.PI / 4.0f);
 		this.pic.setAcceptPlayerInputs(false);
 
 		ArrayList<String> contextMenuOptions = new ArrayList<>();
@@ -126,7 +128,16 @@ public class ModelViewerWindow extends BorderedWindow {
 	}
 
 	@Override
-	public void handleLoadedFile(File file) {
+	public void handleFile(File file) {
+		Model nextModel = null;
+		try {
+			nextModel = Model.loadModelFile(file);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+		
 		if (this.hasModel) {
 			Model.removeInstance(this.modelInstanceID);
 			this.modelInstanceID = -1;
@@ -135,14 +146,9 @@ public class ModelViewerWindow extends BorderedWindow {
 			this.hasModel = false;
 		}
 
-		try {
-			this.model = Model.loadModelFile(file);
-			this.modelInstanceID = Model.addInstance(this.model, Mat4.identity(), WORLD_SCENE);
-			this.hasModel = true;
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
+		this.model = nextModel;
+		this.modelInstanceID = Model.addInstance(this.model, Mat4.identity(), WORLD_SCENE);
+		this.hasModel = true;
 	}
 
 	@Override
