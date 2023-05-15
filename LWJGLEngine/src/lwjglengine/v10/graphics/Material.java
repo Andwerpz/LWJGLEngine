@@ -73,6 +73,16 @@ public class Material {
 		this.emissive = new Vec4(0);
 		this.shininess = shininess.r();
 	}
+	
+	public void set(Material m) {
+		this.diffuse.set(m.getDiffuse());
+		this.specular.set(m.getSpecular());
+		this.emissive.set(m.getEmissive());
+		this.shininess = m.getShininess();
+		this.smoothness = m.getSmoothness();
+		this.specularProbability = m.getSpecularProbability();
+		this.metallic = m.getMetallic();
+	}
 
 	public Vec4 getDiffuse() {
 		return this.diffuse;
@@ -84,6 +94,10 @@ public class Material {
 
 	public float getShininess() {
 		return this.shininess;
+	}
+	
+	public float getMetallic() {
+		return this.metallic;
 	}
 
 	public void setDiffuse(Vec4 diffuse) {
@@ -128,6 +142,10 @@ public class Material {
 
 	public Vec4 getEmissive() {
 		return this.emissive;
+	}
+	
+	public void setMetallic(float m) {
+		this.metallic = m;
 	}
 
 	@Override

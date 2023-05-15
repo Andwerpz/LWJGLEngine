@@ -98,6 +98,11 @@ public class TextField extends Input {
 	private Material currentMaterial;
 
 	private boolean textWrapping = false;
+	
+	public TextField(float x, float y, float width, float height, String sID, String hintText, int fontSize, int selectionScene, int textScene) {
+		super(x, y, 0, width, height, sID, selectionScene);
+		this.init(hintText, new Font("Dialogue", Font.PLAIN, fontSize), textScene);
+	}
 
 	public TextField(float x, float y, float width, float height, String sID, String hintText, Font font, int fontSize, int selectionScene, int textScene) {
 		super(x, y, 0, width, height, sID, selectionScene);

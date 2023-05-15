@@ -34,6 +34,8 @@ public class FileExplorerWindow extends Window {
 	//   - icons? maybe just icons in the folder rect to tell the user which ones are folders
 	//   - text indication when you didn't select a directory in the text rect?
 	//   - text indication when the filter filters out all files in folder
+	// - ability to create folder inside selected directory
+	// - when selecting a folder or directory entry, just make sure that it exists first. 
 
 	private final int DIRECTORY_BACKGROUND_SCENE = Scene.generateScene();
 	private final int DIRECTORY_SELECTION_SCENE = Scene.generateScene();
@@ -398,8 +400,6 @@ public class FileExplorerWindow extends Window {
 		int numAbove = this.selectedDirectoryEntry.getOrder();
 		int maxYOffset = numAbove * entryHeight;
 		int minYOffset = maxYOffset - (int) this.directoryRect.getHeight() + entryHeight;
-		System.out.println("MIN : " + minYOffset + " MAX : " + maxYOffset + " NUM ABOVE : " + numAbove);
-		System.out.println(this.selectedDirectoryEntry.getFilename());
 		this.setDirectoryYOffset((int) (MathUtils.clamp(minYOffset, maxYOffset, this.directoryYOffset)));
 
 		String[] fileNames = FileUtils.getAllFilenamesFromDirectory(e.getPath());
@@ -478,42 +478,46 @@ public class FileExplorerWindow extends Window {
 		}
 
 		if (this.hoveredSectionID == this.directoryRect.getID()) {
-			//select the directory entry
-			this.rootDirectoryEntry.selected(this.hoveredDirectoryEntryID);
-
-			DirectoryEntry e = this.rootDirectoryEntry.getSelected();
-			this.setSelectedDirectoryEntry(e);
-
-			this.setDirectoryYOffset(this.directoryYOffset);
+			if(this.hoveredDirectoryEntryID != this.directoryRect.getID()) {
+				//select the directory entry
+				this.rootDirectoryEntry.selected(this.hoveredDirectoryEntryID);
+	
+				DirectoryEntry e = this.rootDirectoryEntry.getSelected();
+				this.setSelectedDirectoryEntry(e);
+	
+				this.setDirectoryYOffset(this.directoryYOffset);
+			}
 		}
 		else if (this.hoveredSectionID == this.folderRect.getID()) {
-			FolderEntry selectedEntry = null;
-			for (FolderEntry e : this.folderEntries) {
-				e.selected(this.hoveredFolderEntryID);
-				if (e.isSelected()) {
-					selectedEntry = e;
+			if(this.hoveredFolderEntryID != this.folderRect.getID()) {
+				FolderEntry selectedEntry = null;
+				for (FolderEntry e : this.folderEntries) {
+					e.selected(this.hoveredFolderEntryID);
+					if (e.isSelected()) {
+						selectedEntry = e;
+					}
 				}
-			}
-
-			//check if we clicked on the selected entry twice
-			if (selectedEntry != null && selectedEntry == this.selectedFolderEntry) {
-				String filepath = this.selectedFolderEntry.getPath() + this.selectedFolderEntry.getFilename() + "\\";
-				if (selectedEntry.isDirectory()) {
-					//this is a folder. Open the directory entry that corresponds to this folder. 
-					this.rootDirectoryEntry.selected(filepath);
-					this.setSelectedDirectoryEntry(this.rootDirectoryEntry.getSelected());
-					selectedEntry = null; //obviously, we won't have anything in the new folder selected
+	
+				//check if we clicked on the selected entry twice
+				if (selectedEntry != null && selectedEntry == this.selectedFolderEntry) {
+					String filepath = this.selectedFolderEntry.getPath() + this.selectedFolderEntry.getFilename() + "\\";
+					if (selectedEntry.isDirectory()) {
+						//this is a folder. Open the directory entry that corresponds to this folder. 
+						this.rootDirectoryEntry.selected(filepath);
+						this.setSelectedDirectoryEntry(this.rootDirectoryEntry.getSelected());
+						selectedEntry = null; //obviously, we won't have anything in the new folder selected
+					}
 				}
-			}
-
-			this.selectedFolderEntry = selectedEntry;
-
-			if (this.selectedFolderEntry != null) {
-				this.bottomBarSelectedFileText.setText(this.selectedFolderEntry.getFilename() + "         ");
-			}
-			else {
-				this.bottomBarSelectedFileText.setText("          ");
-			}
+	
+				this.selectedFolderEntry = selectedEntry;
+	
+				if (this.selectedFolderEntry != null) {
+					this.bottomBarSelectedFileText.setText(this.selectedFolderEntry.getFilename() + "         ");
+				}
+				else {
+					this.bottomBarSelectedFileText.setText("          ");
+				}
+			}	
 		}
 		else if (this.hoveredSectionID == this.topBarRect.getID()) {
 			Input.inputsPressed(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);

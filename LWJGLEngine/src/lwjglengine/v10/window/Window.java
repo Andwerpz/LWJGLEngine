@@ -58,13 +58,14 @@ public abstract class Window {
 
 	private int width, height;
 
-	//offset of bottom left corner from specified parent window's bottom left corner
+	
 	private int xOffset, yOffset;
 
 	//offset from GLFW window
 	//useful for determining where the mouse is
 	private int globalXOffset, globalYOffset;
-
+	
+	//offset of bottom left corner from specified parent window's bottom left corner
 	private int alignedX, alignedY;
 
 	private int horizontalAlignStyle, verticalAlignStyle;
@@ -121,9 +122,7 @@ public abstract class Window {
 		this.rootUIElement = new UIFilledRectangle(0, 0, 0, this.width, this.height, ROOT_UI_SCENE);
 
 		this.buildBuffers();
-
-		this.updateGlobalOffset();
-
+		
 		this.align();
 	}
 
@@ -303,6 +302,8 @@ public abstract class Window {
 			this.alignedY = parentHeight / 2 + this.yOffset;
 			break;
 		}
+		
+		this.updateGlobalOffset();
 
 		for (Window w : this.childWindows) {
 			w.align();
@@ -369,12 +370,11 @@ public abstract class Window {
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
 		this.align();
-		this.updateGlobalOffset();
 	}
 
 	private void updateGlobalOffset() {
-		this.globalXOffset = this.xOffset;
-		this.globalYOffset = this.yOffset;
+		this.globalXOffset = this.alignedX;
+		this.globalYOffset = this.alignedY;
 
 		if (this.parentWindow != null) {
 			this.globalXOffset += this.parentWindow.globalXOffset;

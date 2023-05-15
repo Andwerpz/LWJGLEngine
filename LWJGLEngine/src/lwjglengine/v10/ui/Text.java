@@ -26,6 +26,7 @@ public class Text extends UIElement {
 
 	//TODO 
 	// - figure out how to fix transparency issues when text size becomes small
+	//   - seems like small text using java.fx is just kinda bad. It works well if the text and the background are around the same color. 
 	// - with string "C:" with color set to white, font Dialogue, plain, size 12, the texture fails to generate. 
 	//   - to fix, you just add a bunch of spaces to the string, so "C:        " works. 
 
@@ -280,6 +281,10 @@ public class Text extends UIElement {
 		this.changedText = true;
 
 		this.align();
+	}
+	
+	public String getText() {
+		return this.text;
 	}
 
 	public int getTextWidth() {

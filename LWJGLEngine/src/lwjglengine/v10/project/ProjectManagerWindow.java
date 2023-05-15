@@ -1,17 +1,22 @@
 package lwjglengine.v10.project;
 
 import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.input.Button;
 import lwjglengine.v10.input.Input;
+import lwjglengine.v10.input.TextField;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.UIScreen;
 import lwjglengine.v10.ui.Text;
 import lwjglengine.v10.ui.UIElement;
 import lwjglengine.v10.ui.UIFilledRectangle;
+import lwjglengine.v10.window.AdjustableWindow;
+import lwjglengine.v10.window.FileExplorerWindow;
 import lwjglengine.v10.window.Window;
 import myutils.v10.math.Vec3;
 
@@ -19,6 +24,7 @@ public class ProjectManagerWindow extends Window {
 
 	//TODO
 	// - should offer to create a new project or open one if a project isn't currently selected. 	
+	// - let users import assets to current project. 
 	
 	private final int SELECT_PROJECT_BACKGROUND_SCENE = Scene.generateScene();
 	private final int SELECT_PROJECT_SELECTION_SCENE = Scene.generateScene();
@@ -27,6 +33,9 @@ public class ProjectManagerWindow extends Window {
 	private UIFilledRectangle selectProjectBackgroundRect;
 	private Text selectProjectText;
 	private Button selectProjectImportButton, selectProjectCreateNewButton;
+	private TextField selectProjectProjectNameTf;
+	
+	private String newProjectName = null;
 	
 	private final int TOP_BAR_BACKGROUND_SCENE = Scene.generateScene();
 	private final int TOP_BAR_SELECTION_SCENE = Scene.generateScene();
@@ -52,7 +61,7 @@ public class ProjectManagerWindow extends Window {
 	private long hoveredSectionID;
 	private long hoveredTopBarID, hoveredSelectProjectID;
 	
-	private TopBarEntry selectedTopBarEntry;
+	private TopBarEntry selectedTopBarEntry = null;
 
 	public ProjectManagerWindow(int xOffset, int yOffset, int width, int height, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
@@ -93,6 +102,12 @@ public class ProjectManagerWindow extends Window {
 		this.selectProjectImportButton.getButtonText().setDoAntialiasing(false);
 		this.selectProjectImportButton.bind(this.selectProjectBackgroundRect);
 		
+		this.selectProjectProjectNameTf = new TextField(10, 30, 100, 20, "tf_project_name", "Project Name", 12, SELECT_PROJECT_SELECTION_SCENE, SELECT_PROJECT_TEXT_SCENE);
+		this.selectProjectProjectNameTf.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_BOTTOM);
+		this.selectProjectProjectNameTf.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
+		this.selectProjectProjectNameTf.getTextUIElement().setDoAntialiasing(false);
+		this.selectProjectProjectNameTf.bind(this.selectProjectBackgroundRect);
+		
 		this.topBarBackgroundRect = new UIFilledRectangle(0, 0, 0, this.getWidth(), topBarHeightPx, TOP_BAR_BACKGROUND_SCENE);
 		this.topBarBackgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		this.topBarBackgroundRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
@@ -104,6 +119,7 @@ public class ProjectManagerWindow extends Window {
 		this.topBarEntries = new ArrayList<>();
 		this.topBarEntries.add(new TopBarEntry("Assets", this.topBarBackgroundRect, TOP_BAR_SELECTION_SCENE, TOP_BAR_TEXT_SCENE));
 		this.topBarEntries.add(new TopBarEntry("States", this.topBarBackgroundRect, TOP_BAR_SELECTION_SCENE, TOP_BAR_TEXT_SCENE));
+		this.topBarEntries.add(new TopBarEntry("Import", this.topBarBackgroundRect, TOP_BAR_SELECTION_SCENE, TOP_BAR_TEXT_SCENE));
 		
 		int xOffset = 0;
 		for(int i = 0; i < this.topBarEntries.size(); i++) {
@@ -126,6 +142,10 @@ public class ProjectManagerWindow extends Window {
 	@Override
 	protected void _resize() {
 		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
+		
+		if(this.contentWindow != null) {
+			this.contentWindow.setDimensions(this.getWidth(), this.getHeight() - topBarHeightPx);
+		}
 	}
 
 	@Override
@@ -197,6 +217,31 @@ public class ProjectManagerWindow extends Window {
 		// TODO Auto-generated method stub
 
 	}
+	
+	@Override
+	public void handleFile(File file) {
+		if(!this.hasProject) {
+			if(this.newProjectName != null) {
+				//create a new project in this directory. 
+				try {
+					this.project = Project.createNewProject(file, this.newProjectName);
+				} catch (IOException e) {
+					e.printStackTrace();
+					return;
+				}
+			}
+			else {
+				//load the project
+				try {
+					this.project = new Project(file);
+				} catch (IOException e) {
+					e.printStackTrace();
+					return;
+				}
+			}
+			this.hasProject = true;
+		}
+	}
 
 	@Override
 	protected void _mousePressed(int button) {
@@ -205,8 +250,39 @@ public class ProjectManagerWindow extends Window {
 		
 		if(this.hoveredSectionID == this.topBarBackgroundRect.getID()) {
 			if(this.hoveredTopBarID != this.topBarBackgroundRect.getID()) {
+				TopBarEntry nextEntry = null;
+				
 				for(int i = 0; i < this.topBarEntries.size(); i++) {
 					this.topBarEntries.get(i).select(this.hoveredTopBarID);
+					if(this.topBarEntries.get(i).isSelected()) {
+						nextEntry = this.topBarEntries.get(i);
+					}
+				}
+				
+				if(this.selectedTopBarEntry != nextEntry) {
+					this.selectedTopBarEntry = nextEntry;
+					
+					//switch the current content window
+					if(this.contentWindow != null) {
+						this.contentWindow.kill();
+						this.contentWindow = null;
+					}
+					
+					if(this.selectedTopBarEntry != null) {
+						switch(this.selectedTopBarEntry.getText()) {
+						case "Assets":
+							this.contentWindow = new ProjectAssetViewerWindow(0, 0, this.getWidth(), this.getHeight() - topBarHeightPx, this.project, this);
+							break;
+							
+						case "States":
+							break;
+							
+						case "Import":
+							break;
+						}
+					}
+					
+					
 				}
 			}
 			
@@ -215,8 +291,26 @@ public class ProjectManagerWindow extends Window {
 
 	@Override
 	protected void _mouseReleased(int button) {
-		Input.inputsReleased(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
 		Input.inputsReleased(this.hoveredSelectProjectID, SELECT_PROJECT_SELECTION_SCENE);
+		switch(Input.getClicked(SELECT_PROJECT_SELECTION_SCENE)) {
+		case "btn_create_new_project": {
+			String newProjectName = Input.getText("tf_project_name");
+			if(newProjectName.length() == 0) {
+				return;
+			}
+			this.newProjectName = newProjectName;
+			Window fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Select New Project Directory", new FileExplorerWindow(this), this);
+			break;
+		}
+			
+		case "btn_import_project": {
+			this.newProjectName = null;
+			Window fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Select Project Directory", new FileExplorerWindow(this), this);
+			break;
+		}
+		}
+		
+		Input.inputsReleased(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
 	}
 
 	@Override
@@ -227,14 +321,12 @@ public class ProjectManagerWindow extends Window {
 
 	@Override
 	protected void _keyPressed(int key) {
-		// TODO Auto-generated method stub
-
+		Input.inputsKeyPressed(key, SELECT_PROJECT_SELECTION_SCENE);
 	}
 
 	@Override
 	protected void _keyReleased(int key) {
-		// TODO Auto-generated method stub
-
+		Input.inputsKeyReleased(key, SELECT_PROJECT_SELECTION_SCENE);
 	}
 
 }
@@ -270,6 +362,10 @@ class TopBarEntry {
 		this.entryRect.setWidth(this.entryText.getTextWidth() + entryHorizontalMargin * 2);
 	}
 	
+	public String getText() {
+		return this.entryText.getText();
+	}
+	
 	public int getWidth() {
 		return (int) this.entryRect.getWidth();
 	}
@@ -296,6 +392,14 @@ class TopBarEntry {
 		else {
 			this.entryRect.setMaterial(ProjectManagerWindow.topBarMaterial);
 		}
+	}
+	
+	public boolean isHovered() {
+		return this.isHovered;
+	}
+	
+	public boolean isSelected() {
+		return this.isSelected;
 	}
 	
 }

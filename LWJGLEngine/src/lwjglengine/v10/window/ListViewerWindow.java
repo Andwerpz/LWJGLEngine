@@ -9,6 +9,8 @@ import java.util.List;
 
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
+import lwjglengine.v10.input.Input;
+import lwjglengine.v10.input.TextField;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.UIScreen;
 import lwjglengine.v10.ui.Text;
@@ -17,13 +19,13 @@ import lwjglengine.v10.ui.UIFilledRectangle;
 import myutils.v10.graphics.GraphicsTools;
 import myutils.v10.math.MathUtils;
 import myutils.v10.math.Vec3;
+import myutils.v10.math.Vec4;
 
 public class ListViewerWindow extends Window {
 	//click on the currently selected entry to submit. 
 	
 	//TODO
-	// - be able to do horizontal or vertical lists
-	// - make top bar optional
+	// - have name of selected entry show up on top bar. 
 	
 	private final int TOP_BAR_BACKGROUND_SCENE = Scene.generateScene();
 	private final int TOP_BAR_SELECTION_SCENE = Scene.generateScene();
@@ -33,19 +35,21 @@ public class ListViewerWindow extends Window {
 	private final int CONTENT_SELECTION_SCENE = Scene.generateScene();
 	private final int CONTENT_TEXT_SCENE = Scene.generateScene();
 	
-	public Material topBarDefaultMaterial = new Material(new Vec3((float) (20 / 255.0)));
-	public Material topBarHoveredMaterial = new Material(new Vec3((float) (30 / 255.0)));
-	public Material topBarSelectedMaterial = new Material(new Vec3((float) (40 / 255.0)));
+	private Material topBarDefaultMaterial = new Material(new Vec3((float) (20 / 255.0)));
+	private Material topBarHoveredMaterial = new Material(new Vec3((float) (30 / 255.0)));
+	private Material topBarSelectedMaterial = new Material(new Vec3((float) (40 / 255.0)));
 	
-	public Material contentDefaultMaterial = new Material(new Vec3((float) (40 / 255.0)));
-	public Material contentHoveredMaterial = new Material(new Vec3((float) (50 / 255.0)));
-	public Material contentSelectedMaterial = new Material(new Vec3((float) (60 / 255.0)));
+	private Material contentDefaultMaterial = new Material(new Vec3((float) (40 / 255.0)));
+	private Material contentHoveredMaterial = new Material(new Vec3((float) (50 / 255.0)));
+	private Material contentSelectedMaterial = new Material(new Vec3((float) (60 / 255.0)));
 	
 	public static Font entryFont = new Font("Dialogue", Font.PLAIN, 12);
 	public static int entryFontSize = 12;
 	
-	public static int entryHeightPx = 20;
+	private int entryHeightPx = 16;
 	public static int entryHorizontalMarginPx = 5;
+	
+	public static int topBarSearchTfWidthPx = 150;
 	
 	private int topBarHeightPx = 20;
 	
@@ -54,6 +58,8 @@ public class ListViewerWindow extends Window {
 	private UIScreen uiScreen;
 	
 	private UIFilledRectangle topBarBackgroundRect, contentBackgroundRect;
+	
+	private TextField topBarSearchTf;
 	
 	private ArrayList<ListEntry> entryList;
 	
@@ -71,7 +77,12 @@ public class ListViewerWindow extends Window {
 	private boolean isHorizontal = false;
 	private boolean renderTopBar = true;
 	
-	private int horizontalAlignWidthSum = 0;
+	private String filterString = "";
+	
+	//if there are no displayable list entries, then we'll display a message saying so. 
+	private boolean noListEntries = false;
+	
+	private Text noListEntriesText;
 
 	public ListViewerWindow(int xOffset, int yOffset, int width, int height, Window callbackWindow, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
@@ -86,6 +97,8 @@ public class ListViewerWindow extends Window {
 	private void init(Window callbackWindow) {
 		this.uiScreen = new UIScreen();
 		
+		this.entryList = new ArrayList<>();
+		
 		this.callbackWindow = callbackWindow;
 		
 		this.topBarBackgroundRect = new UIFilledRectangle(0, 0, 0, this.getWidth(), topBarHeightPx, TOP_BAR_BACKGROUND_SCENE);
@@ -96,6 +109,12 @@ public class ListViewerWindow extends Window {
 		this.topBarBackgroundRect.setMaterial(topBarDefaultMaterial);
 		this.topBarBackgroundRect.bind(this.rootUIElement);
 		
+		this.topBarSearchTf = new TextField(3, 0, topBarSearchTfWidthPx, 16, "tf_filter", "Filter Entries", 12, TOP_BAR_SELECTION_SCENE, TOP_BAR_TEXT_SCENE);
+		this.topBarSearchTf.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
+		this.topBarSearchTf.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
+		this.topBarSearchTf.getTextUIElement().setDoAntialiasing(false);
+		this.topBarSearchTf.bind(this.topBarBackgroundRect);
+		
 		this.contentBackgroundRect = new UIFilledRectangle(0, 0, 0, this.getWidth(), this.getHeight() - topBarHeightPx, CONTENT_BACKGROUND_SCENE);
 		this.contentBackgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
 		this.contentBackgroundRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
@@ -103,6 +122,12 @@ public class ListViewerWindow extends Window {
 		this.contentBackgroundRect.setFillWidthMargin(0);
 		this.contentBackgroundRect.setMaterial(contentDefaultMaterial);
 		this.contentBackgroundRect.bind(this.rootUIElement);
+		
+		this.noListEntriesText = new Text(0, 0, "No List Entries to Display", 12, Color.WHITE, CONTENT_TEXT_SCENE);
+		this.noListEntriesText.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
+		this.noListEntriesText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
+		this.noListEntriesText.setDoAntialiasing(false);
+		this.noListEntriesText.bind(this.contentBackgroundRect);
 		
 		this._resize();
 	}
@@ -112,6 +137,10 @@ public class ListViewerWindow extends Window {
 			i.kill();
 		}
 		this.entryList.clear();
+		
+		if(this.selectedListEntry != null) {
+			this.selectedListEntry = null;
+		}
 	}
 	
 	/**
@@ -129,7 +158,6 @@ public class ListViewerWindow extends Window {
 			String text = i.toString();
 			ListEntry e = new ListEntry(this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, text, this.contentBackgroundRect, CONTENT_SELECTION_SCENE, CONTENT_TEXT_SCENE);
 			this.entryList.add(e);
-			this.horizontalAlignWidthSum += e.getHorizontalAlignWidth();
 		}
 		this.sortList();
 	}
@@ -142,7 +170,6 @@ public class ListViewerWindow extends Window {
 		String text = elem.toString();
 		ListEntry e = new ListEntry(this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, text, this.contentBackgroundRect, CONTENT_SELECTION_SCENE, CONTENT_TEXT_SCENE);
 		this.entryList.add(e);
-		this.horizontalAlignWidthSum += e.getHorizontalAlignWidth();
 		
 		this.sortList();
 	}
@@ -162,11 +189,44 @@ public class ListViewerWindow extends Window {
 		this.alignEntries();
 	}
 	
+	public void setEntryHeightPx(int height) {
+		this.entryHeightPx = height;
+		this.alignEntries();
+	}
+	
+	public String getSelectedEntryString() {
+		if(this.selectedListEntry == null) {
+			return "";
+		}
+		return this.selectedListEntry.getText();
+	}
+	
 	private void alignEntries() {
+		int horizontalAlignWidthSum = 0;
+		ArrayList<ListEntry> filteredEntries = new ArrayList<>();
+		for(ListEntry i : this.entryList) {
+			if(i.getText().toLowerCase().contains(this.filterString)) {
+				filteredEntries.add(i);
+				horizontalAlignWidthSum += i.getHorizontalAlignWidth();
+			}
+			else {
+				i.align(this.getWidth() * 2, this.getHeight() * 2);
+			}
+		}
+		
+		if(filteredEntries.size() == 0) {
+			this.noListEntries = true;
+			this.noListEntriesText.setFrameAlignmentOffset(0, 0);
+		}
+		else {
+			this.noListEntriesText.setFrameAlignmentOffset(this.getWidth(), this.getHeight());
+		}
+		
 		//make sure offset is within bounds. 
 		if(this.isHorizontal) {
 			this.contentBaseYOffset = 0;
-			this.contentBaseXOffset = (int) MathUtils.clamp(this.contentBackgroundRect.getHeight() - this.horizontalAlignWidthSum, 0, this.contentBaseXOffset);
+			int minBaseXOffset = (int) Math.min(0, this.contentBackgroundRect.getWidth() - horizontalAlignWidthSum);
+			this.contentBaseXOffset = (int) MathUtils.clamp(minBaseXOffset, 0, this.contentBaseXOffset);
 		}
 		else {
 			this.contentBaseXOffset = 0;
@@ -176,7 +236,15 @@ public class ListViewerWindow extends Window {
 		
 		int xOffset = this.contentBaseXOffset;
 		int yOffset = this.contentBaseYOffset;
-		for(ListEntry i : this.entryList) {
+		for(ListEntry i : filteredEntries) {
+			i.setEntryHeightPx(this.entryHeightPx);
+			
+			if(this.isHorizontal) {
+				i.doFillWidth(false);
+			}
+			else {
+				i.doFillWidth(true);
+			}
 			i.align(xOffset, yOffset);
 			if(this.isHorizontal) {
 				xOffset += i.getHorizontalAlignWidth();
@@ -242,10 +310,14 @@ public class ListViewerWindow extends Window {
 		else {
 			this.contentBackgroundRect.setHeight(this.getHeight());
 		}
+		
+		this.alignEntries();
 	}
 
 	@Override
 	protected void _update() {
+		Input.inputsHovered(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
+		
 		if(this.submittedListEntry != null) {
 			this.callbackWindow.handleString(this.submittedListEntry.getText());
 			if(this.closeOnSubmit) {
@@ -265,6 +337,17 @@ public class ListViewerWindow extends Window {
 		int mouseX = (int) this.getWindowMousePos().x;
 		int mouseY = (int) this.getWindowMousePos().y;
 		
+		this.uiScreen.setUIScene(CONTENT_BACKGROUND_SCENE);
+		this.uiScreen.render(outputBuffer);		
+		if(this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.contentBackgroundRect.getID()) {
+			this.hoveredSectionID = this.contentBackgroundRect.getID();
+		}
+		this.uiScreen.setUIScene(CONTENT_SELECTION_SCENE);
+		this.uiScreen.render(outputBuffer);
+		this.hoveredContentID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
+		this.uiScreen.setUIScene(CONTENT_TEXT_SCENE);
+		this.uiScreen.render(outputBuffer);
+		
 		if(this.renderTopBar) {
 			this.uiScreen.setUIScene(TOP_BAR_BACKGROUND_SCENE);
 			this.uiScreen.render(outputBuffer);		
@@ -277,17 +360,6 @@ public class ListViewerWindow extends Window {
 			this.uiScreen.setUIScene(TOP_BAR_TEXT_SCENE);
 			this.uiScreen.render(outputBuffer);
 		}
-		
-		this.uiScreen.setUIScene(CONTENT_BACKGROUND_SCENE);
-		this.uiScreen.render(outputBuffer);		
-		if(this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.contentBackgroundRect.getID()) {
-			this.hoveredSectionID = this.contentBackgroundRect.getID();
-		}
-		this.uiScreen.setUIScene(CONTENT_SELECTION_SCENE);
-		this.uiScreen.render(outputBuffer);
-		this.hoveredTopBarID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
-		this.uiScreen.setUIScene(CONTENT_TEXT_SCENE);
-		this.uiScreen.render(outputBuffer);
 	}
 
 	@Override
@@ -322,11 +394,13 @@ public class ListViewerWindow extends Window {
 
 	@Override
 	protected void _mousePressed(int button) {
+		Input.inputsPressed(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
+		
 		if(this.hoveredSectionID == this.topBarBackgroundRect.getID()) {
 			
 		}
 		else if(this.hoveredSectionID == this.contentBackgroundRect.getID()) {
-			if(this.hoveredContentID == this.contentBackgroundRect.getID()) {
+			if(this.hoveredContentID != this.contentBackgroundRect.getID()) {
 				for(ListEntry i : this.entryList) {
 					i.selected(this.hoveredContentID);
 					if(i.isSelected()) {
@@ -342,8 +416,7 @@ public class ListViewerWindow extends Window {
 
 	@Override
 	protected void _mouseReleased(int button) {
-		// TODO Auto-generated method stub
-		
+		Input.inputsReleased(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
 	}
 
 	@Override
@@ -360,26 +433,31 @@ public class ListViewerWindow extends Window {
 
 	@Override
 	protected void _keyPressed(int key) {
-		// TODO Auto-generated method stub
+		Input.inputsKeyPressed(key, TOP_BAR_SELECTION_SCENE);
 		
+		if(this.topBarSearchTf.isClicked()) {
+			this.filterString = this.topBarSearchTf.getText().toLowerCase();
+		}
+		
+		this.alignEntries();
 	}
 
 	@Override
 	protected void _keyReleased(int key) {
-		// TODO Auto-generated method stub
-		
+		Input.inputsKeyReleased(key, TOP_BAR_SELECTION_SCENE);
 	}
 
 }
 
 class ListEntry {
 	
-	private int selectionScene, textScene;
+	private int selectionScene = -1;
+	private int textScene;
 	
 	private String text;
 	
-	private UIFilledRectangle entryRect;
-	private Text entryText;
+	private UIFilledRectangle entryRect = null;
+	private Text entryText = null;
 	
 	private Material defaultMaterial;
 	private Material selectedMaterial;
@@ -395,7 +473,10 @@ class ListEntry {
 	
 	private int horizontalAlignWidth;
 	
+	private int entryHeightPx;
+	
 	public ListEntry(Material defaultMaterial, Material hoveredMaterial, Material selectedMaterial, String text, UIElement baseUIElement, int selectionScene, int textScene) {
+		this.textScene = textScene;
 		this.selectionScene = selectionScene;
 		this.text = text;
 		this.baseUIElement = baseUIElement;
@@ -425,36 +506,47 @@ class ListEntry {
 		if(this.doFillWidth) {
 			this.entryRect.setFillWidth(true);
 			this.entryRect.setFillWidthMargin(0);
+			
+			this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
+			this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
+			this.entryText.setXOffset(ListViewerWindow.entryHorizontalMarginPx);
 		}
 		else {
 			this.entryRect.setFillWidth(false);
 			this.entryRect.setWidth(this.horizontalAlignWidth);
+			
+			this.entryText.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
+			this.entryText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
+			this.entryText.setXOffset(0);
 		}
 	}
 	
+	public void setEntryHeightPx(int height) {
+		this.entryHeightPx = height;
+	}
+	
 	public void align(int xOffset, int yOffset) {
-		this.isVisible = -ListViewerWindow.entryHeightPx >= yOffset && yOffset <= this.baseUIElement.getHeight();
-		this.isVisible &= -this.entryRect.getWidth() >= xOffset && xOffset <= this.baseUIElement.getWidth();
+		this.isVisible = -this.entryHeightPx <= yOffset && yOffset <= this.baseUIElement.getHeight();
+		this.isVisible &= -this.horizontalAlignWidth <= xOffset && xOffset <= this.baseUIElement.getWidth();
+		
 		if(this.isVisible) {
 			if(this.entryRect == null) {
-				this.entryRect = new UIFilledRectangle(0, 0, 0, this.baseUIElement.getWidth(), ListViewerWindow.entryHeightPx, this.selectionScene);
+				this.entryRect = new UIFilledRectangle(0, 0, 0, this.horizontalAlignWidth, this.entryHeightPx, this.selectionScene);
 				this.entryRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
-				this.entryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
-				this.entryRect.setYOffset(yOffset);
-				this.entryRect.setMaterial(this.defaultMaterial);
+				this.entryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+				this.entryRect.setMaterial(new Material(new Vec4(1)));
 				this.entryRect.bind(this.baseUIElement);
 				
-				this.entryText = new Text(ListViewerWindow.entryHorizontalMarginPx, 0, this.text, 12, Color.WHITE, this.textScene);
-				this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
-				this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
+				this.entryText = new Text(0, 0, this.text, 12, Color.WHITE, this.textScene);
+				this.entryText.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
+				this.entryText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 				this.entryText.setDoAntialiasing(false);
-				this.entryText.bind(this.baseUIElement);
+				this.entryText.bind(this.entryRect);
 				
-				if(this.doFillWidth) {
-					this.entryRect.setFillWidth(true);
-					this.entryRect.setFillWidthMargin(0);
-				}
+				this.doFillWidth(this.doFillWidth);
 			}
+			
+			this.entryRect.setFrameAlignmentOffset(xOffset, yOffset);
 		}
 		else {
 			if(this.entryRect != null) {
@@ -481,10 +573,18 @@ class ListEntry {
 	}
 	
 	public void selected(long entityID) {
+		if(this.entryRect == null) {
+			this.isSelected = false;
+			return;
+		}
 		this.isSelected = this.entryRect.getID() == entityID;
 	}
 	
 	public void hovered(long entityID) {
+		if(this.entryRect == null) {
+			this.isHovered = false;
+			return;
+		}
 		this.isHovered = this.entryRect.getID() == entityID;
 	}
 	
