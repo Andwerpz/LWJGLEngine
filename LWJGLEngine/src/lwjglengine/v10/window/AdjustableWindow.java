@@ -6,6 +6,8 @@ import org.lwjgl.glfw.GLFW;
 
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
+import lwjglengine.v10.input.Button;
+import lwjglengine.v10.input.Input;
 import lwjglengine.v10.input.KeyboardInput;
 import lwjglengine.v10.input.MouseInput;
 import lwjglengine.v10.main.Main;
@@ -23,11 +25,14 @@ import myutils.v10.math.Vec4;
 public class AdjustableWindow extends BorderedWindow {
 	//TODO 
 	// - implement snapping to windows that are children of the same parent. 
-	// - add an x on the top right corner so we can close windows 
 	// - fullscreen
 
 	private final int BACKGROUND_SCENE = Scene.generateScene();
-	private final int TITLE_BAR_SCENE = Scene.generateScene();
+	
+	private final int TITLE_BAR_BACKGROUND_SCENE = Scene.generateScene();
+	private final int TITLE_BAR_SELECTION_SCENE = Scene.generateScene();
+	private final int TITLE_BAR_TEXT_SCENE = Scene.generateScene();
+	
 	private final int BORDER_SCENE = Scene.generateScene();
 
 	private Window contentWindow;
@@ -42,6 +47,8 @@ public class AdjustableWindow extends BorderedWindow {
 	private Text titleBarText;
 	private Material deselectedTitleTextMaterial = new Material(new Vec3((float) (205 / 255.0)));
 	private Material selectedTitleTextMaterial = new Material(new Vec3((float) (255 / 255.0)));
+	
+	private Button titleBarCloseBtn;
 
 	//content is always going to be aligned to the bottom. 
 	private int contentWidth, contentHeight;
@@ -87,6 +94,8 @@ public class AdjustableWindow extends BorderedWindow {
 	private boolean renderBorder = true;
 
 	private boolean isFullscreen = false;
+	
+	private boolean shouldClose = false;
 
 	public AdjustableWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window contentWindow, Window parentWindow) {
 		super(xOffset, yOffset, contentWidth, contentHeight + titleBarHeight, parentWindow);
@@ -117,7 +126,7 @@ public class AdjustableWindow extends BorderedWindow {
 		this.backgroundRect.setMaterial(this.deselectedBackgroundMaterial);
 		this.backgroundRect.bind(this.rootUIElement);
 
-		this.titleBarRect = new UIFilledRectangle(0, 0, -9, this.getWidth(), titleBarHeight, TITLE_BAR_SCENE);
+		this.titleBarRect = new UIFilledRectangle(0, 0, -9, this.getWidth(), titleBarHeight, TITLE_BAR_BACKGROUND_SCENE);
 		this.titleBarRect.setFillWidth(true);
 		this.titleBarRect.setFillWidthMargin(0);
 		this.titleBarRect.setMaterial(this.titleBarMaterial);
@@ -126,12 +135,21 @@ public class AdjustableWindow extends BorderedWindow {
 		this.titleBarRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 
 		this.title = title;
-		this.titleBarText = new Text(this.titleLeftMargin, 0, this.title, 12, this.deselectedTitleTextMaterial, TITLE_BAR_SCENE);
+		this.titleBarText = new Text(this.titleLeftMargin, 0, this.title, 12, this.deselectedTitleTextMaterial, TITLE_BAR_TEXT_SCENE);
 		this.titleBarText.setDoAntialiasing(false);
 		this.titleBarText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.titleBarText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.titleBarText.bind(this.titleBarRect);
-
+		
+		this.titleBarCloseBtn = new Button(0, 0, titleBarHeight, titleBarHeight, "btn_close", "   X   ", 12, TITLE_BAR_SELECTION_SCENE, TITLE_BAR_TEXT_SCENE);
+		this.titleBarCloseBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
+		this.titleBarCloseBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
+		this.titleBarCloseBtn.getButtonText().setDoAntialiasing(false);
+		this.titleBarCloseBtn.setReleasedMaterial(this.titleBarMaterial);
+		this.titleBarCloseBtn.setPressedMaterial(this.selectedBackgroundMaterial);
+		this.titleBarCloseBtn.setHoveredMaterial(this.deselectedBackgroundMaterial);
+		this.titleBarCloseBtn.bind(this.titleBarRect);
+		
 		this.windowBorder = new long[4];
 
 		this._resize();
@@ -141,7 +159,9 @@ public class AdjustableWindow extends BorderedWindow {
 	protected void __kill() {
 		this.uiScreen.kill();
 		Scene.removeScene(BACKGROUND_SCENE);
-		Scene.removeScene(TITLE_BAR_SCENE);
+		Scene.removeScene(TITLE_BAR_BACKGROUND_SCENE);
+		Scene.removeScene(TITLE_BAR_SELECTION_SCENE);
+		Scene.removeScene(TITLE_BAR_TEXT_SCENE);
 		Scene.removeScene(BORDER_SCENE);
 	}
 
@@ -226,11 +246,18 @@ public class AdjustableWindow extends BorderedWindow {
 
 	@Override
 	protected void _update() {
-		//check if this child window is still alive
+		//check if should close
 		if (!this.contentWindow.isAlive()) {
+			this.shouldClose = true;
+		}
+		
+		if(this.shouldClose) {
+			System.err.println("CLOSING ADJUSTABLE WINDOW");
 			this.kill();
 			return;
 		}
+		
+		Input.inputsHovered(this.titleBarSceneMouseEntityID, TITLE_BAR_SELECTION_SCENE);
 
 		//update size and / or offset if the edges are grabbed
 		{
@@ -363,16 +390,15 @@ public class AdjustableWindow extends BorderedWindow {
 	@Override
 	protected void _renderOverlay(Framebuffer outputBuffer) {
 		if (this.renderTopBar) {
-			this.uiScreen.setUIScene(TITLE_BAR_SCENE);
+			this.uiScreen.setUIScene(TITLE_BAR_BACKGROUND_SCENE);
+			this.uiScreen.render(outputBuffer);
+			this.uiScreen.setUIScene(TITLE_BAR_SELECTION_SCENE);
 			this.uiScreen.render(outputBuffer);
 			Vec2 mousePos = this.getWindowMousePos();
 			this.titleBarSceneMouseEntityID = this.uiScreen.getEntityIDAtCoord((int) mousePos.x, (int) (mousePos.y));
+			this.uiScreen.setUIScene(TITLE_BAR_TEXT_SCENE);
+			this.uiScreen.render(outputBuffer);
 		}
-
-		//		if (this.renderBorder) {
-		//			this.uiScreen.setUIScene(BORDER_SCENE);
-		//			this.uiScreen.render(outputBuffer);
-		//		}
 	}
 
 	public void setTitle(String title) {
@@ -443,6 +469,8 @@ public class AdjustableWindow extends BorderedWindow {
 
 	@Override
 	protected void _mousePressed(int button) {
+		Input.inputsPressed(this.titleBarSceneMouseEntityID, TITLE_BAR_SELECTION_SCENE);
+		
 		//check if should grab the edge
 		this.leftEdgeGrabbed = this.canGrabLeftEdge();
 		this.rightEdgeGrabbed = this.canGrabRightEdge();
@@ -461,6 +489,14 @@ public class AdjustableWindow extends BorderedWindow {
 
 	@Override
 	protected void _mouseReleased(int button) {
+		Input.inputsReleased(this.titleBarSceneMouseEntityID, TITLE_BAR_SELECTION_SCENE);
+		
+		switch(Input.getClicked(TITLE_BAR_SELECTION_SCENE)) {
+		case "btn_close":
+			this.shouldClose = true;
+			break;
+		}
+		
 		this.leftEdgeGrabbed = false;
 		this.rightEdgeGrabbed = false;
 		this.bottomEdgeGrabbed = false;

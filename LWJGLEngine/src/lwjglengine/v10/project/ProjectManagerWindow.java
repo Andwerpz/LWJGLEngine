@@ -24,7 +24,6 @@ public class ProjectManagerWindow extends Window {
 
 	//TODO
 	// - should offer to create a new project or open one if a project isn't currently selected. 	
-	// - let users import assets to current project. 
 	
 	private final int SELECT_PROJECT_BACKGROUND_SCENE = Scene.generateScene();
 	private final int SELECT_PROJECT_SELECTION_SCENE = Scene.generateScene();
@@ -278,6 +277,7 @@ public class ProjectManagerWindow extends Window {
 							break;
 							
 						case "Import":
+							this.contentWindow = new ProjectImportAssetWindow(0, 0, this.getWidth(), this.getHeight() - topBarHeightPx, this.project, this);
 							break;
 						}
 					}
@@ -292,6 +292,7 @@ public class ProjectManagerWindow extends Window {
 	@Override
 	protected void _mouseReleased(int button) {
 		Input.inputsReleased(this.hoveredSelectProjectID, SELECT_PROJECT_SELECTION_SCENE);
+		System.out.println(Input.getClicked(SELECT_PROJECT_SELECTION_SCENE));
 		switch(Input.getClicked(SELECT_PROJECT_SELECTION_SCENE)) {
 		case "btn_create_new_project": {
 			String newProjectName = Input.getText("tf_project_name");

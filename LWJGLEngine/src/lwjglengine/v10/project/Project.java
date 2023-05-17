@@ -142,13 +142,39 @@ public class Project {
 				StringTokenizer st = new StringTokenizer(fin.readLine());
 				long assetID = Long.parseLong(st.nextToken());
 				String relativePath = st.nextToken();
-				File f = new File(this.assetsDirectory.getPath() + File.separator + relativePath);
+				File f = new File(this.assetsDirectory.getPath() + relativePath);
 				Asset a = new Asset(f, assetID);
 				this.assets.put(assetID, a);
 			}
 			fin.close();
 		}
 		
+	}
+	
+	/**
+	 * Updates the .dat files associated with the project in order to save. 
+	 * @throws IOException
+	 */
+	private void saveProject() throws IOException {
+		//update project.dat
+		{
+			FileWriter fout = new FileWriter(this.projectFile);
+			fout.write(VERSION_HEADER_10 + "\n");
+			fout.write(this.projectName + "\n");
+			fout.close();
+		}
+		
+		//update assets.dat
+		{
+			FileWriter fout = new FileWriter(this.assetsFile);
+			fout.write(this.assets.size() + "\n");
+			for(long id : this.assets.keySet()) {
+				String absolutePath = this.assets.get(id).getFilepath();
+				String relativePath = absolutePath.substring(this.assetsDirectory.getPath().length());
+				fout.write(id + " " + relativePath + "\n");
+			}
+			fout.close();
+		}
 	}
 	
 	private long generateAssetID() {
@@ -173,6 +199,15 @@ public class Project {
 		
 		Asset a = new Asset(copy, this.generateAssetID());
 		this.assets.put(a.getID(), a);
+		
+		//TODO figure out a better place to do this. 
+		//perhaps autosave?
+		try {
+			this.saveProject();
+		} catch(IOException e) {
+			System.err.println("Failed to save project");
+			e.printStackTrace();
+		}
 	}
 	
 	public String getProjectName() {

@@ -67,10 +67,7 @@ public abstract class Input extends UIElement {
 
 	protected abstract void ___kill();
 
-	private void hovered(long entityID, int scene) {
-		if (scene != this.scene) {
-			return;
-		}
+	private void hovered(long entityID) {
 		if (this.getID() != entityID) {
 			if (this.hovered) {
 				this.mouseExited = true;
@@ -92,10 +89,7 @@ public abstract class Input extends UIElement {
 		this.pressed = true;
 	}
 
-	private void released(long entityID, int scene) {
-		if (scene != this.scene) {
-			return;
-		}
+	private void released(long entityID) {
 		if (this.pressed && entityID == this.getID()) {
 			this.clicked = true;
 		}
@@ -111,6 +105,10 @@ public abstract class Input extends UIElement {
 
 	public boolean isHovered() {
 		return this.hovered;
+	}
+	
+	public boolean isPressed() {
+		return this.pressed;
 	}
 
 	public boolean hasMouseEntered() {
@@ -148,10 +146,12 @@ public abstract class Input extends UIElement {
 	 */
 
 	public static String getClicked(int scene) {
-		for (String s : inputs.keySet()) {
-			Input i = inputs.get(s);
-			if (i.isClicked() && i.getScene() == scene) {
-				return s;
+		if(sceneToInput.get(scene) == null) {
+			return "";
+		}
+		for(Input i : sceneToInput.get(scene)) {
+			if(i.isClicked()) {
+				return i.sID;
 			}
 		}
 		return "";
@@ -191,7 +191,7 @@ public abstract class Input extends UIElement {
 			return;
 		}
 		for (Input b : sceneToInput.get(scene)) {
-			b.hovered(entityID, scene);
+			b.hovered(entityID);
 		}
 	}
 
@@ -209,7 +209,7 @@ public abstract class Input extends UIElement {
 			return;
 		}
 		for (Input b : sceneToInput.get(scene)) {
-			b.released(entityID, scene);
+			b.released(entityID);
 		}
 	}
 

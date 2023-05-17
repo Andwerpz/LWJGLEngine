@@ -58,4 +58,7 @@ public class Asset {
 		return this.file.getName();
 	}
 	
+	public String getFilepath() {
+		return this.file.getPath();
+	}
 }
