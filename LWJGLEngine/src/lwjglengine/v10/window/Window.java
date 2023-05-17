@@ -206,6 +206,10 @@ public abstract class Window {
 	public void handleString(String str) {
 		/* keeping it optional to implement */
 	}
+	
+	public void handleObject(Object o) {
+		/* keeping it optional to implement */
+	}
 
 	protected void setRenderWhenNotSelected(boolean b) {
 		this.renderWhenNotSelected = b;

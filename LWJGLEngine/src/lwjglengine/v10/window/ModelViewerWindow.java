@@ -56,6 +56,11 @@ public class ModelViewerWindow extends BorderedWindow {
 		super(0, 0, 300, 400, null);
 		this.init(model);
 	}
+	
+	public ModelViewerWindow() {
+		super(0, 0, 300, 400, null);
+		this.init(null);
+	}
 
 	private void init(Model model) {
 		this.perspectiveScreen = new PerspectiveScreen();

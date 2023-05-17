@@ -6,6 +6,11 @@ import myutils.v10.file.FileUtils;
 
 public class Asset {
 	
+	//TODO
+	// - make sure that for each asset, only one instance of each thing is loaded. 
+	//   - ex. for a 3D model file, don't have multiple models from the same asset. 
+	//   - perhaps this shouldn't be the responsibility of asset? maybe we load stuff based on scene?
+	
 	public static final int TYPE_OTHER = -1;
 	public static final int TYPE_MODEL = 0;
 	public static final int TYPE_TEXTURE = 1;

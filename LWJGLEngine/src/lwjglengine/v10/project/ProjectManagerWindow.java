@@ -281,11 +281,8 @@ public class ProjectManagerWindow extends Window {
 							break;
 						}
 					}
-					
-					
 				}
 			}
-			
 		}
 	}
 

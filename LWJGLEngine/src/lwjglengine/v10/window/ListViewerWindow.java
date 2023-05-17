@@ -144,34 +144,88 @@ public class ListViewerWindow extends Window {
 	}
 	
 	/**
-	 * Creates a string representation for each element of the list. 
+	 * Uses the given string list as the string representation of list. 
+	 * 
+	 * Both lists must be the same size. 
+	 * @param <T>
+	 * @param list
+	 * @param s
+	 */
+	public <T> void setList(ArrayList<T> list, ArrayList<String> s) {
+		if(list == null) {
+			System.err.println("List cannot be null");
+			return;
+		}
+		if(s == null) {
+			System.err.println("String list cannot be null");
+			return;
+		}
+		if(list.size() != s.size()) {
+			System.err.println("String list must be the same size as elem list");
+			return;
+		}
+		
+		this.clearList();
+		
+		for(int i = 0; i < list.size(); i++) {
+			ListEntry e = new ListEntry(list.get(i), this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s.get(i), this.contentBackgroundRect, CONTENT_SELECTION_SCENE, CONTENT_TEXT_SCENE);
+			this.entryList.add(e);
+		}
+		
+		this.sortList();
+	}
+	
+	/**
+	 * Uses the string as the string representation of elem in the list. 
+	 * @param <T>
+	 * @param elem
+	 * @param s
+	 */
+	public <T> void addToList(T elem, String s) {
+		if(elem == null) {
+			return;
+		}
+		if(s == null) {
+			return;
+		}
+		
+		ListEntry e = new ListEntry(elem, this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s, this.contentBackgroundRect, CONTENT_SELECTION_SCENE, CONTENT_TEXT_SCENE);
+		this.entryList.add(e);
+		
+		this.sortList();
+	}
+	
+	/**
+	 * Creates a string representation for each element of the list using toString.
 	 * @param <T>
 	 * @param list
 	 */
 	public <T> void setList(ArrayList<T> list) {
 		this.clearList();
+		
+		ArrayList<String> s = new ArrayList<>();
 		for(T i : list) {
 			if(i == null) {
 				continue;
 			}
 			
-			String text = i.toString();
-			ListEntry e = new ListEntry(this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, text, this.contentBackgroundRect, CONTENT_SELECTION_SCENE, CONTENT_TEXT_SCENE);
-			this.entryList.add(e);
+			s.add(i.toString());
 		}
-		this.sortList();
+		
+		this.setList(list, s);
 	}
 	
+	/**
+	 * Creates string representation using toString
+	 * @param <T>
+	 * @param elem
+	 */
 	public <T> void addToList(T elem) {
 		if(elem == null) {
 			return;
 		}
 		
-		String text = elem.toString();
-		ListEntry e = new ListEntry(this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, text, this.contentBackgroundRect, CONTENT_SELECTION_SCENE, CONTENT_TEXT_SCENE);
-		this.entryList.add(e);
-		
-		this.sortList();
+		this.addToList(elem, elem.toString());
 	}
 	
 	public void setTopBarHeight(int h) {
@@ -319,7 +373,8 @@ public class ListViewerWindow extends Window {
 		Input.inputsHovered(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
 		
 		if(this.submittedListEntry != null) {
-			this.callbackWindow.handleString(this.submittedListEntry.getText());
+			this.callbackWindow.handleObject(this.submittedListEntry.getObject());
+			this.submittedListEntry = null;
 			if(this.closeOnSubmit) {
 				this.kill();
 				return;
@@ -451,6 +506,8 @@ public class ListViewerWindow extends Window {
 
 class ListEntry {
 	
+	private Object o;
+	
 	private int selectionScene = -1;
 	private int textScene;
 	
@@ -475,7 +532,7 @@ class ListEntry {
 	
 	private int entryHeightPx;
 	
-	public ListEntry(Material defaultMaterial, Material hoveredMaterial, Material selectedMaterial, String text, UIElement baseUIElement, int selectionScene, int textScene) {
+	public ListEntry(Object o, Material defaultMaterial, Material hoveredMaterial, Material selectedMaterial, String text, UIElement baseUIElement, int selectionScene, int textScene) {
 		this.textScene = textScene;
 		this.selectionScene = selectionScene;
 		this.text = text;
@@ -486,6 +543,10 @@ class ListEntry {
 		this.selectedMaterial = selectedMaterial;
 		
 		this.horizontalAlignWidth = GraphicsTools.calculateTextWidth(this.text, ListViewerWindow.entryFont) + ListViewerWindow.entryHorizontalMarginPx * 2;
+	}
+	
+	public Object getObject() {
+		return this.o;
 	}
 	
 	public Text getTextUI() {

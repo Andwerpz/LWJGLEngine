@@ -11,7 +11,9 @@ import lwjglengine.v10.ui.Text;
 import lwjglengine.v10.ui.UIElement;
 import lwjglengine.v10.ui.UIFilledRectangle;
 import lwjglengine.v10.window.ListViewerWindow;
+import lwjglengine.v10.window.ModelViewerWindow;
 import lwjglengine.v10.window.Window;
+import lwjglengine.v10.window.AdjustableWindow;
 import myutils.v10.math.Vec3;
 
 public class ProjectAssetViewerWindow extends Window {
@@ -66,6 +68,31 @@ public class ProjectAssetViewerWindow extends Window {
 		
 		this._resize();
 	}
+	
+	@Override
+	public void handleObject(Object o) {
+		if(!(o instanceof Asset)) {
+			return;
+		}
+		
+		Asset a = (Asset) o;
+		
+		switch(a.getType()) {
+		case Asset.TYPE_MODEL:{
+			//Model m = new Model
+			Window w = new AdjustableWindow("Model Viewer", new ModelViewerWindow(), this);
+			break;
+		}
+		
+		case Asset.TYPE_SOUND: {
+			break;
+		}
+		
+		case Asset.TYPE_TEXTURE: {
+			break;
+		}
+		}
+	}
 
 	@Override
 	protected void _kill() {
@@ -108,16 +135,18 @@ public class ProjectAssetViewerWindow extends Window {
 			}
 			}
 			
-			ArrayList<String> filteredAssets = new ArrayList<>();
+			ArrayList<Asset> filteredAssets = new ArrayList<>();
+			ArrayList<String> filteredStrings = new ArrayList<>();
 			ArrayList<Asset> assets = this.project.getAssetList();
 			
 			for(Asset a : assets) {
 				if(a.getType() == type) {
-					filteredAssets.add(a.getFilename());
+					filteredAssets.add(a);
+					filteredStrings.add(a.getFilename());
 				}
 			}
 			
-			this.contentWindow.setList(filteredAssets);
+			this.contentWindow.setList(filteredAssets, filteredStrings);
 		}
 	}
 

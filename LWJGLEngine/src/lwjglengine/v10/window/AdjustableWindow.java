@@ -98,8 +98,16 @@ public class AdjustableWindow extends BorderedWindow {
 	private boolean shouldClose = false;
 
 	public AdjustableWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window contentWindow, Window parentWindow) {
-		super(xOffset, yOffset, contentWidth, contentHeight + titleBarHeight, parentWindow);
-
+		super(xOffset, yOffset - (contentHeight + titleBarHeight), contentWidth, contentHeight + titleBarHeight, parentWindow);
+		this.init(contentWindow, title);
+	}
+	
+	public AdjustableWindow(String title, Window contentWindow, Window parentWindow) {
+		super((int) parentWindow.getWindowMousePos().x, (int) parentWindow.getWindowMousePos().y, 400, 300 + titleBarHeight, parentWindow);
+		this.init(contentWindow, title);
+	}
+	
+	private void init(Window contentWindow, String title) {
 		this.contentWindow = contentWindow;
 		this.contentWindow.setParent(this);
 

@@ -634,7 +634,9 @@ public class Model {
 			IDtoScene.remove(id);
 			IDtoModel.remove(id);
 		}
-
+		
+		//what if the texture material used in this model is also used elsewhere?
+		//should we maintain that each model must use unique instances of materials?
 		for (TextureMaterial t : this.textureMaterials) {
 			t.kill();
 		}
