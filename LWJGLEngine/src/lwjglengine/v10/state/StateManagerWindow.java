@@ -112,7 +112,7 @@ public class StateManagerWindow extends Window {
 			break;
 
 		case "New Model Viewer Window":
-			Window modelViewer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Model Viewer", new ModelViewerWindow(null), this);
+			Window modelViewer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Model Viewer", new ModelViewerWindow(), this);
 			break;
 
 		case "New Project Manager Window":

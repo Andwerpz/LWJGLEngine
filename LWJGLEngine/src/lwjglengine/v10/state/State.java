@@ -8,12 +8,11 @@ import lwjglengine.v10.ui.UIElement;
 import myutils.v10.math.Vec2;
 
 public abstract class State {
-	// each state manages it's own logic and rendering.
-
+	// each state manages its own logic and rendering.
 	// rendering might consist of multiple overlaid screens
 
-	//protected Framebuffer outputBuffer;
-	//protected Texture outputColorMap;
+	//should keep track of its own models, allocating when loading, and deallocating them when done. 
+	//perhaps can also keep track of its own scenes in a similar manner
 
 	protected int bufferWidth, bufferHeight;
 
@@ -49,7 +48,7 @@ public abstract class State {
 	}
 
 	public Vec2 getMousePos() {
-		return sm.getWindowMousePos();
+		return this.sm.getWindowMousePos();
 	}
 
 	// model and scene instance relations
@@ -60,6 +59,7 @@ public abstract class State {
 
 	public abstract void buildBuffers();
 
+	//should unload any models related to this state specifically. 
 	public abstract void kill();
 
 	public abstract void update();

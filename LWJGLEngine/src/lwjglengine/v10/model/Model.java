@@ -82,8 +82,7 @@ public class Model {
 	// like material, but uses a texture2D sampler instead. Is multiplied by the instanced material to get the final result.
 	protected ArrayList<TextureMaterial> textureMaterials;
 
-	// created in init(), stores the same data that meshes stores, just all in
-	// triangles.
+	// created in init(), stores the same data that meshes stores, just all in triangles.
 	private ArrayList<CollisionMesh> collisionMeshes;
 
 	public Model() {
@@ -634,7 +633,7 @@ public class Model {
 			IDtoScene.remove(id);
 			IDtoModel.remove(id);
 		}
-		
+
 		//what if the texture material used in this model is also used elsewhere?
 		//should we maintain that each model must use unique instances of materials?
 		for (TextureMaterial t : this.textureMaterials) {

@@ -20,7 +20,6 @@ import myutils.v10.math.Mat4;
 import myutils.v10.math.Vec3;
 
 public class ModelViewerWindow extends BorderedWindow {
-
 	//TODO
 	// - have an orientation compass thingy like blender does
 	// - draw gridlines that automatically adjust depending on the current position of the camera. 
@@ -52,11 +51,12 @@ public class ModelViewerWindow extends BorderedWindow {
 		this.init(null);
 	}
 
-	public ModelViewerWindow(Model model) {
+	public ModelViewerWindow(File f) throws IOException {
 		super(0, 0, 300, 400, null);
-		this.init(model);
+		Model m = Model.loadModelFile(f);
+		this.init(m);
 	}
-	
+
 	public ModelViewerWindow() {
 		super(0, 0, 300, 400, null);
 		this.init(null);
@@ -142,7 +142,7 @@ public class ModelViewerWindow extends BorderedWindow {
 			e.printStackTrace();
 			return;
 		}
-		
+
 		if (this.hasModel) {
 			Model.removeInstance(this.modelInstanceID);
 			this.modelInstanceID = -1;

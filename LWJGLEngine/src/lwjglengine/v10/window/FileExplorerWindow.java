@@ -35,7 +35,9 @@ public class FileExplorerWindow extends Window {
 	//   - text indication when you didn't select a directory in the text rect?
 	//   - text indication when the filter filters out all files in folder
 	// - ability to create folder inside selected directory
-	// - when selecting a folder or directory entry, just make sure that it exists first. 
+	// - when selecting a folder or directory entry, just make sure that it exists first.
+	// - set root directory when creating an instance of file explorer
+	// - ability to select multiple files. 
 
 	private final int DIRECTORY_BACKGROUND_SCENE = Scene.generateScene();
 	private final int DIRECTORY_SELECTION_SCENE = Scene.generateScene();
@@ -478,18 +480,18 @@ public class FileExplorerWindow extends Window {
 		}
 
 		if (this.hoveredSectionID == this.directoryRect.getID()) {
-			if(this.hoveredDirectoryEntryID != this.directoryRect.getID()) {
+			if (this.hoveredDirectoryEntryID != this.directoryRect.getID()) {
 				//select the directory entry
 				this.rootDirectoryEntry.selected(this.hoveredDirectoryEntryID);
-	
+
 				DirectoryEntry e = this.rootDirectoryEntry.getSelected();
 				this.setSelectedDirectoryEntry(e);
-	
+
 				this.setDirectoryYOffset(this.directoryYOffset);
 			}
 		}
 		else if (this.hoveredSectionID == this.folderRect.getID()) {
-			if(this.hoveredFolderEntryID != this.folderRect.getID()) {
+			if (this.hoveredFolderEntryID != this.folderRect.getID()) {
 				FolderEntry selectedEntry = null;
 				for (FolderEntry e : this.folderEntries) {
 					e.selected(this.hoveredFolderEntryID);
@@ -497,7 +499,7 @@ public class FileExplorerWindow extends Window {
 						selectedEntry = e;
 					}
 				}
-	
+
 				//check if we clicked on the selected entry twice
 				if (selectedEntry != null && selectedEntry == this.selectedFolderEntry) {
 					String filepath = this.selectedFolderEntry.getPath() + this.selectedFolderEntry.getFilename() + "\\";
@@ -508,16 +510,16 @@ public class FileExplorerWindow extends Window {
 						selectedEntry = null; //obviously, we won't have anything in the new folder selected
 					}
 				}
-	
+
 				this.selectedFolderEntry = selectedEntry;
-	
+
 				if (this.selectedFolderEntry != null) {
 					this.bottomBarSelectedFileText.setText(this.selectedFolderEntry.getFilename() + "         ");
 				}
 				else {
 					this.bottomBarSelectedFileText.setText("          ");
 				}
-			}	
+			}
 		}
 		else if (this.hoveredSectionID == this.topBarRect.getID()) {
 			Input.inputsPressed(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
