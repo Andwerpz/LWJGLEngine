@@ -48,12 +48,24 @@ public class ProjectStateViewerWindow extends ListViewerWindow {
 	}
 
 	@Override
+	protected void submitEntry(Object o) {
+		if (!(o instanceof StateAsset)) {
+			return;
+		}
+
+		StateAsset state = (StateAsset) o;
+
+		//open new state editor for this state. 
+		Window w = new AdjustableWindow("Editing State: " + state.getName(), new ProjectStateEditorWindow(0, 0, 400, 400, this.project, state, null), this);
+	}
+
+	@Override
 	protected void _mouseReleased(int button) {
 		super._mouseReleased(button);
 
 		if (this.createStateBtn.isClicked()) {
-			//create new state editor window
-			Window w = new AdjustableWindow("State Editor", new ProjectStateEditorWindow(0, 0, 400, 400, null), this);
+			//create new state dialogue window
+			Window w = new AdjustableWindow("Create New State", new NewProjectStateWindow(0, 0, 400, 400, this.project, null), this);
 		}
 	}
 

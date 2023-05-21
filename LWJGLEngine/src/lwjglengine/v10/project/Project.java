@@ -13,10 +13,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.StringTokenizer;
 
+import myutils.v10.algorithm.GraphUtils;
+import myutils.v10.misc.BiMap;
 import myutils.v11.file.FileUtils;
 
 public class Project {
 	//stores information related to a project :D
+
+	//TODO
+	// - process dependencies when saving. 
+	//   - generate dependency tree
+	//   - combine assets into strongly connected components, and load all assets in one component at once. 
 
 	private static final String PROJECT_FILE_NAME = "project.dat";
 	private static final String ASSETS_FILE_NAME = "assets.dat";
@@ -36,6 +43,15 @@ public class Project {
 	//list of all assets within this project. 
 	//each asset gets an id used by this project. 
 	private HashMap<Long, Asset> assets;
+
+	//list of dependency nodes for all the current assets. 
+	//each dependency node represents one scc in the asset dependency graph. 
+	//it is guaranteed that the graph formed by the asset dependency nodes is a DAG/tree. 
+	private ArrayList<AssetDependencyNode> assetDependencyNodes;
+
+	//maps asset id to dependency node
+	//when loading assets, load by loading the asset dependency node associated with the asset. 
+	private HashMap<Long, AssetDependencyNode> assetToDependencyNode;
 
 	public Project(File projectDirectory) throws IOException {
 		this.init(projectDirectory);
@@ -95,6 +111,9 @@ public class Project {
 
 		this.assets = new HashMap<>();
 
+		this.assetDependencyNodes = new ArrayList<>();
+		this.assetToDependencyNode = new HashMap<>();
+
 		//look for project file
 		this.projectFile = new File(this.projectDirectory.getPath() + File.separator + PROJECT_FILE_NAME);
 		if (!this.projectFile.exists()) {
@@ -125,6 +144,8 @@ public class Project {
 			this.loadProject10();
 			break;
 		}
+
+		this.generateAssetDependencyNodes();
 	}
 
 	private void loadProject10() throws IOException {
@@ -172,6 +193,8 @@ public class Project {
 	 */
 	private void saveProject() {
 		try {
+			this.generateAssetDependencyNodes();
+
 			//update project.dat
 			{
 				FileWriter fout = new FileWriter(this.projectFile);
@@ -266,7 +289,14 @@ public class Project {
 
 	public long createEntityAsset(String name) {
 		File entityFile = new File(this.assetsDirectory.getPath() + File.separator + name + "." + EntityAsset.ENTITY_ASSET_FILE_EXT);
-		entityFile.mkdir();
+		try {
+			entityFile.createNewFile();
+		}
+		catch (IOException e) {
+			System.err.println("Failed to create entity asset");
+			e.printStackTrace();
+			return -1;
+		}
 
 		Asset a = new EntityAsset(entityFile, this.generateAssetID(), name, this);
 		this.assets.put(a.getID(), a);
@@ -278,7 +308,14 @@ public class Project {
 
 	public long createStateAsset(String name) {
 		File stateFile = new File(this.assetsDirectory.getPath() + File.separator + name + "." + StateAsset.STATE_ASSET_FILE_EXT);
-		stateFile.mkdir();
+		try {
+			stateFile.createNewFile();
+		}
+		catch (IOException e) {
+			System.err.println("Failed to create state asset");
+			e.printStackTrace();
+			return -1;
+		}
 
 		Asset a = new StateAsset(stateFile, this.generateAssetID(), name, this);
 		this.assets.put(a.getID(), a);
@@ -300,5 +337,66 @@ public class Project {
 
 	public Asset getAsset(long id) {
 		return this.assets.get(id);
+	}
+
+	private void generateAssetDependencyNodes() {
+		//clear current info on scc
+		this.assetDependencyNodes.clear();
+		this.assetToDependencyNode.clear();
+
+		//first, we run kosajaru's algorithm on the dependency graph to determine the strongly connected components. 
+		BiMap<Long, Integer> idToIndex = new BiMap<>();
+		ArrayList<ArrayList<Integer>> c = new ArrayList<>();
+		for (long id : this.assets.keySet()) {
+			int ind = c.size();
+			idToIndex.put(id, ind);
+			c.add(new ArrayList<Integer>());
+		}
+		for (long i : this.assets.keySet()) {
+			int a = idToIndex.getValue(i);
+			HashSet<Long> d = this.assets.get(i).getDependencies();
+			for (long j : d) {
+				int b = idToIndex.getValue(j);
+				c.get(a).add(b);
+			}
+		}
+		ArrayList<ArrayList<Integer>> scc = GraphUtils.kosajaru(c);
+
+		//once sccs have been determined, we then figure out all the connections between the sccs. 
+		ArrayList<AssetDependencyNode> a = new ArrayList<>();
+		HashMap<Integer, Integer> indexToSCC = new HashMap<>();
+		for (int i = 0; i < scc.size(); i++) {
+			AssetDependencyNode node = new AssetDependencyNode(this);
+			for (int j = 0; j < scc.get(i).size(); j++) {
+				indexToSCC.put(scc.get(i).get(j), i);
+				long assetID = idToIndex.getKey(scc.get(i).get(j));
+				node.addAsset(this.assets.get(assetID));
+				this.assetToDependencyNode.put(assetID, node);
+			}
+			a.add(node);
+		}
+		for (int i = 0; i < a.size(); i++) {
+			HashSet<Asset> assets = a.get(i).getAssets();
+			for (Asset j : assets) {
+				HashSet<Long> dependencies = j.getDependencies();
+				for (long k : dependencies) {
+					int ind = idToIndex.getValue(k);
+					int sccInd = indexToSCC.get(ind);
+					a.get(i).addDependency(a.get(sccInd));
+				}
+			}
+		}
+		this.assetDependencyNodes = a;
+
+		//for debug later
+		//		int cnt = 0;
+		//		for (AssetDependencyNode n : this.assetDependencyNodes) {
+		//			System.out.println("ASSET DEPENDENCY NODE : " + (cnt++));
+		//			HashSet<Asset> assets = n.getAssets();
+		//			for (Asset asset : assets) {
+		//				System.out.println(asset.getName());
+		//			}
+		//			System.out.println();
+		//		}
 	}
 }

@@ -1,13 +1,29 @@
 package lwjglengine.v10.project;
 
 import lwjglengine.v10.graphics.Framebuffer;
+import lwjglengine.v10.screen.PerspectiveScreen;
+import lwjglengine.v10.screen.UIScreen;
 import lwjglengine.v10.window.Window;
 
 public class ProjectStateEditorWindow extends Window {
 
-	public ProjectStateEditorWindow(int xOffset, int yOffset, int width, int height, Window parentWindow) {
+	//somehow, i want to be able to run the project state in this window. 
+	//ideally using the actual project state...
+
+	private PerspectiveScreen perspectiveScreen;
+	private UIScreen uiScreen;
+
+	private Project project;
+	private StateAsset state;
+
+	public ProjectStateEditorWindow(int xOffset, int yOffset, int width, int height, Project project, StateAsset state, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
-		// TODO Auto-generated constructor stub
+		this.init(project, state);
+	}
+
+	private void init(Project project, StateAsset state) {
+		this.project = project;
+		this.state = state;
 	}
 
 	@Override

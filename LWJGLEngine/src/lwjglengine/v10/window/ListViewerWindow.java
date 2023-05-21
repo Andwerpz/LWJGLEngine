@@ -35,14 +35,6 @@ public class ListViewerWindow extends Window {
 	protected final int CONTENT_SELECTION_SCENE = Scene.generateScene();
 	protected final int CONTENT_TEXT_SCENE = Scene.generateScene();
 
-	private Material topBarDefaultMaterial = new Material(new Vec3((float) (20 / 255.0)));
-	private Material topBarHoveredMaterial = new Material(new Vec3((float) (30 / 255.0)));
-	private Material topBarSelectedMaterial = new Material(new Vec3((float) (40 / 255.0)));
-
-	private Material contentDefaultMaterial = new Material(new Vec3((float) (40 / 255.0)));
-	private Material contentHoveredMaterial = new Material(new Vec3((float) (50 / 255.0)));
-	private Material contentSelectedMaterial = new Material(new Vec3((float) (60 / 255.0)));
-
 	public static Font entryFont = new Font("Dialogue", Font.PLAIN, 12);
 	public static int entryFontSize = 12;
 
@@ -65,7 +57,6 @@ public class ListViewerWindow extends Window {
 	private ArrayList<ListEntry> entryList;
 
 	private ListEntry selectedListEntry = null;
-	private ListEntry submittedListEntry = null;
 
 	private boolean closeOnSubmit = true;
 
@@ -85,6 +76,8 @@ public class ListViewerWindow extends Window {
 	//if there are no displayable list entries, then we'll display a message saying so. 
 	private boolean noListEntries = false;
 
+	//if true, displays the currently selected entry on the right side of the top bar. 
+	//if false, then it just makes the text transparent. 
 	private boolean displaySelectedEntryOnTopBar = true;
 
 	private Text noListEntriesText;
@@ -244,10 +237,10 @@ public class ListViewerWindow extends Window {
 	public void setDisplaySelectedEntryOnTopBar(boolean b) {
 		this.displaySelectedEntryOnTopBar = b;
 		if (this.displaySelectedEntryOnTopBar) {
-			this.topBarSelectedEntryText.setYOffset(this.getHeight());
+			this.topBarSelectedEntryText.setMaterial(new Material(Color.WHITE));
 		}
 		else {
-			this.topBarSelectedEntryText.setYOffset(0);
+			this.topBarSelectedEntryText.setMaterial(new Material(new Vec4(0)));
 		}
 	}
 
@@ -399,19 +392,17 @@ public class ListViewerWindow extends Window {
 		this.alignEntries();
 	}
 
+	protected void submitEntry(Object o) {
+		this.callbackWindow.handleObject(o);
+		if (this.closeOnSubmit) {
+			this.close();
+			return;
+		}
+	}
+
 	@Override
 	protected void _update() {
 		Input.inputsHovered(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
-
-		if (this.submittedListEntry != null) {
-			System.out.println("SUBMIT ENTRY");
-			this.callbackWindow.handleObject(this.submittedListEntry.getObject());
-			this.submittedListEntry = null;
-			if (this.closeOnSubmit) {
-				this.kill();
-				return;
-			}
-		}
 
 		for (ListEntry i : this.entryList) {
 			i.hovered(this.hoveredContentID);
@@ -492,7 +483,8 @@ public class ListViewerWindow extends Window {
 					i.selected(this.hoveredContentID);
 					if (i.isSelected()) {
 						if (i == this.selectedListEntry) {
-							this.submittedListEntry = this.selectedListEntry;
+							Object o = this.selectedListEntry.getObject();
+							this.submitEntry(o);
 						}
 						this.selectedListEntry = i;
 						this.topBarSelectedEntryText.setText(this.selectedListEntry.getText());

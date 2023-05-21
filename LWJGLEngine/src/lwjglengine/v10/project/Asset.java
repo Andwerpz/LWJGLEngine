@@ -7,6 +7,8 @@ import java.util.HashSet;
 import myutils.v11.file.FileUtils;
 
 public abstract class Asset {
+	//asset class is only responsible for loading itself. 
+	//taking care of dependencies is done outside of asset class. 
 
 	//TODO
 	// - make sure that for each asset, only one instance of each thing is loaded. 
@@ -26,10 +28,6 @@ public abstract class Asset {
 	//this includes the assets of dependencies, such as entities that are loaded within this state. 
 	//all these assets will be loaded in the load function to improve the user experience :D
 	private HashSet<Long> assetDependencies;
-
-	//count of how many things are loaded that depend on this. 
-	//as of now, if nothing depends on this asset to run, then it will automatically unload itself. 
-	private int numLoadedDependents = 0;
 
 	private boolean loaded = false;
 
@@ -96,34 +94,24 @@ public abstract class Asset {
 
 	//load, and load any dependencies. 
 	public void load() {
-		this.numLoadedDependents++;
 		if (this.loaded) {
 			return;
 		}
 
 		this._load();
 		this.loaded = true;
-		for (long assetID : this.assetDependencies) {
-			Asset a = this.project.getAsset(assetID);
-			a.load();
-		}
 	}
 
 	protected abstract void _load();
 
 	//should unload if numLoadedDependents == 0. 
 	public void unload() {
-		this.numLoadedDependents--;
-		if (this.numLoadedDependents != 0) {
-			return;
+		if (!this.loaded) {
+			this.loaded = false;
 		}
 
 		this._unload();
 		this.loaded = false;
-		for (long assetID : this.assetDependencies) {
-			Asset a = this.project.getAsset(assetID);
-			a.unload();
-		}
 	}
 
 	protected abstract void _unload();
@@ -133,6 +121,11 @@ public abstract class Asset {
 	//dependencies shouldn't change while actually playing the game, so we shouldn't have to worry about loading or unloading when 
 	//changing dependencies. 
 	public void addDependency(long id) {
+		if (id == this.id) {
+			System.err.println("Asset Warning : Can't have self as dependency");
+			//can't have self as a dependency. 
+			return;
+		}
 		this.assetDependencies.add(id);
 	}
 

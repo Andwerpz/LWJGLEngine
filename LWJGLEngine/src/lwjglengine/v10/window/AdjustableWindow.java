@@ -28,11 +28,11 @@ public class AdjustableWindow extends BorderedWindow {
 	// - fullscreen
 
 	private final int BACKGROUND_SCENE = Scene.generateScene();
-	
+
 	private final int TITLE_BAR_BACKGROUND_SCENE = Scene.generateScene();
 	private final int TITLE_BAR_SELECTION_SCENE = Scene.generateScene();
 	private final int TITLE_BAR_TEXT_SCENE = Scene.generateScene();
-	
+
 	private final int BORDER_SCENE = Scene.generateScene();
 
 	private Window contentWindow;
@@ -47,7 +47,7 @@ public class AdjustableWindow extends BorderedWindow {
 	private Text titleBarText;
 	private Material deselectedTitleTextMaterial = new Material(new Vec3((float) (205 / 255.0)));
 	private Material selectedTitleTextMaterial = new Material(new Vec3((float) (255 / 255.0)));
-	
+
 	private Button titleBarCloseBtn;
 
 	//content is always going to be aligned to the bottom. 
@@ -94,19 +94,19 @@ public class AdjustableWindow extends BorderedWindow {
 	private boolean renderBorder = true;
 
 	private boolean isFullscreen = false;
-	
-	private boolean shouldClose = false;
+
+	//private boolean shouldClose = false;
 
 	public AdjustableWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window contentWindow, Window parentWindow) {
 		super(xOffset, yOffset - (contentHeight + titleBarHeight), contentWidth, contentHeight + titleBarHeight, parentWindow);
 		this.init(contentWindow, title);
 	}
-	
+
 	public AdjustableWindow(String title, Window contentWindow, Window parentWindow) {
 		super((int) parentWindow.getWindowMousePos().x, (int) parentWindow.getWindowMousePos().y, 400, 300 + titleBarHeight, parentWindow);
 		this.init(contentWindow, title);
 	}
-	
+
 	private void init(Window contentWindow, String title) {
 		this.contentWindow = contentWindow;
 		this.contentWindow.setParent(this);
@@ -148,7 +148,7 @@ public class AdjustableWindow extends BorderedWindow {
 		this.titleBarText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.titleBarText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.titleBarText.bind(this.titleBarRect);
-		
+
 		this.titleBarCloseBtn = new Button(0, 0, titleBarHeight, titleBarHeight, "btn_close", "   X   ", 12, TITLE_BAR_SELECTION_SCENE, TITLE_BAR_TEXT_SCENE);
 		this.titleBarCloseBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 		this.titleBarCloseBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
@@ -157,7 +157,7 @@ public class AdjustableWindow extends BorderedWindow {
 		this.titleBarCloseBtn.setPressedMaterial(this.selectedBackgroundMaterial);
 		this.titleBarCloseBtn.setHoveredMaterial(this.deselectedBackgroundMaterial);
 		this.titleBarCloseBtn.bind(this.titleBarRect);
-		
+
 		this.windowBorder = new long[4];
 
 		this._resize();
@@ -256,15 +256,9 @@ public class AdjustableWindow extends BorderedWindow {
 	protected void _update() {
 		//check if should close
 		if (!this.contentWindow.isAlive()) {
-			this.shouldClose = true;
+			this.close();
 		}
-		
-		if(this.shouldClose) {
-			System.err.println("CLOSING ADJUSTABLE WINDOW");
-			this.kill();
-			return;
-		}
-		
+
 		Input.inputsHovered(this.titleBarSceneMouseEntityID, TITLE_BAR_SELECTION_SCENE);
 
 		//update size and / or offset if the edges are grabbed
@@ -478,7 +472,7 @@ public class AdjustableWindow extends BorderedWindow {
 	@Override
 	protected void _mousePressed(int button) {
 		Input.inputsPressed(this.titleBarSceneMouseEntityID, TITLE_BAR_SELECTION_SCENE);
-		
+
 		//check if should grab the edge
 		this.leftEdgeGrabbed = this.canGrabLeftEdge();
 		this.rightEdgeGrabbed = this.canGrabRightEdge();
@@ -498,13 +492,13 @@ public class AdjustableWindow extends BorderedWindow {
 	@Override
 	protected void _mouseReleased(int button) {
 		Input.inputsReleased(this.titleBarSceneMouseEntityID, TITLE_BAR_SELECTION_SCENE);
-		
-		switch(Input.getClicked(TITLE_BAR_SELECTION_SCENE)) {
+
+		switch (Input.getClicked(TITLE_BAR_SELECTION_SCENE)) {
 		case "btn_close":
-			this.shouldClose = true;
+			this.close();
 			break;
 		}
-		
+
 		this.leftEdgeGrabbed = false;
 		this.rightEdgeGrabbed = false;
 		this.bottomEdgeGrabbed = false;

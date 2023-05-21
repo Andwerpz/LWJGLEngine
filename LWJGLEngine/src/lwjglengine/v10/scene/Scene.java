@@ -40,6 +40,8 @@ public abstract class Scene {
 
 	/**
 	 * Should deallocate all related info to the scene
+	 * 
+	 * After you clear a scene, all of the models that were in the scene will be killed, so be careful. 
 	 * @param scene
 	 */
 	public static void clearScene(int scene) {
@@ -51,6 +53,8 @@ public abstract class Scene {
 
 	/**
 	 * Should deallocate all related info to the scene, and unreserve the input scene id
+	 * 
+	 * After you remove a scene, all of the models that were in the scene will be killed, so be careful. 
 	 * @param scene
 	 */
 	public static void removeScene(int scene) {

@@ -3,10 +3,15 @@ package lwjglengine.v10.project;
 import java.io.File;
 
 import lwjglengine.v10.graphics.Framebuffer;
+import lwjglengine.v10.screen.PerspectiveScreen;
+import lwjglengine.v10.screen.UIScreen;
 import lwjglengine.v10.state.State;
 
 public class ProjectState extends State {
 	//this is for running the state in production. 
+
+	private PerspectiveScreen perspectiveScreen;
+	private UIScreen uiScreen;
 
 	private File stateFile;
 
@@ -19,6 +24,7 @@ public class ProjectState extends State {
 	@Override
 	public void load() {
 		//load the state file
+
 	}
 
 	@Override

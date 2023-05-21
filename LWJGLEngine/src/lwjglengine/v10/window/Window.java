@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import org.lwjgl.glfw.GLFW;
 
 import lwjglengine.v10.graphics.Framebuffer;
+import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.graphics.Shader;
 import lwjglengine.v10.graphics.Texture;
 import lwjglengine.v10.input.MouseInput;
@@ -54,17 +55,26 @@ public abstract class Window {
 	public static final int FROM_CENTER_TOP = 6;
 	public static final int FROM_CENTER_BOTTOM = 7;
 
+	//for now, keep all of the window materials here. 
+	//TODO make this better. 
+	protected Material topBarDefaultMaterial = new Material(new Vec3((float) (20 / 255.0)));
+	protected Material topBarHoveredMaterial = new Material(new Vec3((float) (30 / 255.0)));
+	protected Material topBarSelectedMaterial = new Material(new Vec3((float) (40 / 255.0)));
+
+	protected Material contentDefaultMaterial = new Material(new Vec3((float) (40 / 255.0)));
+	protected Material contentHoveredMaterial = new Material(new Vec3((float) (50 / 255.0)));
+	protected Material contentSelectedMaterial = new Material(new Vec3((float) (60 / 255.0)));
+
 	private final int ROOT_UI_SCENE = Scene.generateScene();
 
 	private int width, height;
 
-	
 	private int xOffset, yOffset;
 
 	//offset from GLFW window
 	//useful for determining where the mouse is
 	private int globalXOffset, globalYOffset;
-	
+
 	//offset of bottom left corner from specified parent window's bottom left corner
 	private int alignedX, alignedY;
 
@@ -102,6 +112,9 @@ public abstract class Window {
 
 	private ContextMenuWindow contextMenuWindow = null;
 
+	//if true, then it will close on the next update. 
+	private boolean shouldClose = false;
+
 	public Window(int xOffset, int yOffset, int width, int height, Window parentWindow) {
 		this.childWindows = new ArrayList<>();
 
@@ -122,7 +135,7 @@ public abstract class Window {
 		this.rootUIElement = new UIFilledRectangle(0, 0, 0, this.width, this.height, ROOT_UI_SCENE);
 
 		this.buildBuffers();
-		
+
 		this.align();
 	}
 
@@ -147,7 +160,11 @@ public abstract class Window {
 	}
 
 	protected abstract void _kill();
-	
+
+	public void close() {
+		this.shouldClose = true;
+	}
+
 	public void setAlignmentStyle(int horizontal, int vertical) {
 		this.horizontalAlignStyle = horizontal;
 		this.verticalAlignStyle = vertical;
@@ -202,11 +219,11 @@ public abstract class Window {
 	public void handleFile(File file) {
 		/* keeping it optional to implement */
 	}
-	
+
 	public void handleString(String str) {
 		/* keeping it optional to implement */
 	}
-	
+
 	public void handleObject(Object o) {
 		/* keeping it optional to implement */
 	}
@@ -306,7 +323,7 @@ public abstract class Window {
 			this.alignedY = parentHeight / 2 + this.yOffset;
 			break;
 		}
-		
+
 		this.updateGlobalOffset();
 
 		for (Window w : this.childWindows) {
@@ -480,6 +497,11 @@ public abstract class Window {
 	}
 
 	public void update() {
+		if (this.shouldClose) {
+			this.kill();
+			return;
+		}
+
 		if (this.isSelected || this.updateWhenNotSelected) {
 			this._update();
 		}
