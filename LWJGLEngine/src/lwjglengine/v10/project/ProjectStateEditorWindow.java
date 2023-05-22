@@ -7,8 +7,12 @@ import lwjglengine.v10.window.Window;
 
 public class ProjectStateEditorWindow extends Window {
 
+	//project state viewer window, and project state component editor. 
+
 	//somehow, i want to be able to run the project state in this window. 
 	//ideally using the actual project state...
+
+	//one idea to accomplish this is to perhaps have a toggle from freecam, to the project state dictating camera motion. 
 
 	private PerspectiveScreen perspectiveScreen;
 	private UIScreen uiScreen;

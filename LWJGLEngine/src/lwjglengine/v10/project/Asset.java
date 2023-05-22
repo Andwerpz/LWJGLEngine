@@ -8,7 +8,9 @@ import myutils.v11.file.FileUtils;
 
 public abstract class Asset {
 	//asset class is only responsible for loading itself. 
-	//taking care of dependencies is done outside of asset class. 
+	//loading of dependencies is done outside of asset class. 
+
+	//however, this class is responsible for making sure that it's own dependencies are correct. 
 
 	//TODO
 	// - make sure that for each asset, only one instance of each thing is loaded. 
@@ -116,7 +118,12 @@ public abstract class Asset {
 
 	protected abstract void _unload();
 
-	protected abstract void save() throws IOException;
+	public void save() {
+		this.computeDependencies();
+		this.save();
+	}
+
+	protected abstract void _save() throws IOException;
 
 	//dependencies shouldn't change while actually playing the game, so we shouldn't have to worry about loading or unloading when 
 	//changing dependencies. 
@@ -136,6 +143,8 @@ public abstract class Asset {
 	public HashSet<Long> getDependencies() {
 		return this.assetDependencies;
 	}
+
+	protected abstract void computeDependencies();
 
 	public long getID() {
 		return this.id;

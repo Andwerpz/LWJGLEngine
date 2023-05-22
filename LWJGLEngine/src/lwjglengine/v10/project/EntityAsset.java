@@ -24,7 +24,12 @@ public class EntityAsset extends Asset {
 	}
 
 	@Override
-	protected void save() throws IOException {
+	protected void _save() throws IOException {
+
+	}
+
+	@Override
+	protected void computeDependencies() {
 
 	}
 

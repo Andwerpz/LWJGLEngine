@@ -416,6 +416,10 @@ public class Model {
 		System.out.println("REMOVE MODEL INSTANCE " + ID);
 	}
 
+	public static void updateInstance(long ID, ModelTransform m) {
+		Model.updateInstance(ID, m.getModelMatrix());
+	}
+
 	public static void updateInstance(long ID, Mat4 mat4) {
 		Model model = IDtoModel.get(ID);
 		if (IDtoScene.get(ID) == null) {

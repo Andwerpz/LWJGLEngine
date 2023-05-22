@@ -73,7 +73,7 @@ public class LoadState extends State {
 	public void update() {
 		long curTime = System.currentTimeMillis();
 		if (this.state == TRANSITIONING_IN) {
-			this.alpha = MathUtils.interpolate(0, 0, 1, TRANSITION_IN_DURATION_MILLIS, curTime - startTime);
+			this.alpha = MathUtils.lerp(0, 0, 1, TRANSITION_IN_DURATION_MILLIS, curTime - startTime);
 			if (curTime > endTime) {
 				alpha = 1;
 				this.state = READY_TO_LOAD;
@@ -88,7 +88,7 @@ public class LoadState extends State {
 			this.endTime = startTime + TRANSITION_OUT_DURATION_MILLIS;
 		}
 		else if (this.state == TRANSITIONING_OUT) {
-			this.alpha = MathUtils.interpolate(1, 0, 0, TRANSITION_OUT_DURATION_MILLIS, curTime - startTime);
+			this.alpha = MathUtils.lerp(1, 0, 0, TRANSITION_OUT_DURATION_MILLIS, curTime - startTime);
 			if (curTime > endTime) {
 				alpha = 0;
 				this.state = FINISHED;

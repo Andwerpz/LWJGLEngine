@@ -193,7 +193,13 @@ public class Project {
 	 */
 	private void saveProject() {
 		try {
-			this.generateAssetDependencyNodes();
+			//update all assets
+			{
+				for (long id : this.assets.keySet()) {
+					Asset a = this.assets.get(id);
+					a._save();
+				}
+			}
 
 			//update project.dat
 			{
@@ -228,13 +234,8 @@ public class Project {
 				fout.close();
 			}
 
-			//update all assets
-			{
-				for (long id : this.assets.keySet()) {
-					Asset a = this.assets.get(id);
-					a.save();
-				}
-			}
+			//after updating the assets, generate new dependency nodes. 
+			this.generateAssetDependencyNodes();
 		}
 		catch (IOException e) {
 			System.err.println("Failed to save project");

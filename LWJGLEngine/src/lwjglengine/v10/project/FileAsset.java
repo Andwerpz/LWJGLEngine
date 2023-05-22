@@ -55,8 +55,13 @@ public class FileAsset extends Asset {
 	}
 
 	@Override
-	protected void save() throws IOException {
+	protected void _save() throws IOException {
 		//for now, we can just do nothing. 
+	}
+
+	@Override
+	protected void computeDependencies() {
+		//this type of asset should have no dependencies. 
 	}
 
 }
