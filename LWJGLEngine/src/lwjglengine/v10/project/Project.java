@@ -11,8 +11,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Stack;
 import java.util.StringTokenizer;
 
+import lwjglengine.v10.asset.Asset;
+import lwjglengine.v10.asset.AssetDependencyNode;
+import lwjglengine.v10.asset.EntityAsset;
+import lwjglengine.v10.asset.StateAsset;
+import lwjglengine.v10.asset.TextureAsset;
+import lwjglengine.v10.graphics.Texture;
 import myutils.v10.algorithm.GraphUtils;
 import myutils.v10.misc.BiMap;
 import myutils.v11.file.FileUtils;
@@ -44,6 +51,8 @@ public class Project {
 	//each asset gets an id used by this project. 
 	private HashMap<Long, Asset> assets;
 
+	private HashMap<String, Long> relativeFilepathToAsset;
+
 	//list of dependency nodes for all the current assets. 
 	//each dependency node represents one scc in the asset dependency graph. 
 	//it is guaranteed that the graph formed by the asset dependency nodes is a DAG/tree. 
@@ -53,8 +62,21 @@ public class Project {
 	//when loading assets, load by loading the asset dependency node associated with the asset. 
 	private HashMap<Long, AssetDependencyNode> assetToDependencyNode;
 
+	//assets that have been loaded from the outside, along with a count of how many times they were loaded. 
+	private HashMap<Long, Integer> externallyLoadedAssets;
+
+	private boolean isEditing = false;
+
 	public Project(File projectDirectory) throws IOException {
 		this.init(projectDirectory);
+	}
+
+	public void setIsEditing(boolean b) {
+		this.isEditing = b;
+	}
+
+	public boolean isEditing() {
+		return this.isEditing;
 	}
 
 	/**
@@ -110,9 +132,12 @@ public class Project {
 		this.projectDirectory = projectDirectory;
 
 		this.assets = new HashMap<>();
+		this.relativeFilepathToAsset = new HashMap<>();
 
 		this.assetDependencyNodes = new ArrayList<>();
 		this.assetToDependencyNode = new HashMap<>();
+
+		this.externallyLoadedAssets = new HashMap<>();
 
 		//look for project file
 		this.projectFile = new File(this.projectDirectory.getPath() + File.separator + PROJECT_FILE_NAME);
@@ -172,6 +197,7 @@ public class Project {
 				File f = new File(this.assetsDirectory.getPath() + relativePath);
 				Asset a = Asset.createAsset(f, assetID, assetName, this, assetType);
 				this.assets.put(assetID, a);
+				this.relativeFilepathToAsset.put(relativePath, assetID);
 
 				//dependencies
 				int numDependencies = Integer.parseInt(fin.readLine());
@@ -191,13 +217,15 @@ public class Project {
 	 * Also updates the assets. 
 	 * @throws IOException
 	 */
-	private void saveProject() {
+	public void saveProject() {
 		try {
 			//update all assets
 			{
 				for (long id : this.assets.keySet()) {
 					Asset a = this.assets.get(id);
-					a._save();
+					if (a.isLoaded()) {
+						a.save();
+					}
 				}
 			}
 
@@ -338,6 +366,129 @@ public class Project {
 
 	public Asset getAsset(long id) {
 		return this.assets.get(id);
+	}
+
+	public boolean isAssetLoaded(long id) {
+		Asset a = this.getAsset(id);
+		return a != null && a.isLoaded();
+	}
+
+	public long findAssetFromRelativeFilepath(String relFilepath) {
+		if (this.relativeFilepathToAsset.get(relFilepath) != null) {
+			return this.relativeFilepathToAsset.get(relFilepath);
+		}
+		return -1;
+	}
+
+	public void loadAsset(long id) {
+		if (!this.assets.containsKey(id)) {
+			return;
+		}
+
+		AssetDependencyNode n = this.assetToDependencyNode.get(id);
+		n.load();
+
+		//System.err.println("LOADING ASSET VIA PROJECT : " + id);
+		this.externallyLoadedAssets.put(id, this.externallyLoadedAssets.getOrDefault(id, 0) + 1);
+	}
+
+	public void unloadAsset(long id) {
+		if (!this.assets.containsKey(id)) {
+			return;
+		}
+
+		AssetDependencyNode n = this.assetToDependencyNode.get(id);
+		n.unload();
+
+		//System.err.println("UNLOADING ASSET VIA PROJECT : " + id);
+
+		this.externallyLoadedAssets.put(id, this.externallyLoadedAssets.get(id) - 1);
+		if (this.externallyLoadedAssets.get(id) == 0) {
+			this.externallyLoadedAssets.remove(id);
+		}
+
+		if (this.isEditing()) {
+			//we should probably have a seperate thing for this, like project.addAssetDependency
+			//and in that function, do this. 
+			//when modifying the assets, we also probably want to update the dependency graph in realtime as well.
+
+			//make sure that all dependencies are satisfied. 
+			// - create a list of all externally loaded dependencies
+			// - for each scc, if it includes an externally loaded dependency, then it should remain loaded, else it should be unloaded. 
+
+			this.generateAssetDependencyNodes();
+
+			//find all dependency nodes that are loaded externally
+			HashSet<AssetDependencyNode> shouldBeLoaded = new HashSet<>();
+			Stack<AssetDependencyNode> dfsStack = new Stack<>();
+			for (AssetDependencyNode i : this.assetDependencyNodes) {
+				for (Asset j : i.getAssets()) {
+					if (this.externallyLoadedAssets.containsKey(j.getID())) {
+						dfsStack.push(i);
+						shouldBeLoaded.add(i);
+						break;
+					}
+				}
+			}
+			while (dfsStack.size() != 0) {
+				AssetDependencyNode next = dfsStack.pop();
+				for (AssetDependencyNode i : next.getDependencies()) {
+					if (shouldBeLoaded.contains(i)) {
+						continue;
+					}
+					shouldBeLoaded.add(i);
+					dfsStack.push(i);
+				}
+			}
+
+			//go through all nodes. If the node should not be loaded, then forcefully unload all the assets
+			//we do this in the first pass because loading assets lower in the tree will interfere with unloading. 
+			for (AssetDependencyNode i : this.assetDependencyNodes) {
+				if (!shouldBeLoaded.contains(i)) {
+					i.setNumLoadedDependents(1); //trick it into thinking it needs unloading
+					//System.err.println("Force unloading asset dependency node");
+					i.unload();
+				}
+			}
+
+			//if it should be, then check to see if there are any external dependencies. If there are, you can go ahead and load it. 
+			for (AssetDependencyNode i : this.assetDependencyNodes) {
+				if (shouldBeLoaded.contains(i)) {
+					//find sum of external dependents
+					int sum = 0;
+					for (Asset j : i.getAssets()) {
+						if (this.externallyLoadedAssets.get(j.getID()) != null) {
+							sum += this.externallyLoadedAssets.get(j.getID());
+						}
+					}
+
+					if (sum != 0) {
+						//this thing is loaded externally. run load once, then add to the number of external 
+						//dependents sum - 1. 
+						i.load();
+						i.setNumLoadedDependents(i.getNumLoadedDependents() + sum - 1);
+					}
+					else {
+						//this thing should eventually be loaded because it is a dependency of an externally loaded node
+						//we don't have to do anything. 
+					}
+				}
+			}
+		}
+	}
+
+	public Texture getTexture(long id) {
+		if (!isAssetLoaded(id)) {
+			return null;
+		}
+
+		Asset a = this.getAsset(id);
+
+		if (!(a instanceof TextureAsset)) {
+			return null;
+		}
+
+		return ((TextureAsset) a).getTexture();
 	}
 
 	private void generateAssetDependencyNodes() {

@@ -132,6 +132,8 @@ public class ProjectManagerWindow extends Window {
 
 	@Override
 	protected void _kill() {
+		this.project.saveProject();
+
 		this.uiScreen.kill();
 
 		Scene.removeScene(TOP_BAR_BACKGROUND_SCENE);
@@ -242,6 +244,7 @@ public class ProjectManagerWindow extends Window {
 				}
 			}
 			this.hasProject = true;
+			this.project.setIsEditing(true);
 		}
 	}
 

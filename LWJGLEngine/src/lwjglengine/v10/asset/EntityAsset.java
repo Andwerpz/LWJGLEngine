@@ -1,7 +1,9 @@
-package lwjglengine.v10.project;
+package lwjglengine.v10.asset;
 
 import java.io.File;
 import java.io.IOException;
+
+import lwjglengine.v10.project.Project;
 
 public class EntityAsset extends Asset {
 
@@ -29,7 +31,7 @@ public class EntityAsset extends Asset {
 	}
 
 	@Override
-	protected void computeDependencies() {
+	protected void _computeDependencies() {
 
 	}
 

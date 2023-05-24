@@ -9,7 +9,7 @@ import java.util.HashSet;
 import javax.imageio.ImageIO;
 
 import lwjglengine.v10.util.BufferUtils;
-import myutils.v10.file.FileUtils;
+import myutils.v11.file.FileUtils;
 import myutils.v10.graphics.GraphicsTools;
 import myutils.v10.math.MathUtils;
 import myutils.v10.math.Vec3;
@@ -36,6 +36,7 @@ public class Texture {
 	private int width, height;
 	private int textureID;
 
+	//uses relative path
 	public Texture(String path) {
 		this.textureID = this.load(path, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
 	}
@@ -109,7 +110,7 @@ public class Texture {
 	}
 
 	private int load(String path, int loadOptions, int minSampleType, int magSampleType, int numMipmapLevels) {
-		BufferedImage img = FileUtils.loadImage(path);
+		BufferedImage img = FileUtils.loadImageRelative(path);
 		return this.load(img, loadOptions, minSampleType, magSampleType, numMipmapLevels);
 	}
 
@@ -134,7 +135,7 @@ public class Texture {
 	}
 
 	public static int[] getDataFromImage(String path, int loadOptions, int[] outWH) {
-		BufferedImage img = FileUtils.loadImage(path);
+		BufferedImage img = FileUtils.loadImageRelative(path);
 		return Texture.getDataFromImage(img, loadOptions, outWH);
 	}
 

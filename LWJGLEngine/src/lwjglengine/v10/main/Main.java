@@ -21,7 +21,6 @@ import lwjglengine.v10.graphics.Shader;
 import lwjglengine.v10.input.KeyboardInput;
 import lwjglengine.v10.input.MouseInput;
 import lwjglengine.v10.input.ScrollInput;
-import lwjglengine.v10.model.AssetManager;
 import lwjglengine.v10.model.Model;
 import lwjglengine.v10.networking.Client;
 import lwjglengine.v10.networking.Server;
@@ -129,7 +128,6 @@ public class Main implements Runnable {
 
 		// INIT
 		Shader.init();
-		AssetManager.init();
 		this.sm = new StateManagerWindow();
 
 		Main.main = this;

@@ -2,7 +2,6 @@ package lwjglengine.v10.entity;
 
 import java.util.ArrayList;
 
-import lwjglengine.v10.model.AssetManager;
 import lwjglengine.v10.model.Model;
 import myutils.v10.math.Mat4;
 import myutils.v10.math.MathUtils;
@@ -30,9 +29,9 @@ public class Capsule extends Entity {
 		this.height = height;
 		this.scene = scene;
 
-		this.cylinderID = Model.addInstance(AssetManager.getModel("cylinder"), Mat4.identity(), this.scene);
-		this.bottomSphereID = Model.addInstance(AssetManager.getModel("sphere"), Mat4.identity(), this.scene);
-		this.topSphereID = Model.addInstance(AssetManager.getModel("sphere"), Mat4.identity(), this.scene);
+		//this.cylinderID = Model.addInstance(AssetManager.getModel("cylinder"), Mat4.identity(), this.scene);
+		//this.bottomSphereID = Model.addInstance(AssetManager.getModel("sphere"), Mat4.identity(), this.scene);
+		//this.topSphereID = Model.addInstance(AssetManager.getModel("sphere"), Mat4.identity(), this.scene);
 		this.updateModelMats();
 	}
 

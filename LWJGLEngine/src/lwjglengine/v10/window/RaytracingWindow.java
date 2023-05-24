@@ -14,7 +14,6 @@ import java.awt.Color;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.main.Main;
-import lwjglengine.v10.model.AssetManager;
 import lwjglengine.v10.player.PlayerInputController;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.RaytracingScreen;
@@ -44,8 +43,6 @@ public class RaytracingWindow extends Window {
 
 		this.raytracingScreen = new RaytracingScreen();
 		this.raytracingScreen.setRenderMode(RaytracingScreen.RENDER_MODE_PREVIEW);
-
-		Scene.skyboxes.put(RAYTRACING_SCENE, AssetManager.getSkybox("lake_skybox"));
 
 		this.pic = new PlayerInputController(new Vec3(0, 50, 0));
 

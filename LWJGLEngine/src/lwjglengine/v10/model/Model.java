@@ -171,6 +171,9 @@ public class Model {
 
 	// must have .mtl file to be able to load materials
 	// this assumes that all textures are located in the same directory as the actual model
+
+	// use the Asset class to load models
+	@Deprecated
 	public static Model loadModelFile(File file) throws IOException {
 		String filepath = file.getAbsolutePath();
 		String parentFilepath = file.getParent() + "\\";
@@ -327,10 +330,12 @@ public class Model {
 		return new Model(meshes, defaultMaterials, textureMaterials);
 	}
 
+	@Deprecated
 	public static Model loadModelFile(String filepath) throws IOException {
 		return Model.loadModelFile(FileUtils.loadFile(filepath));
 	}
 
+	@Deprecated
 	public static Model loadModelFileRelative(String relativeFilepath) throws IOException {
 		String workingDirectory = SystemUtils.getWorkingDirectory();
 		String filepath = workingDirectory + "/res" + relativeFilepath;
@@ -640,10 +645,14 @@ public class Model {
 
 		//what if the texture material used in this model is also used elsewhere?
 		//should we maintain that each model must use unique instances of materials?
+		//the asset class handles alot of dependency stuff right now, should we make it so that
+		//3d models are another type of asset, and require texture files as dependencies?
 		for (TextureMaterial t : this.textureMaterials) {
 			t.kill();
 		}
 
+		//this is fine, i think
+		//we should demand that a vertex array can only be used in one model
 		for (VertexArray v : this.meshes) {
 			v.kill();
 		}

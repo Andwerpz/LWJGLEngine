@@ -33,7 +33,7 @@ import lwjglengine.v10.ui.UIElement;
 import lwjglengine.v10.ui.UIFilledRectangle;
 import lwjglengine.v10.window.AdjustableWindow;
 import lwjglengine.v10.window.FileExplorerWindow;
-import lwjglengine.v10.window.ModelViewerWindow;
+import lwjglengine.v10.window.ModelAssetViewerWindow;
 import lwjglengine.v10.window.RaytracingWindow;
 import lwjglengine.v10.window.Window;
 import myutils.v10.math.Vec3;
@@ -78,8 +78,8 @@ public class StateManagerWindow extends Window {
 		this.backgroundRect.setMaterial(new Material(new Vec4(0, 0, 0, 1)));
 		this.backgroundRect.bind(this.rootUIElement);
 
-		TextureMaterial logoIconTexture = new TextureMaterial(new Texture("Halfcup_icon_white.png", Texture.VERTICAL_FLIP_BIT));
-		TextureMaterial logoTexture = new TextureMaterial(new Texture("Halfcup_logo_v2.png", Texture.VERTICAL_FLIP_BIT));
+		TextureMaterial logoIconTexture = new TextureMaterial(new Texture("/Halfcup_icon_white.png", Texture.VERTICAL_FLIP_BIT));
+		TextureMaterial logoTexture = new TextureMaterial(new Texture("/Halfcup_logo_v2.png", Texture.VERTICAL_FLIP_BIT));
 
 		this.logoIconRect = new UIFilledRectangle(0, 0, 0, 600, 200, new FilledRectangle(), LOGO_SCENE);
 		this.logoIconRect.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
@@ -93,7 +93,6 @@ public class StateManagerWindow extends Window {
 		ArrayList<String> contextMenuOptions = new ArrayList<>();
 		contextMenuOptions.add("New File Explorer Window");
 		contextMenuOptions.add("New Raytracing Window");
-		contextMenuOptions.add("New Model Viewer Window");
 		contextMenuOptions.add("New Project Manager Window");
 
 		this.setContextMenuOptions(contextMenuOptions);
@@ -109,10 +108,6 @@ public class StateManagerWindow extends Window {
 
 		case "New Raytracing Window":
 			Window raytracer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Raytracing", new RaytracingWindow(), this);
-			break;
-
-		case "New Model Viewer Window":
-			Window modelViewer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Model Viewer", new ModelViewerWindow(), this);
 			break;
 
 		case "New Project Manager Window":

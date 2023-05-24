@@ -1,5 +1,6 @@
 package lwjglengine.v10.project;
 
+import lwjglengine.v10.asset.StateAsset;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.screen.PerspectiveScreen;
 import lwjglengine.v10.screen.UIScreen;

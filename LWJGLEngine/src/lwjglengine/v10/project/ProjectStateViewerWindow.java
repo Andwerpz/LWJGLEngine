@@ -3,6 +3,8 @@ package lwjglengine.v10.project;
 import java.awt.Color;
 import java.util.ArrayList;
 
+import lwjglengine.v10.asset.Asset;
+import lwjglengine.v10.asset.StateAsset;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.input.Button;
 import lwjglengine.v10.ui.UIElement;

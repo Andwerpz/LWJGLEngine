@@ -1,9 +1,10 @@
-package lwjglengine.v10.project;
+package lwjglengine.v10.asset;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 
+import lwjglengine.v10.project.Project;
 import myutils.v11.file.FileUtils;
 
 public abstract class Asset {
@@ -12,31 +13,29 @@ public abstract class Asset {
 
 	//however, this class is responsible for making sure that it's own dependencies are correct. 
 
+	//assets will update their dependencies when unloading, if the project is currently in edit mode. 
+
 	//TODO
-	// - make sure that for each asset, only one instance of each thing is loaded. 
-	//   - ex. for a 3D model file, don't have multiple models from the same asset. 
-	//   - perhaps this shouldn't be the responsibility of asset? maybe we load stuff based on scene?
-	//   - nah, i think the asset should have a load and unload function, and the state should be able to load whatever file it needs from the project object
-	//   - this comes with added bonus that if the asset was not loaded, then we can give an error texture/model/sound or whatever. 
+	// - rework saving info in text files, it would be nice to have a format that is like json or something. 
 
 	public static final int TYPE_UNKNOWN = -1; //never used 
 	public static final int TYPE_FILE = 0;
 	public static final int TYPE_ENTITY = 1;
 	public static final int TYPE_STATE = 2;
 
-	private Project project;
+	protected Project project;
 
 	//assets that need to be loaded for this state to function. 
 	//this includes the assets of dependencies, such as entities that are loaded within this state. 
 	//all these assets will be loaded in the load function to improve the user experience :D
 	private HashSet<Long> assetDependencies;
 
-	private boolean loaded = false;
+	protected boolean loaded = false;
 
-	private File file;
-	private int type;
+	protected File file;
+	protected int type;
 
-	private long id;
+	protected long id;
 
 	protected String name;
 
@@ -45,6 +44,7 @@ public abstract class Asset {
 		this.id = id;
 		this.type = determineType(this);
 		this.name = name;
+		this.project = project;
 		this.assetDependencies = new HashSet<>();
 	}
 
@@ -78,7 +78,7 @@ public abstract class Asset {
 	public static Asset createAsset(File f, long id, String name, Project project, int type) {
 		switch (type) {
 		case TYPE_FILE: {
-			return new FileAsset(f, id, f.getName(), project);
+			return FileAsset.createFileAsset(f, id, name, project);
 		}
 		case TYPE_ENTITY: {
 			return new EntityAsset(f, id, name, project);
@@ -94,22 +94,35 @@ public abstract class Asset {
 		return createAsset(f, id, name, project, determineType(f));
 	}
 
-	//load, and load any dependencies. 
-	public void load() {
+	//load yourself
+	//only called from assetDependencyNode
+	protected void load() {
 		if (this.loaded) {
 			return;
 		}
 
-		this._load();
+		try {
+			this._load();
+		}
+		catch (IOException e) {
+			System.err.println("Failed to load asset : " + this.name);
+			e.printStackTrace();
+			return;
+		}
 		this.loaded = true;
 	}
 
-	protected abstract void _load();
+	protected abstract void _load() throws IOException;
 
-	//should unload if numLoadedDependents == 0. 
-	public void unload() {
+	//unload yourself
+	//only called from assetDependencyNode
+	protected void unload() {
 		if (!this.loaded) {
-			this.loaded = false;
+			return;
+		}
+
+		if (this.project.isEditing()) {
+			this.save();
 		}
 
 		this._unload();
@@ -118,9 +131,22 @@ public abstract class Asset {
 
 	protected abstract void _unload();
 
+	//we must load the asset in order to save it. 
+	//if we don't load it, then how is the asset going to know what to save?
 	public void save() {
+		if (!this.isLoaded()) {
+			System.err.println("Asset Warning : Tried to save unloaded asset named : " + this.getName());
+			return;
+		}
+
 		this.computeDependencies();
-		this.save();
+		try {
+			this._save();
+		}
+		catch (IOException e) {
+			System.out.println("Asset failed to save : " + this.getName());
+			e.printStackTrace();
+		}
 	}
 
 	protected abstract void _save() throws IOException;
@@ -144,7 +170,13 @@ public abstract class Asset {
 		return this.assetDependencies;
 	}
 
-	protected abstract void computeDependencies();
+	private void computeDependencies() {
+		this.assetDependencies.clear();
+		this._computeDependencies();
+	}
+
+	//should tally up all of the dependencies from this asset. 
+	protected abstract void _computeDependencies();
 
 	public long getID() {
 		return this.id;
@@ -168,5 +200,13 @@ public abstract class Asset {
 
 	public String getName() {
 		return this.name;
+	}
+
+	public Project getProject() {
+		return this.project;
+	}
+
+	public boolean isLoaded() {
+		return this.loaded;
 	}
 }

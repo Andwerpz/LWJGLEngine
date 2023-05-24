@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import lwjglengine.v10.graphics.Material;
-import lwjglengine.v10.model.AssetManager;
 import lwjglengine.v10.model.Model;
 import myutils.v10.math.Mat4;
 

@@ -38,8 +38,8 @@ public class TextureMaterial {
 
 	public static final Texture DIFFUSE_DEFAULT = new Texture(255, 255, 255, 1);
 	public static final Texture SPECULAR_DEFAULT = new Texture(255, 255, 255, 1);
-	public static final Texture NORMAL_DEFAULT = new Texture("tex_normal_default.png");
-	public static final Texture DISPLACEMENT_DEFAULT = new Texture("tex_displacement_default.png", Texture.INVERT_COLORS_BIT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
+	public static final Texture NORMAL_DEFAULT = new Texture("/tex_normal_default.png");
+	public static final Texture DISPLACEMENT_DEFAULT = new Texture("/tex_displacement_default.png", Texture.INVERT_COLORS_BIT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
 
 	private int width, height;
 	private Texture diffuse, specular, normal, displacement;

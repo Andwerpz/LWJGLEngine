@@ -140,6 +140,10 @@ public abstract class Window {
 	}
 
 	public void kill() {
+		if (!this.isAlive) {
+			//can't kill what's already dead :P
+			return;
+		}
 		this.isAlive = false;
 
 		this.colorBuffer.kill();

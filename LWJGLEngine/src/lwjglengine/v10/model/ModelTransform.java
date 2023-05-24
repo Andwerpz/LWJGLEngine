@@ -1,5 +1,7 @@
 package lwjglengine.v10.model;
 
+import java.util.StringTokenizer;
+
 import myutils.v10.math.Mat4;
 import myutils.v10.math.MathUtils;
 import myutils.v10.math.Quaternion;
@@ -24,6 +26,12 @@ public class ModelTransform {
 		this.scale = 1;
 		this.rotation = Quaternion.identity();
 		this.translate = new Vec3(0);
+	}
+
+	public ModelTransform(float scale, Quaternion rotation, Vec3 translate) {
+		this.scale = scale;
+		this.rotation = new Quaternion(rotation);
+		this.translate = new Vec3(translate);
 	}
 
 	/**
@@ -81,5 +89,22 @@ public class ModelTransform {
 
 	public void setScale(float s) {
 		this.scale = s;
+	}
+
+	@Override
+	public String toString() {
+		String ret = "";
+		ret += this.scale + "\n";
+		ret += this.rotation.toString() + "\n";
+		ret += this.translate.toString();
+		return ret;
+	}
+
+	public static ModelTransform parseModelTransform(String s) {
+		StringTokenizer st = new StringTokenizer(s, "\n");
+		float scale = Float.parseFloat(st.nextToken());
+		Quaternion rotation = Quaternion.parseQuaternion(st.nextToken());
+		Vec3 translate = Vec3.parseVec3(st.nextToken());
+		return new ModelTransform(scale, rotation, translate);
 	}
 }

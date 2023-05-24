@@ -4,11 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import lwjglengine.v10.asset.ModelAsset;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.model.Line;
 import lwjglengine.v10.model.Model;
 import lwjglengine.v10.player.PlayerInputController;
+import lwjglengine.v10.project.Project;
+import lwjglengine.v10.project.ProjectAssetViewerWindow;
 import lwjglengine.v10.scene.DirLight;
 import lwjglengine.v10.scene.Light;
 import lwjglengine.v10.scene.Scene;
@@ -19,7 +22,7 @@ import lwjglengine.v10.ui.UIFilledRectangle;
 import myutils.v10.math.Mat4;
 import myutils.v10.math.Vec3;
 
-public class ModelViewerWindow extends BorderedWindow {
+public class ModelAssetViewerWindow extends BorderedWindow {
 	//TODO
 	// - have an orientation compass thingy like blender does
 	// - draw gridlines that automatically adjust depending on the current position of the camera. 
@@ -34,8 +37,8 @@ public class ModelViewerWindow extends BorderedWindow {
 	private UIScreen uiScreen;
 	private PerspectiveScreen perspectiveScreen;
 
-	private Model model;
-	private boolean hasModel;
+	private Project project;
+	private ModelAsset modelAsset;
 
 	private long modelInstanceID;
 
@@ -46,23 +49,19 @@ public class ModelViewerWindow extends BorderedWindow {
 	private PlayerInputController pic;
 	private float cameraDistFromCenter = 1f;
 
-	public ModelViewerWindow(int xOffset, int yOffset, int width, int height, Window parentWindow) {
+	public ModelAssetViewerWindow(int xOffset, int yOffset, int width, int height, Project project, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
-		this.init(null);
+		this.init(null, project);
 	}
 
-	public ModelViewerWindow(File f) throws IOException {
+	public ModelAssetViewerWindow(ModelAsset modelAsset, Project project) throws IOException {
 		super(0, 0, 300, 400, null);
-		Model m = Model.loadModelFile(f);
-		this.init(m);
+		this.init(modelAsset, project);
 	}
 
-	public ModelViewerWindow() {
-		super(0, 0, 300, 400, null);
-		this.init(null);
-	}
+	private void init(ModelAsset modelAsset, Project project) {
+		this.project = project;
 
-	private void init(Model model) {
 		this.perspectiveScreen = new PerspectiveScreen();
 		this.uiScreen = new UIScreen();
 
@@ -78,21 +77,10 @@ public class ModelViewerWindow extends BorderedWindow {
 		this.pic.setCamYRot((float) Math.PI / 4.0f);
 		this.pic.setAcceptPlayerInputs(false);
 
-		ArrayList<String> contextMenuOptions = new ArrayList<>();
-		contextMenuOptions.add("Load Model");
+		this.modelAsset = modelAsset;
 
-		this.setContextMenuRightClick(true);
-		this.setContextMenuOptions(contextMenuOptions);
-
-		this.model = model;
-
-		if (this.model != null) {
-			this.hasModel = true;
-			this.modelInstanceID = Model.addInstance(this.model, Mat4.identity(), WORLD_SCENE);
-		}
-		else {
-			this.hasModel = false;
-		}
+		this.project.loadAsset(this.modelAsset.getID());
+		this.modelInstanceID = Model.addInstance(this.modelAsset.getModel(), Mat4.identity(), WORLD_SCENE);
 
 		UIFilledRectangle backgroundRect = new UIFilledRectangle(0, 0, 0, 1, 1, BACKGROUND_SCENE);
 		backgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
@@ -124,42 +112,12 @@ public class ModelViewerWindow extends BorderedWindow {
 	}
 
 	@Override
-	public void handleContextMenuAction(String action) {
-		switch (action) {
-		case "Load Model":
-			Window fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "File Explorer", new FileExplorerWindow(this), this);
-			break;
-		}
-	}
-
-	@Override
-	public void handleFile(File file) {
-		Model nextModel = null;
-		try {
-			nextModel = Model.loadModelFile(file);
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-			return;
-		}
-
-		if (this.hasModel) {
-			Model.removeInstance(this.modelInstanceID);
-			this.modelInstanceID = -1;
-			this.model.kill();
-			this.model = null;
-			this.hasModel = false;
-		}
-
-		this.model = nextModel;
-		this.modelInstanceID = Model.addInstance(this.model, Mat4.identity(), WORLD_SCENE);
-		this.hasModel = true;
-	}
-
-	@Override
 	protected void __kill() {
 		this.perspectiveScreen.kill();
 		this.uiScreen.kill();
+
+		System.err.println("MODEL VIEWER UNLOADING ASSET");
+		this.project.unloadAsset(this.modelAsset.getID());
 
 		Scene.removeScene(BACKGROUND_SCENE);
 		Scene.removeScene(WORLD_SCENE);

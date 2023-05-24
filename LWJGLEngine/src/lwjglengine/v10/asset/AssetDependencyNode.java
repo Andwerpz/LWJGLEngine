@@ -1,7 +1,9 @@
-package lwjglengine.v10.project;
+package lwjglengine.v10.asset;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+
+import lwjglengine.v10.project.Project;
 
 public class AssetDependencyNode {
 	//stores one strongly connected component of assets. 
@@ -12,7 +14,7 @@ public class AssetDependencyNode {
 	private Project project;
 
 	private boolean isLoaded = false;
-	private int loadedDependants = 0; //how many things that depend on you are loaded?
+	private int numLoadedDependents = 0; //how many things that depend on you are loaded?
 
 	private HashSet<AssetDependencyNode> dependencies;
 
@@ -26,40 +28,42 @@ public class AssetDependencyNode {
 
 	//load all the assets associated with this node, 
 	public void load() {
-		this.loadedDependants++;
-		if (this.isLoaded) {
-			return;
-		}
+		this.numLoadedDependents++;
 
 		//ask all dependencies to load
 		for (AssetDependencyNode a : this.dependencies) {
 			a.load();
 		}
 
-		//load all assets
-		this.isLoaded = true;
-		for (Asset a : this.assets) {
-			a.load();
+		if (!this.isLoaded) {
+			//load all assets
+			this.isLoaded = true;
+			for (Asset a : this.assets) {
+				a.load();
+			}
 		}
 	}
 
 	//unload if there is nothing that depends on this asset. 
 	public void unload() {
-		this.loadedDependants--;
-		if (this.loadedDependants != 0) {
-			//there are still things that are loaded that depend on this. 
+		if (this.numLoadedDependents == 0) {
+			System.err.println("Asset Dependency Node Warning : Tried to unload something that already had 0 loaded dependants");
 			return;
 		}
+
+		this.numLoadedDependents--;
 
 		//ask all dependencies to unload
 		for (AssetDependencyNode a : this.dependencies) {
 			a.unload();
 		}
 
-		//unload all assets
-		this.isLoaded = false;
-		for (Asset a : this.assets) {
-			a.load();
+		if (this.numLoadedDependents == 0) {
+			//unload all assets
+			this.isLoaded = false;
+			for (Asset a : this.assets) {
+				a.unload();
+			}
 		}
 	}
 
@@ -86,6 +90,14 @@ public class AssetDependencyNode {
 
 	public boolean isLoaded() {
 		return this.isLoaded;
+	}
+
+	public int getNumLoadedDependents() {
+		return this.numLoadedDependents;
+	}
+
+	public void setNumLoadedDependents(int n) {
+		this.numLoadedDependents = n;
 	}
 
 }

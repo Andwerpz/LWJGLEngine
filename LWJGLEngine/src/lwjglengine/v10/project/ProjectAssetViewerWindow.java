@@ -4,6 +4,9 @@ import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import lwjglengine.v10.asset.Asset;
+import lwjglengine.v10.asset.FileAsset;
+import lwjglengine.v10.asset.ModelAsset;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.scene.Scene;
@@ -12,7 +15,7 @@ import lwjglengine.v10.ui.Text;
 import lwjglengine.v10.ui.UIElement;
 import lwjglengine.v10.ui.UIFilledRectangle;
 import lwjglengine.v10.window.ListViewerWindow;
-import lwjglengine.v10.window.ModelViewerWindow;
+import lwjglengine.v10.window.ModelAssetViewerWindow;
 import lwjglengine.v10.window.Window;
 import lwjglengine.v10.window.AdjustableWindow;
 import myutils.v10.math.Vec3;
@@ -46,6 +49,11 @@ public class ProjectAssetViewerWindow extends Window {
 
 	public ProjectAssetViewerWindow(int xOffset, int yOffset, int width, int height, Project project, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
+		this.init(project);
+	}
+
+	public ProjectAssetViewerWindow(Project project, Window parentWindow) {
+		super(0, 0, 300, 300, parentWindow);
 		this.init(project);
 	}
 
@@ -85,7 +93,7 @@ public class ProjectAssetViewerWindow extends Window {
 		switch (a.getFileType()) {
 		case FileAsset.FILE_TYPE_MODEL: {
 			try {
-				Window w = new AdjustableWindow("Model Viewer", new ModelViewerWindow(a.getFile()), this);
+				Window w = new AdjustableWindow("Model Viewer", new ModelAssetViewerWindow((ModelAsset) a, this.project), this);
 			}
 			catch (IOException e) {
 				System.err.println("Failed to generate model viewer");

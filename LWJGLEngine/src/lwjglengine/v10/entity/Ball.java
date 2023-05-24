@@ -2,7 +2,6 @@ package lwjglengine.v10.entity;
 
 import java.util.ArrayList;
 
-import lwjglengine.v10.model.AssetManager;
 import lwjglengine.v10.model.Model;
 import myutils.v10.math.Mat4;
 import myutils.v10.math.Vec3;
@@ -29,7 +28,7 @@ public class Ball extends Entity {
 		this.transformMat = Mat4.scale(this.radius).mul(Mat4.translate(this.pos));
 		this.scene = scene;
 
-		this.modelInstanceID = addModelInstance(AssetManager.getModel("sphere"), this.transformMat, this.scene);
+		//this.modelInstanceID = addModelInstance(AssetManager.getModel("sphere"), this.transformMat, this.scene);
 	}
 
 	@Override

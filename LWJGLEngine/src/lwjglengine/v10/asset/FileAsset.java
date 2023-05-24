@@ -1,11 +1,12 @@
-package lwjglengine.v10.project;
+package lwjglengine.v10.asset;
 
 import java.io.File;
 import java.io.IOException;
 
+import lwjglengine.v10.project.Project;
 import myutils.v10.file.FileUtils;
 
-public class FileAsset extends Asset {
+public abstract class FileAsset extends Asset {
 
 	public static final int FILE_TYPE_OTHER = -1;
 	public static final int FILE_TYPE_MODEL = 0;
@@ -38,30 +39,30 @@ public class FileAsset extends Asset {
 		return FILE_TYPE_OTHER;
 	}
 
+	public static FileAsset createFileAsset(File f, long id, String name, Project project, int type) {
+		switch (type) {
+		case FILE_TYPE_MODEL:
+			return new ModelAsset(f, id, name, project);
+
+		case FILE_TYPE_TEXTURE:
+			return new TextureAsset(f, id, name, project);
+
+		case FILE_TYPE_SOUND:
+			return new SoundAsset(f, id, name, project);
+
+		case FILE_TYPE_OTHER:
+			return new OtherAsset(f, id, name, project);
+		}
+
+		return null;
+	}
+
+	public static FileAsset createFileAsset(File f, long id, String name, Project project) {
+		return createFileAsset(f, id, name, project, FileAsset.determineFileType(f));
+	}
+
 	public int getFileType() {
 		return this.fileType;
-	}
-
-	@Override
-	protected void _load() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	protected void _unload() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	protected void _save() throws IOException {
-		//for now, we can just do nothing. 
-	}
-
-	@Override
-	protected void computeDependencies() {
-		//this type of asset should have no dependencies. 
 	}
 
 }
