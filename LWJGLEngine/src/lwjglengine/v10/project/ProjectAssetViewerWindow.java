@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import lwjglengine.v10.asset.Asset;
-import lwjglengine.v10.asset.FileAsset;
 import lwjglengine.v10.asset.ModelAsset;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
@@ -84,14 +83,14 @@ public class ProjectAssetViewerWindow extends Window {
 
 	@Override
 	public void handleObject(Object o) {
-		if (!(o instanceof FileAsset)) {
+		if (!(o instanceof Asset)) {
 			return;
 		}
 
-		FileAsset a = (FileAsset) o;
+		Asset a = (Asset) o;
 
-		switch (a.getFileType()) {
-		case FileAsset.FILE_TYPE_MODEL: {
+		switch (a.getType()) {
+		case Asset.TYPE_MODEL: {
 			try {
 				Window w = new AdjustableWindow("Model Viewer", new ModelAssetViewerWindow((ModelAsset) a, this.project), this);
 			}
@@ -99,14 +98,6 @@ public class ProjectAssetViewerWindow extends Window {
 				System.err.println("Failed to generate model viewer");
 				e.printStackTrace();
 			}
-			break;
-		}
-
-		case FileAsset.FILE_TYPE_SOUND: {
-			break;
-		}
-
-		case FileAsset.FILE_TYPE_TEXTURE: {
 			break;
 		}
 		}
@@ -133,22 +124,22 @@ public class ProjectAssetViewerWindow extends Window {
 			int type = -1;
 			switch (this.selectedTopBarString) {
 			case MODEL_STR: {
-				type = FileAsset.FILE_TYPE_MODEL;
+				type = Asset.TYPE_MODEL;
 				break;
 			}
 
 			case TEXTURE_STR: {
-				type = FileAsset.FILE_TYPE_TEXTURE;
+				type = Asset.TYPE_TEXTURE;
 				break;
 			}
 
 			case SOUND_STR: {
-				type = FileAsset.FILE_TYPE_SOUND;
+				type = Asset.TYPE_SOUND;
 				break;
 			}
 
 			case OTHER_STR: {
-				type = FileAsset.FILE_TYPE_OTHER;
+				type = Asset.TYPE_UNKNOWN;
 				break;
 			}
 			}
@@ -158,7 +149,7 @@ public class ProjectAssetViewerWindow extends Window {
 			ArrayList<Asset> assets = this.project.getAssetList();
 
 			for (Asset a : assets) {
-				if (a.getType() == Asset.TYPE_FILE && ((FileAsset) a).getFileType() == type) {
+				if (a.getType() == type) {
 					filteredAssets.add(a);
 					filteredStrings.add(a.getFilename());
 				}

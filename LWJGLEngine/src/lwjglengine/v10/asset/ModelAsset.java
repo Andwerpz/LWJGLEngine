@@ -38,7 +38,7 @@ import lwjglengine.v10.project.Project;
 import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
 
-public class ModelAsset extends FileAsset {
+public class ModelAsset extends Asset {
 	//this should use assimp to load the vertex arrays, and figure out what texture dependencies it has. 
 
 	//should assets try to compute dependencies when loading or when saving?
@@ -46,8 +46,6 @@ public class ModelAsset extends FileAsset {
 	//before loading the thing you want to load. 
 
 	//if a texture dependency is already present within the project, then it should autolink 
-
-	private ArrayList<String> textureRelativePaths;
 
 	private Model model;
 
@@ -57,8 +55,6 @@ public class ModelAsset extends FileAsset {
 
 	@Override
 	protected void _load() throws IOException {
-		this.textureRelativePaths = new ArrayList<>();
-
 		File file = this.getFile();
 
 		String filepath = this.getFile().getAbsolutePath();
@@ -184,7 +180,6 @@ public class ModelAsset extends FileAsset {
 			if (diffusePath != null && diffusePath.length() > 1) {
 				long assetID = this.getProject().findAssetFromRelativeFilepath(diffusePath);
 				Texture diffuseTexture = this.getProject().getTexture(assetID);
-				this.textureRelativePaths.add(diffusePath);
 
 				if (diffuseTexture != null) {
 					material.setTexture(diffuseTexture, TextureMaterial.DIFFUSE);
@@ -198,7 +193,6 @@ public class ModelAsset extends FileAsset {
 			if (specularPath != null && specularPath.length() > 1) {
 				long assetID = this.getProject().findAssetFromRelativeFilepath(specularPath);
 				Texture specularTexture = this.getProject().getTexture(assetID);
-				this.textureRelativePaths.add(specularPath);
 
 				if (specularTexture != null) {
 					material.setTexture(specularTexture, TextureMaterial.SPECULAR);
@@ -212,7 +206,6 @@ public class ModelAsset extends FileAsset {
 			if (normalsPath != null && normalsPath.length() > 1) {
 				long assetID = this.getProject().findAssetFromRelativeFilepath(normalsPath);
 				Texture normalsTexture = this.getProject().getTexture(assetID);
-				this.textureRelativePaths.add(normalsPath);
 
 				if (normalsTexture != null) {
 					material.setTexture(normalsTexture, TextureMaterial.NORMAL);
@@ -222,18 +215,15 @@ public class ModelAsset extends FileAsset {
 			textureMaterials.add(material);
 		}
 
-		Collections.shuffle(textureMaterials);
-
 		this.model = new Model(meshes, defaultMaterials, textureMaterials);
 
 		System.out.println("SUCCESS");
-
 	}
 
 	@Override
 	protected void _unload() {
-		// TODO Auto-generated method stub
-
+		this.model.kill();
+		this.model = null;
 	}
 
 	@Override
@@ -246,9 +236,48 @@ public class ModelAsset extends FileAsset {
 		//find all texture dependencies within the project. 
 		//the dependencies don't actually change during the course of editing, they depend on the properly named files being there. 
 		//perhaps, we can later add a .mtl file asset and add it as a component of the model asset.
-		for (String i : this.textureRelativePaths) {
+
+		ArrayList<String> textureRelativePaths = new ArrayList<>();
+
+		String filepath = this.getFile().getAbsolutePath();
+		AIScene scene = aiImportFile(filepath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+
+		PointerBuffer materials = scene.mMaterials(); // array of pointers to AIMaterial structs
+
+		for (int i = 0; i < scene.mNumMaterials(); i++) {
+			// TextureMaterial
+			// map_Kd in .mtl
+			AIMaterial AIMat = AIMaterial.create(materials.get(i)); // wrap raw pointer in AIMaterial instance
+			AIString path;
+
+			path = AIString.calloc();
+			aiGetMaterialTexture(AIMat, aiTextureType_DIFFUSE, 0, path, (IntBuffer) null, null, null, null, null, null);
+			String diffusePath = File.separator + path.dataString();
+			if (diffusePath != null && diffusePath.length() > 1) {
+				textureRelativePaths.add(diffusePath);
+			}
+
+			// map_Ks in .mtl
+			path = AIString.calloc();
+			aiGetMaterialTexture(AIMat, aiTextureType_SPECULAR, 0, path, (IntBuffer) null, null, null, null, null, null);
+			String specularPath = File.separator + path.dataString();
+			if (specularPath != null && specularPath.length() > 1) {
+				textureRelativePaths.add(specularPath);
+			}
+
+			// norm in .mtl
+			path = AIString.calloc();
+			aiGetMaterialTexture(AIMat, aiTextureType_NORMALS, 0, path, (IntBuffer) null, null, null, null, null, null);
+			String normalsPath = File.separator + path.dataString();
+			if (normalsPath != null && normalsPath.length() > 1) {
+				textureRelativePaths.add(normalsPath);
+			}
+		}
+
+		for (String i : textureRelativePaths) {
 			long assetID = this.project.findAssetFromRelativeFilepath(i);
 			if (assetID != -1) {
+				System.err.println("MODEL ASSET FOUND DEPENDENCY : " + assetID);
 				this.addDependency(assetID);
 			}
 		}

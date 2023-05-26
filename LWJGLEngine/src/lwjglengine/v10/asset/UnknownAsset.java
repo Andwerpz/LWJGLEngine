@@ -5,10 +5,9 @@ import java.io.IOException;
 
 import lwjglengine.v10.project.Project;
 
-public class OtherAsset extends FileAsset {
-	//we don't know what type of asset this is, so this is just a placeholder. 
+public class UnknownAsset extends Asset {
 
-	public OtherAsset(File file, long id, String name, Project project) {
+	public UnknownAsset(File file, long id, String name, Project project) {
 		super(file, id, name, project);
 	}
 

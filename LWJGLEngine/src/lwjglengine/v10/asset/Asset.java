@@ -19,9 +19,12 @@ public abstract class Asset {
 	// - rework saving info in text files, it would be nice to have a format that is like json or something. 
 
 	public static final int TYPE_UNKNOWN = -1; //never used 
-	public static final int TYPE_FILE = 0;
-	public static final int TYPE_ENTITY = 1;
-	public static final int TYPE_STATE = 2;
+	public static final int TYPE_ENTITY = 0;
+	public static final int TYPE_STATE = 1;
+	public static final int TYPE_MODEL = 2;
+	public static final int TYPE_TEXTURE = 3;
+	public static final int TYPE_SOUND = 4;
+	public static final int TYPE_CUBEMAP = 5;
 
 	protected Project project;
 
@@ -39,6 +42,8 @@ public abstract class Asset {
 
 	protected String name;
 
+	private boolean firstLoad = true;
+
 	public Asset(File file, long id, String name, Project project) {
 		this.file = file;
 		this.id = id;
@@ -51,43 +56,69 @@ public abstract class Asset {
 	//infer the type of asset from the file extension
 	public static int determineType(File f) {
 		String ext = FileUtils.getFileExtension(f);
-		if (ext.equals(StateAsset.STATE_ASSET_FILE_EXT)) {
+		switch (ext) {
+		case StateAsset.STATE_ASSET_FILE_EXT:
 			return TYPE_STATE;
-		}
-		else if (ext.equals(EntityAsset.ENTITY_ASSET_FILE_EXT)) {
+
+		case EntityAsset.ENTITY_ASSET_FILE_EXT:
 			return TYPE_ENTITY;
+
+		case "obj":
+			return TYPE_MODEL;
+
+		case "tga":
+		case "png":
+		case "jpg":
+			return TYPE_TEXTURE;
+
+		case "ogg":
+		case "wav":
+			return TYPE_SOUND;
+
+		case CubemapAsset.CUBEMAP_ASSET_FILE_EXT:
+			return TYPE_CUBEMAP;
 		}
-		else {
-			return TYPE_FILE;
-		}
+		return TYPE_UNKNOWN;
 	}
 
 	public static int determineType(Asset a) {
-		if (a instanceof FileAsset) {
-			return TYPE_FILE;
-		}
-		else if (a instanceof EntityAsset) {
+		if (a instanceof EntityAsset) {
 			return TYPE_ENTITY;
 		}
 		else if (a instanceof StateAsset) {
 			return TYPE_STATE;
+		}
+		else if (a instanceof ModelAsset) {
+			return TYPE_MODEL;
+		}
+		else if (a instanceof TextureAsset) {
+			return TYPE_TEXTURE;
+		}
+		else if (a instanceof SoundAsset) {
+			return TYPE_SOUND;
+		}
+		else if (a instanceof CubemapAsset) {
+			return TYPE_CUBEMAP;
 		}
 		return TYPE_UNKNOWN;
 	}
 
 	public static Asset createAsset(File f, long id, String name, Project project, int type) {
 		switch (type) {
-		case TYPE_FILE: {
-			return FileAsset.createFileAsset(f, id, name, project);
-		}
-		case TYPE_ENTITY: {
+		case TYPE_ENTITY:
 			return new EntityAsset(f, id, name, project);
-		}
-		case TYPE_STATE: {
+		case TYPE_STATE:
 			return new StateAsset(f, id, name, project);
+		case TYPE_MODEL:
+			return new ModelAsset(f, id, name, project);
+		case TYPE_TEXTURE:
+			return new TextureAsset(f, id, name, project);
+		case TYPE_SOUND:
+			return new SoundAsset(f, id, name, project);
+		case TYPE_CUBEMAP:
+			return new CubemapAsset(f, id, name, project);
 		}
-		}
-		return null;
+		return new UnknownAsset(f, id, name, project);
 	}
 
 	public static Asset createAsset(File f, long id, String name, Project project) {
@@ -99,6 +130,25 @@ public abstract class Asset {
 	protected void load() {
 		if (this.loaded) {
 			return;
+		}
+
+		System.out.println("LOADING ASSET : " + this.getName());
+
+		//try to compute dependencies
+		if (this.project.isEditing()) {
+			try {
+				this._load();
+			}
+			catch (IOException e) {
+				System.err.println("Failed to load asset : " + this.name);
+				e.printStackTrace();
+				return;
+			}
+
+			if (this.project.isEditing()) {
+				this.computeDependencies();
+			}
+			this._unload();
 		}
 
 		try {
@@ -121,6 +171,8 @@ public abstract class Asset {
 			return;
 		}
 
+		System.out.println("UNLOADING ASSET : " + this.getName());
+
 		if (this.project.isEditing()) {
 			this.save();
 		}
@@ -139,7 +191,6 @@ public abstract class Asset {
 			return;
 		}
 
-		this.computeDependencies();
 		try {
 			this._save();
 		}
@@ -154,25 +205,47 @@ public abstract class Asset {
 	//dependencies shouldn't change while actually playing the game, so we shouldn't have to worry about loading or unloading when 
 	//changing dependencies. 
 	public void addDependency(long id) {
+		if (!this.project.isEditing()) {
+			System.err.println("Asset Warning : Trying to change dependencies when project is not in edit mode");
+		}
+		if (!this.isLoaded()) {
+			System.err.println("Asset Warning : Probably shouldn't try to modify dependency of unloaded asset");
+		}
 		if (id == this.id) {
 			System.err.println("Asset Warning : Can't have self as dependency");
-			//can't have self as a dependency. 
 			return;
 		}
-		this.assetDependencies.add(id);
-	}
 
-	public void removeDependency(long id) {
-		this.assetDependencies.remove(id);
+		if (!this.assetDependencies.contains(id)) {
+			this.assetDependencies.add(id);
+
+			if (!this.computingDependencies) {
+				this.project.updateDependencyGraph();
+			}
+		}
 	}
 
 	public HashSet<Long> getDependencies() {
 		return this.assetDependencies;
 	}
 
-	private void computeDependencies() {
+	private boolean computingDependencies = false;
+
+	protected void computeDependencies() {
+		System.out.println("COMPUTING DEPENDENCIES : " + this.getName());
+
+		HashSet<Long> oldDependencies = new HashSet<>();
+		oldDependencies.addAll(this.assetDependencies);
+
 		this.assetDependencies.clear();
+
+		this.computingDependencies = true;
 		this._computeDependencies();
+		this.computingDependencies = false;
+
+		if (!oldDependencies.equals(this.assetDependencies)) {
+			this.project.updateDependencyGraph();
+		}
 	}
 
 	//should tally up all of the dependencies from this asset. 

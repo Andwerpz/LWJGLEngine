@@ -120,6 +120,7 @@ public class ProjectManagerWindow extends Window {
 		this.topBarEntries.add(new TopBarEntry("States", this.topBarBackgroundRect, TOP_BAR_SELECTION_SCENE, TOP_BAR_TEXT_SCENE));
 		this.topBarEntries.add(new TopBarEntry("Entities", this.topBarBackgroundRect, TOP_BAR_SELECTION_SCENE, TOP_BAR_TEXT_SCENE));
 		this.topBarEntries.add(new TopBarEntry("Import", this.topBarBackgroundRect, TOP_BAR_SELECTION_SCENE, TOP_BAR_TEXT_SCENE));
+		this.topBarEntries.add(new TopBarEntry("Dependency Graph", this.topBarBackgroundRect, TOP_BAR_SELECTION_SCENE, TOP_BAR_TEXT_SCENE));
 
 		int xOffset = 0;
 		for (int i = 0; i < this.topBarEntries.size(); i++) {
@@ -132,7 +133,7 @@ public class ProjectManagerWindow extends Window {
 
 	@Override
 	protected void _kill() {
-		this.project.saveProject();
+		this.project.kill();
 
 		this.uiScreen.kill();
 
@@ -223,27 +224,39 @@ public class ProjectManagerWindow extends Window {
 	@Override
 	public void handleFile(File file) {
 		if (!this.hasProject) {
+			boolean failedToLoad = false;
+			Project project = null;
+
 			if (this.newProjectName != null) {
 				//create a new project in this directory. 
 				try {
-					this.project = Project.createNewProject(file, this.newProjectName);
+					project = Project.createNewProject(file, this.newProjectName);
 				}
 				catch (IOException e) {
 					e.printStackTrace();
+					failedToLoad = true;
 					return;
 				}
 			}
 			else {
 				//load the project
 				try {
-					this.project = new Project(file);
+					project = new Project(file);
 				}
 				catch (IOException e) {
 					e.printStackTrace();
+					failedToLoad = true;
 					return;
 				}
 			}
+
+			if (failedToLoad) {
+				System.err.println("Project failed to load");
+				return;
+			}
+
 			this.hasProject = true;
+			this.project = project;
 			this.project.setIsEditing(true);
 		}
 	}

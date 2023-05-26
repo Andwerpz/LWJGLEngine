@@ -7,13 +7,12 @@ import lwjglengine.v10.graphics.Texture;
 import lwjglengine.v10.project.Project;
 import myutils.v11.file.FileUtils;
 
-public class TextureAsset extends FileAsset {
+public class TextureAsset extends Asset {
 
 	private Texture texture;
 
 	public TextureAsset(File file, long id, String name, Project project) {
 		super(file, id, name, project);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override

@@ -35,6 +35,7 @@ public class AssetDependencyNode {
 			a.load();
 		}
 
+		//load yourself
 		if (!this.isLoaded) {
 			//load all assets
 			this.isLoaded = true;
@@ -53,17 +54,18 @@ public class AssetDependencyNode {
 
 		this.numLoadedDependents--;
 
-		//ask all dependencies to unload
-		for (AssetDependencyNode a : this.dependencies) {
-			a.unload();
-		}
-
+		//unload yourself
 		if (this.numLoadedDependents == 0) {
 			//unload all assets
 			this.isLoaded = false;
 			for (Asset a : this.assets) {
 				a.unload();
 			}
+		}
+
+		//ask all dependencies to unload
+		for (AssetDependencyNode a : this.dependencies) {
+			a.unload();
 		}
 	}
 

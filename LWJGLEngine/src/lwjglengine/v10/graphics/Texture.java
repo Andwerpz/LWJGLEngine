@@ -135,7 +135,7 @@ public class Texture {
 	}
 
 	public static int[] getDataFromImage(String path, int loadOptions, int[] outWH) {
-		BufferedImage img = FileUtils.loadImageRelative(path);
+		BufferedImage img = FileUtils.loadImage(path);
 		return Texture.getDataFromImage(img, loadOptions, outWH);
 	}
 

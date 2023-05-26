@@ -89,4 +89,8 @@ public class Cubemap {
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 	}
 
+	public void kill() {
+		glDeleteTextures(BufferUtils.createIntBuffer(new int[] { this.cubemapID }));
+	}
+
 }

@@ -391,6 +391,10 @@ public class Model {
 		return ID;
 	}
 
+	public static long addInstance(Model model, ModelTransform transform, int scene) {
+		return Model.addInstance(model, transform.getModelMatrix(), scene);
+	}
+
 	public static void removeInstance(long ID) {
 		Model model = IDtoModel.get(ID);
 		if (model == null) { // couldn't find model to remove
@@ -641,14 +645,6 @@ public class Model {
 			modelInstanceIDs.remove(id);
 			IDtoScene.remove(id);
 			IDtoModel.remove(id);
-		}
-
-		//what if the texture material used in this model is also used elsewhere?
-		//should we maintain that each model must use unique instances of materials?
-		//the asset class handles alot of dependency stuff right now, should we make it so that
-		//3d models are another type of asset, and require texture files as dependencies?
-		for (TextureMaterial t : this.textureMaterials) {
-			t.kill();
 		}
 
 		//this is fine, i think

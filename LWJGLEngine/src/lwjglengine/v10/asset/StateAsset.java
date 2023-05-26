@@ -78,4 +78,17 @@ public class StateAsset extends Asset {
 		}
 	}
 
+	public ArrayList<Pair<Long, ModelTransform>> getStaticModels() {
+		return this.staticModels;
+	}
+
+	public void addStaticModel(Long assetID, ModelTransform transform) {
+		if (!(this.project.getAsset(assetID) instanceof ModelAsset)) {
+			return;
+		}
+
+		this.addDependency(assetID);
+		this.staticModels.add(new Pair<Long, ModelTransform>(assetID, transform));
+	}
+
 }

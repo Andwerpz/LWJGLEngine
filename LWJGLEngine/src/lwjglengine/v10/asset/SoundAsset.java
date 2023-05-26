@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import lwjglengine.v10.project.Project;
 
-public class SoundAsset extends FileAsset {
+public class SoundAsset extends Asset {
 
 	public SoundAsset(File file, long id, String name, Project project) {
 		super(file, id, name, project);
