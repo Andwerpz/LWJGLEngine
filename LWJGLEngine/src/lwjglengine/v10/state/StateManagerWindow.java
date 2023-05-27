@@ -95,7 +95,7 @@ public class StateManagerWindow extends Window {
 		contextMenuOptions.add("New Raytracing Window");
 		contextMenuOptions.add("New Project Manager Window");
 
-		this.setContextMenuOptions(contextMenuOptions);
+		this.setContextMenuActions(contextMenuOptions);
 
 	}
 

@@ -35,13 +35,17 @@ public class StateAsset extends Asset {
 		while (header != null) {
 			switch (header) {
 			case HEADER_STATIC_MODELS: {
-				long modelID = Long.parseLong(fin.readLine());
-				String tmp = "";
-				tmp += fin.readLine() + "\n";
-				tmp += fin.readLine() + "\n";
-				tmp += fin.readLine();
-				ModelTransform transform = ModelTransform.parseModelTransform(tmp);
-				this.staticModels.add(new Pair<Long, ModelTransform>(modelID, transform));
+				int nrModels = Integer.parseInt(fin.readLine());
+				for (int i = 0; i < nrModels; i++) {
+					long modelID = Long.parseLong(fin.readLine());
+					String tmp = "";
+					tmp += fin.readLine() + "\n";
+					tmp += fin.readLine() + "\n";
+					tmp += fin.readLine();
+					ModelTransform transform = ModelTransform.parseModelTransform(tmp);
+					this.staticModels.add(new Pair<Long, ModelTransform>(modelID, transform));
+				}
+
 				break;
 			}
 			}
@@ -61,7 +65,7 @@ public class StateAsset extends Asset {
 
 		//static models
 		fout.write(HEADER_STATIC_MODELS + "\n");
-		fout.write(this.staticModels.size());
+		fout.write(this.staticModels.size() + "\n");
 		for (int i = 0; i < this.staticModels.size(); i++) {
 			fout.write(this.staticModels.get(i).first + "\n");
 			fout.write(this.staticModels.get(i).second + "\n");

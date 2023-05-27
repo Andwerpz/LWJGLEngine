@@ -272,6 +272,8 @@ public class ListViewerWindow extends Window {
 	}
 
 	private void alignEntries() {
+		this.contentBackgroundRect.align();
+
 		if (this.sortEntries) {
 			this.sortList();
 		}
@@ -677,8 +679,10 @@ class ListEntry {
 	}
 
 	public void kill() {
-		this.entryRect.kill();
-		this.entryText.kill();
+		if (this.entryRect != null) {
+			this.entryRect.kill();
+			this.entryText.kill();
+		}
 	}
 
 	public String getText() {

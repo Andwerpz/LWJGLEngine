@@ -8,6 +8,7 @@ import static org.lwjgl.opengl.GL30.*;
 import java.nio.FloatBuffer;
 
 import lwjglengine.v10.util.BufferUtils;
+import myutils.v10.file.SystemUtils;
 
 public class Cubemap {
 
@@ -17,15 +18,20 @@ public class Cubemap {
 	// images have to have the same dimensions
 	public Cubemap(String right, String left, String up, String down, String front, String back) {
 		String[] sides = new String[] { right, left, up, down, back, front }; // front and back are in wrong order
-		cubemapID = load(sides);
+		cubemapID = load(sides, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
 	}
 
 	public Cubemap(String[] sides) {
-		cubemapID = load(sides);
+		cubemapID = load(sides, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
 	}
 
 	public Cubemap(int internalFormat, int dataFormat, int dataType) {
-		String[] sides = new String[] { "/cubemap_default.png", "/cubemap_default.png", "/cubemap_default.png", "/cubemap_default.png", "/cubemap_default.png", "/cubemap_default.png" };
+		String[] sides = new String[6];
+
+		for (int i = 0; i < 6; i++) {
+			sides[i] = SystemUtils.getWorkingDirectory() + "/res/cubemap_default.png";
+		}
+
 		cubemapID = load(sides, internalFormat, dataFormat, dataType);
 	}
 
@@ -37,27 +43,6 @@ public class Cubemap {
 			int[] outWH = new int[2];
 			int[] data = Texture.getDataFromImage(sides[i], 0, outWH);
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, outWH[0], outWH[1], 0, dataFormat, dataType, data);
-			this.size = outWH[0];
-		}
-
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
-		return id;
-	}
-
-	public int load(String[] sides) {
-		int id = glGenTextures();
-		glBindTexture(GL_TEXTURE_CUBE_MAP, id);
-
-		for (int i = 0; i < 6; i++) {
-			int[] outWH = new int[2];
-			int[] data = Texture.getDataFromImage(sides[i], 0, outWH);
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, outWH[0], outWH[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 			this.size = outWH[0];
 		}
 

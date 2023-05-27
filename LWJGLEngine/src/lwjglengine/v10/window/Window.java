@@ -206,8 +206,8 @@ public abstract class Window {
 		this.contextMenuRightClick = b;
 	}
 
-	protected void setContextMenuOptions(ArrayList<String> options) {
-		this.contextMenuOptions = options;
+	protected void setContextMenuActions(ArrayList<String> actions) {
+		this.contextMenuOptions = actions;
 	}
 
 	protected void setUpdateWhenNotSelected(boolean b) {

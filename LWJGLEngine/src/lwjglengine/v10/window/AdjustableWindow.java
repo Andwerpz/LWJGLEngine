@@ -227,6 +227,10 @@ public class AdjustableWindow extends BorderedWindow {
 		}
 	}
 
+	public Window getContentWindow() {
+		return this.contentWindow;
+	}
+
 	public int getContentWidth() {
 		return this.contentWidth;
 	}

@@ -277,7 +277,6 @@ public class ModelAsset extends Asset {
 		for (String i : textureRelativePaths) {
 			long assetID = this.project.findAssetFromRelativeFilepath(i);
 			if (assetID != -1) {
-				System.err.println("MODEL ASSET FOUND DEPENDENCY : " + assetID);
 				this.addDependency(assetID);
 			}
 		}

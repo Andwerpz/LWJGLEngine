@@ -28,16 +28,15 @@ public class ProjectAssetViewerWindow extends Window {
 	// - drag and drop files between folders?
 	// - reuse file explorer window for this?
 
-	private static final String MODEL_STR = "Models";
-	private static final String TEXTURE_STR = "Textures";
-	private static final String SOUND_STR = "Sounds";
-	private static final String OTHER_STR = "Other";
+	public static final String OTHER_STR = "Other";
+	public static final String STATE_STR = "States";
+	public static final String ENTITY_STR = "Entities";
+	public static final String MODEL_STR = "Models";
+	public static final String TEXTURE_STR = "Textures";
+	public static final String SOUND_STR = "Sounds";
+	public static final String CUBEMAP_STR = "Cubemaps";
 
 	private int topBarHeightPx = 20;
-
-	private Material topBarDefaultMaterial = new Material(new Vec3((float) (20 / 255.0)));
-	private Material topBarHoveredMaterial = new Material(new Vec3((float) (30 / 255.0)));
-	private Material topBarSelectedMaterial = new Material(new Vec3((float) (40 / 255.0)));
 
 	private ListViewerWindow topBarWindow;
 	private ListViewerWindow contentWindow;
@@ -46,18 +45,34 @@ public class ProjectAssetViewerWindow extends Window {
 
 	private String selectedTopBarString = "";
 
+	private Window callbackWindow;
+
+	private boolean oneCategory = false;
+
+	public ProjectAssetViewerWindow(int xOffset, int yOffset, int width, int height, Project project, Window callbackWindow, Window parentWindow) {
+		super(xOffset, yOffset, width, height, parentWindow);
+		this.init(project, callbackWindow);
+	}
+
 	public ProjectAssetViewerWindow(int xOffset, int yOffset, int width, int height, Project project, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
-		this.init(project);
+		this.init(project, null);
+	}
+
+	public ProjectAssetViewerWindow(Project project, Window callbackWindow, Window parentWindow) {
+		super(0, 0, 300, 300, parentWindow);
+		this.init(project, callbackWindow);
 	}
 
 	public ProjectAssetViewerWindow(Project project, Window parentWindow) {
 		super(0, 0, 300, 300, parentWindow);
-		this.init(project);
+		this.init(project, null);
 	}
 
-	private void init(Project project) {
+	private void init(Project project, Window callbackWindow) {
 		this.project = project;
+
+		this.callbackWindow = callbackWindow;
 
 		this.contentWindow = new ListViewerWindow(this, this);
 		this.contentWindow.setAlignmentStyle(Window.FROM_LEFT, Window.FROM_BOTTOM);
@@ -73,17 +88,102 @@ public class ProjectAssetViewerWindow extends Window {
 		this.topBarWindow.setAlignmentStyle(Window.FROM_LEFT, Window.FROM_TOP);
 		this.topBarWindow.setOffset(0, topBarHeightPx);
 
-		this.topBarWindow.addToList(MODEL_STR);
-		this.topBarWindow.addToList(TEXTURE_STR);
-		this.topBarWindow.addToList(SOUND_STR);
-		this.topBarWindow.addToList(OTHER_STR);
+		ArrayList<String> options = new ArrayList<>();
+		options.add(STATE_STR);
+		options.add(ENTITY_STR);
+		options.add(MODEL_STR);
+		options.add(TEXTURE_STR);
+		options.add(SOUND_STR);
+		options.add(CUBEMAP_STR);
+		options.add(OTHER_STR);
+		this.setAssetTypeCategories(options);
 
 		this._resize();
+	}
+
+	public void setAssetTypeCategories(String[] categories) {
+		ArrayList<String> arr = new ArrayList<>();
+		for (String s : categories) {
+			arr.add(s);
+		}
+		this.setAssetTypeCategories(arr);
+	}
+
+	public void setAssetTypeCategories(ArrayList<String> categories) {
+		System.out.println("SETTING CATEGORIES : " + categories);
+		this.topBarWindow.setList(categories);
+
+		if (categories.size() == 1) {
+			this.setSelectedAssetCategory(categories.get(0));
+
+			this.oneCategory = true;
+
+			this._resize();
+		}
+	}
+
+	private void setSelectedAssetCategory(String category) {
+		System.out.println("SELECTED CATEGORY : " + category);
+
+		int type = -1;
+		switch (category) {
+		case STATE_STR:
+			type = Asset.TYPE_STATE;
+			break;
+
+		case ENTITY_STR:
+			type = Asset.TYPE_ENTITY;
+			break;
+
+		case MODEL_STR:
+			type = Asset.TYPE_MODEL;
+			break;
+
+		case TEXTURE_STR:
+			type = Asset.TYPE_TEXTURE;
+			break;
+
+		case SOUND_STR:
+			type = Asset.TYPE_SOUND;
+			break;
+
+		case CUBEMAP_STR:
+			type = Asset.TYPE_CUBEMAP;
+			break;
+
+		case OTHER_STR:
+			type = Asset.TYPE_UNKNOWN;
+			break;
+
+		}
+
+		System.out.println("SELECTED TYPE : " + type);
+
+		ArrayList<Asset> filteredAssets = new ArrayList<>();
+		ArrayList<String> filteredStrings = new ArrayList<>();
+		ArrayList<Asset> assets = this.project.getAssetList();
+
+		for (Asset a : assets) {
+			if (a.getType() == type) {
+				filteredAssets.add(a);
+				filteredStrings.add(a.getName());
+
+				System.out.println("FILTERED ASSET : " + a.getType() + " " + a.getName());
+			}
+		}
+
+		this.contentWindow.setList(filteredAssets, filteredStrings);
 	}
 
 	@Override
 	public void handleObject(Object o) {
 		if (!(o instanceof Asset)) {
+			return;
+		}
+
+		if (this.callbackWindow != null) {
+			this.callbackWindow.handleObject(o);
+			this.close();
 			return;
 		}
 
@@ -109,53 +209,32 @@ public class ProjectAssetViewerWindow extends Window {
 
 	@Override
 	protected void _resize() {
-		this.contentWindow.setHeight(this.getHeight() - this.topBarHeightPx);
-		this.contentWindow.setWidth(this.getWidth());
+		if (this.oneCategory) {
+			this.contentWindow.setHeight(this.getHeight());
+			this.contentWindow.setWidth(this.getWidth());
 
-		this.topBarWindow.setHeight(this.topBarHeightPx);
-		this.topBarWindow.setWidth(this.getWidth());
+			this.topBarWindow.setHeight(this.topBarHeightPx);
+			this.topBarWindow.setWidth(this.getWidth());
+
+			this.topBarWindow.setXOffset(this.getWidth());
+		}
+		else {
+			this.contentWindow.setHeight(this.getHeight() - this.topBarHeightPx);
+			this.contentWindow.setWidth(this.getWidth());
+
+			this.topBarWindow.setHeight(this.topBarHeightPx);
+			this.topBarWindow.setWidth(this.getWidth());
+
+			this.topBarWindow.setXOffset(0);
+		}
+
 	}
 
 	@Override
 	protected void _update() {
 		if (this.topBarWindow.getSelectedEntryString() != this.selectedTopBarString) {
 			this.selectedTopBarString = this.topBarWindow.getSelectedEntryString();
-
-			int type = -1;
-			switch (this.selectedTopBarString) {
-			case MODEL_STR: {
-				type = Asset.TYPE_MODEL;
-				break;
-			}
-
-			case TEXTURE_STR: {
-				type = Asset.TYPE_TEXTURE;
-				break;
-			}
-
-			case SOUND_STR: {
-				type = Asset.TYPE_SOUND;
-				break;
-			}
-
-			case OTHER_STR: {
-				type = Asset.TYPE_UNKNOWN;
-				break;
-			}
-			}
-
-			ArrayList<Asset> filteredAssets = new ArrayList<>();
-			ArrayList<String> filteredStrings = new ArrayList<>();
-			ArrayList<Asset> assets = this.project.getAssetList();
-
-			for (Asset a : assets) {
-				if (a.getType() == type) {
-					filteredAssets.add(a);
-					filteredStrings.add(a.getFilename());
-				}
-			}
-
-			this.contentWindow.setList(filteredAssets, filteredStrings);
+			this.setSelectedAssetCategory(this.selectedTopBarString);
 		}
 	}
 
