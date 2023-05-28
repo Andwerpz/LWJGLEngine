@@ -115,6 +115,16 @@ public abstract class Window {
 	//if true, then it will close on the next update. 
 	private boolean shouldClose = false;
 
+	//is the cursor locked?
+	//TODO try to clamp the cursor to the window using glfwSetCursorPos so that the user can't click out of the window 
+	//when the cursor is locked. 
+
+	//alternatively, make it so that you can't change the selected window when the cursor is locked. 
+	private boolean cursorLocked = false;
+
+	private boolean lockCursorOnSelect = false;
+	private boolean unlockCursorOnEscPressed = true;
+
 	public Window(int xOffset, int yOffset, int width, int height, Window parentWindow) {
 		this.childWindows = new ArrayList<>();
 
@@ -246,6 +256,28 @@ public abstract class Window {
 
 	public boolean isAlive() {
 		return this.isAlive;
+	}
+
+	public boolean isCursorLocked() {
+		return this.cursorLocked;
+	}
+
+	protected void lockCursor() {
+		Main.lockCursor();
+		this.cursorLocked = true;
+	}
+
+	protected void unlockCursor() {
+		Main.unlockCursor();
+		this.cursorLocked = false;
+	}
+
+	public void setLockCursorOnSelect(boolean b) {
+		this.lockCursorOnSelect = b;
+	}
+
+	public void setUnlockCursorOnEscPressed(boolean b) {
+		this.unlockCursorOnEscPressed = b;
 	}
 
 	public void addChild(Window w) {
@@ -581,6 +613,10 @@ public abstract class Window {
 
 		this.isSelected = true;
 		this.selected();
+
+		if (this.lockCursorOnSelect) {
+			this.lockCursor();
+		}
 	}
 
 	protected void deselect() {
@@ -590,6 +626,8 @@ public abstract class Window {
 
 		this.isSelected = false;
 		this.deselected();
+
+		this.unlockCursor();
 	}
 
 	//what do when selected?
@@ -697,6 +735,9 @@ public abstract class Window {
 					this.contextMenuWindow = null;
 				}
 				this.contextMenuWindow = new ContextMenuWindow(this.contextMenuOptions, this);
+
+				//deselect this window
+				this.deselect();
 			}
 			else {
 				this._mousePressed(button);
@@ -736,6 +777,10 @@ public abstract class Window {
 
 	public void keyPressed(int key) {
 		if (this.isSelected) {
+			if (key == GLFW.GLFW_KEY_ESCAPE && this.unlockCursorOnEscPressed) {
+				this.unlockCursor();
+			}
+
 			this._keyPressed(key);
 		}
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {

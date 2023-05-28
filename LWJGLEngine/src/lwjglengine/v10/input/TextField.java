@@ -91,14 +91,18 @@ public class TextField extends Input {
 	private int textRightMargin = 5;
 	private Font font;
 
+	private String validInputRegex = ".*"; //default should match anything. 
+	private boolean isInputValid = true;
+
 	private HashSet<Integer> pressedKeys; // stores key codes, not chars
 
 	private Material textMaterial, hintTextMaterial;
 	private Material releasedMaterial, pressedMaterial, hoveredMaterial, selectedMaterial;
+	private Material invalidInputMaterial;
 	private Material currentMaterial;
 
 	private boolean textWrapping = false;
-	
+
 	public TextField(float x, float y, float width, float height, String sID, String hintText, int fontSize, int selectionScene, int textScene) {
 		super(x, y, 0, width, height, sID, selectionScene);
 		this.init(hintText, new Font("Dialogue", Font.PLAIN, fontSize), textScene);
@@ -137,7 +141,11 @@ public class TextField extends Input {
 		this.hoveredMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
 		this.releasedMaterial = new Material(new Vec4(1, 1, 1, 0.1f));
 
+		this.invalidInputMaterial = new Material(new Vec4(1, 0, 0, 0.3f));
+
 		this.setMaterial(this.releasedMaterial);
+
+		this.checkIfInputTextIsValid();
 	}
 
 	@Override
@@ -153,22 +161,15 @@ public class TextField extends Input {
 		else if (this.hovered) {
 			nextMaterial = this.hoveredMaterial;
 		}
+		else if (!this.isInputValid) {
+			nextMaterial = this.invalidInputMaterial;
+		}
 		else {
 			nextMaterial = this.releasedMaterial;
 		}
 		if (this.currentMaterial != nextMaterial) {
 			this.currentMaterial = nextMaterial;
 			this.setMaterial(this.currentMaterial);
-		}
-
-		// -- TEXT --
-		if (this.text.length() == 0) {
-			this.fieldText.setMaterial(this.hintTextMaterial);
-			this.fieldText.setText(this.hintText);
-		}
-		else {
-			this.fieldText.setMaterial(this.textMaterial);
-			this.fieldText.setText(this.text);
 		}
 	}
 
@@ -208,6 +209,35 @@ public class TextField extends Input {
 
 	public void setText(String text) {
 		this.text = text;
+
+		if (this.text.length() == 0) {
+			this.fieldText.setMaterial(this.hintTextMaterial);
+			this.fieldText.setText(this.hintText);
+		}
+		else {
+			this.fieldText.setMaterial(this.textMaterial);
+			this.fieldText.setText(this.text);
+		}
+
+		this.checkIfInputTextIsValid();
+	}
+
+	private void checkIfInputTextIsValid() {
+		if (this.text.matches(this.validInputRegex)) {
+			this.isInputValid = true;
+		}
+		else {
+			this.isInputValid = false;
+		}
+	}
+
+	public void setValidInputRegex(String regex) {
+		this.validInputRegex = regex;
+		this.checkIfInputTextIsValid();
+	}
+
+	public boolean isInputValid() {
+		return this.isInputValid;
 	}
 
 	public Text getTextUIElement() {
@@ -278,6 +308,8 @@ public class TextField extends Input {
 				}
 				this.text += k;
 			}
+
+			this.setText(this.text);
 		}
 	}
 

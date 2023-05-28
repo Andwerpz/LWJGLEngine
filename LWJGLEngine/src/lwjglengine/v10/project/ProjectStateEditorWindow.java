@@ -21,6 +21,7 @@ import lwjglengine.v10.window.ListViewerWindow;
 import lwjglengine.v10.window.Window;
 import myutils.v10.math.Vec3;
 import myutils.v10.misc.Pair;
+import myutils.v10.misc.Triple;
 
 public class ProjectStateEditorWindow extends Window {
 
@@ -41,6 +42,8 @@ public class ProjectStateEditorWindow extends Window {
 	private Project project;
 	private StateAsset state;
 
+	private ArrayList<Long> staticModelInstanceIDs;
+
 	public ProjectStateEditorWindow(int xOffset, int yOffset, int width, int height, Project project, StateAsset state, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
 		this.init(project, state);
@@ -59,9 +62,11 @@ public class ProjectStateEditorWindow extends Window {
 		this.pic = new PlayerInputController(new Vec3(0, 0, 0));
 
 		//place static models
+		this.staticModelInstanceIDs = new ArrayList<>();
 		for (Pair<Long, ModelTransform> i : this.state.getStaticModels()) {
 			Model m = this.project.getModel(i.first);
-			Model.addInstance(m, i.second, PERSPECTIVE_WORLD_SCENE);
+			long instanceID = Model.addInstance(m, i.second, PERSPECTIVE_WORLD_SCENE);
+			this.staticModelInstanceIDs.add(instanceID);
 		}
 
 		//'sun'
@@ -76,6 +81,8 @@ public class ProjectStateEditorWindow extends Window {
 		this.setContextMenuActions(contextOptions);
 
 		this.setContextMenuRightClick(true);
+		this.setUnlockCursorOnEscPressed(true);
+		this.setLockCursorOnSelect(true);
 	}
 
 	@Override
@@ -84,16 +91,20 @@ public class ProjectStateEditorWindow extends Window {
 		case "Static Models": {
 			ArrayList<Pair<Long, ModelTransform>> staticModels = this.state.getStaticModels();
 			ArrayList<String> staticModelStrings = new ArrayList<>();
+			ArrayList<String> staticModelSelObjects = new ArrayList<>();
 			for (int i = 0; i < staticModels.size(); i++) {
 				long assetID = staticModels.get(i).first;
 				Asset asset = this.project.getAsset(assetID);
 				ModelTransform transform = staticModels.get(i).second;
 				String desc = asset.getName() + " Instance : " + transform.translate;
 				staticModelStrings.add(desc);
+
+				staticModelSelObjects.add("static_model " + this.staticModelInstanceIDs.get(i));
 			}
 			AdjustableWindow staticModelListWindow = new AdjustableWindow("Static Models", new ListViewerWindow(this, null), this);
 			ListViewerWindow contentWindow = (ListViewerWindow) staticModelListWindow.getContentWindow();
 			contentWindow.setCloseOnSubmit(false);
+			contentWindow.setList(staticModelSelObjects, staticModelStrings);
 			break;
 		}
 
@@ -106,7 +117,33 @@ public class ProjectStateEditorWindow extends Window {
 
 	@Override
 	public void handleObject(Object o) {
-		if (o instanceof Pair) {
+		if (o instanceof String) {
+			//strings should have the form 'type id'. 
+			String[] arr = ((String) o).split(" ");
+			String type = arr[0];
+			long id = Long.parseLong(arr[1]);
+
+			switch (type) {
+			case "static_model": {
+				//look for the static model with the given id
+				int modelIndex = -1;
+				for (int i = 0; i < this.staticModelInstanceIDs.size(); i++) {
+					if (this.staticModelInstanceIDs.get(i) == id) {
+						modelIndex = i;
+						break;
+					}
+				}
+
+				ModelTransform transform = this.state.getStaticModels().get(modelIndex).second;
+
+				//open a model transform editor window
+				//TODO make it into a general model instance editor, so we can edit materials. 
+				Window modelTransformEditor = new AdjustableWindow("Editing Static Model : " + id, new ModelTransformEditorWindow(id, transform, null), this);
+				break;
+			}
+			}
+		}
+		else if (o instanceof Pair) {
 			if (((Pair<?, ?>) o).first instanceof Long && ((Pair<?, ?>) o).second instanceof ModelTransform) {
 				//we have a new static model. 
 
@@ -115,11 +152,12 @@ public class ProjectStateEditorWindow extends Window {
 				Long assetID = p.first;
 				ModelTransform transform = p.second;
 
-				this.state.addStaticModel(assetID, transform);
-
 				//add the static model to the scene
 				Model m = this.project.getModel(assetID);
-				Model.addInstance(m, transform, PERSPECTIVE_WORLD_SCENE);
+				long instanceID = Model.addInstance(m, transform, PERSPECTIVE_WORLD_SCENE);
+
+				this.state.addStaticModel(assetID, transform);
+				this.staticModelInstanceIDs.add(instanceID);
 			}
 		}
 	}
@@ -140,7 +178,7 @@ public class ProjectStateEditorWindow extends Window {
 
 	@Override
 	protected void _update() {
-		if (this.isSelected()) {
+		if (this.isCursorLocked()) {
 			this.pic.update();
 
 			//update camera
@@ -162,12 +200,12 @@ public class ProjectStateEditorWindow extends Window {
 
 	@Override
 	protected void selected() {
-		Main.lockCursor();
+
 	}
 
 	@Override
 	protected void deselected() {
-		Main.unlockCursor();
+
 	}
 
 	@Override
@@ -203,9 +241,7 @@ public class ProjectStateEditorWindow extends Window {
 	@Override
 	protected void _keyPressed(int key) {
 		switch (key) {
-		case GLFW_KEY_ESCAPE:
-			this.deselect();
-			break;
+
 		}
 	}
 
