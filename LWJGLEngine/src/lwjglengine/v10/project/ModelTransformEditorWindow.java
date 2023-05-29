@@ -173,6 +173,8 @@ public class ModelTransformEditorWindow extends Window {
 	@Override
 	protected void _kill() {
 		this.uiScreen.kill();
+
+		this.uiSection.kill();
 	}
 
 	@Override

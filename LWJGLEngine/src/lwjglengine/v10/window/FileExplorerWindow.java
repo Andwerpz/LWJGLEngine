@@ -43,10 +43,6 @@ public class FileExplorerWindow extends Window {
 	private final int DIRECTORY_SELECTION_SCENE = Scene.generateScene();
 	private final int DIRECTORY_TEXT_SCENE = Scene.generateScene();
 
-	private final int FOLDER_SCENE = Scene.generateScene();
-	private final int FOLDER_SELECTION_SCENE = Scene.generateScene();
-	private final int FOLDER_TEXT_SCENE = Scene.generateScene();
-
 	private final int TOP_BAR_SCENE = Scene.generateScene();
 	private final int TOP_BAR_SELECTION_SCENE = Scene.generateScene();
 	private final int TOP_BAR_TEXT_SCENE = Scene.generateScene();
@@ -79,9 +75,6 @@ public class FileExplorerWindow extends Window {
 	public static int directoryGrabTolerancePx = 4;
 	private boolean directoryGrabbed = false;
 
-	private UIFilledRectangle folderRect;
-	public static Material folderMaterial = new Material(new Vec3((float) (40 / 255.0)));
-
 	private static int bottomBarHeight = 24;
 	private UIFilledRectangle bottomBarRect;
 	public static Material bottomBarMaterial = new Material(new Vec3((float) (20 / 255.0)));
@@ -93,11 +86,6 @@ public class FileExplorerWindow extends Window {
 
 	private DirectoryEntry selectedDirectoryEntry = null;
 
-	private ArrayList<FolderEntry> folderEntries;
-	private int folderYOffset = 0;
-	private FolderEntry selectedFolderEntry = null;
-	private String folderEntryFilter = "";
-
 	private long hoveredDirectoryEntryID = -1;
 	private long hoveredFolderEntryID = -1;
 	private long hoveredSectionID = -1;
@@ -105,9 +93,9 @@ public class FileExplorerWindow extends Window {
 	private long hoveredTopBarID = -1;
 	private long hoveredBottomBarID = -1;
 
-	private File submittedFile = null;
-
 	private Window callbackWindow;
+
+	private ListViewerWindow folderWindow;
 
 	public FileExplorerWindow(Window callbackWindow) {
 		super(0, 0, 300, 400, null);
@@ -121,12 +109,6 @@ public class FileExplorerWindow extends Window {
 		this.directoryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		this.directoryRect.setMaterial(directoryMaterial);
 		this.directoryRect.bind(this.rootUIElement);
-
-		this.folderRect = new UIFilledRectangle(0, topBarHeight, 0, this.getWidth() - this.directoryWidth, this.getHeight() - topBarHeight - bottomBarHeight, FOLDER_SCENE);
-		this.folderRect.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
-		this.folderRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
-		this.folderRect.setMaterial(folderMaterial);
-		this.folderRect.bind(this.rootUIElement);
 
 		this.topBarRect = new UIFilledRectangle(0, 0, 0, this.getWidth(), topBarHeight, TOP_BAR_SCENE);
 		this.topBarRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
@@ -149,8 +131,6 @@ public class FileExplorerWindow extends Window {
 		this.rootDirectoryEntry.expand();
 		this.rootDirectoryEntry.align(this.directoryYOffset);
 
-		this.folderEntries = new ArrayList<>();
-
 		this.topBarBackButton = new Button(3, 0, 20, 20, "btn_directory_back", "          ", new Font("Dialog", Font.PLAIN, 12), 12, TOP_BAR_SELECTION_SCENE, TOP_BAR_TEXT_SCENE);
 		this.topBarBackButton.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.topBarBackButton.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
@@ -163,10 +143,6 @@ public class FileExplorerWindow extends Window {
 		this.topBarFilterTextField.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.topBarFilterTextField.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 		this.topBarFilterTextField.getTextUIElement().setDoAntialiasing(false);
-		this.topBarFilterTextField.setReleasedMaterial(new Material(new Vec3((float) (15 / 255.0))));
-		this.topBarFilterTextField.setHoveredMaterial(new Material(new Vec3((float) (10 / 255.0))));
-		this.topBarFilterTextField.setPressedMaterial(new Material(new Vec3((float) (5 / 255.0))));
-		this.topBarFilterTextField.setSelectedMaterial(new Material(new Vec3((float) (5 / 255.0))));
 		this.topBarFilterTextField.bind(this.topBarRect);
 
 		this.topBarPathText = new Text(this.topBarBackButton.getRightBorder() + 5, 0, "          ", 12, Color.WHITE, TOP_BAR_TEXT_SCENE);
@@ -183,14 +159,37 @@ public class FileExplorerWindow extends Window {
 
 		this.bottomBarSubmitFileButton = new Button(3, 0, 100, 20, "btn_submit_file", "Select File", new Font("Dialog", Font.PLAIN, 12), 12, BOTTOM_BAR_SELECTION_SCENE, BOTTOM_BAR_TEXT_SCENE);
 		this.bottomBarSubmitFileButton.getButtonText().setDoAntialiasing(false);
-		this.bottomBarSubmitFileButton.setReleasedMaterial(new Material(new Vec3((float) (15 / 255.0))));
-		this.bottomBarSubmitFileButton.setHoveredMaterial(new Material(new Vec3((float) (10 / 255.0))));
-		this.bottomBarSubmitFileButton.setPressedMaterial(new Material(new Vec3((float) (5 / 255.0))));
 		this.bottomBarSubmitFileButton.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.bottomBarSubmitFileButton.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 		this.bottomBarSubmitFileButton.bind(this.bottomBarRect);
 
+		this.folderWindow = new ListViewerWindow(this, this);
+		this.folderWindow.setRenderBottomBar(false);
+		this.folderWindow.setDisplaySelectedEntryOnTopBar(true);
+		this.folderWindow.setSubmitOnClickingSelectedListEntry(true);
+		this.folderWindow.setSortEntries(true);
+		this.folderWindow.setAllowInputWhenNotSelected(true);
+		this.folderWindow.setRenderTopBar(false);
+		this.folderWindow.setCloseOnSubmit(false);
+
 		this._resize();
+	}
+
+	@Override
+	public void handleObjects(Object[] objects) {
+		if (objects.length != 1) {
+			return;
+		}
+
+		File f = (File) objects[0];
+
+		if (f.isDirectory()) {
+			this.rootDirectoryEntry.selected(f.getPath() + "\\");
+			DirectoryEntry e = this.rootDirectoryEntry.getSelected();
+
+			this.setSelectedDirectoryEntry(e);
+		}
+
 	}
 
 	@Override
@@ -200,9 +199,6 @@ public class FileExplorerWindow extends Window {
 		Scene.removeScene(DIRECTORY_BACKGROUND_SCENE);
 		Scene.removeScene(DIRECTORY_SELECTION_SCENE);
 		Scene.removeScene(DIRECTORY_TEXT_SCENE);
-		Scene.removeScene(FOLDER_SCENE);
-		Scene.removeScene(FOLDER_SELECTION_SCENE);
-		Scene.removeScene(FOLDER_TEXT_SCENE);
 		Scene.removeScene(TOP_BAR_SCENE);
 		Scene.removeScene(TOP_BAR_SELECTION_SCENE);
 		Scene.removeScene(TOP_BAR_TEXT_SCENE);
@@ -217,14 +213,15 @@ public class FileExplorerWindow extends Window {
 			this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
 		}
 
-		if (this.folderRect != null) {
-			this.folderRect.setWidth(this.getWidth() - this.directoryWidth);
-			this.folderRect.setHeight(this.getHeight() - topBarHeight - bottomBarHeight);
+		if (this.folderWindow != null) {
+			this.folderWindow.setWidth(this.getWidth() - this.directoryWidth);
+			this.folderWindow.setHeight(this.getHeight() - topBarHeight - bottomBarHeight);
 
-			this.setFolderYOffset(this.folderYOffset);
+			this.folderWindow.setOffset(this.directoryWidth, bottomBarHeight);
 		}
 
 		if (this.directoryRect != null) {
+			this.directoryRect.setWidth(this.directoryWidth);
 			this.directoryRect.setHeight(this.getHeight() - topBarHeight - bottomBarHeight);
 
 			//realign entries
@@ -245,11 +242,6 @@ public class FileExplorerWindow extends Window {
 		Input.inputsHovered(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
 		Input.inputsHovered(this.hoveredBottomBarID, BOTTOM_BAR_SELECTION_SCENE);
 
-		for (FolderEntry e : this.folderEntries) {
-			e.hovered(this.hoveredFolderEntryID);
-			e.update();
-		}
-
 		this.rootDirectoryEntry.hovered(this.hoveredDirectoryEntryID);
 		this.rootDirectoryEntry.update();
 
@@ -258,14 +250,7 @@ public class FileExplorerWindow extends Window {
 			int newDirectoryWidth = (int) this.getWindowMousePos().x;
 			newDirectoryWidth = Math.max(newDirectoryWidth, directoryMinWidth);
 			this.directoryWidth = newDirectoryWidth;
-			this.directoryRect.setWidth(this.directoryWidth);
-			this.folderRect.setWidth(this.getWidth() - this.directoryWidth);
-		}
-
-		//check if already selected file
-		if (this.submittedFile != null) {
-			this.callbackWindow.handleFile(this.submittedFile);
-			this.kill();
+			this._resize();
 		}
 	}
 
@@ -284,18 +269,6 @@ public class FileExplorerWindow extends Window {
 		this.uiScreen.render(outputBuffer);
 		this.hoveredDirectoryEntryID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
 		this.uiScreen.setUIScene(DIRECTORY_TEXT_SCENE);
-		this.uiScreen.render(outputBuffer);
-
-		this.uiScreen.setUIScene(FOLDER_SCENE);
-		this.uiScreen.render(outputBuffer);
-		if (this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.folderRect.getID()) {
-			this.hoveredSectionID = this.folderRect.getID();
-		}
-
-		this.uiScreen.setUIScene(FOLDER_SELECTION_SCENE);
-		this.uiScreen.render(outputBuffer);
-		this.hoveredFolderEntryID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
-		this.uiScreen.setUIScene(FOLDER_TEXT_SCENE);
 		this.uiScreen.render(outputBuffer);
 
 		this.uiScreen.setUIScene(TOP_BAR_SCENE);
@@ -323,13 +296,13 @@ public class FileExplorerWindow extends Window {
 		this.uiScreen.render(outputBuffer);
 	}
 
+	public void setSingleEntrySelection(boolean b) {
+		this.folderWindow.setSingleEntrySelection(b);
+	}
+
 	@Override
 	protected void renderOverlay(Framebuffer outputBuffer) {
 
-	}
-
-	public File getSubmittedFile() {
-		return this.submittedFile;
 	}
 
 	private void setDirectoryYOffset(int newYOffset) {
@@ -358,16 +331,10 @@ public class FileExplorerWindow extends Window {
 			return;
 		}
 
-		//delete all old ui elements from folder section. 
-		for (FolderEntry entry : this.folderEntries) {
-			entry.kill();
-		}
-		this.folderEntries.clear();
-
 		this.selectedDirectoryEntry = e;
 
 		//reset the filter
-		this.folderEntryFilter = "";
+		this.folderWindow.setFilter("");
 		this.topBarFilterTextField.setText("");
 
 		if (e == null) {
@@ -404,46 +371,15 @@ public class FileExplorerWindow extends Window {
 		int minYOffset = maxYOffset - (int) this.directoryRect.getHeight() + entryHeight;
 		this.setDirectoryYOffset((int) (MathUtils.clamp(minYOffset, maxYOffset, this.directoryYOffset)));
 
-		String[] fileNames = FileUtils.getAllFilenamesFromDirectory(e.getPath());
-		Arrays.sort(fileNames);
-		for (int i = 0; i < fileNames.length; i++) {
-			FolderEntry entry = new FolderEntry(fileNames[i], this.selectedDirectoryEntry.getPath(), this.folderRect, FOLDER_SELECTION_SCENE, FOLDER_TEXT_SCENE);
-			this.folderEntries.add(entry);
+		//populate list window with files
+		File[] files = FileUtils.getAllFilesFromDirectory(e.getPath());
+		ArrayList<File> fileList = new ArrayList<>();
+		ArrayList<String> strList = new ArrayList<>();
+		for (int i = 0; i < files.length; i++) {
+			fileList.add(files[i]);
+			strList.add(files[i].getName());
 		}
-
-		this.setFolderEntryFilter("");
-
-		this.setFolderYOffset(0);
-	}
-
-	private void setFolderEntryFilter(String filter) {
-		this.folderEntryFilter = filter;
-
-		this.setFolderYOffset(this.folderYOffset);
-	}
-
-	private void setFolderYOffset(int newYOffset) {
-		ArrayList<FolderEntry> filtered = new ArrayList<>();
-		for (int i = 0; i < this.folderEntries.size(); i++) {
-			//check if folder entry is filtered out
-			if (this.folderEntryFilter == "" || this.folderEntries.get(i).getFilename().toLowerCase().contains(this.folderEntryFilter.toLowerCase())) {
-				filtered.add(this.folderEntries.get(i));
-			}
-			else {
-				this.folderEntries.get(i).align(-entryHeight * 10);
-			}
-		}
-
-		int folderEntryTotalHeight = filtered.size() * entryHeight;
-
-		int minYOffset = 0;
-		int maxYOffset = (int) (folderEntryTotalHeight - this.folderRect.getHeight());
-		maxYOffset = Math.max(maxYOffset, 0);
-		this.folderYOffset = (int) (MathUtils.clamp(minYOffset, maxYOffset, newYOffset));
-
-		for (int i = 0; i < filtered.size(); i++) {
-			filtered.get(i).align(i * entryHeight - this.folderYOffset);
-		}
+		this.folderWindow.setList(fileList, strList);
 	}
 
 	@Override
@@ -490,37 +426,6 @@ public class FileExplorerWindow extends Window {
 				this.setDirectoryYOffset(this.directoryYOffset);
 			}
 		}
-		else if (this.hoveredSectionID == this.folderRect.getID()) {
-			if (this.hoveredFolderEntryID != this.folderRect.getID()) {
-				FolderEntry selectedEntry = null;
-				for (FolderEntry e : this.folderEntries) {
-					e.selected(this.hoveredFolderEntryID);
-					if (e.isSelected()) {
-						selectedEntry = e;
-					}
-				}
-
-				//check if we clicked on the selected entry twice
-				if (selectedEntry != null && selectedEntry == this.selectedFolderEntry) {
-					String filepath = this.selectedFolderEntry.getPath() + this.selectedFolderEntry.getFilename() + "\\";
-					if (selectedEntry.isDirectory()) {
-						//this is a folder. Open the directory entry that corresponds to this folder. 
-						this.rootDirectoryEntry.selected(filepath);
-						this.setSelectedDirectoryEntry(this.rootDirectoryEntry.getSelected());
-						selectedEntry = null; //obviously, we won't have anything in the new folder selected
-					}
-				}
-
-				this.selectedFolderEntry = selectedEntry;
-
-				if (this.selectedFolderEntry != null) {
-					this.bottomBarSelectedFileText.setText(this.selectedFolderEntry.getFilename() + "         ");
-				}
-				else {
-					this.bottomBarSelectedFileText.setText("          ");
-				}
-			}
-		}
 		else if (this.hoveredSectionID == this.topBarRect.getID()) {
 			Input.inputsPressed(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
 		}
@@ -544,8 +449,14 @@ public class FileExplorerWindow extends Window {
 
 		switch (Input.getClicked(BOTTOM_BAR_SELECTION_SCENE)) {
 		case "btn_submit_file":
-			if (this.selectedFolderEntry != null) {
-				this.submittedFile = this.selectedFolderEntry.loadFile();
+			Object[] objects = this.folderWindow.getSelectedListEntryObjects();
+			if (objects.length != 0) {
+				File[] files = new File[objects.length];
+				for (int i = 0; i < files.length; i++) {
+					files[i] = (File) objects[i];
+				}
+				this.callbackWindow.handleFiles(files);
+				this.close();
 			}
 			break;
 		}
@@ -558,9 +469,6 @@ public class FileExplorerWindow extends Window {
 		if (this.hoveredSectionID == this.directoryRect.getID()) {
 			this.setDirectoryYOffset(this.directoryYOffset - (int) (smoothOffset) * entryHeight);
 		}
-		else if (this.hoveredSectionID == this.folderRect.getID()) {
-			this.setFolderYOffset(this.folderYOffset - (int) (smoothOffset) * entryHeight);
-		}
 	}
 
 	@Override
@@ -568,149 +476,13 @@ public class FileExplorerWindow extends Window {
 		Input.inputsKeyPressed(key, TOP_BAR_SELECTION_SCENE);
 
 		if (this.topBarFilterTextField.isClicked()) {
-			//update the filter
-			this.setFolderEntryFilter(this.topBarFilterTextField.getText());
+			this.folderWindow.setFilter(this.topBarFilterTextField.getText());
 		}
 	}
 
 	@Override
 	protected void _keyReleased(int key) {
 		Input.inputsKeyReleased(key, TOP_BAR_SELECTION_SCENE);
-	}
-
-}
-
-class FolderEntry {
-
-	public static Material defaultFolderEntryMaterial = new Material(new Vec3((float) (40 / 255.0)));
-	public static Material hoveredFolderEntryMaterial = new Material(new Vec3((float) (50 / 255.0)));
-	public static Material selectedFolderEntryMaterial = new Material(new Vec3((float) (60 / 255.0)));
-
-	private boolean isVisible = true;
-
-	private boolean isHovered = false;
-	private boolean isSelected = false;
-
-	private UIElement rootUIElement;
-	private UIElement entryBaseUIElement = null;
-
-	private String filename;
-	private String path;
-	private Text entryText = null;
-
-	private int selectionScene, textScene;
-
-	public FolderEntry(String filename, String path, UIElement rootUIElement, int selectionScene, int textScene) {
-		this.filename = filename;
-		this.path = path;
-		this.rootUIElement = rootUIElement;
-		this.selectionScene = selectionScene;
-		this.textScene = textScene;
-	}
-
-	public void kill() {
-		if (this.entryBaseUIElement != null) {
-			this.entryBaseUIElement.kill();
-			this.entryText.kill();
-		}
-	}
-
-	public void update() {
-		if (this.isVisible) {
-			if (this.isSelected) {
-				this.entryBaseUIElement.setMaterial(selectedFolderEntryMaterial);
-			}
-			else if (this.isHovered) {
-				this.entryBaseUIElement.setMaterial(hoveredFolderEntryMaterial);
-			}
-			else {
-				this.entryBaseUIElement.setMaterial(defaultFolderEntryMaterial);
-			}
-		}
-	}
-
-	public void hovered(long entityID) {
-		if (!this.isVisible) {
-			this.isHovered = false;
-			return;
-		}
-
-		if (this.entryBaseUIElement.getID() == entityID) {
-			this.isHovered = true;
-		}
-		else {
-			this.isHovered = false;
-		}
-	}
-
-	public void selected(long entityID) {
-		if (!this.isVisible) {
-			this.isSelected = false;
-			return;
-		}
-
-		if (this.entryBaseUIElement.getID() == entityID) {
-			this.isSelected = true;
-		}
-		else {
-			this.isSelected = false;
-		}
-	}
-
-	public boolean isSelected() {
-		return this.isSelected;
-	}
-
-	public String getFilename() {
-		return this.filename;
-	}
-
-	public String getPath() {
-		return this.path;
-	}
-
-	public boolean isDirectory() {
-		return this.loadFile().isDirectory();
-	}
-
-	public File loadFile() {
-		File file = new File(this.getPath() + this.getFilename() + "\\");
-		return file;
-	}
-
-	public void align(int yOffset) {
-		this.isVisible = false;
-		if (-FileExplorerWindow.entryHeight <= yOffset && yOffset <= this.rootUIElement.getHeight()) {
-			this.isVisible = true;
-		}
-
-		if (this.isVisible) {
-			if (this.entryBaseUIElement == null) {
-				this.entryBaseUIElement = new UIFilledRectangle(0, 0, 0, this.rootUIElement.getWidth(), FileExplorerWindow.entryHeight, this.selectionScene);
-				this.entryBaseUIElement.setFillWidth(true);
-				this.entryBaseUIElement.setFillWidthMargin(0);
-				this.entryBaseUIElement.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
-				this.entryBaseUIElement.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
-				this.entryBaseUIElement.setMaterial(defaultFolderEntryMaterial);
-				this.entryBaseUIElement.bind(this.rootUIElement);
-
-				this.entryText = new Text(FileExplorerWindow.entryXOffsetBase, 0, this.filename + "         ", 12, Color.WHITE, this.textScene);
-				this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
-				this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				this.entryText.setDoAntialiasing(false);
-				this.entryText.bind(this.entryBaseUIElement);
-			}
-
-			this.entryBaseUIElement.setYOffset(yOffset);
-		}
-		else {
-			if (this.entryBaseUIElement != null) {
-				this.entryText.kill();
-				this.entryBaseUIElement.kill();
-				this.entryText = null;
-				this.entryBaseUIElement = null;
-			}
-		}
 	}
 
 }

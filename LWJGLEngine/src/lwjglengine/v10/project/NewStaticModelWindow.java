@@ -75,7 +75,9 @@ public class NewStaticModelWindow extends Window {
 	}
 
 	@Override
-	public void handleObject(Object o) {
+	public void handleObjects(Object[] objects) {
+		Object o = objects[0];
+
 		if (!(o instanceof ModelAsset)) {
 			return;
 		}
@@ -91,6 +93,8 @@ public class NewStaticModelWindow extends Window {
 	@Override
 	protected void _kill() {
 		this.uiScreen.kill();
+
+		this.contentSection.kill();
 	}
 
 	@Override
@@ -161,7 +165,7 @@ public class NewStaticModelWindow extends Window {
 			}
 
 			Pair<Long, ModelTransform> staticModel = new Pair<Long, ModelTransform>(this.selectedModelAsset.getID(), new ModelTransform());
-			this.callbackWindow.handleObject(staticModel);
+			this.callbackWindow.handleObjects(new Object[] { staticModel });
 			this.close();
 			break;
 		}

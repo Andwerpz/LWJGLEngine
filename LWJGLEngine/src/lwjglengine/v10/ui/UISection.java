@@ -53,9 +53,7 @@ public class UISection {
 
 		this.uiScreen.setUIScene(BACKGROUND_SCENE);
 		this.uiScreen.render(outputBuffer);
-		if (this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.backgroundRect.getID()) {
-			this.sectionHovered = true;
-		}
+		this.sectionHovered = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.backgroundRect.getID();
 		this.uiScreen.setUIScene(SELECTION_SCENE);
 		this.uiScreen.render(outputBuffer);
 		this.hoveredEntityID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);

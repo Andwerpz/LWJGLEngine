@@ -5,35 +5,33 @@ import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+
+import org.lwjgl.glfw.GLFW;
 
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
+import lwjglengine.v10.input.Button;
 import lwjglengine.v10.input.Input;
+import lwjglengine.v10.input.KeyboardInput;
 import lwjglengine.v10.input.TextField;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.UIScreen;
 import lwjglengine.v10.ui.Text;
 import lwjglengine.v10.ui.UIElement;
 import lwjglengine.v10.ui.UIFilledRectangle;
+import lwjglengine.v10.ui.UISection;
 import myutils.v10.graphics.GraphicsTools;
 import myutils.v10.math.MathUtils;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
 
 public class ListViewerWindow extends Window {
-	//click on the currently selected entry to submit. 
 
-	//TODO
-	// - have name of selected entry show up on top bar. 
+	protected UISection topBarSection, contentSection, bottomBarSection;
 
-	protected final int TOP_BAR_BACKGROUND_SCENE = Scene.generateScene();
-	protected final int TOP_BAR_SELECTION_SCENE = Scene.generateScene();
-	protected final int TOP_BAR_TEXT_SCENE = Scene.generateScene();
-
-	protected final int CONTENT_BACKGROUND_SCENE = Scene.generateScene();
-	protected final int CONTENT_SELECTION_SCENE = Scene.generateScene();
-	protected final int CONTENT_TEXT_SCENE = Scene.generateScene();
+	private Button bottomBarSubmitBtn;
 
 	public static Font entryFont = new Font("Dialogue", Font.PLAIN, 12);
 	public static int entryFontSize = 12;
@@ -45,18 +43,18 @@ public class ListViewerWindow extends Window {
 
 	private int topBarHeightPx = 20;
 
+	private int bottomBarHeightPx = 20;
+
 	private Window callbackWindow;
 
 	private UIScreen uiScreen;
-
-	protected UIFilledRectangle topBarBackgroundRect, contentBackgroundRect;
 
 	private TextField topBarSearchTf;
 	private Text topBarSelectedEntryText;
 
 	private ArrayList<ListEntry> entryList;
 
-	private ListEntry selectedListEntry = null;
+	private HashSet<ListEntry> selectedListEntries;
 
 	private boolean closeOnSubmit = true;
 
@@ -82,6 +80,16 @@ public class ListViewerWindow extends Window {
 
 	private Text noListEntriesText;
 
+	//if true, then you can only have 1 entry selected at a time. 
+	private boolean singleEntrySelection = false;
+
+	private int selectedPivotEntryIndex = 0;
+
+	//if there is only 1 selected list entry, and the user clicks on it, then it will submit if this is true. 
+	private boolean submitOnClickingSelectedListEntry = false;
+
+	private boolean renderBottomBar = true;
+
 	public ListViewerWindow(int xOffset, int yOffset, int width, int height, Window callbackWindow, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
 		this.init(callbackWindow);
@@ -95,58 +103,79 @@ public class ListViewerWindow extends Window {
 	private void init(Window callbackWindow) {
 		this.uiScreen = new UIScreen();
 
+		this.topBarSection = new UISection(0, 0, this.getWidth(), this.topBarHeightPx, this.uiScreen);
+		this.contentSection = new UISection(0, 0, this.getWidth(), this.getHeight(), this.uiScreen);
+		this.bottomBarSection = new UISection(0, 0, this.getWidth(), this.bottomBarHeightPx, this.uiScreen);
+
 		this.entryList = new ArrayList<>();
+
+		this.selectedListEntries = new HashSet<>();
 
 		this.callbackWindow = callbackWindow;
 
-		this.topBarBackgroundRect = new UIFilledRectangle(0, 0, 0, this.getWidth(), topBarHeightPx, TOP_BAR_BACKGROUND_SCENE);
-		this.topBarBackgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
-		this.topBarBackgroundRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
-		this.topBarBackgroundRect.setFillWidth(true);
-		this.topBarBackgroundRect.setFillWidthMargin(0);
-		this.topBarBackgroundRect.setMaterial(topBarDefaultMaterial);
-		this.topBarBackgroundRect.bind(this.rootUIElement);
+		UIFilledRectangle topBarBackgroundRect = this.topBarSection.getBackgroundRect();
+		topBarBackgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+		topBarBackgroundRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+		topBarBackgroundRect.setFillWidth(true);
+		topBarBackgroundRect.setFillWidthMargin(0);
+		topBarBackgroundRect.setMaterial(this.topBarDefaultMaterial);
+		topBarBackgroundRect.bind(this.rootUIElement);
 
-		this.topBarSearchTf = new TextField(3, 0, topBarSearchTfWidthPx, 16, "tf_filter", "Filter Entries", 12, TOP_BAR_SELECTION_SCENE, TOP_BAR_TEXT_SCENE);
+		this.topBarSearchTf = new TextField(3, 0, topBarSearchTfWidthPx, 16, "tf_filter", "Filter Entries", 12, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
 		this.topBarSearchTf.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.topBarSearchTf.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 		this.topBarSearchTf.getTextUIElement().setDoAntialiasing(false);
-		this.topBarSearchTf.bind(this.topBarBackgroundRect);
+		this.topBarSearchTf.bind(topBarBackgroundRect);
 
-		this.topBarSelectedEntryText = new Text(3, 0, "       ", 12, Color.WHITE, TOP_BAR_TEXT_SCENE);
+		this.topBarSelectedEntryText = new Text(3, 0, "       ", 12, Color.WHITE, this.topBarSection.getTextScene());
 		this.topBarSelectedEntryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.topBarSelectedEntryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.topBarSelectedEntryText.setDoAntialiasing(false);
-		this.topBarSelectedEntryText.bind(this.topBarBackgroundRect);
+		this.topBarSelectedEntryText.bind(topBarBackgroundRect);
 
-		this.contentBackgroundRect = new UIFilledRectangle(0, 0, 0, this.getWidth(), this.getHeight() - topBarHeightPx, CONTENT_BACKGROUND_SCENE);
-		this.contentBackgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
-		this.contentBackgroundRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
-		this.contentBackgroundRect.setFillWidth(true);
-		this.contentBackgroundRect.setFillWidthMargin(0);
-		this.contentBackgroundRect.setMaterial(contentDefaultMaterial);
-		this.contentBackgroundRect.bind(this.rootUIElement);
+		UIFilledRectangle contentBackgroundRect = this.contentSection.getBackgroundRect();
+		contentBackgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
+		contentBackgroundRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
+		contentBackgroundRect.setFillWidth(true);
+		contentBackgroundRect.setFillWidthMargin(0);
+		contentBackgroundRect.setMaterial(contentDefaultMaterial);
+		contentBackgroundRect.bind(this.rootUIElement);
 
-		this.noListEntriesText = new Text(0, 0, "No List Entries to Display", 12, Color.WHITE, CONTENT_TEXT_SCENE);
+		this.noListEntriesText = new Text(0, 0, "No List Entries to Display", 12, Color.WHITE, this.contentSection.getTextScene());
 		this.noListEntriesText.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
 		this.noListEntriesText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 		this.noListEntriesText.setDoAntialiasing(false);
-		this.noListEntriesText.bind(this.contentBackgroundRect);
+		this.noListEntriesText.bind(contentBackgroundRect);
+
+		UIFilledRectangle bottomBarRect = this.bottomBarSection.getBackgroundRect();
+		bottomBarRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
+		bottomBarRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
+		bottomBarRect.setFillWidth(true);
+		bottomBarRect.setMaterial(this.topBarDefaultMaterial);
+		bottomBarRect.bind(this.rootUIElement);
+
+		this.bottomBarSubmitBtn = new Button(3, 0, 100, 16, "btn_submit", "Submit", 12, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
+		this.bottomBarSubmitBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
+		this.bottomBarSubmitBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
+		this.bottomBarSubmitBtn.getButtonText().setDoAntialiasing(false);
+		this.bottomBarSubmitBtn.bind(bottomBarRect);
 
 		this._resize();
 	}
 
-	private void clearList() {
+	public void clearList() {
 		for (ListEntry i : this.entryList) {
 			i.kill();
 		}
 		this.entryList.clear();
 
-		if (this.selectedListEntry != null) {
-			this.selectedListEntry = null;
-		}
+		this.selectedPivotEntryIndex = 0;
+
+		this.selectedListEntries.clear();
 
 		this.topBarSelectedEntryText.setText("        ");
+
+		this.alignEntries();
 	}
 
 	/**
@@ -174,7 +203,7 @@ public class ListViewerWindow extends Window {
 		this.clearList();
 
 		for (int i = 0; i < list.size(); i++) {
-			ListEntry e = new ListEntry(list.get(i), this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s.get(i), this.contentBackgroundRect, CONTENT_SELECTION_SCENE, CONTENT_TEXT_SCENE);
+			ListEntry e = new ListEntry(list.get(i), this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s.get(i), this.contentSection.getBackgroundRect(), this.contentSection.getSelectionScene(), this.contentSection.getTextScene());
 			this.entryList.add(e);
 		}
 
@@ -195,7 +224,7 @@ public class ListViewerWindow extends Window {
 			return;
 		}
 
-		ListEntry e = new ListEntry(elem, this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s, this.contentBackgroundRect, CONTENT_SELECTION_SCENE, CONTENT_TEXT_SCENE);
+		ListEntry e = new ListEntry(elem, this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s, this.contentSection.getBackgroundRect(), this.contentSection.getSelectionScene(), this.contentSection.getTextScene());
 		this.entryList.add(e);
 
 		this.alignEntries();
@@ -234,6 +263,24 @@ public class ListViewerWindow extends Window {
 		this.addToList(elem, elem.toString());
 	}
 
+	public void setRenderBottomBar(boolean b) {
+		this.renderBottomBar = b;
+		this._resize();
+	}
+
+	public void setFilter(String filter) {
+		this.filterString = filter;
+		this.alignEntries();
+	}
+
+	public void setSubmitOnClickingSelectedListEntry(boolean b) {
+		this.submitOnClickingSelectedListEntry = b;
+	}
+
+	public void setSingleEntrySelection(boolean b) {
+		this.singleEntrySelection = b;
+	}
+
 	public void setDisplaySelectedEntryOnTopBar(boolean b) {
 		this.displaySelectedEntryOnTopBar = b;
 		if (this.displaySelectedEntryOnTopBar) {
@@ -264,15 +311,28 @@ public class ListViewerWindow extends Window {
 		this.alignEntries();
 	}
 
+	//returns the string of the current pivot entry. 
 	public String getSelectedEntryString() {
-		if (this.selectedListEntry == null) {
+		if (this.selectedPivotEntryIndex >= this.entryList.size()) {
 			return "";
 		}
-		return this.selectedListEntry.getText();
+		return this.entryList.get(this.selectedPivotEntryIndex).getText();
+	}
+
+	public Object[] getSelectedListEntryObjects() {
+		Object[] ret = new Object[this.selectedListEntries.size()];
+
+		int i = 0;
+		for (ListEntry e : this.selectedListEntries) {
+			ret[i] = e.getObject();
+			i++;
+		}
+
+		return ret;
 	}
 
 	private void alignEntries() {
-		this.contentBackgroundRect.align();
+		this.contentSection.getBackgroundRect().align();
 
 		if (this.sortEntries) {
 			this.sortList();
@@ -301,12 +361,12 @@ public class ListViewerWindow extends Window {
 		//make sure offset is within bounds. 
 		if (this.isHorizontal) {
 			this.contentBaseYOffset = 0;
-			int minBaseXOffset = (int) Math.min(0, this.contentBackgroundRect.getWidth() - horizontalAlignWidthSum);
+			int minBaseXOffset = (int) Math.min(0, this.contentSection.getBackgroundRect().getWidth() - horizontalAlignWidthSum);
 			this.contentBaseXOffset = (int) MathUtils.clamp(minBaseXOffset, 0, this.contentBaseXOffset);
 		}
 		else {
 			this.contentBaseXOffset = 0;
-			int minBaseYOffset = Math.min(0, (int) this.contentBackgroundRect.getHeight() - this.entryList.size() * entryHeightPx);
+			int minBaseYOffset = Math.min(0, (int) this.contentSection.getBackgroundRect().getHeight() - this.entryList.size() * entryHeightPx);
 			this.contentBaseYOffset = (int) MathUtils.clamp(minBaseYOffset, 0, this.contentBaseYOffset);
 		}
 
@@ -367,35 +427,41 @@ public class ListViewerWindow extends Window {
 	protected void _kill() {
 		this.uiScreen.kill();
 
-		Scene.removeScene(TOP_BAR_BACKGROUND_SCENE);
-		Scene.removeScene(TOP_BAR_SELECTION_SCENE);
-		Scene.removeScene(TOP_BAR_TEXT_SCENE);
-
-		Scene.removeScene(CONTENT_BACKGROUND_SCENE);
-		Scene.removeScene(CONTENT_SELECTION_SCENE);
-		Scene.removeScene(CONTENT_TEXT_SCENE);
+		this.topBarSection.kill();
+		this.contentSection.kill();
+		this.bottomBarSection.kill();
 	}
 
 	@Override
 	protected void _resize() {
 		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
 
-		this.topBarBackgroundRect.setHeight(this.topBarHeightPx);
+		this.topBarSection.getBackgroundRect().setHeight(this.topBarHeightPx);
+		this.bottomBarSection.getBackgroundRect().setHeight(this.bottomBarHeightPx);
+
+		int contentHeight = this.getHeight();
 
 		if (this.renderTopBar) {
-			this.contentBackgroundRect.setHeight(this.getHeight() - this.topBarHeightPx);
+			contentHeight -= this.topBarHeightPx;
+		}
+
+		if (this.renderBottomBar) {
+			contentHeight -= this.bottomBarHeightPx;
+			this.contentSection.getBackgroundRect().setFrameAlignmentOffset(0, this.bottomBarHeightPx);
 		}
 		else {
-			this.contentBackgroundRect.setHeight(this.getHeight());
+			this.contentSection.getBackgroundRect().setFrameAlignmentOffset(0, 0);
 		}
+
+		this.contentSection.getBackgroundRect().setHeight(contentHeight);
 
 		this.topBarSelectedEntryText.setWidth(this.getWidth() - 6);
 
 		this.alignEntries();
 	}
 
-	protected void submitEntry(Object o) {
-		this.callbackWindow.handleObject(o);
+	protected void submitEntries(Object[] o) {
+		this.callbackWindow.handleObjects(o);
 		if (this.closeOnSubmit) {
 			this.close();
 			return;
@@ -404,7 +470,9 @@ public class ListViewerWindow extends Window {
 
 	@Override
 	protected void _update() {
-		Input.inputsHovered(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
+		this.topBarSection.update();
+		this.contentSection.update();
+		this.bottomBarSection.update();
 
 		for (ListEntry i : this.entryList) {
 			i.hovered(this.hoveredContentID);
@@ -417,28 +485,25 @@ public class ListViewerWindow extends Window {
 		int mouseX = (int) this.getWindowMousePos().x;
 		int mouseY = (int) this.getWindowMousePos().y;
 
-		this.uiScreen.setUIScene(CONTENT_BACKGROUND_SCENE);
-		this.uiScreen.render(outputBuffer);
-		if (this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.contentBackgroundRect.getID()) {
-			this.hoveredSectionID = this.contentBackgroundRect.getID();
+		this.contentSection.render(outputBuffer, getWindowMousePos());
+		if (this.contentSection.sectionHovered()) {
+			this.hoveredSectionID = this.contentSection.getBackgroundRect().getID();
 		}
-		this.uiScreen.setUIScene(CONTENT_SELECTION_SCENE);
-		this.uiScreen.render(outputBuffer);
-		this.hoveredContentID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
-		this.uiScreen.setUIScene(CONTENT_TEXT_SCENE);
-		this.uiScreen.render(outputBuffer);
+		this.hoveredContentID = this.contentSection.getHoveredEntityID();
 
 		if (this.renderTopBar) {
-			this.uiScreen.setUIScene(TOP_BAR_BACKGROUND_SCENE);
-			this.uiScreen.render(outputBuffer);
-			if (this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.topBarBackgroundRect.getID()) {
-				this.hoveredSectionID = this.topBarBackgroundRect.getID();
+			this.topBarSection.render(outputBuffer, getWindowMousePos());
+			if (this.topBarSection.sectionHovered()) {
+				this.hoveredSectionID = this.topBarSection.getBackgroundRect().getID();
 			}
-			this.uiScreen.setUIScene(TOP_BAR_SELECTION_SCENE);
-			this.uiScreen.render(outputBuffer);
-			this.hoveredTopBarID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
-			this.uiScreen.setUIScene(TOP_BAR_TEXT_SCENE);
-			this.uiScreen.render(outputBuffer);
+			this.hoveredTopBarID = this.topBarSection.getHoveredEntityID();
+		}
+
+		if (this.renderBottomBar) {
+			this.bottomBarSection.render(outputBuffer, this.getWindowMousePos());
+			if (this.bottomBarSection.sectionHovered()) {
+				this.hoveredSectionID = this.bottomBarSection.getBackgroundRect().getID();
+			}
 		}
 	}
 
@@ -472,24 +537,92 @@ public class ListViewerWindow extends Window {
 
 	}
 
+	private void listEntryClicked(ListEntry clickedEntry) {
+		int clickedIndex = -1;
+		for (int i = 0; i < this.entryList.size(); i++) {
+			if (this.entryList.get(i) == clickedEntry) {
+				clickedIndex = i;
+				break;
+			}
+		}
+
+		if (this.singleEntrySelection) {
+			if (this.selectedListEntries.size() == 1 && this.selectedListEntries.contains(clickedEntry) && this.submitOnClickingSelectedListEntry) {
+				this.submitEntries(new Object[] { clickedEntry.getObject() });
+				return;
+			}
+
+			this.selectedListEntries.clear();
+			this.selectedListEntries.add(clickedEntry);
+
+			this.selectedPivotEntryIndex = clickedIndex;
+		}
+		else {
+			boolean ctrlPressed = KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL);
+			boolean shiftPressed = KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_LEFT_SHIFT) || KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_RIGHT_SHIFT);
+
+			if (!ctrlPressed && !shiftPressed && this.selectedListEntries.size() == 1 && this.selectedListEntries.contains(clickedEntry) && this.submitOnClickingSelectedListEntry) {
+				this.submitEntries(new Object[] { clickedEntry.getObject() });
+				return;
+			}
+
+			if (!shiftPressed) {
+				//set the pivot
+				this.selectedPivotEntryIndex = clickedIndex;
+			}
+
+			if (!ctrlPressed) {
+				//clear current list of selected entries
+				this.selectedListEntries.clear();
+			}
+
+			//add pivot to list of selected entries
+			this.selectedListEntries.add(clickedEntry);
+
+			if (shiftPressed) {
+				int l = Math.min(clickedIndex, this.selectedPivotEntryIndex);
+				int r = Math.max(clickedIndex, this.selectedPivotEntryIndex);
+				for (int i = l; i <= r; i++) {
+					this.selectedListEntries.add(this.entryList.get(i));
+				}
+			}
+		}
+
+		//go through all folder entries and set the selected status of each
+		for (ListEntry e : this.entryList) {
+			if (this.selectedListEntries.contains(e)) {
+				e.setSelected(true);
+			}
+			else {
+				e.setSelected(false);
+			}
+		}
+
+		//set the top bar text
+		if (this.selectedListEntries.size() == 1) {
+			this.topBarSelectedEntryText.setText(clickedEntry.getText());
+		}
+		else {
+			this.topBarSelectedEntryText.setText(this.selectedListEntries.size() + " entries selected");
+		}
+	}
+
 	@Override
 	protected void _mousePressed(int button) {
-		Input.inputsPressed(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
+		this.topBarSection.mousePressed(button);
+		this.bottomBarSection.mousePressed(button);
+		this.contentSection.mousePressed(button);
 
-		if (this.hoveredSectionID == this.topBarBackgroundRect.getID()) {
+		if (this.hoveredSectionID == this.topBarSection.getBackgroundRect().getID()) {
 
 		}
-		else if (this.hoveredSectionID == this.contentBackgroundRect.getID()) {
-			if (this.hoveredContentID != this.contentBackgroundRect.getID()) {
+		else if (this.hoveredSectionID == this.contentSection.getBackgroundRect().getID()) {
+			if (this.hoveredContentID != this.contentSection.getBackgroundRect().getID()) {
 				for (ListEntry i : this.entryList) {
 					i.selected(this.hoveredContentID);
 					if (i.isSelected()) {
-						if (i == this.selectedListEntry) {
-							Object o = this.selectedListEntry.getObject();
-							this.submitEntry(o);
-						}
-						this.selectedListEntry = i;
-						this.topBarSelectedEntryText.setText(this.selectedListEntry.getText());
+						this.listEntryClicked(i);
+						break;
 					}
 				}
 			}
@@ -498,24 +631,43 @@ public class ListViewerWindow extends Window {
 
 	@Override
 	protected void _mouseReleased(int button) {
-		Input.inputsReleased(this.hoveredTopBarID, TOP_BAR_SELECTION_SCENE);
+		this.topBarSection.mouseReleased(button);
+		this.bottomBarSection.mouseReleased(button);
+
+		if (this.hoveredSectionID == this.bottomBarSection.getBackgroundRect().getID()) {
+			switch (Input.getClicked(this.bottomBarSection.getSelectionScene())) {
+			case "btn_submit": {
+				if (this.selectedListEntries.size() != 0) {
+					Object[] objects = new Object[this.selectedListEntries.size()];
+					int i = 0;
+					for (ListEntry e : this.selectedListEntries) {
+						objects[i] = e.getObject();
+						i++;
+					}
+
+					this.submitEntries(objects);
+				}
+				break;
+			}
+			}
+		}
 	}
 
 	@Override
 	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
-		if (this.hoveredSectionID == this.contentBackgroundRect.getID()) {
+		if (this.hoveredSectionID == this.contentSection.getBackgroundRect().getID()) {
 			if (this.isHorizontal) {
-				this.setContentBaseXOffset(this.contentBaseXOffset - (int) ((smoothOffset) * entryHeightPx));
+				this.setContentBaseXOffset(this.contentBaseXOffset + (int) ((smoothOffset) * entryHeightPx));
 			}
 			else {
-				this.setContentBaseYOffset(this.contentBaseYOffset - (int) ((smoothOffset) * entryHeightPx));
+				this.setContentBaseYOffset(this.contentBaseYOffset + (int) ((smoothOffset) * entryHeightPx));
 			}
 		}
 	}
 
 	@Override
 	protected void _keyPressed(int key) {
-		Input.inputsKeyPressed(key, TOP_BAR_SELECTION_SCENE);
+		this.topBarSection.keyPressed(key);
 
 		if (this.topBarSearchTf.isClicked()) {
 			this.filterString = this.topBarSearchTf.getText().toLowerCase();
@@ -526,7 +678,7 @@ public class ListViewerWindow extends Window {
 
 	@Override
 	protected void _keyReleased(int key) {
-		Input.inputsKeyReleased(key, TOP_BAR_SELECTION_SCENE);
+		this.topBarSection.keyReleased(key);
 	}
 
 }
@@ -695,6 +847,10 @@ class ListEntry {
 
 	public boolean isSelected() {
 		return this.isSelected;
+	}
+
+	public void setSelected(boolean b) {
+		this.isSelected = b;
 	}
 
 }

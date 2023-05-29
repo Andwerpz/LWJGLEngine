@@ -104,6 +104,9 @@ public class ProjectStateEditorWindow extends Window {
 			AdjustableWindow staticModelListWindow = new AdjustableWindow("Static Models", new ListViewerWindow(this, null), this);
 			ListViewerWindow contentWindow = (ListViewerWindow) staticModelListWindow.getContentWindow();
 			contentWindow.setCloseOnSubmit(false);
+			contentWindow.setRenderBottomBar(false);
+			contentWindow.setSubmitOnClickingSelectedListEntry(true);
+			contentWindow.setSingleEntrySelection(true);
 			contentWindow.setList(staticModelSelObjects, staticModelStrings);
 			break;
 		}
@@ -116,7 +119,9 @@ public class ProjectStateEditorWindow extends Window {
 	}
 
 	@Override
-	public void handleObject(Object o) {
+	public void handleObjects(Object[] objects) {
+		Object o = objects[0];
+
 		if (o instanceof String) {
 			//strings should have the form 'type id'. 
 			String[] arr = ((String) o).split(" ");
@@ -152,11 +157,12 @@ public class ProjectStateEditorWindow extends Window {
 				Long assetID = p.first;
 				ModelTransform transform = p.second;
 
+				//add to project, and register as dependency
+				this.state.addStaticModel(assetID, transform);
+
 				//add the static model to the scene
 				Model m = this.project.getModel(assetID);
 				long instanceID = Model.addInstance(m, transform, PERSPECTIVE_WORLD_SCENE);
-
-				this.state.addStaticModel(assetID, transform);
 				this.staticModelInstanceIDs.add(instanceID);
 			}
 		}

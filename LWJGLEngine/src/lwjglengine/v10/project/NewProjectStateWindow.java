@@ -69,8 +69,9 @@ public class NewProjectStateWindow extends Window {
 
 	@Override
 	protected void _kill() {
-		// TODO Auto-generated method stub
+		this.uiScreen.kill();
 
+		this.newStateDialogue.kill();
 	}
 
 	@Override

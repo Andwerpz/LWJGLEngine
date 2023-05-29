@@ -28,6 +28,9 @@ public class ProjectStateViewerWindow extends ListViewerWindow {
 		this.project = project;
 
 		this.setDisplaySelectedEntryOnTopBar(false);
+		this.setRenderBottomBar(false);
+		this.setSubmitOnClickingSelectedListEntry(true);
+		this.setSingleEntrySelection(true);
 
 		//extract all state assets. 
 		ArrayList<Asset> assets = this.project.getAssetList();
@@ -42,15 +45,17 @@ public class ProjectStateViewerWindow extends ListViewerWindow {
 		this.setList(filteredAssets, filteredStrings);
 
 		//create new state button
-		this.createStateBtn = new Button(3, 0, 100, 16, "btn_new_state", "New State", 12, TOP_BAR_SELECTION_SCENE, TOP_BAR_TEXT_SCENE);
+		this.createStateBtn = new Button(3, 0, 100, 16, "btn_new_state", "New State", 12, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
 		this.createStateBtn.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.createStateBtn.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.createStateBtn.getButtonText().setDoAntialiasing(false);
-		this.createStateBtn.bind(this.topBarBackgroundRect);
+		this.createStateBtn.bind(this.topBarSection.getBackgroundRect());
 	}
 
 	@Override
-	protected void submitEntry(Object o) {
+	protected void submitEntries(Object[] objects) {
+		Object o = objects[0];
+
 		if (!(o instanceof StateAsset)) {
 			return;
 		}

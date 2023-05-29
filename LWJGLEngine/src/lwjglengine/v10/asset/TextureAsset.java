@@ -1,10 +1,12 @@
 package lwjglengine.v10.asset;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
 import lwjglengine.v10.graphics.Texture;
 import lwjglengine.v10.project.Project;
+import myutils.v10.file.TargaReader;
 import myutils.v11.file.FileUtils;
 
 public class TextureAsset extends Asset {
@@ -17,7 +19,21 @@ public class TextureAsset extends Asset {
 
 	@Override
 	protected void _load() throws IOException {
-		this.texture = new Texture(FileUtils.loadImage(this.file.getPath()), Texture.VERTICAL_FLIP_BIT);
+		String fileExtension = FileUtils.getFileExtension(this.getFile());
+		BufferedImage img = null;
+
+		switch (fileExtension) {
+		case "png":
+		case "jpg":
+			img = FileUtils.loadImage(this.getFile().getAbsolutePath());
+			break;
+
+		case "tga":
+			img = TargaReader.getImage(this.getFile().getAbsolutePath());
+			break;
+		}
+
+		this.texture = new Texture(img, Texture.VERTICAL_FLIP_BIT);
 	}
 
 	@Override

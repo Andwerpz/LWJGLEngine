@@ -102,6 +102,8 @@ public abstract class Window {
 	private boolean updateWhenNotSelected = true;
 	private boolean renderWhenNotSelected = true;
 
+	private boolean allowInputWhenNotSelected = false;
+
 	//for debugging
 	public boolean renderAlpha = false;
 
@@ -230,7 +232,7 @@ public abstract class Window {
 	}
 
 	//A file has been loaded in a file explorer window; handle it here. 
-	public void handleFile(File file) {
+	public void handleFiles(File[] files) {
 		/* keeping it optional to implement */
 	}
 
@@ -238,7 +240,7 @@ public abstract class Window {
 		/* keeping it optional to implement */
 	}
 
-	public void handleObject(Object o) {
+	public void handleObjects(Object[] o) {
 		/* keeping it optional to implement */
 	}
 
@@ -248,6 +250,10 @@ public abstract class Window {
 
 	protected void setAllowModifyingChildren(boolean b) {
 		this.allowModifyingChildren = b;
+	}
+
+	public void setAllowInputWhenNotSelected(boolean b) {
+		this.allowInputWhenNotSelected = b;
 	}
 
 	public boolean isAllowModifyingChildren() {
@@ -727,7 +733,7 @@ public abstract class Window {
 	}
 
 	public void mousePressed(int button) {
-		if (this.isSelected) {
+		if (this.isSelected || this.allowInputWhenNotSelected) {
 			if (button == GLFW.GLFW_MOUSE_BUTTON_2 && this.contextMenuRightClick) {
 				//spawn context menu
 				if (this.contextMenuWindow != null && this.contextMenuWindow.isAlive()) {
@@ -752,7 +758,7 @@ public abstract class Window {
 	protected abstract void _mousePressed(int button);
 
 	public void mouseReleased(int button) {
-		if (this.isSelected) {
+		if (this.isSelected || this.allowInputWhenNotSelected) {
 			this._mouseReleased(button);
 		}
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
@@ -764,7 +770,7 @@ public abstract class Window {
 	protected abstract void _mouseReleased(int button);
 
 	public void mouseScrolled(float wheelOffset, float smoothOffset) {
-		if (this.isSelected) {
+		if (this.isSelected || this.allowInputWhenNotSelected) {
 			this._mouseScrolled(wheelOffset, smoothOffset);
 		}
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
@@ -776,7 +782,7 @@ public abstract class Window {
 	protected abstract void _mouseScrolled(float wheelOffset, float smoothOffset);
 
 	public void keyPressed(int key) {
-		if (this.isSelected) {
+		if (this.isSelected || this.allowInputWhenNotSelected) {
 			if (key == GLFW.GLFW_KEY_ESCAPE && this.unlockCursorOnEscPressed) {
 				this.unlockCursor();
 			}
@@ -792,7 +798,7 @@ public abstract class Window {
 	protected abstract void _keyPressed(int key);
 
 	public void keyReleased(int key) {
-		if (this.isSelected) {
+		if (this.isSelected || this.allowInputWhenNotSelected) {
 			this._keyReleased(key);
 		}
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {

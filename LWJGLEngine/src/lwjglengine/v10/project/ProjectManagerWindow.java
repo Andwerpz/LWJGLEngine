@@ -133,7 +133,9 @@ public class ProjectManagerWindow extends Window {
 
 	@Override
 	protected void _kill() {
-		this.project.kill();
+		if (this.project != null) {
+			this.project.kill();
+		}
 
 		this.uiScreen.kill();
 
@@ -222,7 +224,11 @@ public class ProjectManagerWindow extends Window {
 	}
 
 	@Override
-	public void handleFile(File file) {
+	public void handleFiles(File[] files) {
+		if (files.length != 1) {
+			return;
+		}
+
 		if (!this.hasProject) {
 			boolean failedToLoad = false;
 			Project project = null;
@@ -230,7 +236,7 @@ public class ProjectManagerWindow extends Window {
 			if (this.newProjectName != null) {
 				//create a new project in this directory. 
 				try {
-					project = Project.createNewProject(file, this.newProjectName);
+					project = Project.createNewProject(files[0], this.newProjectName);
 				}
 				catch (IOException e) {
 					e.printStackTrace();
@@ -241,7 +247,7 @@ public class ProjectManagerWindow extends Window {
 			else {
 				//load the project
 				try {
-					project = new Project(file);
+					project = new Project(files[0]);
 				}
 				catch (IOException e) {
 					e.printStackTrace();
@@ -319,13 +325,17 @@ public class ProjectManagerWindow extends Window {
 				return;
 			}
 			this.newProjectName = newProjectName;
-			Window fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Select New Project Directory", new FileExplorerWindow(this), this);
+			AdjustableWindow fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Select New Project Directory", new FileExplorerWindow(this), this);
+			FileExplorerWindow w = (FileExplorerWindow) fileExplorer.getContentWindow();
+			w.setSingleEntrySelection(true);
 			break;
 		}
 
 		case "btn_import_project": {
 			this.newProjectName = null;
-			Window fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Select Project Directory", new FileExplorerWindow(this), this);
+			AdjustableWindow fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Select Project Directory", new FileExplorerWindow(this), this);
+			FileExplorerWindow w = (FileExplorerWindow) fileExplorer.getContentWindow();
+			w.setSingleEntrySelection(true);
 			break;
 		}
 		}

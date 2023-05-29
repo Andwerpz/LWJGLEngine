@@ -77,12 +77,18 @@ public class ProjectAssetViewerWindow extends Window {
 		this.contentWindow = new ListViewerWindow(this, this);
 		this.contentWindow.setAlignmentStyle(Window.FROM_LEFT, Window.FROM_BOTTOM);
 		this.contentWindow.setCloseOnSubmit(false);
+		this.contentWindow.setSingleEntrySelection(true);
+		this.contentWindow.setRenderBottomBar(false);
+		this.contentWindow.setSubmitOnClickingSelectedListEntry(true);
 
 		this.topBarWindow = new ListViewerWindow(this, this);
 		this.topBarWindow.setSortEntries(false);
 		this.topBarWindow.setCloseOnSubmit(false);
 		this.topBarWindow.setRenderTopBar(false);
 		this.topBarWindow.setIsHorizontal(true);
+		this.topBarWindow.setRenderBottomBar(false);
+		this.topBarWindow.setSingleEntrySelection(true);
+		this.topBarWindow.setSubmitOnClickingSelectedListEntry(false);
 		this.topBarWindow.setEntryHeightPx(this.topBarHeightPx);
 
 		this.topBarWindow.setAlignmentStyle(Window.FROM_LEFT, Window.FROM_TOP);
@@ -176,13 +182,15 @@ public class ProjectAssetViewerWindow extends Window {
 	}
 
 	@Override
-	public void handleObject(Object o) {
+	public void handleObjects(Object[] objects) {
+		Object o = objects[0];
+
 		if (!(o instanceof Asset)) {
 			return;
 		}
 
 		if (this.callbackWindow != null) {
-			this.callbackWindow.handleObject(o);
+			this.callbackWindow.handleObjects(new Object[] { o });
 			this.close();
 			return;
 		}

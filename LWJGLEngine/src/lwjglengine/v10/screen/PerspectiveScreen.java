@@ -12,7 +12,6 @@ import lwjglengine.v10.graphics.Cubemap;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Shader;
 import lwjglengine.v10.graphics.Texture;
-import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.Model;
 import lwjglengine.v10.player.Camera;
 import lwjglengine.v10.scene.Light;
@@ -24,7 +23,7 @@ public class PerspectiveScreen extends Screen {
 	// renders the scene with a perspective projection matrix.
 
 	private static final float NEAR = 0.1f;
-	private static final float FAR = 200.0f;
+	private static final float FAR = 400.0f;
 
 	private int world_scene;
 	private int decal_scene;
@@ -37,8 +36,8 @@ public class PerspectiveScreen extends Screen {
 	private int particle_scene;
 	private boolean renderParticles = false;
 
-	private static final int SHADOW_MAP_NR_CASCADES = 6;
-	private static float[] shadowCascades = new float[] { NEAR, 1, 3, 7, 15, 30, FAR };
+	private static final int SHADOW_MAP_NR_CASCADES = 7;
+	private static float[] shadowCascades = new float[] { NEAR, 1, 3, 7, 15, 30, 100, FAR };
 
 	private float worldFOV;
 
@@ -329,13 +328,13 @@ public class PerspectiveScreen extends Screen {
 					// generate perspective frustum corners in camera space
 					float near = shadowCascades[cascade];
 					float far = shadowCascades[cascade + 1];
-					float y1 = near * (float) Math.tan(Main.FOV / 2f);
-					float y2 = far * (float) Math.tan(Main.FOV / 2f);
-					float x1 = y1 * Main.ASPECT_RATIO;
-					float x2 = y2 * Main.ASPECT_RATIO;
-					Vec3[] corners = new Vec3[] { new Vec3(x1, y1, -near), new Vec3(-x1, y1, -near), new Vec3(-x1, -y1, -near), new Vec3(x1, -y1, -near),
+					float y1 = near * (float) Math.tan(this.camera.getVerticalFOV() / 2f);
+					float y2 = far * (float) Math.tan(this.camera.getVerticalFOV() / 2f);
 
-							new Vec3(x2, y2, -far), new Vec3(-x2, y2, -far), new Vec3(-x2, -y2, -far), new Vec3(x2, -y2, -far), };
+					float aspectRatio = (float) this.screenWidth / (float) this.screenHeight;
+					float x1 = y1 * aspectRatio;
+					float x2 = y2 * aspectRatio;
+					Vec3[] corners = new Vec3[] { new Vec3(x1, y1, -near), new Vec3(-x1, y1, -near), new Vec3(-x1, -y1, -near), new Vec3(x1, -y1, -near), new Vec3(x2, y2, -far), new Vec3(-x2, y2, -far), new Vec3(-x2, -y2, -far), new Vec3(x2, -y2, -far), };
 
 					//we have to normalize the near and far coordinates
 					near = (1f / near - 1f / NEAR) / (1f / FAR - 1f / NEAR);
@@ -368,7 +367,10 @@ public class PerspectiveScreen extends Screen {
 					}
 
 					// construct orthographic projection matrix
-					Camera lightCamera = new Camera(left, right, bottom, top, near - 100f, far + 100f);
+					//it's important that all geometry is captured inside this orthographic frustum, so we have to consider
+					//stuff that's behind the camera as well. 
+					float diff = FAR - NEAR;
+					Camera lightCamera = new Camera(left, right, bottom, top, near - diff, far + diff);
 					lightCamera.setFacing(lightDir);
 
 					// render shadow map
