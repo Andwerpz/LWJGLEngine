@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import lwjglengine.v10.entity.ProjectEntityViewerWindow;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.input.Button;
@@ -302,6 +303,12 @@ public class ProjectManagerWindow extends Window {
 							ProjectStateViewerWindow psv = new ProjectStateViewerWindow(0, 0, this.getWidth(), this.getHeight() - topBarHeightPx, this.project, this, this);
 							psv.setCloseOnSubmit(false);
 							this.contentWindow = psv;
+							break;
+							
+						case "Entities":
+							ProjectEntityViewerWindow pev = new ProjectEntityViewerWindow(0, 0, this.getWidth(), this.getHeight() - topBarHeightPx, this.project, this, this);
+							pev.setCloseOnSubmit(false);
+							this.contentWindow = pev;
 							break;
 
 						case "Import":
