@@ -316,8 +316,19 @@ public class Project {
 
 	//if there is a file that is outside of the current assets folder, then we can copy it in. 
 	public long addAsset(File f) {
+		if (f.isDirectory()) {
+			return -1; //can't have a directory as an asset. 
+		}
+
 		//just make copy of given file into assets folder
 		String filename = f.getName();
+		String relFilepath = File.separator + filename;
+		String assetFilepath = this.assetsDirectory.getPath() + File.separator + filename;
+
+		if (this.findAssetFromRelativeFilepath(relFilepath) != -1) {
+			return -1; //asset already exists. 
+		}
+
 		File copy = new File(this.assetsDirectory.getPath() + File.separator + filename);
 
 		try {

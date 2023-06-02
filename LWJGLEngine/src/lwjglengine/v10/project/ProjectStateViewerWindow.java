@@ -31,6 +31,7 @@ public class ProjectStateViewerWindow extends ListViewerWindow {
 		this.setRenderBottomBar(false);
 		this.setSubmitOnClickingSelectedListEntry(true);
 		this.setSingleEntrySelection(true);
+		this.setCloseOnSubmit(false);
 
 		//extract all state assets. 
 		ArrayList<Asset> assets = this.project.getAssetList();

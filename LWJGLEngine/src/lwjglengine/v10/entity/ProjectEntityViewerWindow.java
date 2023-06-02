@@ -13,25 +13,31 @@ import lwjglengine.v10.window.ListViewerWindow;
 import lwjglengine.v10.window.Window;
 
 public class ProjectEntityViewerWindow extends ListViewerWindow {
-	
+
 	private Project project;
-	
+
 	private Button createEntityBtn;
 
 	public ProjectEntityViewerWindow(int xOffset, int yOffset, int width, int height, Project project, Window callbackWindow, Window parentWindow) {
 		super(xOffset, yOffset, width, height, callbackWindow, parentWindow);
 		this.init(project);
 	}
-	
+
 	private void init(Project project) {
 		this.project = project;
-		
+
+		this.setDisplaySelectedEntryOnTopBar(false);
+		this.setRenderBottomBar(false);
+		this.setSubmitOnClickingSelectedListEntry(true);
+		this.setSingleEntrySelection(true);
+		this.setCloseOnSubmit(false);
+
 		//extract all state assets. 
 		ArrayList<Asset> assets = this.project.getAssetList();
 		ArrayList<Asset> filteredAssets = new ArrayList<>();
 		ArrayList<String> filteredStrings = new ArrayList<>();
 		for (Asset a : assets) {
-			if (a instanceof StateAsset) {
+			if (a instanceof EntityAsset) {
 				filteredAssets.add(a);
 				filteredStrings.add(a.getName());
 			}
@@ -45,7 +51,7 @@ public class ProjectEntityViewerWindow extends ListViewerWindow {
 		this.createEntityBtn.getButtonText().setDoAntialiasing(false);
 		this.createEntityBtn.bind(this.topBarSection.getBackgroundRect());
 	}
-	
+
 	@Override
 	protected void submitEntries(Object[] objects) {
 		Object o = objects[0];
@@ -57,7 +63,7 @@ public class ProjectEntityViewerWindow extends ListViewerWindow {
 		EntityAsset entity = (EntityAsset) o;
 
 		//open new state editor for this state. 
-		//Window w = new AdjustableWindow("Editing State: " + entity.getName(), new ProjectEntityEditorWindow(0, 0, 400, 400, this.project, entity, null), this);
+		Window w = new AdjustableWindow("Editing State: " + entity.getName(), new ProjectEntityEditorWindow(0, 0, 400, 400, this.project, entity, null), this);
 	}
 
 	@Override
@@ -66,7 +72,7 @@ public class ProjectEntityViewerWindow extends ListViewerWindow {
 
 		if (this.createEntityBtn.isClicked()) {
 			//create new state dialogue window
-			//Window w = new AdjustableWindow("Create New Entity", new NewProjectEntityWindow(0, 0, 400, 400, this.project, null), this);
+			Window w = new AdjustableWindow("Create New Entity", new NewProjectEntityWindow(0, 0, 400, 400, this.project, null), this);
 		}
 	}
 
