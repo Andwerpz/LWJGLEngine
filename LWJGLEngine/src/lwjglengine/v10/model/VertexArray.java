@@ -1,4 +1,4 @@
-package lwjglengine.v10.graphics;
+package lwjglengine.v10.model;
 
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import lwjglengine.v10.model.Model;
+import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.util.BufferUtils;
 import myutils.v10.math.Mat4;
@@ -129,17 +129,17 @@ public class VertexArray {
 
 	// orr, we can have a seperate method for removing a model instance.
 	// but then, we'd have to modify the entire buffer data anyways.
-	public void updateInstances(HashMap<Long, Mat4> mat4Map, HashMap<Long, Material> materialMap, int whichScene) {
-		int numInstances = mat4Map.size();
+	public void updateInstances(ArrayList<Long> idList, ArrayList<ModelTransform> transformList, ArrayList<Material> materialList, int whichScene) {
+		int numInstances = idList.size();
 		Mat4[] modelMats = new Mat4[numInstances];
 		Vec3[] colorIDs = new Vec3[numInstances];
 		Material[] materials = new Material[numInstances];
-		int i = 0;
-		for (long ID : mat4Map.keySet()) {
+
+		for (int i = 0; i < idList.size(); i++) {
+			long ID = idList.get(i);
 			colorIDs[i] = Model.convertIDToRGB(ID);
-			modelMats[i] = mat4Map.get(ID);
-			materials[i] = materialMap.get(ID);
-			i++;
+			modelMats[i] = transformList.get(i).getModelMatrix(); //convert model transform object to mat4
+			materials[i] = materialList.get(i);
 		}
 
 		if (scenes.get(whichScene) == null) {

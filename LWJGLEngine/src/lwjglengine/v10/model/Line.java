@@ -3,7 +3,6 @@ package lwjglengine.v10.model;
 import static org.lwjgl.opengl.GL11.*;
 
 import lwjglengine.v10.graphics.TextureMaterial;
-import lwjglengine.v10.graphics.VertexArray;
 import myutils.v10.math.Mat4;
 import myutils.v10.math.Vec3;
 
@@ -29,19 +28,20 @@ public class Line extends Model {
 		this.textureMaterials.add(TextureMaterial.defaultTextureMaterial());
 	}
 
-	public static long addLine(float x1, float y1, float z1, float x2, float y2, float z2, int scene) {
+	public static ModelInstance addLine(float x1, float y1, float z1, float x2, float y2, float z2, int scene) {
 		float dx = x2 - x1;
 		float dy = y2 - y1;
 		float dz = z2 - z1;
-		Mat4 modelMat4 = Mat4.scale(dx, dy, dz).mul(Mat4.translate(new Vec3(x1, y1, z1)));
-		return Model.addInstance(Line.line, modelMat4, scene);
+
+		ModelTransform transform = new ModelTransform();
+		transform.setScale(new Vec3(dx, dy, dz));
+		transform.setTranslation(new Vec3(x1, y1, z1));
+
+		return new ModelInstance(Line.line, transform, scene);
 	}
 
-	public static long addLine(float x1, float y1, float x2, float y2, int scene) {
-		float dx = x2 - x1;
-		float dy = y2 - y1;
-		Mat4 modelMat4 = Mat4.scale(dx, dy, 0).mul(Mat4.translate(new Vec3(x1, y1, 0)));
-		return Model.addInstance(Line.line, modelMat4, scene);
+	public static ModelInstance addLine(float x1, float y1, float x2, float y2, int scene) {
+		return Line.addLine(x1, y1, 0, x2, y2, 0, scene);
 	}
 
 }

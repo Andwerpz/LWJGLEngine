@@ -25,6 +25,7 @@ public class TextureAsset extends Asset {
 		switch (fileExtension) {
 		case "png":
 		case "jpg":
+		case "jpeg":
 			img = FileUtils.loadImage(this.getFile().getAbsolutePath());
 			break;
 

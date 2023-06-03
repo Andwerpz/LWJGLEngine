@@ -69,6 +69,7 @@ public abstract class Asset {
 		case "tga":
 		case "png":
 		case "jpg":
+		case "jpeg":
 			return TYPE_TEXTURE;
 
 		case "ogg":

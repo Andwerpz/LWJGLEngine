@@ -69,7 +69,7 @@ public class Ball extends Entity {
 		}
 
 		this.transformMat = Mat4.scale(radius).mul(Mat4.translate(pos));
-		this.updateModelInstance(modelInstanceID, transformMat);
+		//this.updateModelInstance(modelInstanceID, transformMat);
 	}
 
 }

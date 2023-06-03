@@ -9,6 +9,8 @@ import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.model.Line;
 import lwjglengine.v10.model.Model;
+import lwjglengine.v10.model.ModelInstance;
+import lwjglengine.v10.model.ModelTransform;
 import lwjglengine.v10.player.PlayerInputController;
 import lwjglengine.v10.project.Project;
 import lwjglengine.v10.project.ProjectAssetViewerWindow;
@@ -40,11 +42,11 @@ public class ModelAssetViewerWindow extends BorderedWindow {
 	private Project project;
 	private ModelAsset modelAsset;
 
-	private long modelInstanceID;
+	private ModelInstance modelInstance;
 
 	private static int numGridlines = 101;
 	private float gridlineInterval = 1;
-	private long[] horizontalGridlines, verticalGridlines;
+	private ModelInstance[] horizontalGridlines, verticalGridlines;
 
 	private PlayerInputController pic;
 	private float cameraDistFromCenter = 1f;
@@ -80,7 +82,7 @@ public class ModelAssetViewerWindow extends BorderedWindow {
 		this.modelAsset = modelAsset;
 
 		this.project.loadAsset(this.modelAsset.getID());
-		this.modelInstanceID = Model.addInstance(this.modelAsset.getModel(), Mat4.identity(), WORLD_SCENE);
+		this.modelInstance = new ModelInstance(this.modelAsset.getModel(), WORLD_SCENE);
 
 		UIFilledRectangle backgroundRect = new UIFilledRectangle(0, 0, 0, 1, 1, BACKGROUND_SCENE);
 		backgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
@@ -94,8 +96,8 @@ public class ModelAssetViewerWindow extends BorderedWindow {
 
 		//grid lines
 		float gridlineLength = gridlineInterval * (numGridlines + 2);
-		this.horizontalGridlines = new long[numGridlines];
-		this.verticalGridlines = new long[numGridlines];
+		this.horizontalGridlines = new ModelInstance[numGridlines];
+		this.verticalGridlines = new ModelInstance[numGridlines];
 		for (int i = 0; i < numGridlines; i++) {
 			float x1 = (i * gridlineInterval) - ((numGridlines - 1) / 2.0f);
 			float x2 = x1;
@@ -104,8 +106,8 @@ public class ModelAssetViewerWindow extends BorderedWindow {
 			this.verticalGridlines[i] = Line.addLine(x1, 0, y1, x2, 0, y2, WORLD_SCENE);
 			this.horizontalGridlines[i] = Line.addLine(y1, 0, x1, y2, 0, x2, WORLD_SCENE);
 
-			Model.updateInstance(this.verticalGridlines[i], new Material(new Vec3(102 / 255.0f)));
-			Model.updateInstance(this.horizontalGridlines[i], new Material(new Vec3(102 / 255.0f)));
+			this.verticalGridlines[i].setMaterial(new Material(new Vec3(102 / 255.0f)));
+			this.horizontalGridlines[i].setMaterial(new Material(new Vec3(102 / 255.0f)));
 		}
 
 		this._resize();

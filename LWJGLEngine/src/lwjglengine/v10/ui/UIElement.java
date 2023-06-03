@@ -9,6 +9,8 @@ import lwjglengine.v10.graphics.TextureMaterial;
 import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.FilledRectangle;
 import lwjglengine.v10.model.Model;
+import lwjglengine.v10.model.ModelInstance;
+import lwjglengine.v10.model.ModelTransform;
 import myutils.v10.math.Mat4;
 import myutils.v10.math.Vec2;
 
@@ -60,8 +62,7 @@ public abstract class UIElement extends Entity {
 	protected int scene;
 
 	//this refers to the bounding rect. 
-	private long modelID;
-	private Mat4 modelMat4;
+	private ModelInstance modelInstance;
 
 	private FilledRectangle boundingRect;
 	private boolean hasCustomBoundingRect; //if it doesn't, then we don't want it to assign texture materials. 
@@ -161,9 +162,9 @@ public abstract class UIElement extends Entity {
 		this.boundingRect = boundingRect;
 
 		//just a dummy rectangle for now. We'll set it's transformations manually thru Model interface
-		this.modelID = this.boundingRect.addRectangle(0, 0, 1, 1, scene);
-		this.modelMat4 = Mat4.identity();
-		this.registerModelInstance(this.modelID);
+		this.modelInstance = this.boundingRect.addRectangle(0, 0, 1, 1, scene);
+		this.modelInstance.getModelTransform().doCustomModelMat4 = true;
+		this.registerModelInstance(this.modelInstance);
 
 		this.scene = scene;
 
@@ -221,11 +222,11 @@ public abstract class UIElement extends Entity {
 	}
 
 	public Mat4 getModelMat4() {
-		return this.modelMat4;
+		return this.modelInstance.getModelTransform().getModelMatrix();
 	}
 
 	public long getModelID() {
-		return this.modelID;
+		return this.modelInstance.getID();
 	}
 
 	public void setFrameAlignmentStyle(int horizontalAlign, int verticalAlign) {
@@ -335,11 +336,11 @@ public abstract class UIElement extends Entity {
 		if (this.getMaterial() == m) {
 			return;
 		}
-		this.updateModelInstance(this.modelID, m);
+		this.modelInstance.setMaterial(m);
 	}
 
 	public Material getMaterial() {
-		return Model.getMaterial(this.modelID);
+		return this.modelInstance.getMaterial();
 	}
 
 	public void setTextureMaterial(TextureMaterial m) {
@@ -477,9 +478,9 @@ public abstract class UIElement extends Entity {
 		this.changedDimensions = false;
 		this.changedRotationRads = false;
 
-		this.modelMat4 = this.getScaleMat4().muli(this.getTranslateMat4());
-
-		this.updateModelInstance(this.modelID, this.modelMat4);
+		Mat4 modelMat4 = this.getScaleMat4().muli(this.getTranslateMat4());
+		this.modelInstance.getModelTransform().setCustomMat4(modelMat4);
+		this.modelInstance.updateInstance();
 	}
 
 	//idk, might regenerate some texture, still needed

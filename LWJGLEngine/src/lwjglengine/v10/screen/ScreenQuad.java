@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import lwjglengine.v10.graphics.Material;
-import lwjglengine.v10.graphics.VertexArray;
 import lwjglengine.v10.main.Main;
+import lwjglengine.v10.model.ModelTransform;
+import lwjglengine.v10.model.VertexArray;
 import lwjglengine.v10.scene.Scene;
 import myutils.v10.math.Mat4;
 import myutils.v10.math.Vec2;
@@ -29,11 +30,15 @@ public class ScreenQuad {
 		int[] indices = new int[] { 0, 3, 2, 0, 2, 1, };
 
 		this.mesh = new VertexArray(vertices, uvs, indices, GL_TRIANGLES);
-		HashMap<Long, Mat4> mat4Map = new HashMap<>();
-		mat4Map.put((long) 0, Mat4.identity());
-		HashMap<Long, Material> materialMap = new HashMap<>();
-		materialMap.put((long) 0, Material.defaultMaterial());
-		this.mesh.updateInstances(mat4Map, materialMap, Scene.FRAMEBUFFER_SCENE);
+
+		ArrayList<Long> ids = new ArrayList<>();
+		ids.add(0L);
+		ArrayList<ModelTransform> transforms = new ArrayList<>();
+		transforms.add(new ModelTransform());
+		ArrayList<Material> materials = new ArrayList<>();
+		materials.add(Material.defaultMaterial());
+
+		this.mesh.updateInstances(ids, transforms, materials, Scene.FRAMEBUFFER_SCENE);
 	}
 
 	//if you want to manipulate the screen quad to render to different portions of the screen; dont do it this way

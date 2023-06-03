@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import lwjglengine.v10.graphics.Material;
-import lwjglengine.v10.graphics.VertexArray;
 import lwjglengine.v10.main.Main;
+import lwjglengine.v10.model.ModelTransform;
+import lwjglengine.v10.model.VertexArray;
 import lwjglengine.v10.scene.Scene;
 import myutils.v10.math.Mat4;
 
@@ -26,11 +27,15 @@ public class SkyboxCube {
 		float[] tex = new float[] { 0f, 0f, 0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f, 0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f, 0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f, 0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f, 0f, 1f, 1f, 1f, 1f, 0f, 0f, 0f, 0f, 1f, 1f, 1f, 1f, 0f, };
 
 		this.mesh = new VertexArray(vertices, tex, indices, GL_TRIANGLES);
-		HashMap<Long, Mat4> mat4Map = new HashMap<>();
-		mat4Map.put((long) 0, Mat4.identity());
-		HashMap<Long, Material> materialMap = new HashMap<>();
-		materialMap.put((long) 0, Material.defaultMaterial());
-		this.mesh.updateInstances(mat4Map, materialMap, Scene.FRAMEBUFFER_SCENE);
+
+		ArrayList<Long> ids = new ArrayList<>();
+		ids.add(0L);
+		ArrayList<ModelTransform> transforms = new ArrayList<>();
+		transforms.add(new ModelTransform());
+		ArrayList<Material> materials = new ArrayList<>();
+		materials.add(Material.defaultMaterial());
+
+		this.mesh.updateInstances(ids, transforms, materials, Scene.FRAMEBUFFER_SCENE);
 	}
 
 	public void render() {

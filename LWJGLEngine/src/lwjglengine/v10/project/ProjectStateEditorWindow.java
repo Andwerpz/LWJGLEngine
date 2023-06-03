@@ -9,6 +9,7 @@ import lwjglengine.v10.asset.StateAsset;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.Model;
+import lwjglengine.v10.model.ModelInstance;
 import lwjglengine.v10.model.ModelTransform;
 import lwjglengine.v10.player.PlayerInputController;
 import lwjglengine.v10.scene.DirLight;
@@ -42,7 +43,7 @@ public class ProjectStateEditorWindow extends Window {
 	private Project project;
 	private StateAsset state;
 
-	private ArrayList<Long> staticModelInstanceIDs;
+	private ArrayList<ModelInstance> staticModelInstances;
 
 	public ProjectStateEditorWindow(int xOffset, int yOffset, int width, int height, Project project, StateAsset state, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
@@ -62,11 +63,12 @@ public class ProjectStateEditorWindow extends Window {
 		this.pic = new PlayerInputController(new Vec3(0, 0, 0));
 
 		//place static models
-		this.staticModelInstanceIDs = new ArrayList<>();
+		this.staticModelInstances = new ArrayList<>();
 		for (Pair<Long, ModelTransform> i : this.state.getStaticModels()) {
 			Model m = this.project.getModel(i.first);
-			long instanceID = Model.addInstance(m, i.second, PERSPECTIVE_WORLD_SCENE);
-			this.staticModelInstanceIDs.add(instanceID);
+			ModelTransform transform = i.second;
+			ModelInstance instance = new ModelInstance(m, transform, PERSPECTIVE_WORLD_SCENE);
+			this.staticModelInstances.add(instance);
 		}
 
 		//'sun'
@@ -99,7 +101,7 @@ public class ProjectStateEditorWindow extends Window {
 				String desc = asset.getName() + " Instance : " + transform.translate;
 				staticModelStrings.add(desc);
 
-				staticModelSelObjects.add("static_model " + this.staticModelInstanceIDs.get(i));
+				staticModelSelObjects.add("static_model " + this.staticModelInstances.get(i).getID());
 			}
 			AdjustableWindow staticModelListWindow = new AdjustableWindow("Static Models", new ListViewerWindow(this, null), this);
 			ListViewerWindow contentWindow = (ListViewerWindow) staticModelListWindow.getContentWindow();
@@ -132,8 +134,8 @@ public class ProjectStateEditorWindow extends Window {
 			case "static_model": {
 				//look for the static model with the given id
 				int modelIndex = -1;
-				for (int i = 0; i < this.staticModelInstanceIDs.size(); i++) {
-					if (this.staticModelInstanceIDs.get(i) == id) {
+				for (int i = 0; i < this.staticModelInstances.size(); i++) {
+					if (this.staticModelInstances.get(i).getID() == id) {
 						modelIndex = i;
 						break;
 					}
@@ -143,7 +145,7 @@ public class ProjectStateEditorWindow extends Window {
 
 				//open a model transform editor window
 				//TODO make it into a general model instance editor, so we can edit materials. 
-				Window modelTransformEditor = new AdjustableWindow("Editing Static Model : " + id, new ModelTransformEditorWindow(id, transform, null), this);
+				Window modelTransformEditor = new AdjustableWindow("Editing Static Model : " + id, new ModelTransformEditorWindow(this.staticModelInstances.get(modelIndex), transform, null), this);
 				break;
 			}
 			}
@@ -162,8 +164,8 @@ public class ProjectStateEditorWindow extends Window {
 
 				//add the static model to the scene
 				Model m = this.project.getModel(assetID);
-				long instanceID = Model.addInstance(m, transform, PERSPECTIVE_WORLD_SCENE);
-				this.staticModelInstanceIDs.add(instanceID);
+				ModelInstance instance = new ModelInstance(m, transform, PERSPECTIVE_WORLD_SCENE);
+				this.staticModelInstances.add(instance);
 			}
 		}
 	}

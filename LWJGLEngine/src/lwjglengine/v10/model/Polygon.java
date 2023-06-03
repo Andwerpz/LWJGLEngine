@@ -6,7 +6,6 @@ import java.util.ArrayList;
 
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.graphics.TextureMaterial;
-import lwjglengine.v10.graphics.VertexArray;
 import myutils.v10.math.Mat4;
 import myutils.v10.math.MathUtils;
 import myutils.v10.math.Vec2;

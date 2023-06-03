@@ -8,11 +8,14 @@ import java.util.HashSet;
 import lwjglengine.v10.entity.Entity;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.graphics.TextureMaterial;
-import lwjglengine.v10.graphics.VertexArray;
 import lwjglengine.v10.main.Main;
 import lwjglengine.v10.model.FilledRectangle;
 import lwjglengine.v10.model.Model;
+import lwjglengine.v10.model.ModelInstance;
+import lwjglengine.v10.model.ModelTransform;
+import lwjglengine.v10.model.VertexArray;
 import myutils.v10.math.Mat4;
+import myutils.v10.math.MathUtils;
 import myutils.v10.math.Vec3;
 
 public class Particle extends Entity {
@@ -47,9 +50,8 @@ public class Particle extends Entity {
 	}
 
 	public void addInstance(Vec3 pos, Vec3 vel, float rot, int scene) {
-		long modelInstanceID = Model.addInstance(this.rectangleModel, Mat4.identity(), scene);
-		Model.updateInstance(modelInstanceID, this.defaultMaterial);
-		this.particles.add(new ParticleInstance(pos, vel, this.lifeLengthMillis, rot, scale, this.defaultMaterial, modelInstanceID));
+		ModelInstance instance = new ModelInstance(this.rectangleModel, scene);
+		this.particles.add(new ParticleInstance(pos, vel, this.lifeLengthMillis, rot, this.scale, this.defaultMaterial, instance));
 	}
 
 	@Override
@@ -89,7 +91,7 @@ public class Particle extends Entity {
 
 class ParticleInstance {
 
-	private long modelInstanceID;
+	private ModelInstance modelInstance;
 
 	private Material material;
 
@@ -100,7 +102,7 @@ class ParticleInstance {
 
 	private long elapsedTime = 0;
 
-	public ParticleInstance(Vec3 pos, Vec3 vel, long lifeLengthMillis, float rot, float scale, Material material, long modelInstanceID) {
+	public ParticleInstance(Vec3 pos, Vec3 vel, long lifeLengthMillis, float rot, float scale, Material material, ModelInstance modelInstance) {
 		this.pos = new Vec3(pos);
 		this.vel = new Vec3(vel);
 		this.lifeLengthMillis = lifeLengthMillis;
@@ -109,7 +111,7 @@ class ParticleInstance {
 
 		this.material = material;
 
-		this.modelInstanceID = modelInstanceID;
+		this.modelInstance = modelInstance;
 	}
 
 	//returns false if this particle needs to be removed. 
@@ -135,12 +137,16 @@ class ParticleInstance {
 		modelMat4.muli(Mat4.rotateZ(this.rot));
 		modelMat4.muli(Mat4.translate(this.pos));
 
-		Model.updateInstance(this.modelInstanceID, modelMat4);
-		Model.updateInstance(this.modelInstanceID, this.material);
+		ModelTransform transform = this.modelInstance.getModelTransform();
+		transform.setScale(this.scale);
+		transform.setRotation(MathUtils.quaternionFromRotationMat4(Mat4.rotateZ(this.rot)));
+		transform.setTranslation(this.pos);
+
+		this.modelInstance.updateInstance();
 	}
 
 	public void kill() {
-		Model.removeInstance(this.modelInstanceID);
+		this.modelInstance.kill();
 	}
 
 }

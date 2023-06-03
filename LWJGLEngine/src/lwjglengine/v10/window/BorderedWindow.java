@@ -4,6 +4,7 @@ import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.model.Line;
 import lwjglengine.v10.model.Model;
+import lwjglengine.v10.model.ModelInstance;
 import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.UIScreen;
 import myutils.v10.math.Vec3;
@@ -22,7 +23,7 @@ public abstract class BorderedWindow extends Window {
 	private Material deselectedBorderMaterial = new Material(new Vec3((float) (55 / 255.0)));
 	private Material selectedBorderMaterial = new Material(new Vec3((float) (65 / 255.0)));
 
-	private long[] windowBorder;
+	private ModelInstance[] windowBorder;
 
 	private boolean renderBorder = true;
 
@@ -31,7 +32,7 @@ public abstract class BorderedWindow extends Window {
 
 		this.uiScreen = new UIScreen();
 
-		this.windowBorder = new long[4];
+		this.windowBorder = new ModelInstance[4];
 	}
 
 	public void setRenderBorder(boolean b) {
@@ -52,7 +53,10 @@ public abstract class BorderedWindow extends Window {
 		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
 
 		for (int i = 0; i < 4; i++) {
-			Model.removeInstance(this.windowBorder[i]);
+			if (this.windowBorder[i] == null) {
+				continue;
+			}
+			this.windowBorder[i].kill();
 		}
 
 		this.windowBorder[0] = Line.addLine(0, 1, this.getWidth(), 1, BORDER_SCENE);
@@ -61,7 +65,7 @@ public abstract class BorderedWindow extends Window {
 		this.windowBorder[3] = Line.addLine(0, this.getHeight(), this.getWidth(), this.getHeight(), BORDER_SCENE);
 
 		for (int i = 0; i < 4; i++) {
-			Model.updateInstance(this.windowBorder[i], this.isSubtreeSelected() ? this.selectedBorderMaterial : this.deselectedBorderMaterial);
+			this.windowBorder[i].setMaterial(this.isSubtreeSelected() ? this.selectedBorderMaterial : this.deselectedBorderMaterial);
 		}
 
 		this.__resize();
@@ -84,7 +88,7 @@ public abstract class BorderedWindow extends Window {
 	@Override
 	protected void subtreeSelected() {
 		for (int i = 0; i < 4; i++) {
-			Model.updateInstance(this.windowBorder[i], this.selectedBorderMaterial);
+			this.windowBorder[i].setMaterial(this.selectedBorderMaterial);
 		}
 
 		this._subtreeSelected();
@@ -93,7 +97,7 @@ public abstract class BorderedWindow extends Window {
 	@Override
 	protected void subtreeDeselected() {
 		for (int i = 0; i < 4; i++) {
-			Model.updateInstance(this.windowBorder[i], this.deselectedBorderMaterial);
+			this.windowBorder[i].setMaterial(this.deselectedBorderMaterial);
 		}
 
 		this._subtreeDeselected();

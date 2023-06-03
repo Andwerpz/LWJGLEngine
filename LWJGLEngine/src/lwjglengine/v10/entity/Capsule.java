@@ -37,9 +37,9 @@ public class Capsule extends Entity {
 
 	@Override
 	protected void _kill() {
-		Model.removeInstance(bottomSphereID);
-		Model.removeInstance(topSphereID);
-		Model.removeInstance(cylinderID);
+		//		Model.removeInstance(bottomSphereID);
+		//		Model.removeInstance(topSphereID);
+		//		Model.removeInstance(cylinderID);
 	}
 
 	public void setNoUpdate(boolean b) {
@@ -72,9 +72,9 @@ public class Capsule extends Entity {
 		this.bottomSphereMat4 = Mat4.scale(radius + 0.0036f).mul(Mat4.translate(capsule_bottomSphere));
 		this.topSphereMat4 = Mat4.scale(radius + 0.0036f).mul(Mat4.translate(capsule_topSphere));
 
-		Model.updateInstance(this.cylinderID, cylinderMat4);
-		Model.updateInstance(this.bottomSphereID, bottomSphereMat4);
-		Model.updateInstance(this.topSphereID, topSphereMat4);
+		//		Model.updateInstance(this.cylinderID, cylinderMat4);
+		//		Model.updateInstance(this.bottomSphereID, bottomSphereMat4);
+		//		Model.updateInstance(this.topSphereID, topSphereMat4);
 	}
 
 	@Override

@@ -2,7 +2,6 @@ package lwjglengine.v10.model;
 
 import java.util.ArrayList;
 
-import lwjglengine.v10.graphics.VertexArray;
 import myutils.v10.math.Mat4;
 import myutils.v10.math.MathUtils;
 import myutils.v10.math.Vec3;

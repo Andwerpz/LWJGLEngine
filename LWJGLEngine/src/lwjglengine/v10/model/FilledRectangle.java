@@ -3,7 +3,6 @@ package lwjglengine.v10.model;
 import static org.lwjgl.opengl.GL11.*;
 
 import lwjglengine.v10.graphics.TextureMaterial;
-import lwjglengine.v10.graphics.VertexArray;
 import myutils.v10.math.Mat4;
 import myutils.v10.math.Vec3;
 
@@ -30,14 +29,15 @@ public class FilledRectangle extends Model {
 		this.textureMaterials.add(TextureMaterial.defaultTextureMaterial());
 	}
 
-	public long addRectangle(float x, float y, float width, float height, int scene) {
-		Mat4 modelMat4 = Mat4.scale(width, height, 1).mul(Mat4.translate(new Vec3(x, y, 0)));
-		return Model.addInstance(this, modelMat4, scene);
+	public ModelInstance addRectangle(float x, float y, float width, float height, int scene) {
+		return this.addRectangle(x, y, 0, width, height, scene);
 	}
 
-	public long addRectangle(float x, float y, float z, float width, float height, int scene) {
-		Mat4 modelMat4 = Mat4.scale(width, height, 1).mul(Mat4.translate(new Vec3(x, y, z)));
-		return Model.addInstance(this, modelMat4, scene);
+	public ModelInstance addRectangle(float x, float y, float z, float width, float height, int scene) {
+		ModelTransform transform = new ModelTransform();
+		transform.setScale(new Vec3(width, height, 1));
+		transform.setTranslation(new Vec3(x, y, z));
+		return new ModelInstance(this, transform, scene);
 	}
 
 	public TextureMaterial getTextureMaterial() {

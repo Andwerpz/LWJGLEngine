@@ -3,7 +3,6 @@ package lwjglengine.v10.model;
 import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
 
 import lwjglengine.v10.graphics.TextureMaterial;
-import lwjglengine.v10.graphics.VertexArray;
 
 public class Decal extends Model {
 

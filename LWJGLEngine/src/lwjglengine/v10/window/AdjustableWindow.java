@@ -56,8 +56,6 @@ public class AdjustableWindow extends BorderedWindow {
 
 	private UIFilledRectangle backgroundRect;
 
-	private long[] windowBorder;
-
 	private Material titleBarMaterial = new Material(new Vec3((float) (15 / 255.0)));
 
 	private Material deselectedBackgroundMaterial = new Material(new Vec3((float) (25 / 255.0)));
@@ -158,8 +156,6 @@ public class AdjustableWindow extends BorderedWindow {
 		this.titleBarCloseBtn.setHoveredMaterial(this.deselectedBackgroundMaterial);
 		this.titleBarCloseBtn.bind(this.titleBarRect);
 
-		this.windowBorder = new long[4];
-
 		this._resize();
 	}
 
@@ -208,23 +204,7 @@ public class AdjustableWindow extends BorderedWindow {
 		this.uiScreen.setViewportWidth(this.getWidth());
 		this.uiScreen.setViewportHeight(this.getHeight());
 
-		for (int i = 0; i < 4; i++) {
-			if (this.windowBorder[i] == 0) {
-				continue;
-			}
-			Model.removeInstance(this.windowBorder[i]);
-		}
-
-		this.windowBorder[0] = Line.addLine(0, 1, this.getWidth(), 1, BORDER_SCENE);
-		this.windowBorder[1] = Line.addLine(1, 0, 1, this.getHeight(), BORDER_SCENE);
-		this.windowBorder[2] = Line.addLine(this.getWidth(), 0, this.getWidth(), this.getHeight(), BORDER_SCENE);
-		this.windowBorder[3] = Line.addLine(0, this.getHeight(), this.getWidth(), this.getHeight(), BORDER_SCENE);
-
 		this.contentRootUIElement.setHeight(this.getContentHeight());
-
-		for (int i = 0; i < 4; i++) {
-			Model.updateInstance(this.windowBorder[i], this.isSubtreeSelected() ? this.selectedBorderMaterial : this.deselectedBorderMaterial);
-		}
 	}
 
 	public Window getContentWindow() {
@@ -435,18 +415,12 @@ public class AdjustableWindow extends BorderedWindow {
 	protected void _subtreeSelected() {
 		this.titleBarText.setMaterial(this.selectedTitleTextMaterial);
 		this.backgroundRect.setMaterial(this.selectedBackgroundMaterial);
-		for (int i = 0; i < 4; i++) {
-			Model.updateInstance(this.windowBorder[i], this.selectedBorderMaterial);
-		}
 	}
 
 	@Override
 	protected void _subtreeDeselected() {
 		this.titleBarText.setMaterial(this.deselectedTitleTextMaterial);
 		this.backgroundRect.setMaterial(this.deselectedBackgroundMaterial);
-		for (int i = 0; i < 4; i++) {
-			Model.updateInstance(this.windowBorder[i], this.deselectedBorderMaterial);
-		}
 	}
 
 	private boolean canGrabLeftEdge() {

@@ -6,6 +6,7 @@ import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.input.TextField;
 import lwjglengine.v10.model.Model;
+import lwjglengine.v10.model.ModelInstance;
 import lwjglengine.v10.model.ModelTransform;
 import lwjglengine.v10.screen.UIScreen;
 import lwjglengine.v10.ui.Text;
@@ -21,7 +22,7 @@ import myutils.v10.math.Vec4;
 
 public class ModelTransformEditorWindow extends Window {
 
-	private long modelInstanceID;
+	private ModelInstance modelInstance;
 	private ModelTransform transform;
 
 	private UISection uiSection;
@@ -50,13 +51,13 @@ public class ModelTransformEditorWindow extends Window {
 	private Text eulerXText;
 	private Text eulerYText;
 
-	public ModelTransformEditorWindow(long modelInstanceID, ModelTransform transform, Window parentWindow) {
+	public ModelTransformEditorWindow(ModelInstance modelInstance, ModelTransform transform, Window parentWindow) {
 		super(0, 0, 300, 300, parentWindow);
-		this.init(modelInstanceID, transform);
+		this.init(modelInstance, transform);
 	}
 
-	private void init(long modelInstanceID, ModelTransform transform) {
-		this.modelInstanceID = modelInstanceID;
+	private void init(ModelInstance modelInstance, ModelTransform transform) {
+		this.modelInstance = modelInstance;
 		this.transform = transform;
 
 		this.uiScreen = new UIScreen();
@@ -256,7 +257,7 @@ public class ModelTransformEditorWindow extends Window {
 			this.transform.setTranslation(translate);
 			this.transform.setRotation(rotation);
 
-			Model.updateInstance(this.modelInstanceID, this.transform);
+			this.modelInstance.setModelTransform(this.transform);
 		}
 	}
 

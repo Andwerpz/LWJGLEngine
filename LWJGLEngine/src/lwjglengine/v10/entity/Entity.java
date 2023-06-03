@@ -6,6 +6,7 @@ import java.util.HashSet;
 
 import lwjglengine.v10.graphics.Material;
 import lwjglengine.v10.model.Model;
+import lwjglengine.v10.model.ModelInstance;
 import myutils.v10.math.Mat4;
 
 public abstract class Entity {
@@ -26,13 +27,13 @@ public abstract class Entity {
 	// never equal to 0
 	private long ID;
 
-	protected HashSet<Long> modelInstanceIDs; // holds all model instance IDs associated with this entity
+	protected HashSet<ModelInstance> modelInstances; // holds all model instance objects associated with this entity
 
 	private boolean isAlive = true;
 
 	public Entity() {
 		this.ID = Entity.generateNewID();
-		this.modelInstanceIDs = new HashSet<>();
+		this.modelInstances = new HashSet<>();
 		Entity.entities.put(this.ID, this);
 	}
 
@@ -56,33 +57,20 @@ public abstract class Entity {
 		return entities.get(ID);
 	}
 
-	protected long addModelInstance(Model model, Mat4 mat4, int scene) {
-		long modelInstanceID = Model.addInstance(model, mat4, scene);
-		this.modelInstanceIDs.add(modelInstanceID);
-		modelToEntityID.put(modelInstanceID, this.ID);
-		return modelInstanceID;
-	}
-
-	protected void registerModelInstance(long modelInstanceID) {
-		this.modelInstanceIDs.add(modelInstanceID);
+	protected void registerModelInstance(ModelInstance instance) {
+		long modelInstanceID = instance.getID();
+		this.modelInstances.add(instance);
 		modelToEntityID.put(modelInstanceID, this.ID);
 	}
 
-	protected void updateModelInstance(long modelInstanceID, Mat4 mat4) {
-		Model.updateInstance(modelInstanceID, mat4);
-	}
-
-	protected void updateModelInstance(long modelInstanceID, Material material) {
-		Model.updateInstance(modelInstanceID, material);
-	}
-
-	protected void removeModelInstance(long modelInstanceID) {
-		if (!modelInstanceIDs.contains(modelInstanceID)) {
+	protected void removeModelInstance(ModelInstance instance) {
+		long modelInstanceID = instance.getID();
+		if (!modelInstances.contains(instance)) {
 			return;
 		}
-		this.modelInstanceIDs.remove(modelInstanceID);
+		this.modelInstances.remove(instance);
 		modelToEntityID.remove(modelInstanceID);
-		Model.removeInstance(modelInstanceID);
+		instance.kill();
 	}
 
 	public static void updateEntities() {
@@ -105,10 +93,10 @@ public abstract class Entity {
 	public void kill() {
 		this.isAlive = false;
 
-		// remove all model instances
-		for (long id : this.modelInstanceIDs) {
-			modelToEntityID.remove(id);
-			Model.removeInstance(id);
+		// remove all model instances currently registered to this entity
+		for (ModelInstance i : this.modelInstances) {
+			modelToEntityID.remove(i.getID());
+			i.kill();
 		}
 
 		// remove entity pointer
