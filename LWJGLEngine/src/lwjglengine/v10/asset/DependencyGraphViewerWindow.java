@@ -1,0 +1,116 @@
+package lwjglengine.v10.asset;
+
+import java.util.ArrayList;
+
+import lwjglengine.v10.graphics.Framebuffer;
+import lwjglengine.v10.project.Project;
+import lwjglengine.v10.ui.UIFilledRectangle;
+import lwjglengine.v10.window.Window;
+
+public class DependencyGraphViewerWindow extends Window {
+	
+	private Project project;
+	
+	private UIFilledRectangle baseRect;
+	private ArrayList<UIFilledRectangle> nodeRects;
+
+	public DependencyGraphViewerWindow(int xOffset, int yOffset, int width, int height, Project project, Window parentWindow) {
+		super(xOffset, yOffset, width, height, parentWindow);
+		this.init(project);
+	}
+	
+	private void init(Project project) {
+		
+	}
+	
+	private void clear() {
+		this.baseRect.kill();
+		
+		this.nodeRects.clear();
+	}
+
+	@Override
+	protected void _kill() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void _resize() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void _update() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void renderContent(Framebuffer outputBuffer) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void renderOverlay(Framebuffer outputBuffer) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void selected() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void deselected() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void subtreeSelected() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void subtreeDeselected() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void _mousePressed(int button) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void _mouseReleased(int button) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void _keyPressed(int key) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void _keyReleased(int key) {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

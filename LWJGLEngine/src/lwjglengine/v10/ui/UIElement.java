@@ -29,6 +29,14 @@ public abstract class UIElement extends Entity {
 	//to inherit transform matrices, it's child inherited = child matrix * parent matrix. 
 
 	//ui elements are in charge of creating their own textures, and or creating child ui elements. 
+	
+	//TODO 
+	// - rectangle corner alignment
+	//   - can align a specific corner to another ui element or something. 
+	// - try to further abstract this class
+	//   - for example, if i wanted to have a line ui element, then i should be able to align the two ends of the line seperately. 
+	//   - lines will be nice for rendering arrows. 
+	//   - currently this class is built with the assumption that you will only render rectangles. 
 
 	private static HashSet<UIElement> uiElements = new HashSet<UIElement>();
 	public static boolean shouldAlignUIElements = false;

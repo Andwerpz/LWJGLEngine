@@ -7,7 +7,7 @@ import myutils.v10.math.MathUtils;
 import myutils.v10.math.Quaternion;
 import myutils.v10.math.Vec3;
 
-public class ModelTransform {
+public class ModelTransform implements Comparable<ModelTransform> {
 	//just a utility class for creating a model matrix. 
 
 	//transformations are applied in the order:
@@ -115,5 +115,10 @@ public class ModelTransform {
 		Quaternion rotation = Quaternion.parseQuaternion(st.nextToken());
 		Vec3 translate = Vec3.parseVec3(st.nextToken());
 		return new ModelTransform(scale, rotation, translate);
+	}
+
+	@Override
+	public int compareTo(ModelTransform o) {
+		return 0;
 	}
 }
