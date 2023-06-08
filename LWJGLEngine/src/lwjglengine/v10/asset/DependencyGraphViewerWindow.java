@@ -28,6 +28,13 @@ public class DependencyGraphViewerWindow extends Window {
 		
 		this.nodeRects.clear();
 	}
+	
+	private void generateNodes() {
+		this.clear();
+		
+		//for now, just place nodes randomly
+		
+	}
 
 	@Override
 	protected void _kill() {
