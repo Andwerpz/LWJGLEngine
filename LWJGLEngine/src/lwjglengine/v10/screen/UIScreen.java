@@ -40,6 +40,9 @@ public class UIScreen extends Screen {
 	//but in other cases where you want proper depth ids, you should turn this off. 
 	private boolean reverseDepthColorID = true;
 
+	//renders color id if true. 
+	private boolean renderColorID = false;
+
 	private Vec2 viewportOffset; //where the bottom left corner is
 	private float viewportWidth, viewportHeight;
 
@@ -197,6 +200,10 @@ public class UIScreen extends Screen {
 		this.reverseDepthColorID = b;
 	}
 
+	public void setRenderColorID(boolean b) {
+		this.renderColorID = b;
+	}
+
 	@Override
 	protected void _render(Framebuffer outputBuffer) {
 		if (this.clearColorIDBufferOnRender) {
@@ -247,7 +254,7 @@ public class UIScreen extends Screen {
 		Shader.GEOMETRY.setUniform3f("view_pos", camera.getPos());
 		Model.renderModels(this.ui_scene);
 
-		// -- RENDER COLOR ID TO SAVE--
+		// -- RENDER COLOR ID TO SAVE --
 		this.colorIDBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
@@ -256,6 +263,18 @@ public class UIScreen extends Screen {
 		Shader.SPLASH.setUniform1f("alpha", 1f);
 		geometryColorIDMap.bind(GL_TEXTURE0);
 		screenQuad.render();
+
+		// -- RENDER COLOR ID TO OUTPUT --
+		if (this.renderColorID) {
+			outputBuffer.bind();
+			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_BLEND);
+
+			Shader.SPLASH.enable();
+			Shader.SPLASH.setUniform1f("alpha", 1f);
+			this.geometryColorIDMap.bind(GL_TEXTURE0);
+			screenQuad.render();
+		}
 
 	}
 

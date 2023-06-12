@@ -681,176 +681,176 @@ public class ListViewerWindow extends Window {
 		this.topBarSection.keyReleased(key);
 	}
 
-}
+	class ListEntry {
 
-class ListEntry {
+		private Object o;
 
-	private Object o;
+		private int selectionScene = -1;
+		private int textScene;
 
-	private int selectionScene = -1;
-	private int textScene;
+		private String text;
 
-	private String text;
+		private UIFilledRectangle entryRect = null;
+		private Text entryText = null;
 
-	private UIFilledRectangle entryRect = null;
-	private Text entryText = null;
+		private Material defaultMaterial;
+		private Material selectedMaterial;
+		private Material hoveredMaterial;
 
-	private Material defaultMaterial;
-	private Material selectedMaterial;
-	private Material hoveredMaterial;
+		private boolean isHovered = false;
+		private boolean isSelected = false;
+		private boolean isVisible = false;
 
-	private boolean isHovered = false;
-	private boolean isSelected = false;
-	private boolean isVisible = false;
+		private boolean doFillWidth = true;
 
-	private boolean doFillWidth = true;
+		private UIElement baseUIElement;
 
-	private UIElement baseUIElement;
+		private int horizontalAlignWidth;
 
-	private int horizontalAlignWidth;
+		private int entryHeightPx;
 
-	private int entryHeightPx;
+		public ListEntry(Object o, Material defaultMaterial, Material hoveredMaterial, Material selectedMaterial, String text, UIElement baseUIElement, int selectionScene, int textScene) {
+			this.o = o;
 
-	public ListEntry(Object o, Material defaultMaterial, Material hoveredMaterial, Material selectedMaterial, String text, UIElement baseUIElement, int selectionScene, int textScene) {
-		this.o = o;
+			this.textScene = textScene;
+			this.selectionScene = selectionScene;
+			this.text = text;
+			this.baseUIElement = baseUIElement;
 
-		this.textScene = textScene;
-		this.selectionScene = selectionScene;
-		this.text = text;
-		this.baseUIElement = baseUIElement;
+			this.defaultMaterial = defaultMaterial;
+			this.hoveredMaterial = hoveredMaterial;
+			this.selectedMaterial = selectedMaterial;
 
-		this.defaultMaterial = defaultMaterial;
-		this.hoveredMaterial = hoveredMaterial;
-		this.selectedMaterial = selectedMaterial;
-
-		this.horizontalAlignWidth = GraphicsTools.calculateTextWidth(this.text, ListViewerWindow.entryFont) + ListViewerWindow.entryHorizontalMarginPx * 2;
-	}
-
-	public Object getObject() {
-		return this.o;
-	}
-
-	public Text getTextUI() {
-		return this.entryText;
-	}
-
-	public int getHorizontalAlignWidth() {
-		return this.horizontalAlignWidth;
-	}
-
-	public void doFillWidth(boolean b) {
-		this.doFillWidth = b;
-
-		if (!this.isVisible) {
-			return;
+			this.horizontalAlignWidth = GraphicsTools.calculateTextWidth(this.text, ListViewerWindow.entryFont) + ListViewerWindow.entryHorizontalMarginPx * 2;
 		}
 
-		if (this.doFillWidth) {
-			this.entryRect.setFillWidth(true);
-			this.entryRect.setFillWidthMargin(0);
-
-			this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
-			this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-			this.entryText.setXOffset(ListViewerWindow.entryHorizontalMarginPx);
+		public Object getObject() {
+			return this.o;
 		}
-		else {
-			this.entryRect.setFillWidth(false);
-			this.entryRect.setWidth(this.horizontalAlignWidth);
 
-			this.entryText.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
-			this.entryText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
-			this.entryText.setXOffset(0);
+		public Text getTextUI() {
+			return this.entryText;
 		}
-	}
 
-	public void setEntryHeightPx(int height) {
-		this.entryHeightPx = height;
-	}
+		public int getHorizontalAlignWidth() {
+			return this.horizontalAlignWidth;
+		}
 
-	public void align(int xOffset, int yOffset) {
-		this.isVisible = -this.entryHeightPx <= yOffset && yOffset <= this.baseUIElement.getHeight();
-		this.isVisible &= -this.horizontalAlignWidth <= xOffset && xOffset <= this.baseUIElement.getWidth();
+		public void doFillWidth(boolean b) {
+			this.doFillWidth = b;
 
-		if (this.isVisible) {
-			if (this.entryRect == null) {
-				this.entryRect = new UIFilledRectangle(0, 0, 0, this.horizontalAlignWidth, this.entryHeightPx, this.selectionScene);
-				this.entryRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
-				this.entryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
-				this.entryRect.setMaterial(new Material(new Vec4(1)));
-				this.entryRect.bind(this.baseUIElement);
-
-				this.entryText = new Text(0, 0, this.text, 12, Color.WHITE, this.textScene);
-				this.entryText.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
-				this.entryText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
-				this.entryText.setDoAntialiasing(false);
-				this.entryText.bind(this.entryRect);
-
-				this.doFillWidth(this.doFillWidth);
+			if (!this.isVisible) {
+				return;
 			}
 
-			this.entryRect.setFrameAlignmentOffset(xOffset, yOffset);
+			if (this.doFillWidth) {
+				this.entryRect.setFillWidth(true);
+				this.entryRect.setFillWidthMargin(0);
+
+				this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
+				this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
+				this.entryText.setXOffset(ListViewerWindow.entryHorizontalMarginPx);
+			}
+			else {
+				this.entryRect.setFillWidth(false);
+				this.entryRect.setWidth(this.horizontalAlignWidth);
+
+				this.entryText.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
+				this.entryText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
+				this.entryText.setXOffset(0);
+			}
 		}
-		else {
+
+		public void setEntryHeightPx(int height) {
+			this.entryHeightPx = height;
+		}
+
+		public void align(int xOffset, int yOffset) {
+			this.isVisible = -this.entryHeightPx <= yOffset && yOffset <= this.baseUIElement.getHeight();
+			this.isVisible &= -this.horizontalAlignWidth <= xOffset && xOffset <= this.baseUIElement.getWidth();
+
+			if (this.isVisible) {
+				if (this.entryRect == null) {
+					this.entryRect = new UIFilledRectangle(0, 0, 0, this.horizontalAlignWidth, this.entryHeightPx, this.selectionScene);
+					this.entryRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+					this.entryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+					this.entryRect.setMaterial(new Material(new Vec4(1)));
+					this.entryRect.bind(this.baseUIElement);
+
+					this.entryText = new Text(0, 0, this.text, 12, Color.WHITE, this.textScene);
+					this.entryText.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
+					this.entryText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
+					this.entryText.setDoAntialiasing(false);
+					this.entryText.bind(this.entryRect);
+
+					this.doFillWidth(this.doFillWidth);
+				}
+
+				this.entryRect.setFrameAlignmentOffset(xOffset, yOffset);
+			}
+			else {
+				if (this.entryRect != null) {
+					this.entryRect.kill();
+					this.entryText.kill();
+					this.entryRect = null;
+					this.entryText = null;
+				}
+			}
+		}
+
+		public void update() {
+			if (this.isVisible) {
+				if (this.isSelected) {
+					this.entryRect.setMaterial(this.selectedMaterial);
+				}
+				else if (this.isHovered) {
+					this.entryRect.setMaterial(this.hoveredMaterial);
+				}
+				else {
+					this.entryRect.setMaterial(this.defaultMaterial);
+				}
+			}
+		}
+
+		public void selected(long entityID) {
+			if (this.entryRect == null) {
+				this.isSelected = false;
+				return;
+			}
+			this.isSelected = this.entryRect.getID() == entityID;
+		}
+
+		public void hovered(long entityID) {
+			if (this.entryRect == null) {
+				this.isHovered = false;
+				return;
+			}
+			this.isHovered = this.entryRect.getID() == entityID;
+		}
+
+		public void kill() {
 			if (this.entryRect != null) {
 				this.entryRect.kill();
 				this.entryText.kill();
-				this.entryRect = null;
-				this.entryText = null;
 			}
 		}
-	}
 
-	public void update() {
-		if (this.isVisible) {
-			if (this.isSelected) {
-				this.entryRect.setMaterial(this.selectedMaterial);
-			}
-			else if (this.isHovered) {
-				this.entryRect.setMaterial(this.hoveredMaterial);
-			}
-			else {
-				this.entryRect.setMaterial(this.defaultMaterial);
-			}
+		public String getText() {
+			return this.text;
 		}
-	}
 
-	public void selected(long entityID) {
-		if (this.entryRect == null) {
-			this.isSelected = false;
-			return;
+		public boolean isHovered() {
+			return this.isHovered;
 		}
-		this.isSelected = this.entryRect.getID() == entityID;
-	}
 
-	public void hovered(long entityID) {
-		if (this.entryRect == null) {
-			this.isHovered = false;
-			return;
+		public boolean isSelected() {
+			return this.isSelected;
 		}
-		this.isHovered = this.entryRect.getID() == entityID;
-	}
 
-	public void kill() {
-		if (this.entryRect != null) {
-			this.entryRect.kill();
-			this.entryText.kill();
+		public void setSelected(boolean b) {
+			this.isSelected = b;
 		}
-	}
 
-	public String getText() {
-		return this.text;
-	}
-
-	public boolean isHovered() {
-		return this.isHovered;
-	}
-
-	public boolean isSelected() {
-		return this.isSelected;
-	}
-
-	public void setSelected(boolean b) {
-		this.isSelected = b;
 	}
 
 }

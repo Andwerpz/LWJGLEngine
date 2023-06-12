@@ -68,13 +68,6 @@ public class Model {
 	// this system really needs a rework. 
 	private static HashMap<Integer, HashSet<Long>> activeCollisionMeshes = new HashMap<>();
 
-	// first, specify which scene
-	// TODO replace this with modelInstance objects
-	// K : model instance ID, Can be translated to a color to draw
-	// V : info for that model instance.
-	//private HashMap<Integer, HashMap<Long, Mat4>> modelMats;
-	//private HashMap<Integer, HashMap<Long, ArrayList<Material>>> materials;
-
 	//for each model, map each scene to a set of model instance ids
 	private HashMap<Integer, HashSet<Long>> sceneToID;
 
@@ -390,18 +383,12 @@ public class Model {
 		if (model.sceneToID.get(scene) == null) {
 			model.sceneToID.put(scene, new HashSet<Long>());
 		}
-		//		if (model.modelMats.get(scene) == null) {
-		//			model.modelMats.put(scene, new HashMap<Long, Mat4>());
-		//		}
-		//		if (model.materials.get(scene) == null) {
-		//			model.materials.put(scene, new HashMap<Long, ArrayList<Material>>());
-		//		}
+
 		IDtoInstance.put(ID, instance);
 		IDtoScene.put(ID, scene);
 		IDtoModel.put(ID, model);
 		modelInstanceIDs.add(ID);
-		//model.modelMats.get(scene).put(ID, mat4);
-		//model.materials.get(scene).put(ID, new ArrayList<Material>(model.defaultMaterials));
+
 		model.sceneToID.get(scene).add(ID);
 		model.scenesNeedingUpdates.add(scene);
 
@@ -423,25 +410,11 @@ public class Model {
 			model.sceneToID.remove(scene);
 		}
 
-		//		model.modelMats.get(scene).remove(ID);
-		//		if (model.modelMats.get(scene).size() == 0) {
-		//			model.modelMats.remove(scene);
-		//		}
-		//
-		//		model.materials.get(scene).remove(ID);
-		//		if (model.materials.get(scene).size() == 0) {
-		//			model.materials.remove(scene);
-		//		}
-
 		Model.deactivateCollisionMesh(ID);
 		IDtoInstance.remove(ID);
 		IDtoScene.remove(ID);
 		IDtoModel.remove(ID);
 		modelInstanceIDs.remove(ID);
-
-		//		if (model.modelMats.containsKey(scene)) {
-		//			model.scenesNeedingUpdates.add(scene);
-		//		}
 
 		//if there are still instances left in this scene, then we should update them. 
 		if (model.sceneToID.containsKey(scene)) {
@@ -460,50 +433,8 @@ public class Model {
 		model.scenesNeedingUpdates.add(scene);
 	}
 
-	//	protected static void updateInstance(long ID, ModelTransform m) {
-	//		Model.updateInstance(ID, m.getModelMatrix());
-	//	}
-	//
-	//	public static void updateInstance(long ID, Mat4 mat4) {
-	//		Model model = IDtoModel.get(ID);
-	//		if (IDtoScene.get(ID) == null) {
-	//			System.err.println("Can't find model instance " + ID + " when updating");
-	//		}
-	//		int scene = IDtoScene.get(ID);
-	//		model.modelMats.get(scene).put(ID, mat4);
-	//		model.scenesNeedingUpdates.add(scene);
-	//	}
-	//
-	//	public static void updateInstance(long ID, Material material, int index) {
-	//		Model model = IDtoModel.get(ID);
-	//		int scene = IDtoScene.get(ID);
-	//		if (model.materials.get(scene).get(ID).size() <= index) {
-	//			System.err.println("Material index " + index + " out of bounds");
-	//			return;
-	//		}
-	//		model.materials.get(scene).get(ID).set(index, new Material(material));
-	//		model.scenesNeedingUpdates.add(scene);
-	//	}
-	//
-	//	public static void updateInstance(long ID, Material material) {
-	//		Model.updateInstance(ID, material, 0);
-	//	}
-	//
-	//	public static void updateInstance(long ID, ArrayList<Material> materials) {
-	//		for (int i = 0; i < materials.size(); i++) {
-	//			Model.updateInstance(ID, materials.get(i), i);
-	//		}
-	//	}
-
 	public static Material getMaterial(long ID, int index) {
 		return Model.IDtoInstance.get(ID).getMaterials().get(index);
-		//		Model model = IDtoModel.get(ID);
-		//		int scene = IDtoScene.get(ID);
-		//		if (model.materials.get(scene).get(ID).size() <= index) {
-		//			System.err.println("Failed to retrieve material at index " + index);
-		//			return null;
-		//		}
-		//		return model.materials.get(scene).get(ID).get(index);
 	}
 
 	public static Material getMaterial(long ID) {
@@ -552,27 +483,6 @@ public class Model {
 			if (this.sceneToID.get(scene) == null) {
 				continue;
 			}
-			//			if (this.modelMats.get(scene) == null) {
-			//				continue;
-			//			}
-
-			// which vertex array, model instance ID, material for the model instance ID for that vertex array.
-			//			ArrayList<HashMap<Long, Material>> instancedMaterials = new ArrayList<>();
-			//			int vertexArrayAmt = this.meshes.size();
-			//			for (int i = 0; i < vertexArrayAmt; i++) {
-			//				instancedMaterials.add(new HashMap<Long, Material>());
-			//			}
-			//
-			//			for (long ID : this.modelMats.get(scene).keySet()) {
-			//				ArrayList<Material> matArr = this.materials.get(scene).get(ID);
-			//				if (matArr == null) {
-			//					System.out.println("DIDNT SET MATERIALS " + ID);
-			//					matArr = this.defaultMaterials;
-			//				}
-			//				for (int i = 0; i < vertexArrayAmt; i++) {
-			//					instancedMaterials.get(i).put(ID, matArr.get(i));
-			//				}
-			//			}
 
 			ArrayList<Long> ids = new ArrayList<>();
 			ArrayList<ModelTransform> transforms = new ArrayList<>();
@@ -693,7 +603,6 @@ public class Model {
 	}
 
 	public void kill() {
-
 		//dispose of all model instances
 		ArrayList<Long> instanceIDs = new ArrayList<>();
 		for (HashSet<Long> i : this.sceneToID.values()) {
@@ -701,12 +610,6 @@ public class Model {
 				instanceIDs.add(id);
 			}
 		}
-
-		//		for (HashMap<Long, Mat4> i : this.modelMats.values()) {
-		//			for (Long id : i.keySet()) {
-		//				instanceIDs.add(id);
-		//			}
-		//		}
 
 		for (long id : instanceIDs) {
 			Model.removeInstance(id);

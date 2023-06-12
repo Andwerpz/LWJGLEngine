@@ -605,4 +605,8 @@ public class Project {
 
 		return ((ModelAsset) a).getModel();
 	}
+
+	public ArrayList<AssetDependencyNode> getAssetDependencyNodeList() {
+		return this.assetDependencyNodes;
+	}
 }

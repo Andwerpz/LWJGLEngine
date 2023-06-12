@@ -485,453 +485,453 @@ public class FileExplorerWindow extends Window {
 		Input.inputsKeyReleased(key, TOP_BAR_SELECTION_SCENE);
 	}
 
-}
+	class DirectoryEntry {
+		public Material defaultDirectoryEntryMaterial = new Material(new Vec3((float) (20 / 255.0)));
+		public Material hoveredDirectoryEntryMaterial = new Material(new Vec3((float) (30 / 255.0)));
+		public Material selectedDirectoryEntryMaterial = new Material(new Vec3((float) (40 / 255.0)));
 
-class DirectoryEntry {
-	public static Material defaultDirectoryEntryMaterial = new Material(new Vec3((float) (20 / 255.0)));
-	public static Material hoveredDirectoryEntryMaterial = new Material(new Vec3((float) (30 / 255.0)));
-	public static Material selectedDirectoryEntryMaterial = new Material(new Vec3((float) (40 / 255.0)));
+		private boolean isHovered = false;
+		private boolean isSelected = false;
 
-	private boolean isHovered = false;
-	private boolean isSelected = false;
+		//if this is null, then it means that we still need to find this entry's children. 
+		//one special case is where this entry has no children, then we just set it to an empty arraylist. 
+		private ArrayList<DirectoryEntry> children = null;
+		private boolean childrenGenerated = false;
 
-	//if this is null, then it means that we still need to find this entry's children. 
-	//one special case is where this entry has no children, then we just set it to an empty arraylist. 
-	private ArrayList<DirectoryEntry> children = null;
-	private boolean childrenGenerated = false;
+		private DirectoryEntry parent;
 
-	private DirectoryEntry parent;
+		private int selectionScene, textScene;
 
-	private int selectionScene, textScene;
+		private UIElement rootUIElement;
 
-	private UIElement rootUIElement;
+		private boolean isExpanded = false;
+		private boolean isDisplayed = false;
+		private boolean isVisible = false; //every time we align, we check if this entry is visible. 
 
-	private boolean isExpanded = false;
-	private boolean isDisplayed = false;
-	private boolean isVisible = false; //every time we align, we check if this entry is visible. 
+		private UIElement entryBaseUIElement = null;
 
-	private UIElement entryBaseUIElement = null;
+		private String path;
 
-	private String path;
+		private String filename;
+		private Text entryText = null;
 
-	private String filename;
-	private Text entryText = null;
+		private int xOffset, yOffset;
 
-	private int xOffset, yOffset;
+		private int order = -1;
 
-	private int order = -1;
+		public DirectoryEntry(DirectoryEntry parent, String path, String filename, UIElement rootUIElement, int selectionScene, int textScene) {
+			this.parent = parent;
 
-	public DirectoryEntry(DirectoryEntry parent, String path, String filename, UIElement rootUIElement, int selectionScene, int textScene) {
-		this.parent = parent;
+			this.xOffset = 0;
+			this.yOffset = 0;
 
-		this.xOffset = 0;
-		this.yOffset = 0;
+			if (this.parent != null) {
+				this.xOffset = this.parent.xOffset + FileExplorerWindow.entryXOffsetInterval;
+			}
+			else {
+				this.xOffset = FileExplorerWindow.entryXOffsetBase - FileExplorerWindow.entryXOffsetInterval;
+			}
 
-		if (this.parent != null) {
-			this.xOffset = this.parent.xOffset + FileExplorerWindow.entryXOffsetInterval;
-		}
-		else {
-			this.xOffset = FileExplorerWindow.entryXOffsetBase - FileExplorerWindow.entryXOffsetInterval;
-		}
-
-		this.children = new ArrayList<>();
-
-		this.path = path;
-		this.filename = filename;
-		if (path != "" && FileUtils.getAllFilesFromDirectory(path).length == 0) {
 			this.children = new ArrayList<>();
+
+			this.path = path;
+			this.filename = filename;
+			if (path != "" && FileUtils.getAllFilesFromDirectory(path).length == 0) {
+				this.children = new ArrayList<>();
+			}
+
+			this.rootUIElement = rootUIElement;
+
+			this.selectionScene = selectionScene;
+			this.textScene = textScene;
 		}
 
-		this.rootUIElement = rootUIElement;
+		public DirectoryEntry createDirectoryEntry(DirectoryEntry parent, String path, String filename, UIElement rootUIElement, int selectionScene, int textScene) {
+			File[] files = FileUtils.getAllFilesFromDirectory(path);
+			if (files == null) {
+				//this file isn't a folder
+				return null;
+			}
 
-		this.selectionScene = selectionScene;
-		this.textScene = textScene;
-	}
-
-	public static DirectoryEntry createDirectoryEntry(DirectoryEntry parent, String path, String filename, UIElement rootUIElement, int selectionScene, int textScene) {
-		File[] files = FileUtils.getAllFilesFromDirectory(path);
-		if (files == null) {
-			//this file isn't a folder
-			return null;
+			return new DirectoryEntry(parent, path, filename, rootUIElement, selectionScene, textScene);
 		}
 
-		return new DirectoryEntry(parent, path, filename, rootUIElement, selectionScene, textScene);
-	}
+		public void kill() {
+			if (this.entryBaseUIElement != null) {
+				this.entryBaseUIElement.kill();
+				this.entryText.kill();
+			}
 
-	public void kill() {
-		if (this.entryBaseUIElement != null) {
-			this.entryBaseUIElement.kill();
-			this.entryText.kill();
-		}
-
-		if (this.children != null) {
-			for (DirectoryEntry e : this.children) {
-				e.kill();
+			if (this.children != null) {
+				for (DirectoryEntry e : this.children) {
+					e.kill();
+				}
 			}
 		}
-	}
 
-	public void align(int offset) {
-		if (this.parent != null) {
-			System.err.println("TRIED TO ALIGN DIRECTORY ENTRY THAT IS NOT ROOT");
-			return;
-		}
-
-		this._align(-FileExplorerWindow.entryHeight + offset);
-	}
-
-	//aligns this subtree of directory entries
-	//returns the height of this subtree
-	private int _align(int yOffset) {
-		if (!this.isDisplayed) {
-			return 0;
-		}
-		int totalHeight = FileExplorerWindow.entryHeight;
-
-		this.yOffset = yOffset;
-
-		//check if this thing is visible
-		this.isVisible = false;
-		if (-FileExplorerWindow.entryHeight <= this.yOffset && this.yOffset <= this.rootUIElement.getHeight()) {
-			this.isVisible = true;
-		}
-
-		if (this.isVisible) {
-			if (this.entryBaseUIElement == null) {
-				this.entryBaseUIElement = new UIFilledRectangle(0, this.yOffset, 0, 0, FileExplorerWindow.entryHeight, this.selectionScene);
-				this.entryBaseUIElement.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
-				this.entryBaseUIElement.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
-				this.entryBaseUIElement.setFillWidth(true);
-				this.entryBaseUIElement.setFillWidthMargin(0);
-				this.entryBaseUIElement.setMaterial(defaultDirectoryEntryMaterial);
-				this.entryBaseUIElement.bind(this.rootUIElement);
-
-				this.entryText = new Text(0, 0, this.filename + "         ", 12, Color.WHITE, this.textScene);
-				this.entryText.setDoAntialiasing(false);
-				this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
-				this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				this.entryText.bind(this.entryBaseUIElement);
+		public void align(int offset) {
+			if (this.parent != null) {
+				System.err.println("TRIED TO ALIGN DIRECTORY ENTRY THAT IS NOT ROOT");
+				return;
 			}
-			this.entryBaseUIElement.setYOffset(this.yOffset);
-			this.entryText.setXOffset(this.xOffset);
+
+			this._align(-FileExplorerWindow.entryHeight + offset);
 		}
-		else {
+
+		//aligns this subtree of directory entries
+		//returns the height of this subtree
+		private int _align(int yOffset) {
+			if (!this.isDisplayed) {
+				return 0;
+			}
+			int totalHeight = FileExplorerWindow.entryHeight;
+
+			this.yOffset = yOffset;
+
+			//check if this thing is visible
+			this.isVisible = false;
+			if (-FileExplorerWindow.entryHeight <= this.yOffset && this.yOffset <= this.rootUIElement.getHeight()) {
+				this.isVisible = true;
+			}
+
+			if (this.isVisible) {
+				if (this.entryBaseUIElement == null) {
+					this.entryBaseUIElement = new UIFilledRectangle(0, this.yOffset, 0, 0, FileExplorerWindow.entryHeight, this.selectionScene);
+					this.entryBaseUIElement.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+					this.entryBaseUIElement.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+					this.entryBaseUIElement.setFillWidth(true);
+					this.entryBaseUIElement.setFillWidthMargin(0);
+					this.entryBaseUIElement.setMaterial(defaultDirectoryEntryMaterial);
+					this.entryBaseUIElement.bind(this.rootUIElement);
+
+					this.entryText = new Text(0, 0, this.filename + "         ", 12, Color.WHITE, this.textScene);
+					this.entryText.setDoAntialiasing(false);
+					this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
+					this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
+					this.entryText.bind(this.entryBaseUIElement);
+				}
+				this.entryBaseUIElement.setYOffset(this.yOffset);
+				this.entryText.setXOffset(this.xOffset);
+			}
+			else {
+				if (this.entryBaseUIElement != null) {
+					this.entryText.kill();
+					this.entryBaseUIElement.kill();
+					this.entryText = null;
+					this.entryBaseUIElement = null;
+				}
+			}
+
+			if (this.isExpanded) {
+				for (DirectoryEntry e : this.children) {
+					totalHeight += e._align(yOffset + totalHeight);
+				}
+			}
+
+			return totalHeight;
+		}
+
+		public int getXOffset() {
+			return this.xOffset;
+		}
+
+		public int getYOffset() {
+			return this.yOffset;
+		}
+
+		public String getPath() {
+			return this.path;
+		}
+
+		public String getFilename() {
+			return this.filename;
+		}
+
+		public boolean isExpanded() {
+			return this.isExpanded;
+		}
+
+		public DirectoryEntry getParent() {
+			return this.parent;
+		}
+
+		//recursively display this subtree. 
+		//only display children if the current entry is expanded
+		public void display() {
+			if (this.isDisplayed) {
+				return;
+			}
+			this.isDisplayed = true;
+
+			if (this.isExpanded) {
+				for (DirectoryEntry e : this.children) {
+					e.display();
+				}
+			}
+		}
+
+		//hide this subtree. 
+		public void hide() {
+			if (!this.isDisplayed) {
+				return;
+			}
+
+			this.isDisplayed = false;
+			this.isVisible = false;
+
 			if (this.entryBaseUIElement != null) {
 				this.entryText.kill();
-				this.entryBaseUIElement.kill();
 				this.entryText = null;
+
+				this.entryBaseUIElement.kill();
 				this.entryBaseUIElement = null;
 			}
-		}
 
-		if (this.isExpanded) {
-			for (DirectoryEntry e : this.children) {
-				totalHeight += e._align(yOffset + totalHeight);
+			if (this.children != null) {
+				for (DirectoryEntry e : this.children) {
+					e.hide();
+				}
 			}
 		}
 
-		return totalHeight;
-	}
+		public void generateChildren() {
+			if (this.childrenGenerated) {
+				return;
+			}
+			this.childrenGenerated = true;
 
-	public int getXOffset() {
-		return this.xOffset;
-	}
+			//is root folder
+			if (this.path == "") {
+				//load all root drives
+				File[] paths;
+				FileSystemView fsv = FileSystemView.getFileSystemView();
 
-	public int getYOffset() {
-		return this.yOffset;
-	}
+				// returns pathnames for files and directory
+				paths = File.listRoots();
 
-	public String getPath() {
-		return this.path;
-	}
+				// for each pathname in pathname array
+				for (File p : paths) {
+					System.out.println("Drive Name: " + p.toString());
+					System.out.println("Description: " + fsv.getSystemTypeDescription(p));
 
-	public String getFilename() {
-		return this.filename;
-	}
+					String path = p.toString();
+					String name = path.toString().substring(0, path.toString().length() - 1);
 
-	public boolean isExpanded() {
-		return this.isExpanded;
-	}
-
-	public DirectoryEntry getParent() {
-		return this.parent;
-	}
-
-	//recursively display this subtree. 
-	//only display children if the current entry is expanded
-	public void display() {
-		if (this.isDisplayed) {
-			return;
+					DirectoryEntry e = this.createDirectoryEntry(this, path, name, rootUIElement, selectionScene, textScene);
+					if (e == null) {
+						continue;
+					}
+					this.children.add(e);
+				}
+			}
+			else {
+				String[] filenames = FileUtils.getAllFilenamesFromDirectory(this.path);
+				Arrays.sort(filenames);
+				for (int i = 0; i < filenames.length; i++) {
+					DirectoryEntry e = this.createDirectoryEntry(this, this.path + filenames[i] + "\\", filenames[i], this.rootUIElement, this.selectionScene, this.textScene);
+					if (e == null) {
+						continue;
+					}
+					this.children.add(e);
+				}
+			}
 		}
-		this.isDisplayed = true;
 
-		if (this.isExpanded) {
+		public boolean childrenGenerated() {
+			return this.childrenGenerated;
+		}
+
+		public void expand() {
+			if (this.isExpanded) {
+				return;
+			}
+			if (!this.isDisplayed) {
+				System.err.println("PRESSED ON ENTRY THAT ISN'T DISPLAYED : " + this.filename);
+				//we can't expand an entry if we can't see it. 
+				return;
+			}
+
+			if (!this.childrenGenerated) {
+				this.generateChildren();
+			}
+
+			this.isExpanded = true;
+
 			for (DirectoryEntry e : this.children) {
 				e.display();
 			}
 		}
-	}
 
-	//hide this subtree. 
-	public void hide() {
-		if (!this.isDisplayed) {
-			return;
-		}
+		public void collapse() {
+			if (this.parent == null) {
+				//this is the root entry, don't collapse this. 
+				return;
+			}
+			if (!this.isExpanded) {
+				return;
+			}
+			if (!this.isDisplayed) {
+				return;
+			}
 
-		this.isDisplayed = false;
-		this.isVisible = false;
+			this.isExpanded = false;
 
-		if (this.entryBaseUIElement != null) {
-			this.entryText.kill();
-			this.entryText = null;
-
-			this.entryBaseUIElement.kill();
-			this.entryBaseUIElement = null;
-		}
-
-		if (this.children != null) {
 			for (DirectoryEntry e : this.children) {
 				e.hide();
 			}
 		}
-	}
 
-	public void generateChildren() {
-		if (this.childrenGenerated) {
-			return;
-		}
-		this.childrenGenerated = true;
+		public void update() {
 
-		//is root folder
-		if (this.path == "") {
-			//load all root drives
-			File[] paths;
-			FileSystemView fsv = FileSystemView.getFileSystemView();
-
-			// returns pathnames for files and directory
-			paths = File.listRoots();
-
-			// for each pathname in pathname array
-			for (File p : paths) {
-				System.out.println("Drive Name: " + p.toString());
-				System.out.println("Description: " + fsv.getSystemTypeDescription(p));
-
-				String path = p.toString();
-				String name = path.toString().substring(0, path.toString().length() - 1);
-
-				DirectoryEntry e = DirectoryEntry.createDirectoryEntry(this, path, name, rootUIElement, selectionScene, textScene);
-				if (e == null) {
-					continue;
+			//set background material
+			if (this.isVisible) {
+				if (!this.entryBaseUIElement.isAlive()) {
+					System.err.println("UIELEMENT ID : " + this.entryBaseUIElement.getID() + " IS NOT ALIVE!!!");
 				}
-				this.children.add(e);
-			}
-		}
-		else {
-			String[] filenames = FileUtils.getAllFilenamesFromDirectory(this.path);
-			Arrays.sort(filenames);
-			for (int i = 0; i < filenames.length; i++) {
-				DirectoryEntry e = DirectoryEntry.createDirectoryEntry(this, this.path + filenames[i] + "\\", filenames[i], this.rootUIElement, this.selectionScene, this.textScene);
-				if (e == null) {
-					continue;
+				if (this.isSelected) {
+					this.entryBaseUIElement.setMaterial(selectedDirectoryEntryMaterial);
 				}
-				this.children.add(e);
+				else if (this.isHovered) {
+					this.entryBaseUIElement.setMaterial(hoveredDirectoryEntryMaterial);
+				}
+				else {
+					this.entryBaseUIElement.setMaterial(defaultDirectoryEntryMaterial);
+				}
 			}
-		}
-	}
 
-	public boolean childrenGenerated() {
-		return this.childrenGenerated;
-	}
-
-	public void expand() {
-		if (this.isExpanded) {
-			return;
-		}
-		if (!this.isDisplayed) {
-			System.err.println("PRESSED ON ENTRY THAT ISN'T DISPLAYED : " + this.filename);
-			//we can't expand an entry if we can't see it. 
-			return;
-		}
-
-		if (!this.childrenGenerated) {
-			this.generateChildren();
-		}
-
-		this.isExpanded = true;
-
-		for (DirectoryEntry e : this.children) {
-			e.display();
-		}
-	}
-
-	public void collapse() {
-		if (this.parent == null) {
-			//this is the root entry, don't collapse this. 
-			return;
-		}
-		if (!this.isExpanded) {
-			return;
-		}
-		if (!this.isDisplayed) {
-			return;
-		}
-
-		this.isExpanded = false;
-
-		for (DirectoryEntry e : this.children) {
-			e.hide();
-		}
-	}
-
-	public void update() {
-
-		//set background material
-		if (this.isVisible) {
-			if (!this.entryBaseUIElement.isAlive()) {
-				System.err.println("UIELEMENT ID : " + this.entryBaseUIElement.getID() + " IS NOT ALIVE!!!");
-			}
-			if (this.isSelected) {
-				this.entryBaseUIElement.setMaterial(selectedDirectoryEntryMaterial);
-			}
-			else if (this.isHovered) {
-				this.entryBaseUIElement.setMaterial(hoveredDirectoryEntryMaterial);
-			}
-			else {
-				this.entryBaseUIElement.setMaterial(defaultDirectoryEntryMaterial);
+			if (this.children != null) {
+				for (DirectoryEntry e : this.children) {
+					e.update();
+				}
 			}
 		}
 
-		if (this.children != null) {
-			for (DirectoryEntry e : this.children) {
-				e.update();
+		public void hovered(long entityID) {
+			if (!this.isDisplayed) {
+				return;
 			}
-		}
-	}
 
-	public void hovered(long entityID) {
-		if (!this.isDisplayed) {
-			return;
-		}
-
-		if (this.isVisible) {
-			if (entityID == this.entryBaseUIElement.getID()) {
-				this.isHovered = true;
+			if (this.isVisible) {
+				if (entityID == this.entryBaseUIElement.getID()) {
+					this.isHovered = true;
+				}
+				else {
+					this.isHovered = false;
+				}
 			}
 			else {
 				this.isHovered = false;
 			}
-		}
-		else {
-			this.isHovered = false;
-		}
 
-		if (this.children != null) {
-			for (DirectoryEntry e : this.children) {
-				e.hovered(entityID);
+			if (this.children != null) {
+				for (DirectoryEntry e : this.children) {
+					e.hovered(entityID);
+				}
 			}
+
 		}
 
-	}
+		public void selected(long entityID) {
+			if (!this.isDisplayed) {
+				return;
+			}
 
-	public void selected(long entityID) {
-		if (!this.isDisplayed) {
-			return;
-		}
-
-		if (this.isVisible) {
-			if (entityID == this.entryBaseUIElement.getID()) {
-				this.isSelected = true;
+			if (this.isVisible) {
+				if (entityID == this.entryBaseUIElement.getID()) {
+					this.isSelected = true;
+				}
+				else {
+					this.isSelected = false;
+				}
 			}
 			else {
 				this.isSelected = false;
 			}
-		}
-		else {
-			this.isSelected = false;
-		}
 
-		if (this.children != null) {
-			for (DirectoryEntry e : this.children) {
-				e.selected(entityID);
-			}
-		}
-	}
-
-	//idk, might be kinda slow
-	public void selected(String path) {
-		this.isSelected = this.path.equals(path);
-		if (this.children != null) {
-			for (DirectoryEntry e : this.children) {
-				e.selected(path);
-			}
-		}
-	}
-
-	public DirectoryEntry getSelected() {
-		if (this.isSelected) {
-			return this;
-		}
-
-		if (this.children != null) {
-			for (DirectoryEntry e : this.children) {
-				DirectoryEntry ans = e.getSelected();
-				if (ans != null) {
-					return ans;
+			if (this.children != null) {
+				for (DirectoryEntry e : this.children) {
+					e.selected(entityID);
 				}
 			}
 		}
-		return null;
-	}
 
-	public int count() {
-		int ans = 1;
-		if (this.children != null) {
-			for (DirectoryEntry e : this.children) {
-				ans += e.count();
+		//idk, might be kinda slow
+		public void selected(String path) {
+			this.isSelected = this.path.equals(path);
+			if (this.children != null) {
+				for (DirectoryEntry e : this.children) {
+					e.selected(path);
+				}
 			}
 		}
-		return ans;
-	}
 
-	public int countDisplayed() {
-		if (!this.isDisplayed) {
-			return 0;
-		}
-
-		int ans = 0;
-		if (this.parent != null) {
-			//don't count the root entry
-			ans++;
-		}
-		if (this.children != null) {
-			for (DirectoryEntry e : this.children) {
-				ans += e.countDisplayed();
+		public DirectoryEntry getSelected() {
+			if (this.isSelected) {
+				return this;
 			}
-		}
-		return ans;
-	}
 
-	//labels all the displayed entries on this subtree, starting with the root down. 
-	//essentially, preorder traversal?
-	public int computeOrder(int ptr) {
-		if (!this.isDisplayed) {
+			if (this.children != null) {
+				for (DirectoryEntry e : this.children) {
+					DirectoryEntry ans = e.getSelected();
+					if (ans != null) {
+						return ans;
+					}
+				}
+			}
+			return null;
+		}
+
+		public int count() {
+			int ans = 1;
+			if (this.children != null) {
+				for (DirectoryEntry e : this.children) {
+					ans += e.count();
+				}
+			}
+			return ans;
+		}
+
+		public int countDisplayed() {
+			if (!this.isDisplayed) {
+				return 0;
+			}
+
+			int ans = 0;
+			if (this.parent != null) {
+				//don't count the root entry
+				ans++;
+			}
+			if (this.children != null) {
+				for (DirectoryEntry e : this.children) {
+					ans += e.countDisplayed();
+				}
+			}
+			return ans;
+		}
+
+		//labels all the displayed entries on this subtree, starting with the root down. 
+		//essentially, preorder traversal?
+		public int computeOrder(int ptr) {
+			if (!this.isDisplayed) {
+				return ptr;
+			}
+			this.order = ptr++;
+			if (this.children != null) {
+				for (DirectoryEntry e : this.children) {
+					ptr = e.computeOrder(ptr);
+				}
+			}
 			return ptr;
 		}
-		this.order = ptr++;
-		if (this.children != null) {
-			for (DirectoryEntry e : this.children) {
-				ptr = e.computeOrder(ptr);
-			}
+
+		public int getOrder() {
+			return this.order;
 		}
-		return ptr;
-	}
 
-	public int getOrder() {
-		return this.order;
-	}
+		public boolean isSelected() {
+			return this.isSelected;
+		}
 
-	public boolean isSelected() {
-		return this.isSelected;
 	}
 
 }

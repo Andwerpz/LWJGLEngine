@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import lwjglengine.v10.asset.DependencyGraphViewerWindow;
 import lwjglengine.v10.entity.ProjectEntityViewerWindow;
 import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Material;
@@ -304,7 +305,7 @@ public class ProjectManagerWindow extends Window {
 							psv.setCloseOnSubmit(false);
 							this.contentWindow = psv;
 							break;
-							
+
 						case "Entities":
 							ProjectEntityViewerWindow pev = new ProjectEntityViewerWindow(0, 0, this.getWidth(), this.getHeight() - topBarHeightPx, this.project, this, this);
 							pev.setCloseOnSubmit(false);
@@ -313,6 +314,10 @@ public class ProjectManagerWindow extends Window {
 
 						case "Import":
 							this.contentWindow = new ProjectImportAssetWindow(0, 0, this.getWidth(), this.getHeight() - topBarHeightPx, this.project, this);
+							break;
+
+						case "Dependency Graph":
+							this.contentWindow = new DependencyGraphViewerWindow(0, 0, this.getWidth(), this.getHeight() - topBarHeightPx, this.project, this);
 							break;
 						}
 					}

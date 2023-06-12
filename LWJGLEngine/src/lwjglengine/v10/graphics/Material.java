@@ -23,6 +23,10 @@ public class Material {
 		return new Material(new Vec3(1f), new Vec3(1), 64f);
 	}
 
+	public static Material transparent() {
+		return new Material(new Vec4(0f));
+	}
+
 	public Material(Material m) {
 		this.diffuse = new Vec4(m.diffuse);
 		this.specular = new Vec4(m.specular);
@@ -73,7 +77,7 @@ public class Material {
 		this.emissive = new Vec4(0);
 		this.shininess = shininess.r();
 	}
-	
+
 	public void set(Material m) {
 		this.diffuse.set(m.getDiffuse());
 		this.specular.set(m.getSpecular());
@@ -95,7 +99,7 @@ public class Material {
 	public float getShininess() {
 		return this.shininess;
 	}
-	
+
 	public float getMetallic() {
 		return this.metallic;
 	}
@@ -143,7 +147,7 @@ public class Material {
 	public Vec4 getEmissive() {
 		return this.emissive;
 	}
-	
+
 	public void setMetallic(float m) {
 		this.metallic = m;
 	}
