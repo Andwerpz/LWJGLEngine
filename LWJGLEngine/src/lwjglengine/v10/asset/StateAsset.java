@@ -19,6 +19,9 @@ public class StateAsset extends Asset {
 
 	//for now, everything is in one scene
 	//TODO implement scenes
+	
+	//TODO some form of scripting, for example, when to transition to other scenes?
+	// - like, when the player touches some sort of load trigger, a scene transition is played. 
 
 	public ArrayList<Pair<Long, ModelTransform>> staticModels;
 
