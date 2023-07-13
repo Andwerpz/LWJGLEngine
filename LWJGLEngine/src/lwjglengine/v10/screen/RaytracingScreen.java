@@ -328,7 +328,7 @@ public class RaytracingScreen extends Screen {
 
 		//pre-render checks
 		if (!Scene.skyboxes.containsKey(this.raytracingScene)) {
-			System.err.println("NO SKYBOX ENTRY FOR RAYTRACING SCENE " + this.raytracingScene);
+			System.err.println("RaytracingScreen : NO SKYBOX ENTRY FOR RAYTRACING SCENE " + this.raytracingScene);
 			return;
 		}
 

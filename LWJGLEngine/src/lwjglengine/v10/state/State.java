@@ -11,8 +11,11 @@ public abstract class State {
 	// each state manages its own logic and rendering.
 	// rendering might consist of multiple overlaid screens
 
-	//should keep track of its own models, allocating when loading, and deallocating them when done. 
-	//perhaps can also keep track of its own scenes in a similar manner
+	// should keep track of its own models, allocating when loading, and deallocating them when done. 
+	// perhaps can also keep track of its own scenes in a similar manner
+
+	// states are rendered directly onto the state manager window layer, so if there are any windows
+	// attached to the state manager, they will always render above the state. 
 
 	protected int bufferWidth, bufferHeight;
 
@@ -26,7 +29,11 @@ public abstract class State {
 		this.sm = sm;
 	}
 
-	@Deprecated //use Scene.clearScene() instead
+	/**
+	 * use Scene.clearScene() instead
+	 * @param scene
+	 */
+	@Deprecated
 	protected void clearScene(int scene) {
 		UIElement.removeAllUIElementsFromScene(scene);
 		Model.removeInstancesFromScene(scene);

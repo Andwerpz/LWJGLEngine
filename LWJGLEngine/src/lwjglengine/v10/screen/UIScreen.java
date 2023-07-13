@@ -215,7 +215,7 @@ public class UIScreen extends Screen {
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
-		glDisable(GL_BLEND);
+		glEnable(GL_BLEND);
 		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		glClearDepth(1); // maximum value
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
@@ -257,7 +257,7 @@ public class UIScreen extends Screen {
 		// -- RENDER COLOR ID TO SAVE --
 		this.colorIDBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
+		glEnable(GL_BLEND); //should this be enabled?
 
 		Shader.SPLASH.enable();
 		Shader.SPLASH.setUniform1f("alpha", 1f);

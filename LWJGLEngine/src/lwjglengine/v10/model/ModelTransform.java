@@ -32,21 +32,33 @@ public class ModelTransform implements Comparable<ModelTransform> {
 	public Mat4 customModelMat4 = Mat4.identity();
 
 	public ModelTransform() {
-		this.scale = new Vec3(1);
-		this.rotation = Quaternion.identity();
-		this.translate = new Vec3(0);
+		this.init();
 	}
 
 	public ModelTransform(ModelTransform m) {
-		this.scale = m.scale;
-		this.rotation = new Quaternion(m.rotation);
-		this.translate = new Vec3(m.translate);
+		this.init();
+		this.set(m);
 	}
 
 	public ModelTransform(Vec3 scale, Quaternion rotation, Vec3 translate) {
+		this.init();
 		this.scale = new Vec3(scale);
 		this.rotation = new Quaternion(rotation);
 		this.translate = new Vec3(translate);
+	}
+
+	public ModelTransform(Mat4 customMat4) {
+		this.init();
+		this.doCustomModelMat4 = true;
+		this.customModelMat4.set(customMat4);
+	}
+
+	private void init() {
+		this.scale = new Vec3(1);
+		this.rotation = Quaternion.identity();
+		this.translate = new Vec3(0);
+		this.doCustomModelMat4 = false;
+		this.customModelMat4 = Mat4.identity();
 	}
 
 	/**
@@ -78,6 +90,9 @@ public class ModelTransform implements Comparable<ModelTransform> {
 		this.setRotation(m.rotation);
 		this.setTranslation(m.translate);
 		this.setScale(m.scale);
+		if (m.doCustomModelMat4) {
+			this.setCustomMat4(m.customModelMat4);
+		}
 	}
 
 	public void setRotation(Quaternion q) {
@@ -97,6 +112,7 @@ public class ModelTransform implements Comparable<ModelTransform> {
 	}
 
 	public void setCustomMat4(Mat4 m) {
+		this.doCustomModelMat4 = true;
 		this.customModelMat4.set(m);
 	}
 

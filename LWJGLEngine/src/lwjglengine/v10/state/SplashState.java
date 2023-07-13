@@ -7,7 +7,6 @@ import lwjglengine.v10.screen.Screen;
 import lwjglengine.v10.screen.ScreenQuad;
 
 public class SplashState extends State {
-
 	//this state just has to render nothing. Root window is going to render logo
 
 	private static final long TIME_ON_SCREEN_MILLIS = 1500;
@@ -16,8 +15,8 @@ public class SplashState extends State {
 	//TODO figure out how to do this D:
 	private State nextState = new TestState(); //what state loads after the splash screen
 
-	public SplashState() {
-
+	public SplashState(State nextState) {
+		this.nextState = nextState;
 	}
 
 	@Override

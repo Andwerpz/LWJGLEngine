@@ -9,6 +9,8 @@ import javax.imageio.ImageIO;
 import lwjglengine.v10.util.BufferUtils;
 import myutils.v10.graphics.GraphicsTools;
 import myutils.v10.math.Vec3;
+import myutils.v11.file.FileUtils;
+import myutils.v11.file.JarUtils;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
@@ -38,8 +40,8 @@ public class TextureMaterial {
 
 	public static final Texture DIFFUSE_DEFAULT = new Texture(255, 255, 255, 1);
 	public static final Texture SPECULAR_DEFAULT = new Texture(255, 255, 255, 1);
-	public static final Texture NORMAL_DEFAULT = new Texture("/tex_normal_default.png");
-	public static final Texture DISPLACEMENT_DEFAULT = new Texture("/tex_displacement_default.png", Texture.INVERT_COLORS_BIT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
+	public static final Texture NORMAL_DEFAULT = new Texture(JarUtils.loadImage("/tex_normal_default.png"));
+	public static final Texture DISPLACEMENT_DEFAULT = new Texture(JarUtils.loadImage("/tex_displacement_default.png"), Texture.INVERT_COLORS_BIT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
 
 	private int width, height;
 	private Texture diffuse, specular, normal, displacement;

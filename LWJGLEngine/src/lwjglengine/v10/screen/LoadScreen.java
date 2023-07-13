@@ -8,10 +8,12 @@ import lwjglengine.v10.graphics.Framebuffer;
 import lwjglengine.v10.graphics.Shader;
 import lwjglengine.v10.graphics.Texture;
 import myutils.v10.math.MathUtils;
+import myutils.v11.file.FileUtils;
+import myutils.v11.file.JarUtils;
 
 public class LoadScreen extends Screen {
 
-	private static Texture loadingTexture = new Texture("/load_screen/black_background.png");
+	private static Texture loadingTexture = new Texture(JarUtils.loadImage("/load_screen/black_background.png"));
 	private float alpha;
 
 	public LoadScreen() {

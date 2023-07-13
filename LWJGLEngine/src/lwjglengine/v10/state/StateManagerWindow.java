@@ -38,6 +38,8 @@ import lwjglengine.v10.window.RaytracingWindow;
 import lwjglengine.v10.window.Window;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
+import myutils.v11.file.FileUtils;
+import myutils.v11.file.JarUtils;
 
 public class StateManagerWindow extends Window {
 	//this window is it's own root window?
@@ -52,23 +54,28 @@ public class StateManagerWindow extends Window {
 
 	private boolean renderLogo = true;
 
+	private StateFactory initialStateFactory;
+
 	public State activeState;
 	public LoadState loadState;
 
-	public StateManagerWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, Window parentWindow) {
+	public StateManagerWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, StateFactory initialStateFactory, Window parentWindow) {
 		super(xOffset, yOffset, contentWidth, contentHeight, parentWindow);
-		this.init();
+		this.init(initialStateFactory);
 	}
 
-	public StateManagerWindow() {
+	public StateManagerWindow(StateFactory initialStateFactory) {
 		super(0, 0, Main.windowWidth, Main.windowHeight, null);
-		this.init();
+		this.init(initialStateFactory);
 	}
 
-	private void init() {
+	private void init(StateFactory initialStateFactory) {
+		this.initialStateFactory = initialStateFactory;
+
 		this.activeState = null;
-		this.loadState = new LoadState(new SplashState());
+		this.loadState = new LoadState(new SplashState(this.initialStateFactory.createState()));
 		this.loadState.setStateManager(this);
+		this.setAllowInput(false);
 
 		this.uiScreen = new UIScreen();
 
@@ -78,8 +85,8 @@ public class StateManagerWindow extends Window {
 		this.backgroundRect.setMaterial(new Material(new Vec4(0, 0, 0, 1)));
 		this.backgroundRect.bind(this.rootUIElement);
 
-		TextureMaterial logoIconTexture = new TextureMaterial(new Texture("/Halfcup_icon_white.png", Texture.VERTICAL_FLIP_BIT));
-		TextureMaterial logoTexture = new TextureMaterial(new Texture("/Halfcup_logo_v2.png", Texture.VERTICAL_FLIP_BIT));
+		TextureMaterial logoIconTexture = new TextureMaterial(new Texture(JarUtils.loadImage("/Halfcup_icon_white.png"), Texture.VERTICAL_FLIP_BIT));
+		TextureMaterial logoTexture = new TextureMaterial(new Texture(JarUtils.loadImage("/Halfcup_logo_v2.png"), Texture.VERTICAL_FLIP_BIT));
 
 		this.logoIconRect = new UIFilledRectangle(0, 0, 0, 600, 200, new FilledRectangle(), LOGO_SCENE);
 		this.logoIconRect.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
@@ -88,7 +95,7 @@ public class StateManagerWindow extends Window {
 		this.logoIconRect.setTextureMaterial(logoTexture);
 		this.logoIconRect.bind(this.rootUIElement);
 
-		this.setContextMenuRightClick(true);
+		//this.setContextMenuRightClick(true);
 
 		ArrayList<String> contextMenuOptions = new ArrayList<>();
 		contextMenuOptions.add("New File Explorer Window");
@@ -121,6 +128,7 @@ public class StateManagerWindow extends Window {
 		if (this.loadState == null || this.loadState.isFinishedLoading()) {
 			this.loadState = new LoadState(nextState);
 			this.loadState.setStateManager(this);
+			this.setAllowInput(false);
 		}
 	}
 
@@ -134,11 +142,12 @@ public class StateManagerWindow extends Window {
 		this.uiScreen.kill();
 	}
 
+	//used during the load screen to clear all windows
 	public void killAllChildren() {
-		for (Window w : this.childWindows) {
+		while (this.childWindows.size() != 0) {
+			Window w = this.childWindows.get(0);
 			w.kill();
 		}
-		this.childWindows.clear();
 	}
 
 	@Override
@@ -166,6 +175,8 @@ public class StateManagerWindow extends Window {
 			}
 			this.activeState = this.loadState.getNextState();
 			this.activeState.setStateManager(this);
+
+			this.setAllowInput(true);
 		}
 	}
 
@@ -182,16 +193,13 @@ public class StateManagerWindow extends Window {
 		if (this.activeState != null) {
 			this.activeState.render(outputBuffer);
 		}
-
-		if (this.loadState != null) {
-			this.loadState.render(outputBuffer);
-		}
 	}
 
 	@Override
 	protected void renderOverlay(Framebuffer outputBuffer) {
-		// TODO Auto-generated method stub
-
+		if (this.loadState != null) {
+			this.loadState.render(outputBuffer);
+		}
 	}
 
 	@Override

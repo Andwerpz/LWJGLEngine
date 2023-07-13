@@ -3,6 +3,9 @@ package lwjglengine.v10.audio;
 import static org.lwjgl.stb.STBVorbis.*;
 import static org.lwjgl.openal.AL10.*;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.HashSet;
@@ -14,23 +17,23 @@ import myutils.v10.file.FileUtils;
 import myutils.v10.math.Vec3;
 
 public class Sound {
-
 	//only mono audio sources can get the 3D effect
 	//use stereo stuff for things like menu music
+
+	//TODO figure out how to load a sound from an input stream .ogg
+	// - currently the problem is that i rely on a library function to retrieve the raw audio buffer. 
+	// - one would think that stb_vorbis_decode_memory would take in a byte buffer in lieu of a file and return
+	//   the raw audio, but for some reason it doesn't work. 
 
 	private static HashSet<Sound> sounds = new HashSet<Sound>();
 
 	private int bufferID;
 	private HashSet<Integer> sourceIDs;
 
-	private String filepath, absoluteFilepath;
-
 	private boolean loops;
 
 	public Sound(String filepath, boolean loops) {
-		this.filepath = filepath;
-		this.absoluteFilepath = FileUtils.loadFile(filepath).getAbsolutePath();
-
+		String absoluteFilepath = FileUtils.loadFile(filepath).getAbsolutePath();
 		String fileExtension = FileUtils.getFileExtension(filepath);
 		IntBuffer channelsBuffer = null;
 		IntBuffer sampleRateBuffer = null;
@@ -46,6 +49,32 @@ public class Sound {
 
 		assert rawAudioBuffer != null : filepath + " Failed to load";
 
+		this.init(channelsBuffer, sampleRateBuffer, rawAudioBuffer, loops);
+	}
+
+	public Sound(InputStream inputStream, String fileExtension, boolean loops) {
+		IntBuffer channelsBuffer = null;
+		IntBuffer sampleRateBuffer = null;
+		ShortBuffer rawAudioBuffer = null;
+
+		switch (fileExtension) {
+		case "ogg":
+			channelsBuffer = BufferUtils.createIntBuffer(1);
+			sampleRateBuffer = BufferUtils.createIntBuffer(1);
+			try {
+				rawAudioBuffer = stb_vorbis_decode_memory(ByteBuffer.wrap(inputStream.readAllBytes()), channelsBuffer, sampleRateBuffer);
+			}
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			break;
+		}
+
+		this.init(channelsBuffer, sampleRateBuffer, rawAudioBuffer, loops);
+	}
+
+	public void init(IntBuffer channelsBuffer, IntBuffer sampleRateBuffer, ShortBuffer rawAudioBuffer, boolean loops) {
 		int channels = channelsBuffer.get();
 		int sampleRate = sampleRateBuffer.get();
 
@@ -152,10 +181,6 @@ public class Sound {
 	public static void setRelativePosition(int sourceID, Vec3 pos) {
 		alSourcei(sourceID, AL_SOURCE_RELATIVE, 1); //toggling relative position flag on
 		alSource3f(sourceID, AL_POSITION, pos.x, pos.y, pos.z);
-	}
-
-	public String getFilepath() {
-		return this.filepath;
 	}
 
 	public static boolean isPlaying(int sourceID) {

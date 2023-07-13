@@ -55,8 +55,8 @@ public abstract class Window {
 	public static final int FROM_CENTER_TOP = 6;
 	public static final int FROM_CENTER_BOTTOM = 7;
 
-	//for now, keep all of the window materials here. 
-	//TODO make this better. 
+	//for now, keep all of the generic window materials here. 
+	//TODO make this better. perhaps put this into a seperate 'constants' class. 
 	protected Material topBarDefaultMaterial = new Material(new Vec3((float) (20 / 255.0)));
 	protected Material topBarHoveredMaterial = new Material(new Vec3((float) (30 / 255.0)));
 	protected Material topBarSelectedMaterial = new Material(new Vec3((float) (40 / 255.0)));
@@ -101,6 +101,9 @@ public abstract class Window {
 
 	private boolean updateWhenNotSelected = true;
 	private boolean renderWhenNotSelected = true;
+
+	//if this is false, then no inputs will get to this window, regardless of if it's selected. 
+	private boolean allowInput = true;
 
 	private boolean allowInputWhenNotSelected = false;
 
@@ -250,6 +253,10 @@ public abstract class Window {
 
 	protected void setAllowModifyingChildren(boolean b) {
 		this.allowModifyingChildren = b;
+	}
+
+	public void setAllowInput(boolean b) {
+		this.allowInput = b;
 	}
 
 	public void setAllowInputWhenNotSelected(boolean b) {
@@ -729,11 +736,21 @@ public abstract class Window {
 			this.childWindows.remove(selectedWindow);
 			this.childWindows.add(0, w);
 		}
+	}
 
+	//helper to check if this window should allow inputs at this moment
+	private boolean shouldAllowInput() {
+		if (!this.allowInput) {
+			return false;
+		}
+		if (this.isSelected || this.allowInputWhenNotSelected) {
+			return true;
+		}
+		return false;
 	}
 
 	public void mousePressed(int button) {
-		if (this.isSelected || this.allowInputWhenNotSelected) {
+		if (this.shouldAllowInput()) {
 			if (button == GLFW.GLFW_MOUSE_BUTTON_2 && this.contextMenuRightClick) {
 				//spawn context menu
 				if (this.contextMenuWindow != null && this.contextMenuWindow.isAlive()) {
@@ -758,7 +775,7 @@ public abstract class Window {
 	protected abstract void _mousePressed(int button);
 
 	public void mouseReleased(int button) {
-		if (this.isSelected || this.allowInputWhenNotSelected) {
+		if (this.shouldAllowInput()) {
 			this._mouseReleased(button);
 		}
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
@@ -770,7 +787,7 @@ public abstract class Window {
 	protected abstract void _mouseReleased(int button);
 
 	public void mouseScrolled(float wheelOffset, float smoothOffset) {
-		if (this.isSelected || this.allowInputWhenNotSelected) {
+		if (this.shouldAllowInput()) {
 			this._mouseScrolled(wheelOffset, smoothOffset);
 		}
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
@@ -782,7 +799,7 @@ public abstract class Window {
 	protected abstract void _mouseScrolled(float wheelOffset, float smoothOffset);
 
 	public void keyPressed(int key) {
-		if (this.isSelected || this.allowInputWhenNotSelected) {
+		if (this.shouldAllowInput()) {
 			if (key == GLFW.GLFW_KEY_ESCAPE && this.unlockCursorOnEscPressed) {
 				this.unlockCursor();
 			}
@@ -798,7 +815,7 @@ public abstract class Window {
 	protected abstract void _keyPressed(int key);
 
 	public void keyReleased(int key) {
-		if (this.isSelected || this.allowInputWhenNotSelected) {
+		if (this.shouldAllowInput()) {
 			this._keyReleased(key);
 		}
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {

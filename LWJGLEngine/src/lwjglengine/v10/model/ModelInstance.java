@@ -3,6 +3,7 @@ package lwjglengine.v10.model;
 import java.util.ArrayList;
 
 import lwjglengine.v10.graphics.Material;
+import myutils.v10.math.Mat4;
 
 public class ModelInstance {
 	//wrapper class to more easily manage model instances
@@ -12,6 +13,8 @@ public class ModelInstance {
 	private long id;
 	private int scene;
 
+	private boolean alive = true;
+
 	private Model model;
 	private ModelTransform modelTransform;
 
@@ -19,6 +22,10 @@ public class ModelInstance {
 
 	public ModelInstance(Model model, ModelTransform modelTransform, int scene) {
 		this.init(model, modelTransform, scene);
+	}
+
+	public ModelInstance(Model model, Mat4 mat4, int scene) {
+		this.init(model, new ModelTransform(mat4), scene);
 	}
 
 	public ModelInstance(Model model, int scene) {
@@ -103,5 +110,10 @@ public class ModelInstance {
 
 	public void kill() {
 		Model.removeInstance(this.id);
+		this.alive = false;
+	}
+
+	public boolean isAlive() {
+		return this.alive;
 	}
 }

@@ -28,8 +28,10 @@ import lwjglengine.v10.scene.Scene;
 import lwjglengine.v10.screen.Screen;
 import lwjglengine.v10.screen.ScreenQuad;
 import lwjglengine.v10.state.SplashState;
+import lwjglengine.v10.state.StateFactory;
 import lwjglengine.v10.state.StateManagerWindow;
 import lwjglengine.v10.state.TestState;
+import lwjglengine.v10.state.TestStateFactory;
 import lwjglengine.v10.ui.UIElement;
 import myutils.v10.graphics.FontUtils;
 import myutils.v10.math.Mat4;
@@ -62,6 +64,8 @@ public class Main implements Runnable {
 	public long deltaMillis = 0;
 	public int lastSecondUpdates = 0;
 	public int lastSecondFrames = 0;
+
+	public static StateFactory initialStateFactory = new TestStateFactory();
 
 	private StateManagerWindow sm;
 
@@ -128,7 +132,7 @@ public class Main implements Runnable {
 
 		// INIT
 		Shader.init();
-		this.sm = new StateManagerWindow();
+		this.sm = new StateManagerWindow(Main.initialStateFactory);
 
 		Main.main = this;
 
