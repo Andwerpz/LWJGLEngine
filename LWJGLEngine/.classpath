@@ -8,7 +8,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="shaders"/>
 	<classpathentry kind="src" path="res"/>
-	<classpathentry kind="src" path="tmp"/>
 	<classpathentry exported="true" kind="lib" path="C:/Program Files/lwjgl3/lwjgl.jar"/>
 	<classpathentry exported="true" kind="lib" path="C:/Program Files/lwjgl3/lwjgl-assimp.jar"/>
 	<classpathentry exported="true" kind="lib" path="C:/Program Files/lwjgl3/lwjgl-assimp-javadoc.jar"/>
