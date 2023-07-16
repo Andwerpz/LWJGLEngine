@@ -127,7 +127,7 @@ public class ListViewerWindow extends Window {
 		this.topBarSearchTf.getTextUIElement().setDoAntialiasing(false);
 		this.topBarSearchTf.bind(topBarBackgroundRect);
 
-		this.topBarSelectedEntryText = new Text(3, 0, "       ", 12, Color.WHITE, this.topBarSection.getTextScene());
+		this.topBarSelectedEntryText = new Text(5, 0, "       ", 12, Color.WHITE, this.topBarSection.getTextScene());
 		this.topBarSelectedEntryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.topBarSelectedEntryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.topBarSelectedEntryText.setDoAntialiasing(false);

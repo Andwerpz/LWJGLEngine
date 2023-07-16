@@ -5,43 +5,49 @@ import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL30.*;
 
+import java.awt.image.BufferedImage;
 import java.nio.FloatBuffer;
 
 import lwjglengine.util.BufferUtils;
+import lwjglengine.util.TextureUtils;
 import myutils.v10.file.SystemUtils;
+import myutils.v11.file.JarUtils;
 
 public class Cubemap {
+
+	public static final String[] CUBEMAP_SIDE_NAMES = { "right", "left", "top", "bottom", "front", "back" };
 
 	private int cubemapID;
 	private int size;
 
 	// images have to have the same dimensions
-	public Cubemap(String right, String left, String up, String down, String front, String back) {
-		String[] sides = new String[] { right, left, up, down, back, front }; // front and back are in wrong order
+	public Cubemap(BufferedImage right, BufferedImage left, BufferedImage top, BufferedImage bottom, BufferedImage front, BufferedImage back) {
+		// front and back are in wrong order?
+		BufferedImage[] sides = new BufferedImage[] { right, left, top, bottom, back, front };
 		cubemapID = load(sides, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
 	}
 
-	public Cubemap(String[] sides) {
+	public Cubemap(BufferedImage[] sides) {
 		cubemapID = load(sides, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
 	}
 
 	public Cubemap(int internalFormat, int dataFormat, int dataType) {
-		String[] sides = new String[6];
+		BufferedImage[] sides = new BufferedImage[6];
 
 		for (int i = 0; i < 6; i++) {
-			sides[i] = SystemUtils.getWorkingDirectory() + "/res/cubemap_default.png";
+			sides[i] = JarUtils.loadImage("/cubemap_default.png");
 		}
 
 		cubemapID = load(sides, internalFormat, dataFormat, dataType);
 	}
 
-	public int load(String[] sides, int internalFormat, int dataFormat, int dataType) {
+	public int load(BufferedImage[] sides, int internalFormat, int dataFormat, int dataType) {
 		int id = glGenTextures();
 		glBindTexture(GL_TEXTURE_CUBE_MAP, id);
 
 		for (int i = 0; i < 6; i++) {
 			int[] outWH = new int[2];
-			int[] data = Texture.getDataFromImage(sides[i], 0, outWH);
+			int[] data = TextureUtils.getDataFromImage(sides[i], 0, outWH);
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, outWH[0], outWH[1], 0, dataFormat, dataType, data);
 			this.size = outWH[0];
 		}

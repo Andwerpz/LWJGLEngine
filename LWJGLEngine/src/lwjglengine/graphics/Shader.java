@@ -153,4 +153,8 @@ public class Shader {
 		enabled = false;
 	}
 
+	public void kill() {
+		glDeleteShader(this.ID);
+	}
+
 }

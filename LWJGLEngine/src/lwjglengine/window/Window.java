@@ -129,10 +129,15 @@ public abstract class Window {
 	//when the cursor is locked. 
 
 	//alternatively, make it so that you can't change the selected window when the cursor is locked. 
+
+	//ok, every time we call the selectWindow function, it first checks to make sure that Main.isCursorLocked() returns false
+	//before doing anything. Might be kinda jank if we ever want to deal with multiple glfw windows, but for now it works. 
 	private boolean cursorLocked = false;
 
 	private boolean lockCursorOnSelect = false;
 	private boolean unlockCursorOnEscPressed = true;
+
+	private boolean deselectOnEscPressed = false;
 
 	public Window(int xOffset, int yOffset, int width, int height, Window parentWindow) {
 		this.childWindows = new ArrayList<>();
@@ -304,6 +309,10 @@ public abstract class Window {
 
 	public void setUnlockCursorOnEscPressed(boolean b) {
 		this.unlockCursorOnEscPressed = b;
+	}
+
+	public void setDeselectOnEscPressed(boolean b) {
+		this.deselectOnEscPressed = b;
 	}
 
 	public void addChild(Window w) {
@@ -734,6 +743,11 @@ public abstract class Window {
 
 	//this should be called every time the mousePressed function is called externally
 	public void selectWindow(int x, int y, boolean covered) {
+		//if the cursor is locked, we shouldn't change the selected window
+		if (Main.isCursorLocked()) {
+			return;
+		}
+
 		int selectedWindow = getClickedWindowIndex(x, y);
 		if (covered) {
 			this.deselect();
@@ -782,7 +796,7 @@ public abstract class Window {
 
 	public void mousePressed(int button) {
 		if (this.shouldAllowInput()) {
-			if (button == GLFW.GLFW_MOUSE_BUTTON_2 && this.contextMenuRightClick) {
+			if (button == GLFW.GLFW_MOUSE_BUTTON_2 && this.contextMenuRightClick && !Main.isCursorLocked()) {
 				//spawn context menu
 				if (this.contextMenuWindow != null && this.contextMenuWindow.isAlive()) {
 					this.contextMenuWindow.kill();
@@ -831,8 +845,13 @@ public abstract class Window {
 
 	public void keyPressed(int key) {
 		if (this.shouldAllowInput()) {
-			if (key == GLFW.GLFW_KEY_ESCAPE && this.unlockCursorOnEscPressed) {
-				this.unlockCursor();
+			if (key == GLFW.GLFW_KEY_ESCAPE) {
+				if (this.deselectOnEscPressed) {
+					this.deselect();
+				}
+				if (this.unlockCursorOnEscPressed) {
+					this.unlockCursor();
+				}
 			}
 
 			this._keyPressed(key);

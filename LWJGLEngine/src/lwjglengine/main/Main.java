@@ -178,6 +178,14 @@ public class Main implements Runnable {
 		this.fullscreen = !this.fullscreen;
 	}
 
+	public void setWindowDimensions(int width, int height) {
+		glfwSetWindowSize(window, width, height);
+	}
+
+	public void setWindowPosition(int x, int y) {
+		glfwSetWindowPos(window, x, y);
+	}
+
 	public static void lockCursor() {
 		cursorLocked = true;
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);

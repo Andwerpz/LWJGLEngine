@@ -101,7 +101,7 @@ public class AdjustableWindow extends BorderedWindow {
 	}
 
 	public AdjustableWindow(String title, Window contentWindow, Window parentWindow) {
-		super((int) parentWindow.getWindowMousePos().x, (int) parentWindow.getWindowMousePos().y, 400, 300 + titleBarHeight, parentWindow);
+		super(contentWindow.getXOffset(), contentWindow.getYOffset() - titleBarHeight, contentWindow.getWidth(), contentWindow.getHeight() + titleBarHeight, parentWindow);
 		this.init(contentWindow, title);
 	}
 

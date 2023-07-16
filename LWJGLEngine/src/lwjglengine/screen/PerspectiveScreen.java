@@ -312,6 +312,10 @@ public class PerspectiveScreen extends Screen {
 
 		// calculate lighting with each light seperately
 		ArrayList<Light> lights = Light.lights.get(this.world_scene);
+		if (lights == null || lights.size() == 0) {
+			System.err.println("PerspectiveScreen : Must have at least 1 light in world scene to render");
+			return;
+		}
 		for (int i = 0; i < lights.size(); i++) {
 			// generate depth map for light
 			if (lights.get(i).type == Light.DIR_LIGHT) {
@@ -491,10 +495,11 @@ public class PerspectiveScreen extends Screen {
 				SkyboxCube.skyboxCube.render();
 			}
 			else {
-				System.err.println("NO SKYBOX ENTRY FOR SCENE " + this.world_scene);
+				System.err.println("PerspectiveScreen : NO SKYBOX ENTRY FOR SCENE " + this.world_scene);
 			}
 		}
 
+		// -- RENDER TO OUTPUT --
 		outputBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
