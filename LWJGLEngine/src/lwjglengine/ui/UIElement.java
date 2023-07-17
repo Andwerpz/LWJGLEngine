@@ -233,8 +233,8 @@ public abstract class UIElement extends Entity {
 		return this.modelInstance.getModelTransform().getModelMatrix();
 	}
 
-	public long getModelID() {
-		return this.modelInstance.getID();
+	public ModelInstance getModelInstance() {
+		return this.modelInstance;
 	}
 
 	public void setFrameAlignmentStyle(int horizontalAlign, int verticalAlign) {

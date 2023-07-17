@@ -34,7 +34,7 @@ public class TextureAsset extends Asset {
 			break;
 		}
 
-		this.texture = new Texture(img, Texture.VERTICAL_FLIP_BIT);
+		this.texture = new Texture(img);
 	}
 
 	@Override

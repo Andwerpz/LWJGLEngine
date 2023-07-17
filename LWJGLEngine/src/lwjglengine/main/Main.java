@@ -269,11 +269,15 @@ public class Main implements Runnable {
 		this.sm.render(this.outputBuffer);
 
 		glfwSwapBuffers(window);
-
+		
 		int error = glGetError();
-		if (error != GL_NO_ERROR) {
-			System.out.println(error);
+		while(error != GL_NO_ERROR) {
+			if (error != GL_NO_ERROR) {
+				System.out.println("Main: GL ERROR : " + error);
+				error = glGetError();
+			}
 		}
+		
 	}
 
 	public void exit() {

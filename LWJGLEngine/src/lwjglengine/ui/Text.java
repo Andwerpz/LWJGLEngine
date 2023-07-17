@@ -129,7 +129,7 @@ public class Text extends UIElement {
 		this.contentYOffset = this.textSampleDescent;
 
 		BufferedImage img = GraphicsTools.generateTextImage(text, font, Color.WHITE, (int) this.width);
-		Texture texture = new Texture(img, Texture.VERTICAL_FLIP_BIT);
+		Texture texture = new Texture(img);
 		TextureMaterial textTextureMaterial = new TextureMaterial(texture);
 
 		this.setTextureMaterial(textTextureMaterial);
@@ -194,7 +194,7 @@ public class Text extends UIElement {
 
 			g.drawString(this.text, alignedX, this.textSampleAscent);
 
-			return new Texture(img, Texture.VERTICAL_FLIP_BIT);
+			return new Texture(img);
 		}
 
 		String currentLine = a[0];
@@ -238,7 +238,7 @@ public class Text extends UIElement {
 			alignedX = (int) this.width - lineWidth;
 		}
 		g.drawString(currentLine, alignedX, curY + this.textSampleAscent);
-		return new Texture(img, Texture.VERTICAL_FLIP_BIT);
+		return new Texture(img);
 	}
 
 	private int calculateHeight() {

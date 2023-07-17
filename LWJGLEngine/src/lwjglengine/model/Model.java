@@ -169,13 +169,17 @@ public class Model {
 
 	public void create() {
 	}
-
-	// must have .mtl file to be able to load materials
-	// this assumes that all textures are located in the same directory as the actual model
-
-	// use the Asset class to load models
-	@Deprecated
-	public static Model loadModelFile(File file) throws IOException {
+	
+	/**
+	 * Legacy method to load .obj file.
+	 * 
+	 * must have .mtl file to be able to load materials
+	 * this assumes that all textures are located in the same directory as the actual model
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	public static Model loadModelFile(File file) {
 		String filepath = file.getAbsolutePath();
 		String parentFilepath = file.getParent() + "\\";
 
@@ -188,7 +192,8 @@ public class Model {
 		AIScene scene = aiImportFile(filepath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
 
 		if (scene == null) {
-			throw new IOException("Failed to load model " + file.getName());
+			System.err.println("Failed to load model " + file.getName());
+			return null;
 		}
 
 		// group meshes with the same material
@@ -297,12 +302,12 @@ public class Model {
 			aiGetMaterialTexture(AIMat, aiTextureType_DIFFUSE, 0, path, (IntBuffer) null, null, null, null, null, null);
 			String diffusePath = path.dataString();
 			if (diffusePath != null && diffusePath.length() != 0) {
-				System.out.println("DIFFUSE TEXTURE : ");
-				System.out.println(parentFilepath);
-				System.out.println(diffusePath);
-				System.out.println(parentFilepath + diffusePath);
-				Texture diffuseTexture = new Texture(loadImage(parentFilepath + diffusePath));
-				material.setTexture(diffuseTexture, TextureMaterial.DIFFUSE);
+				try {
+					Texture diffuseTexture = new Texture(loadImage(parentFilepath + diffusePath));
+					material.setTexture(diffuseTexture, TextureMaterial.DIFFUSE);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 
 			// map_Ks in .mtl
@@ -310,8 +315,12 @@ public class Model {
 			aiGetMaterialTexture(AIMat, aiTextureType_SPECULAR, 0, path, (IntBuffer) null, null, null, null, null, null);
 			String specularPath = path.dataString();
 			if (specularPath != null && specularPath.length() != 0) {
-				Texture specularTexture = new Texture(loadImage(parentFilepath + specularPath));
-				material.setTexture(specularTexture, TextureMaterial.SPECULAR);
+				try {
+					Texture specularTexture = new Texture(loadImage(parentFilepath + specularPath));
+					material.setTexture(specularTexture, TextureMaterial.SPECULAR);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 
 			// norm in .mtl
@@ -319,8 +328,12 @@ public class Model {
 			aiGetMaterialTexture(AIMat, aiTextureType_NORMALS, 0, path, (IntBuffer) null, null, null, null, null, null);
 			String normalsPath = path.dataString();
 			if (normalsPath != null && normalsPath.length() != 0) {
-				Texture normalsTexture = new Texture(loadImage(parentFilepath + normalsPath));
-				material.setTexture(normalsTexture, TextureMaterial.NORMAL);
+				try {
+					Texture normalsTexture = new Texture(loadImage(parentFilepath + normalsPath));
+					material.setTexture(normalsTexture, TextureMaterial.NORMAL);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 
 			textureMaterials.add(material);
@@ -331,17 +344,12 @@ public class Model {
 		return new Model(meshes, defaultMaterials, textureMaterials);
 	}
 
-	@Deprecated
 	public static Model loadModelFile(String filepath) throws IOException {
 		return Model.loadModelFile(FileUtils.loadFile(filepath));
 	}
 
-	@Deprecated
 	public static Model loadModelFileRelative(String relativeFilepath) throws IOException {
-		String workingDirectory = SystemUtils.getWorkingDirectory();
-		String filepath = workingDirectory + "/res" + relativeFilepath;
-
-		return Model.loadModelFile(filepath);
+		return Model.loadModelFile(FileUtils.generateAbsoluteFilepath(relativeFilepath));
 	}
 
 	public static BufferedImage loadImage(String path) throws IOException {

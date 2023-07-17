@@ -83,28 +83,28 @@ public class TextureMaterial {
 			diffuse = DIFFUSE_DEFAULT;
 		}
 		else {
-			diffuse = new Texture(diffusePath, Texture.VERTICAL_FLIP_BIT);
+			diffuse = new Texture(diffusePath);
 		}
 
 		if (specularPath == null) {
 			specular = SPECULAR_DEFAULT;
 		}
 		else {
-			specular = new Texture(specularPath, Texture.VERTICAL_FLIP_BIT);
+			specular = new Texture(specularPath);
 		}
 
 		if (normalPath == null) {
 			normal = NORMAL_DEFAULT;
 		}
 		else {
-			normal = new Texture(normalPath, Texture.VERTICAL_FLIP_BIT);
+			normal = new Texture(normalPath);
 		}
 
 		if (displacementPath == null) {
 			displacement = DISPLACEMENT_DEFAULT;
 		}
 		else {
-			displacement = new Texture(displacementPath, Texture.VERTICAL_FLIP_BIT | Texture.INVERT_COLORS_BIT);
+			displacement = new Texture(displacementPath, Texture.INVERT_COLORS_BIT);
 		}
 	}
 
@@ -139,43 +139,11 @@ public class TextureMaterial {
 	}
 
 	public void setTexture(String path, int which) {
-		switch (which) {
-		case DIFFUSE:
-			diffuse = new Texture(path, Texture.VERTICAL_FLIP_BIT);
-			break;
-
-		case SPECULAR:
-			specular = new Texture(path, Texture.VERTICAL_FLIP_BIT);
-			break;
-
-		case NORMAL:
-			normal = new Texture(path, Texture.VERTICAL_FLIP_BIT);
-			break;
-
-		case DISPLACEMENT:
-			displacement = new Texture(path, Texture.VERTICAL_FLIP_BIT | Texture.INVERT_COLORS_BIT);
-			break;
-		}
+		this.setTexture(new Texture(path), which);
 	}
 
 	public void setTexture(BufferedImage img, int which) {
-		switch (which) {
-		case DIFFUSE:
-			diffuse = new Texture(img, Texture.VERTICAL_FLIP_BIT);
-			break;
-
-		case SPECULAR:
-			specular = new Texture(img, Texture.VERTICAL_FLIP_BIT);
-			break;
-
-		case NORMAL:
-			normal = new Texture(img, Texture.VERTICAL_FLIP_BIT);
-			break;
-
-		case DISPLACEMENT:
-			displacement = new Texture(img, Texture.VERTICAL_FLIP_BIT | Texture.INVERT_COLORS_BIT);
-			break;
-		}
+		this.setTexture(new Texture(img), which);
 	}
 
 	public void setTexture(Texture tex, int which) {

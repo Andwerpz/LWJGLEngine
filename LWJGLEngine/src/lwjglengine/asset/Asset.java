@@ -14,6 +14,10 @@ public abstract class Asset {
 	//however, this class is responsible for making sure that it's own dependencies are correct. 
 
 	//assets will update their dependencies when unloading, if the project is currently in edit mode. 
+	
+	//note that assets loaded via this class must be from an external folder, not packaged with 
+	//the jar. If we want to package stuff into the jar, then we must figure out how to load everything
+	//from input streams or urls, which assimp can't do. 
 
 	//TODO
 	// - rework saving info in text files, it would be nice to have a format that is like json or something. 

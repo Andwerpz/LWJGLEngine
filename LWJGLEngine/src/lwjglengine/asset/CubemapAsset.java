@@ -17,26 +17,42 @@ public class CubemapAsset extends Asset {
 	//   multiple textures to form one cubemap
 	// - current method is to save relative filepaths to the textures, but then how will we do error textures when
 	//   they inevitably go missing?
+	
+	//i think i'm just going to put 6 asset ids in the cubemap file. 
+	
+	//i'll have to write an editor for this asset. By default, all the textures on the cubemap are
+	//going to be error textures. 
 
 	public static final String CUBEMAP_ASSET_FILE_EXT = "cube";
 
 	private Cubemap cubemap;
-
-	private String[] sides;
+	
+	private int[] sideIDs;
 
 	public CubemapAsset(File file, long id, String name, Project project) {
 		super(file, id, name, project);
+		
+		this.sideIDs = new int[6];
+		for(int i = 0; i < 6; i++) {
+			this.sideIDs[i] = -1;
+		}
 	}
 
 	@Override
 	protected void _load() throws IOException {
-		this.sides = new String[6];
-
 		BufferedReader fin = new BufferedReader(new FileReader(this.getFile()));
-
+		
+		Texture[] textures = new Texture[6];
+		int[] sideIDs = new int[6];
 		for (int i = 0; i < 6; i++) {
-			this.sides[i] = fin.readLine();
+			int id = Integer.parseInt(fin.readLine());
+			sideIDs[i] = id;
+			Texture texture = this.project.getTexture(id);
+			textures[i] = texture;
 		}
+		
+		// idk if this works lol
+		this.cubemap = new Cubemap(textures);
 
 		fin.close();
 	}
@@ -51,19 +67,18 @@ public class CubemapAsset extends Asset {
 	protected void _save() throws IOException {
 		FileWriter fout = new FileWriter(this.getFile());
 
-		//		for (int i = 0; i < 6; i++) {
-		//			if (this.sides[i] == -1) {
-		//				continue;
-		//			}
-		//			fout.write(this.sides[i] + "\n");
-		//		}
+		for (int i = 0; i < 6; i++) {
+			fout.write(this.sideIDs[i] + "\n");
+		}
 
 		fout.close();
 	}
 
 	@Override
 	protected void _computeDependencies() {
-		//no dependencies.
+		for(int i = 0; i < 6; i++) {
+			this.addDependency(this.sideIDs[i]);
+		}
 	}
 
 	public Cubemap getCubemap() {

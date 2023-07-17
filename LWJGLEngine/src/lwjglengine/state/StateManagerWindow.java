@@ -33,7 +33,7 @@ import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.window.AdjustableWindow;
 import lwjglengine.window.FileExplorerWindow;
-import lwjglengine.window.ModelAssetViewerWindow;
+import lwjglengine.window.ModelViewerWindow;
 import lwjglengine.window.RaytracingWindow;
 import lwjglengine.window.Window;
 import myutils.v10.math.Vec3;
@@ -85,8 +85,8 @@ public class StateManagerWindow extends Window {
 		this.backgroundRect.setMaterial(new Material(new Vec4(0, 0, 0, 1)));
 		this.backgroundRect.bind(this.rootUIElement);
 
-		TextureMaterial logoIconTexture = new TextureMaterial(new Texture(JarUtils.loadImage("/Halfcup_icon_white.png"), Texture.VERTICAL_FLIP_BIT));
-		TextureMaterial logoTexture = new TextureMaterial(new Texture(JarUtils.loadImage("/Halfcup_logo_v2.png"), Texture.VERTICAL_FLIP_BIT));
+		TextureMaterial logoIconTexture = new TextureMaterial(new Texture(JarUtils.loadImage("/Halfcup_icon_white.png")));
+		TextureMaterial logoTexture = new TextureMaterial(new Texture(JarUtils.loadImage("/Halfcup_logo_v2.png")));
 
 		this.logoIconRect = new UIFilledRectangle(0, 0, 0, 600, 200, new FilledRectangle(), LOGO_SCENE);
 		this.logoIconRect.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);

@@ -14,7 +14,7 @@ import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.window.ListViewerWindow;
-import lwjglengine.window.ModelAssetViewerWindow;
+import lwjglengine.window.ModelViewerWindow;
 import lwjglengine.window.Window;
 import lwjglengine.window.AdjustableWindow;
 import myutils.v10.math.Vec3;
@@ -199,13 +199,7 @@ public class ProjectAssetViewerWindow extends Window {
 
 		switch (a.getType()) {
 		case Asset.TYPE_MODEL: {
-			try {
-				Window w = new AdjustableWindow("Model Viewer", new ModelAssetViewerWindow((ModelAsset) a, this.project), this);
-			}
-			catch (IOException e) {
-				System.err.println("Failed to generate model viewer");
-				e.printStackTrace();
-			}
+			Window w = new AdjustableWindow("Model Viewer", new ModelViewerWindow(((ModelAsset) a).getModel()), this);
 			break;
 		}
 		}

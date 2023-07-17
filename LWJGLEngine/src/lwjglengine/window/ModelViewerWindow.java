@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import lwjglengine.asset.ModelAsset;
 import lwjglengine.graphics.Framebuffer;
 import lwjglengine.graphics.Material;
 import lwjglengine.model.Line;
@@ -12,8 +11,6 @@ import lwjglengine.model.Model;
 import lwjglengine.model.ModelInstance;
 import lwjglengine.model.ModelTransform;
 import lwjglengine.player.PlayerInputController;
-import lwjglengine.project.Project;
-import lwjglengine.project.ProjectAssetViewerWindow;
 import lwjglengine.scene.DirLight;
 import lwjglengine.scene.Light;
 import lwjglengine.scene.Scene;
@@ -24,7 +21,7 @@ import lwjglengine.ui.UIFilledRectangle;
 import myutils.v10.math.Mat4;
 import myutils.v10.math.Vec3;
 
-public class ModelAssetViewerWindow extends BorderedWindow {
+public class ModelViewerWindow extends BorderedWindow {
 	//TODO
 	// - have an orientation compass thingy like blender does
 	// - draw gridlines that automatically adjust depending on the current position of the camera. 
@@ -38,10 +35,12 @@ public class ModelAssetViewerWindow extends BorderedWindow {
 
 	private UIScreen uiScreen;
 	private PerspectiveScreen perspectiveScreen;
-
-	private Project project;
-	private ModelAsset modelAsset;
-
+	
+	//if this is true, then it means that this window loaded the model
+	//this can be false in the case when the model was passed in thru the constructor, or set externally. 
+	private boolean shouldUnload = false;	
+	private Model model;
+	
 	private ModelInstance modelInstance;
 
 	private static int numGridlines = 101;
@@ -51,19 +50,29 @@ public class ModelAssetViewerWindow extends BorderedWindow {
 	private PlayerInputController pic;
 	private float cameraDistFromCenter = 1f;
 
-	public ModelAssetViewerWindow(int xOffset, int yOffset, int width, int height, Project project, Window parentWindow) {
+	public ModelViewerWindow(int xOffset, int yOffset, int width, int height, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
-		this.init(null, project);
+		this.init();
 	}
 
-	public ModelAssetViewerWindow(ModelAsset modelAsset, Project project) throws IOException {
+	public ModelViewerWindow(Model model) {
 		super(0, 0, 300, 400, null);
-		this.init(modelAsset, project);
+		this.init();
+		
+		this.setModel(model);
+	}
+	
+	public ModelViewerWindow(File file) {
+		super(0, 0, 300, 400, null);
+		this.init();
+		
+		this.setModel(file);
 	}
 
-	private void init(ModelAsset modelAsset, Project project) {
-		this.project = project;
-
+	private void init() {
+		this.model = null;
+		this.shouldUnload = false;
+		
 		this.perspectiveScreen = new PerspectiveScreen();
 		this.uiScreen = new UIScreen();
 
@@ -78,11 +87,8 @@ public class ModelAssetViewerWindow extends BorderedWindow {
 		this.pic.setCamXRot((float) Math.PI / 4.0f);
 		this.pic.setCamYRot((float) Math.PI / 4.0f);
 		this.pic.setAcceptPlayerInputs(false);
-
-		this.modelAsset = modelAsset;
-
-		this.project.loadAsset(this.modelAsset.getID());
-		this.modelInstance = new ModelInstance(this.modelAsset.getModel(), WORLD_SCENE);
+		
+		this.modelInstance = null;
 
 		UIFilledRectangle backgroundRect = new UIFilledRectangle(0, 0, 0, 1, 1, BACKGROUND_SCENE);
 		backgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
@@ -112,14 +118,38 @@ public class ModelAssetViewerWindow extends BorderedWindow {
 
 		this._resize();
 	}
+	
+	public void setModel(File file) {
+		//try to load model from file
+		Model model = Model.loadModelFile(file);
+		this.setModel(model);
+		this.shouldUnload = true;	//we loaded it, we should probably unload it. 
+	}
+	
+	public void setModel(Model model) {
+		if(this.shouldUnload) {
+			if(this.model != null) {
+				this.model.kill();
+			}
+			this.model = null;
+		}
+		this.shouldUnload = false;
+		this.modelInstance = null;
+		
+		if(this.model == null) {
+			return;
+		}
+		
+		this.model = model;
+		this.modelInstance = new ModelInstance(this.model, WORLD_SCENE);
+	}
 
 	@Override
 	protected void __kill() {
 		this.perspectiveScreen.kill();
 		this.uiScreen.kill();
 
-		System.err.println("MODEL VIEWER UNLOADING ASSET");
-		this.project.unloadAsset(this.modelAsset.getID());
+		this.setModel((Model) null);
 
 		Scene.removeScene(BACKGROUND_SCENE);
 		Scene.removeScene(WORLD_SCENE);
