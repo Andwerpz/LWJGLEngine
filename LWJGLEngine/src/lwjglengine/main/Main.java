@@ -273,7 +273,7 @@ public class Main implements Runnable {
 		int error = glGetError();
 		while(error != GL_NO_ERROR) {
 			if (error != GL_NO_ERROR) {
-				System.out.println("Main: GL ERROR : " + error);
+				System.err.println("Main: GL ERROR : " + error);
 				error = glGetError();
 			}
 		}
