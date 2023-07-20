@@ -63,6 +63,11 @@ public class NewProjectEntityWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "New Project Entity";
+	}
+
+	@Override
 	protected void _kill() {
 		// TODO Auto-generated method stub
 

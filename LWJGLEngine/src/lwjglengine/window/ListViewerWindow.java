@@ -163,6 +163,11 @@ public class ListViewerWindow extends Window {
 		this._resize();
 	}
 
+	@Override
+	public String getDefaultTitle() {
+		return "List Viewer";
+	}
+
 	public void clearList() {
 		for (ListEntry i : this.entryList) {
 			i.kill();

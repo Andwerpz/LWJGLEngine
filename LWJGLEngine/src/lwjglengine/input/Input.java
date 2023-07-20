@@ -7,6 +7,7 @@ import java.util.HashSet;
 import lwjglengine.entity.Entity;
 import lwjglengine.model.FilledRectangle;
 import lwjglengine.ui.UIElement;
+import myutils.v10.math.Vec2;
 
 public abstract class Input extends UIElement {
 	//the scene in this refers to the selection scene. 
@@ -22,8 +23,12 @@ public abstract class Input extends UIElement {
 
 	private static HashMap<Integer, HashSet<Input>> sceneToInput = new HashMap<>();
 
-	protected boolean pressed, hovered, clicked;
-	protected boolean mouseEntered, mouseExited;
+	protected boolean pressed, hovered;
+
+	//if this is true, then it means that this is the last input to be clicked. 
+	private boolean clicked;
+
+	protected Vec2 mousePos, mouseDiff; //TODO move this to MouseInput
 
 	private String sID;
 
@@ -43,6 +48,9 @@ public abstract class Input extends UIElement {
 		this.pressed = false;
 		this.hovered = false;
 		this.clicked = false;
+
+		this.mousePos = MouseInput.getMousePos();
+		this.mouseDiff = new Vec2(0);
 
 		Input.addInput(sID, this);
 	}
@@ -70,16 +78,24 @@ public abstract class Input extends UIElement {
 	private void hovered(long entityID) {
 		if (this.getID() != entityID) {
 			if (this.hovered) {
-				this.mouseExited = true;
+				this._mouseExited();
 			}
 			this.hovered = false;
 		}
 		else {
 			if (!this.hovered) {
-				this.mouseEntered = true;
+				this._mouseEntered();
 			}
 			this.hovered = true;
 		}
+	}
+
+	protected void _mouseEntered() {
+		/* Keeping it optional to implement */
+	}
+
+	protected void _mouseExited() {
+		/* Keeping it optional to implement */
 	}
 
 	private void pressed(long entityID) {
@@ -87,16 +103,37 @@ public abstract class Input extends UIElement {
 			return;
 		}
 		this.pressed = true;
+		this._pressed();
+	}
+
+	protected void _pressed() {
+		/* Keeping it optional to implement */
 	}
 
 	private void released(long entityID) {
 		if (this.pressed && entityID == this.getID()) {
 			this.clicked = true;
+			this._clicked();
 		}
 		else {
 			this.clicked = false;
+			this._released();
 		}
 		this.pressed = false;
+	}
+
+	/**
+	 * User has pressed on this input, but has released outside of the bounds of this input
+	 */
+	protected void _released() {
+		/* Keeping it optional to implement */
+	}
+
+	/**
+	 * User has clicked on this input. 
+	 */
+	protected void _clicked() {
+		/* Keeping it optional to implement */
 	}
 
 	public boolean isClicked() {
@@ -106,17 +143,9 @@ public abstract class Input extends UIElement {
 	public boolean isHovered() {
 		return this.hovered;
 	}
-	
+
 	public boolean isPressed() {
 		return this.pressed;
-	}
-
-	public boolean hasMouseEntered() {
-		return this.mouseEntered;
-	}
-
-	public boolean hasMouseExited() {
-		return this.mouseExited;
 	}
 
 	public static void addInput(String id, Input input) {
@@ -146,11 +175,11 @@ public abstract class Input extends UIElement {
 	 */
 
 	public static String getClicked(int scene) {
-		if(sceneToInput.get(scene) == null) {
+		if (sceneToInput.get(scene) == null) {
 			return "";
 		}
-		for(Input i : sceneToInput.get(scene)) {
-			if(i.isClicked()) {
+		for (Input i : sceneToInput.get(scene)) {
+			if (i.isClicked()) {
 				return i.sID;
 			}
 		}
@@ -178,8 +207,9 @@ public abstract class Input extends UIElement {
 
 	@Override
 	protected void _update() {
-		this.mouseEntered = false;
-		this.mouseExited = false;
+		Vec2 nextMousePos = MouseInput.getMousePos();
+		this.mouseDiff.set(new Vec2(this.mousePos, nextMousePos));
+		this.mousePos.set(nextMousePos);
 
 		this.__update();
 	}

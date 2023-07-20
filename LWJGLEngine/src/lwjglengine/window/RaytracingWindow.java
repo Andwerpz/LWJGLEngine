@@ -119,6 +119,11 @@ public class RaytracingWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "Raytracing Window";
+	}
+
+	@Override
 	protected void _kill() {
 		this.raytracingScreen.kill();
 		Scene.removeScene(RAYTRACING_SCENE);

@@ -12,6 +12,7 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,6 +27,7 @@ import lwjglengine.ui.UIElement;
 import myutils.v10.graphics.FontUtils;
 import myutils.v10.graphics.GraphicsTools;
 import myutils.v10.math.Mat4;
+import myutils.v10.math.MathUtils;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
 
@@ -91,7 +93,19 @@ public class TextField extends Input {
 	private int textRightMargin = 5;
 	private Font font;
 
-	private String validInputRegex = ".*"; //default should match anything. 
+	//same as text field, but only allows floats. 
+	//supports dragging to the left/right to increment/decrement the value held in the field by a set amount. 
+	private boolean isFloatField = false;
+	private static final String FLOAT_REGEX = "[-+]?[0-9]*\\.?[0-9]+";
+
+	private float floatFieldDragIncrement = 0.01f; //how much will the input change per pixel
+
+	private float floatFieldMinimum = Float.MIN_VALUE;
+	private float floatFieldMaximum = Float.MAX_VALUE;
+	private DecimalFormat floatFieldFormat = new DecimalFormat("0.00");
+
+	private static final String DEFAULT_REGEX = ".*"; //default should match anything. 
+	private String validInputRegex = DEFAULT_REGEX;
 	private boolean isInputValid = true;
 
 	private HashSet<Integer> pressedKeys; // stores key codes, not chars
@@ -152,7 +166,7 @@ public class TextField extends Input {
 	protected void __update() {
 		// -- FIELD INNER --
 		Material nextMaterial = null;
-		if (this.clicked) { // check for clicks happens when mouse is released.
+		if (this.isClicked()) {
 			nextMaterial = this.selectedMaterial;
 		}
 		else if (this.pressed) {
@@ -170,6 +184,19 @@ public class TextField extends Input {
 		if (this.currentMaterial != nextMaterial) {
 			this.currentMaterial = nextMaterial;
 			this.setMaterial(this.currentMaterial);
+		}
+
+		// -- FLOAT FIELD --
+		if (this.isFloatField) {
+			if (this.isPressed() && this.text.matches(this.validInputRegex)) {
+				//increment current input
+				float curFloat = Float.parseFloat(this.getText());
+				int horizontalDiff = (int) Math.abs(this.mouseDiff.x) * (this.mouseDiff.x < 0 ? -1 : 1);
+				curFloat += horizontalDiff * this.floatFieldDragIncrement;
+				curFloat = MathUtils.clamp(this.floatFieldMinimum, this.floatFieldMaximum, curFloat);
+
+				this.setText(this.floatFieldFormat.format(curFloat));
+			}
 		}
 	}
 
@@ -200,7 +227,6 @@ public class TextField extends Input {
 			this.fieldText.setFrameAlignmentOffset(this.textLeftMargin, 0);
 			this.fieldText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		}
-
 	}
 
 	public String getText() {
@@ -223,17 +249,59 @@ public class TextField extends Input {
 	}
 
 	private void checkIfInputTextIsValid() {
-		if (this.text.matches(this.validInputRegex)) {
-			this.isInputValid = true;
-		}
-		else {
+		this.isInputValid = true;
+
+		if (!this.text.matches(this.validInputRegex)) {
 			this.isInputValid = false;
+			return;
+		}
+
+		if (this.isFloatField()) {
+			float curFloat = Float.parseFloat(this.text);
+			if (curFloat < this.floatFieldMinimum || curFloat > this.floatFieldMaximum) {
+				this.isInputValid = false;
+			}
 		}
 	}
 
 	public void setValidInputRegex(String regex) {
+		if (this.isFloatField && !regex.equals(FLOAT_REGEX)) {
+			return;
+		}
+
 		this.validInputRegex = regex;
 		this.checkIfInputTextIsValid();
+	}
+
+	public void setIsFloatField(boolean b) {
+		this.isFloatField = b;
+		if (this.isFloatField) {
+			this.setValidInputRegex(FLOAT_REGEX);
+			this.setText(this.floatFieldFormat.format(this.floatFieldMinimum));
+		}
+		else {
+			this.setValidInputRegex(DEFAULT_REGEX);
+		}
+	}
+
+	public boolean isFloatField() {
+		return this.isFloatField;
+	}
+
+	public void setFloatFieldMinimum(float f) {
+		this.floatFieldMinimum = f;
+	}
+
+	public void setFloatFieldMaximum(float f) {
+		this.floatFieldMaximum = f;
+	}
+
+	public void setFloatFieldDragIncrement(float f) {
+		this.floatFieldDragIncrement = f;
+	}
+
+	public void setFloatFieldFormat(DecimalFormat df) {
+		this.floatFieldFormat = df;
 	}
 
 	public boolean isInputValid() {
@@ -270,7 +338,7 @@ public class TextField extends Input {
 
 	@Override
 	public void keyPressed(int key) {
-		if (this.clicked) {
+		if (this.isClicked()) {
 			pressedKeys.add(key);
 
 			// looking for ctrl + v
@@ -315,7 +383,7 @@ public class TextField extends Input {
 
 	@Override
 	public void keyReleased(int key) {
-		if (this.clicked) {
+		if (this.isClicked()) {
 			if (pressedKeys.contains(key)) {
 				pressedKeys.remove(key);
 			}

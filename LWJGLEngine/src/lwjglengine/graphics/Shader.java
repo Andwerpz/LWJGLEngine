@@ -15,7 +15,7 @@ public class Shader {
 	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS;
 	public static Shader IMG_POST_PROCESS, SPLASH, OVERWRITE_ALPHA, DECAL, RENDER_BUFFER;
 	public static Shader PARTICLE, RAYTRACING, RAYTRACING_HDR, RAYTRACING_EXTRACT_BLOOM;
-	public static Shader GAUSSIAN_BLUR, RENDER_ALPHA;
+	public static Shader GAUSSIAN_BLUR, RENDER_ALPHA, TEXTURE3D_DISPLAY;
 
 	private boolean enabled = false;
 
@@ -43,6 +43,7 @@ public class Shader {
 		RAYTRACING_EXTRACT_BLOOM = new Shader("/raytracing_extract_bloom.vert", "/raytracing_extract_bloom.frag");
 		GAUSSIAN_BLUR = new Shader("/gaussian_blur.vert", "/gaussian_blur.frag");
 		RENDER_ALPHA = new Shader("/render_alpha.vert", "/render_alpha.frag");
+		TEXTURE3D_DISPLAY = new Shader("/texture3d_display.vert", "/texture3d_display.frag");
 
 		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
 		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
@@ -98,6 +99,8 @@ public class Shader {
 		Shader.GAUSSIAN_BLUR.setUniform1i("tex_color", 0);
 
 		Shader.RENDER_ALPHA.setUniform1i("tex_color", 0);
+
+		Shader.TEXTURE3D_DISPLAY.setUniform1i("tex_color", 0);
 	}
 
 	public int getUniform(String name) {

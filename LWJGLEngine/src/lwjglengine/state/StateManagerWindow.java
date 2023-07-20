@@ -107,6 +107,11 @@ public class StateManagerWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "State Manager";
+	}
+
+	@Override
 	public void handleContextMenuAction(String action) {
 		switch (action) {
 		case "New File Explorer Window":

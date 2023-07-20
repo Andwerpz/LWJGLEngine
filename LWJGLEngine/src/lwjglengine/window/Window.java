@@ -231,6 +231,12 @@ public abstract class Window {
 		this.colorBuffer.isComplete();
 	}
 
+	/**
+	 * Returns the default title used in adjustable windows. 
+	 * @return
+	 */
+	public abstract String getDefaultTitle();
+
 	protected void setContextMenuRightClick(boolean b) {
 		this.contextMenuRightClick = b;
 	}

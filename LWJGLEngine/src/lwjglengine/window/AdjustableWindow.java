@@ -89,11 +89,8 @@ public class AdjustableWindow extends BorderedWindow {
 
 	private boolean renderBackground = true;
 	private boolean renderTopBar = true;
-	private boolean renderBorder = true;
 
 	private boolean isFullscreen = false;
-
-	//private boolean shouldClose = false;
 
 	public AdjustableWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window contentWindow, Window parentWindow) {
 		super(xOffset, yOffset - (contentHeight + titleBarHeight), contentWidth, contentHeight + titleBarHeight, parentWindow);
@@ -103,6 +100,11 @@ public class AdjustableWindow extends BorderedWindow {
 	public AdjustableWindow(String title, Window contentWindow, Window parentWindow) {
 		super(contentWindow.getXOffset(), contentWindow.getYOffset() - titleBarHeight, contentWindow.getWidth(), contentWindow.getHeight() + titleBarHeight, parentWindow);
 		this.init(contentWindow, title);
+	}
+
+	public AdjustableWindow(Window contentWindow, Window parentWindow) {
+		super(contentWindow.getXOffset(), contentWindow.getYOffset() - titleBarHeight, contentWindow.getWidth(), contentWindow.getHeight() + titleBarHeight, parentWindow);
+		this.init(contentWindow, contentWindow.getDefaultTitle());
 	}
 
 	private void init(Window contentWindow, String title) {
@@ -160,6 +162,11 @@ public class AdjustableWindow extends BorderedWindow {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "Adjustable Window";
+	}
+
+	@Override
 	protected void __kill() {
 		this.uiScreen.kill();
 		Scene.removeScene(BACKGROUND_SCENE);
@@ -176,13 +183,11 @@ public class AdjustableWindow extends BorderedWindow {
 		this.isFullscreen = b;
 
 		if (this.isFullscreen) {
-			this.renderBorder = false;
 			this.renderTopBar = false;
 
 			this.setDimensions(this.parentWindow.getWidth(), this.parentWindow.getHeight());
 		}
 		else {
-			this.renderBorder = true;
 			this.renderTopBar = true;
 
 			this.__resize();

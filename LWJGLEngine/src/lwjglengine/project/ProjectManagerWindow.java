@@ -134,6 +134,11 @@ public class ProjectManagerWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "Project Manager";
+	}
+
+	@Override
 	protected void _kill() {
 		if (this.project != null) {
 			this.project.kill();

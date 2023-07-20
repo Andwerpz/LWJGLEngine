@@ -172,6 +172,11 @@ public class ModelTransformEditorWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "Model Transform Editor";
+	}
+
+	@Override
 	protected void _kill() {
 		this.uiScreen.kill();
 

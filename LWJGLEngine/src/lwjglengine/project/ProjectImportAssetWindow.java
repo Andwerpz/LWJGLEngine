@@ -75,6 +75,11 @@ public class ProjectImportAssetWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "Project Import Asset";
+	}
+
+	@Override
 	public void handleFiles(File[] files) {
 		for (File f : files) {
 			if (f == null) {

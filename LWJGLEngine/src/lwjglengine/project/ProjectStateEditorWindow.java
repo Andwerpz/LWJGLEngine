@@ -88,6 +88,11 @@ public class ProjectStateEditorWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "Project State Editor";
+	}
+
+	@Override
 	public void handleContextMenuAction(String action) {
 		switch (action) {
 		case "Static Models": {

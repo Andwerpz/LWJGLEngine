@@ -176,6 +176,11 @@ public class FileExplorerWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "File Explorer";
+	}
+
+	@Override
 	public void handleObjects(Object[] objects) {
 		if (objects.length != 1) {
 			return;

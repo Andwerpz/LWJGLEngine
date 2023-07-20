@@ -26,11 +26,11 @@ import static org.lwjgl.opengl.GL46.*;
 
 public class Texture {
 	//note that this is only for texture2D, texture3D is going to have to be implemented seperately.
-	
+
 	//internalFormat is like data format, but it can be more specific with how many bits each channel gets, eg GL_RGBA8
 	//dataFormat specifies what is being stored, and the ordering, eg GL_RGB, GL_ARGB, GL_RED
 	//dataType specifies how exactly the data is being stored, eg GL_BYTE, GL_FLOAT, GL_INT
-	
+
 	public static final boolean VERTICAL_FLIP_DEFAULT = true; //if textures are always flipped upside down, then turn this on. 
 	public static final boolean HORIZONTAL_FLIP_DEFAULT = false;
 
@@ -105,13 +105,13 @@ public class Texture {
 	public int getID() {
 		return this.textureID;
 	}
-	
+
 	public int getWidth() {
 		int[] ret = new int[1];
 		glGetTextureLevelParameteriv(this.getID(), 0, GL_TEXTURE_WIDTH, ret);
 		return ret[0];
 	}
-	
+
 	public int getHeight() {
 		int[] ret = new int[1];
 		glGetTextureLevelParameteriv(this.getID(), 0, GL_TEXTURE_HEIGHT, ret);
@@ -135,7 +135,7 @@ public class Texture {
 	public void kill() {
 		glDeleteTextures(BufferUtils.createIntBuffer(new int[] { this.textureID }));
 	}
-	
+
 	/**
 	 * Converts the image into ARGB format, then extracts the ARGB information into an int buffer. 
 	 * 
@@ -193,10 +193,10 @@ public class Texture {
 		int textureID = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, dataType, (FloatBuffer) null);
-		glGenerateMipmap(GL_TEXTURE_2D);
+		//glGenerateMipmap(GL_TEXTURE_2D);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minSampleType);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magSampleType);
-		if (internalFormat == GL_DEPTH_COMPONENT) {	
+		if (internalFormat == GL_DEPTH_COMPONENT) {
 			//we make depth textures clamp to border because of how perspective screen does directional lighting. 
 			//if it didn't clamp to border, any pixel outside of the shadow cascade will appear lit as default, or it will wrap. 
 			//probably want to make this sort of thing something to choose. 
@@ -223,15 +223,17 @@ public class Texture {
 		int width = outWH[0];
 		int height = outWH[1];
 
-		int result = Texture.createTexture(GL_RGBA8, width, height, GL_RGBA, GL_RGBA8, minSampleType, magSampleType);
-		glBindTexture(GL_TEXTURE_2D, result);
+		int textureID = glGenTextures();
+		glBindTexture(GL_TEXTURE_2D, textureID);
 		glTexStorage2D(GL_TEXTURE_2D, numMipmapLevels, GL_RGBA8, width, height);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
 		glGenerateMipmap(GL_TEXTURE_2D); //Generate num_mipmaps number of mipmaps here.
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16); //enable anisotropic filtering
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minSampleType);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magSampleType); // magnification filter
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); //enable texture wrapping
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glBindTexture(GL_TEXTURE_2D, 0);
-		return result;
+		return textureID;
 	}
 }

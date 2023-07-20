@@ -108,6 +108,11 @@ public class ContextMenuWindow extends BorderedWindow {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "Context Menu";
+	}
+
+	@Override
 	protected void __kill() {
 		this.uiScreen.kill();
 

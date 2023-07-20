@@ -75,6 +75,11 @@ public class NewStaticModelWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "New Static Model";
+	}
+
+	@Override
 	public void handleObjects(Object[] objects) {
 		Object o = objects[0];
 

@@ -24,6 +24,11 @@ public class ProjectEntityEditorWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "Project Entity Editor";
+	}
+
+	@Override
 	protected void _kill() {
 		this.project.unloadAsset(this.entity.getID());
 	}

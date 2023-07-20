@@ -68,6 +68,11 @@ public class NewProjectStateWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "New Project State";
+	}
+
+	@Override
 	protected void _kill() {
 		this.uiScreen.kill();
 

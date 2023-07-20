@@ -87,6 +87,11 @@ public class DependencyGraphViewerWindow extends Window {
 		this.generateNodes();
 	}
 
+	@Override
+	public String getDefaultTitle() {
+		return "Dependency Graph Viewer";
+	}
+
 	private void clear() {
 		if (this.baseRect != null) {
 			this.baseRect.kill();

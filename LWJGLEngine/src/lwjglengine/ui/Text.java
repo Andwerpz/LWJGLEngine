@@ -282,7 +282,7 @@ public class Text extends UIElement {
 
 		this.align();
 	}
-	
+
 	public String getText() {
 		return this.text;
 	}

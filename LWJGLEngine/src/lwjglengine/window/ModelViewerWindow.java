@@ -35,12 +35,12 @@ public class ModelViewerWindow extends BorderedWindow {
 
 	private UIScreen uiScreen;
 	private PerspectiveScreen perspectiveScreen;
-	
+
 	//if this is true, then it means that this window loaded the model
 	//this can be false in the case when the model was passed in thru the constructor, or set externally. 
-	private boolean shouldUnload = false;	
+	private boolean shouldUnload = false;
 	private Model model;
-	
+
 	private ModelInstance modelInstance;
 
 	private static int numGridlines = 101;
@@ -58,21 +58,21 @@ public class ModelViewerWindow extends BorderedWindow {
 	public ModelViewerWindow(Model model) {
 		super(0, 0, 300, 400, null);
 		this.init();
-		
+
 		this.setModel(model);
 	}
-	
+
 	public ModelViewerWindow(File file) {
 		super(0, 0, 300, 400, null);
 		this.init();
-		
+
 		this.setModel(file);
 	}
 
 	private void init() {
 		this.model = null;
 		this.shouldUnload = false;
-		
+
 		this.perspectiveScreen = new PerspectiveScreen();
 		this.uiScreen = new UIScreen();
 
@@ -87,7 +87,7 @@ public class ModelViewerWindow extends BorderedWindow {
 		this.pic.setCamXRot((float) Math.PI / 4.0f);
 		this.pic.setCamYRot((float) Math.PI / 4.0f);
 		this.pic.setAcceptPlayerInputs(false);
-		
+
 		this.modelInstance = null;
 
 		UIFilledRectangle backgroundRect = new UIFilledRectangle(0, 0, 0, 1, 1, BACKGROUND_SCENE);
@@ -118,28 +118,33 @@ public class ModelViewerWindow extends BorderedWindow {
 
 		this._resize();
 	}
-	
+
+	@Override
+	public String getDefaultTitle() {
+		return "Model Viewer";
+	}
+
 	public void setModel(File file) {
 		//try to load model from file
 		Model model = Model.loadModelFile(file);
 		this.setModel(model);
-		this.shouldUnload = true;	//we loaded it, we should probably unload it. 
+		this.shouldUnload = true; //we loaded it, we should probably unload it. 
 	}
-	
+
 	public void setModel(Model model) {
-		if(this.shouldUnload) {
-			if(this.model != null) {
+		if (this.shouldUnload) {
+			if (this.model != null) {
 				this.model.kill();
 			}
 			this.model = null;
 		}
 		this.shouldUnload = false;
 		this.modelInstance = null;
-		
-		if(this.model == null) {
+
+		if (this.model == null) {
 			return;
 		}
-		
+
 		this.model = model;
 		this.modelInstance = new ModelInstance(this.model, WORLD_SCENE);
 	}

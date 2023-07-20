@@ -107,6 +107,11 @@ public class ProjectAssetViewerWindow extends Window {
 		this._resize();
 	}
 
+	@Override
+	public String getDefaultTitle() {
+		return "Project Asset Viewer";
+	}
+
 	public void setAssetTypeCategories(String[] categories) {
 		ArrayList<String> arr = new ArrayList<>();
 		for (String s : categories) {
