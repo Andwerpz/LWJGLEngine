@@ -8,6 +8,7 @@ import lwjglengine.model.FilledRectangle;
 import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import myutils.v10.graphics.FontUtils;
+import myutils.v10.graphics.GraphicsTools;
 import myutils.v10.math.Vec4;
 
 public class ToggleButton extends Input {
@@ -18,6 +19,11 @@ public class ToggleButton extends Input {
 
 	private Material pressedMaterial, releasedMaterial, hoveredMaterial, toggledMaterial;
 	private Material currentMaterial;
+
+	//if true, text will change to toggledText and untoggledText depending on toggle status. 
+	private boolean changeTextOnToggle = false;
+	private String toggledText = "True";
+	private String untoggledText = "False";
 
 	public ToggleButton(float x, float y, float width, float height, String sID, String text, int fontSize, int selectionScene, int textScene) {
 		super(x, y, 0, width, height, sID, selectionScene);
@@ -36,10 +42,8 @@ public class ToggleButton extends Input {
 
 	// text size should already be included in the font
 	private void init(String text, Font font, int textScene) {
-		this.setFrameAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
-
-		this.horizontalAlignContent = UIElement.ALIGN_LEFT;
-		this.verticalAlignContent = UIElement.ALIGN_BOTTOM;
+		this.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
+		this.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 
 		this.buttonText = new Text(0, 0, this.z + depthSpacing, text, font, new Material(Color.WHITE), textScene);
 		this.buttonText.setFrameAlignmentStyle(UIElement.FROM_CENTER_RIGHT, UIElement.FROM_CENTER_TOP);
@@ -58,7 +62,7 @@ public class ToggleButton extends Input {
 
 	@Override
 	protected void _clicked() {
-		this.isToggled = !this.isToggled;
+		this.setIsToggled(!this.isToggled);
 	}
 
 	@Override
@@ -114,6 +118,28 @@ public class ToggleButton extends Input {
 
 	public void setIsToggled(boolean b) {
 		this.isToggled = b;
+
+		if (this.changeTextOnToggle) {
+			String nextText = this.isToggled ? this.toggledText : this.untoggledText;
+			this.buttonText.setWidth(GraphicsTools.calculateTextWidth(nextText, this.buttonText.getFont()));
+			this.buttonText.setText(nextText);
+			this.buttonText.align();
+		}
+	}
+
+	public void setChangeTextOnToggle(boolean b) {
+		this.changeTextOnToggle = b;
+		this.setIsToggled(this.isToggled);
+	}
+
+	public void setToggledText(String s) {
+		this.toggledText = s;
+		this.setIsToggled(this.isToggled);
+	}
+
+	public void setUntoggledText(String s) {
+		this.untoggledText = s;
+		this.setIsToggled(this.isToggled);
 	}
 
 	@Override

@@ -351,7 +351,7 @@ public class FileExplorerWindow extends Window {
 			this.rootDirectoryEntry.selected(this.selectedDirectoryEntry.getPath());
 		}
 
-		this.topBarPathText.setText(e.getPath() + "          ");
+		this.topBarPathText.setText(e.getPath());
 
 		//if parents aren't expanded, go ahead and expand them
 		ArrayList<DirectoryEntry> unexpandedParents = new ArrayList<>();

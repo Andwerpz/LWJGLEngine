@@ -98,11 +98,12 @@ public class TextField extends Input {
 	private boolean isFloatField = false;
 	private static final String FLOAT_REGEX = "[-+]?[0-9]*\\.?[0-9]+";
 
-	private float floatFieldDragIncrement = 0.01f; //how much will the input change per pixel
+	//use doubles here for more precision and range
+	private double floatFieldDragIncrement = 0.01; //how much will the input change per pixel
 
-	private float floatFieldMinimum = Float.MIN_VALUE;
-	private float floatFieldMaximum = Float.MAX_VALUE;
-	private DecimalFormat floatFieldFormat = new DecimalFormat("0.00");
+	private double floatFieldMinimum = -Double.MAX_VALUE;
+	private double floatFieldMaximum = Double.MAX_VALUE;
+	private DecimalFormat floatFieldFormat = new DecimalFormat("0.00####;-0.00####");
 
 	private static final String DEFAULT_REGEX = ".*"; //default should match anything. 
 	private String validInputRegex = DEFAULT_REGEX;
@@ -190,7 +191,7 @@ public class TextField extends Input {
 		if (this.isFloatField) {
 			if (this.isPressed() && this.text.matches(this.validInputRegex)) {
 				//increment current input
-				float curFloat = Float.parseFloat(this.getText());
+				double curFloat = Double.parseDouble(this.getText());
 				int horizontalDiff = (int) Math.abs(this.mouseDiff.x) * (this.mouseDiff.x < 0 ? -1 : 1);
 				curFloat += horizontalDiff * this.floatFieldDragIncrement;
 				curFloat = MathUtils.clamp(this.floatFieldMinimum, this.floatFieldMaximum, curFloat);
@@ -257,7 +258,7 @@ public class TextField extends Input {
 		}
 
 		if (this.isFloatField()) {
-			float curFloat = Float.parseFloat(this.text);
+			double curFloat = Double.parseDouble(this.text);
 			if (curFloat < this.floatFieldMinimum || curFloat > this.floatFieldMaximum) {
 				this.isInputValid = false;
 			}
@@ -277,7 +278,7 @@ public class TextField extends Input {
 		this.isFloatField = b;
 		if (this.isFloatField) {
 			this.setValidInputRegex(FLOAT_REGEX);
-			this.setText(this.floatFieldFormat.format(this.floatFieldMinimum));
+			this.setText(this.floatFieldFormat.format(0));
 		}
 		else {
 			this.setValidInputRegex(DEFAULT_REGEX);
@@ -288,15 +289,15 @@ public class TextField extends Input {
 		return this.isFloatField;
 	}
 
-	public void setFloatFieldMinimum(float f) {
+	public void setFloatFieldMinimum(double f) {
 		this.floatFieldMinimum = f;
 	}
 
-	public void setFloatFieldMaximum(float f) {
+	public void setFloatFieldMaximum(double f) {
 		this.floatFieldMaximum = f;
 	}
 
-	public void setFloatFieldDragIncrement(float f) {
+	public void setFloatFieldDragIncrement(double f) {
 		this.floatFieldDragIncrement = f;
 	}
 

@@ -154,7 +154,7 @@ public class Texture3DViewerWindow extends Window {
 		if (this.texture != null) {
 			glViewport(this.displayXOffset, this.displayYOffset, this.displayWidth, this.displayHeight);
 			Shader.TEXTURE3D_DISPLAY.enable();
-			Shader.TEXTURE3D_DISPLAY.setUniform1f("sample_depth", Float.parseFloat(Input.getText("tf_zlevel")));
+			Shader.TEXTURE3D_DISPLAY.setUniform1f("sample_depth", Float.parseFloat(Input.getText("tf_zlevel", this.uiSection.getSelectionScene())));
 			Shader.TEXTURE3D_DISPLAY.setUniform1i("display_red", this.displayRedTb.isToggled() ? 1 : 0);
 			Shader.TEXTURE3D_DISPLAY.setUniform1i("display_blue", this.displayBlueTb.isToggled() ? 1 : 0);
 			Shader.TEXTURE3D_DISPLAY.setUniform1i("display_green", this.displayGreenTb.isToggled() ? 1 : 0);

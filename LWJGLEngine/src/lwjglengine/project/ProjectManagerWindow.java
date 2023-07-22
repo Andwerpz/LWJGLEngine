@@ -337,7 +337,7 @@ public class ProjectManagerWindow extends Window {
 		System.out.println(Input.getClicked(SELECT_PROJECT_SELECTION_SCENE));
 		switch (Input.getClicked(SELECT_PROJECT_SELECTION_SCENE)) {
 		case "btn_create_new_project": {
-			String newProjectName = Input.getText("tf_project_name");
+			String newProjectName = Input.getText("tf_project_name", SELECT_PROJECT_SELECTION_SCENE);
 			if (newProjectName.length() == 0) {
 				return;
 			}

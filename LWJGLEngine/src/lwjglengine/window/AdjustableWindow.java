@@ -149,7 +149,7 @@ public class AdjustableWindow extends BorderedWindow {
 		this.titleBarText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.titleBarText.bind(this.titleBarRect);
 
-		this.titleBarCloseBtn = new Button(0, 0, titleBarHeight, titleBarHeight, "btn_close", "   X   ", 12, TITLE_BAR_SELECTION_SCENE, TITLE_BAR_TEXT_SCENE);
+		this.titleBarCloseBtn = new Button(0, 0, titleBarHeight, titleBarHeight, "btn_close", "X", 12, TITLE_BAR_SELECTION_SCENE, TITLE_BAR_TEXT_SCENE);
 		this.titleBarCloseBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 		this.titleBarCloseBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
 		this.titleBarCloseBtn.getButtonText().setDoAntialiasing(false);

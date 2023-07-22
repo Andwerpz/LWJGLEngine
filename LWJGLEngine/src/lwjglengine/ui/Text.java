@@ -1,5 +1,8 @@
 package lwjglengine.ui;
 
+import static org.lwjgl.opengl.GL11.GL_LINEAR;
+import static org.lwjgl.opengl.GL11.GL_LINEAR_MIPMAP_LINEAR;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -27,8 +30,12 @@ public class Text extends UIElement {
 	//TODO 
 	// - figure out how to fix transparency issues when text size becomes small
 	//   - seems like small text using java.fx is just kinda bad. It works well if the text and the background are around the same color. 
+
+	// FIXED
 	// - with string "C:" with color set to white, font Dialogue, plain, size 12, the texture fails to generate. 
 	//   - to fix, you just add a bunch of spaces to the string, so "C:        " works. 
+	//   - the problem was the texture was too small to generate the required mipmaps. I just made it so that
+	//		when generating a text texture, we don't generate any mipmaps. 
 
 	private int textWidth, textMaxHeight;
 	private int textSampleAscent, textSampleDescent;
@@ -129,7 +136,7 @@ public class Text extends UIElement {
 		this.contentYOffset = this.textSampleDescent;
 
 		BufferedImage img = GraphicsTools.generateTextImage(text, font, Color.WHITE, (int) this.width);
-		Texture texture = new Texture(img);
+		Texture texture = new Texture(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
 		TextureMaterial textTextureMaterial = new TextureMaterial(texture);
 
 		this.setTextureMaterial(textTextureMaterial);
@@ -158,6 +165,7 @@ public class Text extends UIElement {
 
 	public void setDoAntialiasing(boolean b) {
 		this.doAntialiasing = b;
+		this.setTextureMaterial(new TextureMaterial(this.generateAlignedTexture()));
 	}
 
 	private Texture generateAlignedTexture() {
@@ -194,7 +202,7 @@ public class Text extends UIElement {
 
 			g.drawString(this.text, alignedX, this.textSampleAscent);
 
-			return new Texture(img);
+			return new Texture(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
 		}
 
 		String currentLine = a[0];
@@ -238,7 +246,7 @@ public class Text extends UIElement {
 			alignedX = (int) this.width - lineWidth;
 		}
 		g.drawString(currentLine, alignedX, curY + this.textSampleAscent);
-		return new Texture(img);
+		return new Texture(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
 	}
 
 	private int calculateHeight() {
@@ -278,6 +286,8 @@ public class Text extends UIElement {
 		this.textWidth = GraphicsTools.calculateTextWidth(this.text, this.font);
 		this.height = this.calculateHeight();
 
+		this.setContentDimensions(this.textWidth, this.height);
+
 		this.changedText = true;
 
 		this.align();
@@ -294,6 +304,10 @@ public class Text extends UIElement {
 	public void setTextWrapping(boolean b) {
 		this.textWrapping = b;
 		this.align();
+	}
+
+	public Font getFont() {
+		return this.font;
 	}
 
 	@Override

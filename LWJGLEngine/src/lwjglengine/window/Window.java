@@ -163,6 +163,30 @@ public abstract class Window {
 		this.align();
 	}
 
+	public Window(Window parentWindow) {
+		this.childWindows = new ArrayList<>();
+
+		this.setParent(parentWindow);
+
+		this.globalXOffset = 0;
+		this.globalYOffset = 0;
+
+		this.horizontalAlignStyle = FROM_LEFT;
+		this.verticalAlignStyle = FROM_BOTTOM;
+
+		this.xOffset = 0;
+		this.yOffset = 0;
+
+		this.width = 400;
+		this.height = 300;
+
+		this.rootUIElement = new UIFilledRectangle(0, 0, 0, this.width, this.height, ROOT_UI_SCENE);
+
+		this.buildBuffers();
+
+		this.align();
+	}
+
 	public void kill() {
 		if (!this.isAlive) {
 			//can't kill what's already dead :P

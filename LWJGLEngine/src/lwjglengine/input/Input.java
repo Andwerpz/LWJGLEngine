@@ -16,12 +16,17 @@ public abstract class Input extends UIElement {
 
 	//TODO 
 	// - maybe make it so that we don't have to manually call the pressed released hovered etc functions. 
+	// - it might be the case that between two windows, two inputs will share the same id. 
+	//   - perhaps we also have to specify which selection scene an input is from?
 
-	private static HashMap<String, Input> inputs = new HashMap<>();
+	private static HashMap<Integer, HashMap<String, Input>> inputs = new HashMap<>();
 	private static HashMap<Long, String> entityToStringID = new HashMap<>();
 	private static HashMap<String, Long> stringToEntityID = new HashMap<>();
 
+	//this does kind of the same thing as 'inputs'
 	private static HashMap<Integer, HashSet<Input>> sceneToInput = new HashMap<>();
+
+	private int selectionScene;
 
 	protected boolean pressed, hovered;
 
@@ -34,16 +39,18 @@ public abstract class Input extends UIElement {
 
 	public Input(float x, float y, float z, float width, float height, String sID, FilledRectangle baseRect, int scene) {
 		super(x, y, z, width, height, baseRect, scene);
-		this.init(sID);
+		this.init(sID, scene);
 	}
 
 	public Input(float x, float y, float z, float width, float height, String sID, int scene) {
 		super(x, y, z, width, height, scene);
-		this.init(sID);
+		this.init(sID, scene);
 	}
 
-	private void init(String sID) {
+	private void init(String sID, int selectionScene) {
 		this.sID = sID;
+
+		this.selectionScene = selectionScene;
 
 		this.pressed = false;
 		this.hovered = false;
@@ -149,7 +156,13 @@ public abstract class Input extends UIElement {
 	}
 
 	public static void addInput(String id, Input input) {
-		inputs.put(id, input);
+		int selectionScene = input.selectionScene;
+
+		if (inputs.get(selectionScene) == null) {
+			inputs.put(selectionScene, new HashMap<String, Input>());
+		}
+		inputs.get(selectionScene).put(id, input);
+
 		entityToStringID.put(input.getID(), id);
 		stringToEntityID.put(id, input.getID());
 
@@ -159,12 +172,15 @@ public abstract class Input extends UIElement {
 		sceneToInput.get(input.getScene()).add(input);
 	}
 
-	public static Input getInput(String id) {
-		return inputs.get(id);
+	public static Input getInput(String id, int scene) {
+		if (inputs.get(scene) == null) {
+			return null;
+		}
+		return inputs.get(scene).get(id);
 	}
 
-	public static boolean isClicked(String id) {
-		Input b = inputs.get(id);
+	public static boolean isClicked(String id, int scene) {
+		Input b = Input.getInput(id, scene);
 		return b == null ? false : b.isClicked();
 	}
 
@@ -187,8 +203,11 @@ public abstract class Input extends UIElement {
 	}
 
 	public static String getHovered(int scene) {
-		for (String s : inputs.keySet()) {
-			Input i = inputs.get(s);
+		if (inputs.get(scene) == null) {
+			return "";
+		}
+		for (String s : inputs.get(scene).keySet()) {
+			Input i = inputs.get(scene).get(s);
 			if (i.isHovered() && i.getScene() == scene) {
 				return s;
 			}
@@ -196,8 +215,8 @@ public abstract class Input extends UIElement {
 		return "";
 	}
 
-	public static String getText(String id) {
-		Input b = inputs.get(id);
+	public static String getText(String id, int scene) {
+		Input b = Input.getInput(id, scene);
 		if (!(b instanceof TextField)) {
 			return null;
 		}

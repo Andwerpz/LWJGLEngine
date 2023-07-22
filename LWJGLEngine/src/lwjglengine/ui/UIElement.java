@@ -29,7 +29,7 @@ public abstract class UIElement extends Entity {
 	//to inherit transform matrices, it's child inherited = child matrix * parent matrix. 
 
 	//ui elements are in charge of creating their own textures, and or creating child ui elements. 
-	
+
 	//TODO 
 	// - rectangle corner alignment
 	//   - can align a specific corner to another ui element or something. 
@@ -39,7 +39,7 @@ public abstract class UIElement extends Entity {
 	//   - currently this class is built with the assumption that you will only render rectangles. 
 
 	private static HashSet<UIElement> uiElements = new HashSet<UIElement>();
-	public static boolean shouldAlignUIElements = false;
+	public static boolean shouldAlignUIElements = false; //TODO remove this
 
 	//setting the reference xy coordinates. 
 	public static final int FROM_LEFT = 0;
@@ -137,6 +137,7 @@ public abstract class UIElement extends Entity {
 	protected boolean changedContentAlignmentStyle = false;
 	protected boolean changedDimensions = false;
 	protected boolean changedRotationRads = false;
+	protected boolean changedContentDimensions = false;
 
 	public UIElement(float xOffset, float yOffset, float z, float width, float height, int scene) {
 		this.init(xOffset, yOffset, z, width, height, FilledRectangle.DEFAULT_RECTANGLE, scene);
@@ -304,6 +305,24 @@ public abstract class UIElement extends Entity {
 		this.height = Math.max(height, 0);
 		this.shouldAlign = true;
 		this.changedDimensions = true;
+	}
+
+	public void setContentWidth(float width) {
+		this.setContentDimensions(width, this.contentHeight);
+	}
+
+	public void setContentHeight(float height) {
+		this.setContentDimensions(this.contentWidth, height);
+	}
+
+	public void setContentDimensions(float width, float height) {
+		this.contentWidth = width;
+		this.contentHeight = height;
+
+		if (this.alignContentInsteadOfFrame) {
+			this.shouldAlign = true;
+		}
+		this.changedContentDimensions = true;
 	}
 
 	public void setRotationRads(float rads) {
