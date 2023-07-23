@@ -33,6 +33,7 @@ public class ObjectEditorWindow extends Window {
 	//it will only generate input fields for some predetermined set of basic types. 
 
 	//TODO only call the get and set functions when we need to. 
+	// - calling the setters every frame is actually very expensive. 
 
 	private static final int CLASS_TYPE_UNKNOWN = -1;
 
@@ -163,8 +164,6 @@ public class ObjectEditorWindow extends Window {
 			boundingRect.bind(backgroundRect);
 
 			yptr += boundingRect.getHeight() + this.verticalPadding;
-
-			System.out.println(yptr);
 		}
 	}
 
