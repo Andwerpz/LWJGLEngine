@@ -70,17 +70,21 @@ public class Texture {
 		this.textureID = Texture.createTexture(img, loadOptions, minSampleType, magSampleType, 5);
 	}
 
+	public Texture(int[] data, int width, int height, int minSampleType, int magSampleType) {
+		this.textureID = Texture.createTexture(data, width, height, minSampleType, magSampleType, 5);
+	}
+
 	//initializes a texture with a solid color
 	public Texture(int r, int g, int b, float a) {
 		BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-		int alpha = (int) MathUtils.clamp(0, 255, (int) (a * 255f));
+		int alpha = MathUtils.clamp(0, 255, (int) (a * 255f));
 		int rgb = alpha;
 		rgb <<= 8;
-		rgb |= (int) MathUtils.clamp(0, 255, r);
+		rgb |= MathUtils.clamp(0, 255, r);
 		rgb <<= 8;
-		rgb |= (int) MathUtils.clamp(0, 255, g);
+		rgb |= MathUtils.clamp(0, 255, g);
 		rgb <<= 8;
-		rgb |= (int) MathUtils.clamp(0, 255, b);
+		rgb |= MathUtils.clamp(0, 255, b);
 		img.setRGB(0, 0, rgb);
 		this.textureID = Texture.createTexture(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
 	}
@@ -116,6 +120,12 @@ public class Texture {
 		int[] ret = new int[1];
 		glGetTextureLevelParameteriv(this.getID(), 0, GL_TEXTURE_HEIGHT, ret);
 		return ret[0];
+	}
+
+	public void setWrapping(int wrap) {
+		glBindTexture(GL_TEXTURE_2D, this.textureID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
 	}
 
 	public void bind(int glTextureLocation) {
@@ -223,6 +233,14 @@ public class Texture {
 		int width = outWH[0];
 		int height = outWH[1];
 
+		return createTexture(data, width, height, minSampleType, magSampleType, numMipmapLevels);
+	}
+
+	/**
+	 * Creates a texture initialized with the given data, and returns the handle
+	 * @return
+	 */
+	public static int createTexture(int[] data, int width, int height, int minSampleType, int magSampleType, int numMipmapLevels) {
 		int textureID = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		glTexStorage2D(GL_TEXTURE_2D, numMipmapLevels, GL_RGBA8, width, height);

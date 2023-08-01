@@ -163,6 +163,30 @@ public abstract class Window {
 		this.align();
 	}
 
+	public Window(int xOffset, int yOffset, Window parentWindow) {
+		this.childWindows = new ArrayList<>();
+
+		this.setParent(parentWindow);
+
+		this.globalXOffset = xOffset;
+		this.globalYOffset = yOffset;
+
+		this.horizontalAlignStyle = FROM_LEFT;
+		this.verticalAlignStyle = FROM_BOTTOM;
+
+		this.xOffset = xOffset;
+		this.yOffset = yOffset;
+
+		this.width = 400;
+		this.height = 300;
+
+		this.rootUIElement = new UIFilledRectangle(0, 0, 0, this.width, this.height, ROOT_UI_SCENE);
+
+		this.buildBuffers();
+
+		this.align();
+	}
+
 	public Window(Window parentWindow) {
 		this.childWindows = new ArrayList<>();
 
