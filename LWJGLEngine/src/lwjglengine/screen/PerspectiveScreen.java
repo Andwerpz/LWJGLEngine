@@ -22,6 +22,9 @@ import myutils.v10.math.Vec3;
 public class PerspectiveScreen extends Screen {
 	// renders the scene with a perspective projection matrix.
 
+	//TODO move shininess out of the alpha channel, and add emissiveness buffer so we can do full bright particles. 
+	//actually, we can do full bright particles by just moving particle rendering after the lighting step. 
+
 	private static final float NEAR = 0.1f;
 	private static final float FAR = 400.0f;
 
@@ -51,9 +54,6 @@ public class PerspectiveScreen extends Screen {
 	private Texture geometrySpecularMap; // RGB: specular, A: shininess
 	private Texture geometryColorMap; // RGB: color, A: alpha
 	private Texture geometryColorIDMap; // RGB: colorID
-
-	//TODO move shininess out of the alpha channel, and add emissiveness buffer so we can do full bright particles. 
-	//actually, we can do full bright particles by just moving particle rendering after the lighting step. 
 
 	private Texture lightingColorMap; // RGB: color
 	private Texture lightingBrightnessMap; // R: brightness

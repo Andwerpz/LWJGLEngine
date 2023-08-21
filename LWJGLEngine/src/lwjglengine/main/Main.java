@@ -144,6 +144,14 @@ public class Main implements Runnable {
 		this.outputBuffer = new Framebuffer(0);
 	}
 
+	public static long getDeltaMillis() {
+		return Main.main.deltaMillis;
+	}
+
+	public static float getDeltaSeconds() {
+		return Main.main.deltaMillis / 1000.0f;
+	}
+
 	class WindowSizeCallback extends GLFWWindowSizeCallback {
 		@Override
 		public void invoke(long window, int width, int height) {
@@ -269,15 +277,15 @@ public class Main implements Runnable {
 		this.sm.render(this.outputBuffer);
 
 		glfwSwapBuffers(window);
-		
+
 		int error = glGetError();
-		while(error != GL_NO_ERROR) {
+		while (error != GL_NO_ERROR) {
 			if (error != GL_NO_ERROR) {
 				System.err.println("Main: GL ERROR : " + error);
 				error = glGetError();
 			}
 		}
-		
+
 	}
 
 	public void exit() {

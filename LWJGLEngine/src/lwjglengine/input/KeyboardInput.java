@@ -11,6 +11,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
 import static org.lwjgl.glfw.GLFW.glfwGetCursorPos;
 
 import java.nio.DoubleBuffer;
+import java.util.HashMap;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
@@ -20,6 +21,58 @@ import lwjglengine.main.Main;
 import myutils.v10.math.Vec2;
 
 public class KeyboardInput extends GLFWKeyCallback {
+
+	public static HashMap<Character, Character> shiftMap = new HashMap<Character, Character>() {
+		{
+			put('`', '~');
+			put('1', '!');
+			put('2', '@');
+			put('3', '#');
+			put('4', '$');
+			put('5', '%');
+			put('6', '^');
+			put('7', '&');
+			put('8', '*');
+			put('9', '(');
+			put('0', ')');
+			put('-', '_');
+			put('=', '+');
+			put('q', 'Q');
+			put('w', 'W');
+			put('e', 'E');
+			put('r', 'R');
+			put('t', 'T');
+			put('y', 'Y');
+			put('u', 'U');
+			put('i', 'I');
+			put('o', 'O');
+			put('p', 'P');
+			put('[', '{');
+			put(']', '}');
+			put('\\', '|');
+			put('a', 'A');
+			put('s', 'S');
+			put('d', 'D');
+			put('f', 'F');
+			put('g', 'G');
+			put('h', 'H');
+			put('j', 'J');
+			put('k', 'K');
+			put('l', 'L');
+			put(';', ':');
+			put('\'', '"');
+			put('z', 'Z');
+			put('x', 'X');
+			put('c', 'C');
+			put('v', 'V');
+			put('b', 'B');
+			put('n', 'N');
+			put('m', 'M');
+			put(',', '<');
+			put('.', '>');
+			put('/', '?');
+		}
+	};
 
 	public static boolean[] keys = new boolean[65536];
 

@@ -33,58 +33,6 @@ import myutils.v10.math.Vec4;
 
 public class TextField extends Input {
 
-	private static HashMap<Character, Character> shiftMap = new HashMap<Character, Character>() {
-		{
-			put('`', '~');
-			put('1', '!');
-			put('2', '@');
-			put('3', '#');
-			put('4', '$');
-			put('5', '%');
-			put('6', '^');
-			put('7', '&');
-			put('8', '*');
-			put('9', '(');
-			put('0', ')');
-			put('-', '_');
-			put('=', '+');
-			put('q', 'Q');
-			put('w', 'W');
-			put('e', 'E');
-			put('r', 'R');
-			put('t', 'T');
-			put('y', 'Y');
-			put('u', 'U');
-			put('i', 'I');
-			put('o', 'O');
-			put('p', 'P');
-			put('[', '{');
-			put(']', '}');
-			put('\\', '|');
-			put('a', 'A');
-			put('s', 'S');
-			put('d', 'D');
-			put('f', 'F');
-			put('g', 'G');
-			put('h', 'H');
-			put('j', 'J');
-			put('k', 'K');
-			put('l', 'L');
-			put(';', ':');
-			put('\'', '"');
-			put('z', 'Z');
-			put('x', 'X');
-			put('c', 'C');
-			put('v', 'V');
-			put('b', 'B');
-			put('n', 'N');
-			put('m', 'M');
-			put(',', '<');
-			put('.', '>');
-			put('/', '?');
-		}
-	};
-
 	//private long fieldInnerID;
 	private Text fieldText;
 
@@ -373,7 +321,7 @@ public class TextField extends Input {
 				}
 				char k = keyName.charAt(0);
 				if (pressedKeys.contains(GLFW_KEY_LEFT_SHIFT) || pressedKeys.contains(GLFW_KEY_RIGHT_SHIFT)) {
-					k = shiftMap.get(k);
+					k = KeyboardInput.shiftMap.get(k);
 				}
 				this.text += k;
 			}

@@ -169,7 +169,7 @@ public class Model {
 
 	public void create() {
 	}
-	
+
 	/**
 	 * Legacy method to load .obj file.
 	 * 
@@ -305,7 +305,8 @@ public class Model {
 				try {
 					Texture diffuseTexture = new Texture(loadImage(parentFilepath + diffusePath));
 					material.setTexture(diffuseTexture, TextureMaterial.DIFFUSE);
-				} catch (IOException e) {
+				}
+				catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
@@ -318,7 +319,8 @@ public class Model {
 				try {
 					Texture specularTexture = new Texture(loadImage(parentFilepath + specularPath));
 					material.setTexture(specularTexture, TextureMaterial.SPECULAR);
-				} catch (IOException e) {
+				}
+				catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
@@ -331,7 +333,8 @@ public class Model {
 				try {
 					Texture normalsTexture = new Texture(loadImage(parentFilepath + normalsPath));
 					material.setTexture(normalsTexture, TextureMaterial.NORMAL);
-				} catch (IOException e) {
+				}
+				catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
@@ -434,7 +437,7 @@ public class Model {
 
 	protected static void updateInstance(long ID) {
 		if (IDtoScene.get(ID) == null) {
-			System.err.println("Model Warning : Can't find model instance " + ID + " when updating");
+			System.err.println("Model: Can't find model instance " + ID + " when updating");
 		}
 		int scene = IDtoScene.get(ID);
 		Model model = IDtoModel.get(ID);
@@ -524,7 +527,7 @@ public class Model {
 		}
 		for (long ID : activeCollisionMeshes.get(scene)) {
 			if (!Model.modelInstanceIDs.contains(ID)) {
-				System.out.println("Model Warning : something is wrong with " + ID);
+				System.err.println("Model: something is wrong with " + ID);
 				continue;
 			}
 			Model model = IDtoModel.get(ID);
@@ -543,7 +546,7 @@ public class Model {
 		}
 		for (long ID : activeCollisionMeshes.get(scene)) {
 			if (!Model.modelInstanceIDs.contains(ID)) {
-				System.out.println("something is wrong " + ID);
+				System.err.println("Model: something is wrong " + ID);
 				continue;
 			}
 			Model model = IDtoModel.get(ID);
@@ -562,7 +565,7 @@ public class Model {
 		}
 		for (long ID : activeCollisionMeshes.get(scene)) {
 			if (!Model.modelInstanceIDs.contains(ID)) {
-				System.out.println("something is wrong " + ID);
+				System.err.println("Model: something is wrong " + ID);
 				continue;
 			}
 			Model model = IDtoModel.get(ID);

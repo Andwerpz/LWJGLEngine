@@ -80,6 +80,11 @@ public class Text extends UIElement {
 		this.init(GraphicsTools.calculateTextWidth(text, font), text, font, new Material(color));
 	}
 
+	public Text(float x, float y, String text, Font font, Material material, int scene) {
+		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
+		this.init(GraphicsTools.calculateTextWidth(text, font), text, font, material);
+	}
+
 	public Text(float x, float y, String text, Font font, int fontSize, Color color, int scene) {
 		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
 		Font derivedFont = FontUtils.deriveSize(fontSize, font);
@@ -100,11 +105,6 @@ public class Text extends UIElement {
 		super(x, y, z, 0, 0, new FilledRectangle(), scene);
 		Font derivedFont = FontUtils.deriveSize(fontSize, font);
 		this.init(width, text, derivedFont, new Material(color));
-	}
-
-	public Text(float x, float y, String text, Font font, Material material, int scene) {
-		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
-		this.init(GraphicsTools.calculateTextWidth(text, font), text, font, material);
 	}
 
 	private void init(float width, String text, Font font, Material material) {
@@ -135,11 +135,7 @@ public class Text extends UIElement {
 		this.contentHeight = this.textSampleAscent;
 		this.contentYOffset = this.textSampleDescent;
 
-		BufferedImage img = GraphicsTools.generateTextImage(text, font, Color.WHITE, (int) this.width);
-		Texture texture = new Texture(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
-		TextureMaterial textTextureMaterial = new TextureMaterial(texture);
-
-		this.setTextureMaterial(textTextureMaterial);
+		this.setTextureMaterial(new TextureMaterial(this.generateAlignedTexture()));
 		this.setMaterial(textMaterial);
 
 		this.setContentAlignmentStyle(ALIGN_LEFT, ALIGN_BOTTOM);
@@ -157,10 +153,12 @@ public class Text extends UIElement {
 
 	public void setBackgroundColor(Color c) {
 		this.backgroundColor = c;
+		this.setTextureMaterial(new TextureMaterial(this.generateAlignedTexture()));
 	}
 
 	public void setDrawBackground(boolean b) {
 		this.drawBackground = b;
+		this.setTextureMaterial(new TextureMaterial(this.generateAlignedTexture()));
 	}
 
 	public void setDoAntialiasing(boolean b) {

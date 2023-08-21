@@ -98,7 +98,7 @@ public abstract class UIElement extends Entity {
 	private float easingTargetXOffset, easingTargetYOffset;
 
 	protected int horizontalAlignContent, verticalAlignContent;
-	protected float x, y; //reference coordinates for drawing
+	protected float offsetX, offsetY; //x and y coordinates of the bottom left corner after frame offsets have been applied
 	protected float z; //needed as float for layering purposes
 
 	//dimensions of the frame
@@ -123,6 +123,7 @@ public abstract class UIElement extends Entity {
 	private float fillWidthMargin, fillHeightMargin;
 
 	//denotes the bottom left point of the bounding rectangle for this ui element, relative to the parent element's bottom left point
+	//after applying frame and content alignments. 
 	//we want this to be int as opposed to float to not get any weird interpixel sampling issues
 	//on ui elements that are constantly being resized tho, you might want them to remain as floats. 
 	protected float alignedX, alignedY;
@@ -138,6 +139,9 @@ public abstract class UIElement extends Entity {
 	protected boolean changedDimensions = false;
 	protected boolean changedRotationRads = false;
 	protected boolean changedContentDimensions = false;
+
+	//if true, will automatically kill any custom bounding rect when kill() is called on this ui element. 
+	protected boolean killCustomBoundingRect = true;
 
 	public UIElement(float xOffset, float yOffset, float z, float width, float height, int scene) {
 		this.init(xOffset, yOffset, z, width, height, FilledRectangle.DEFAULT_RECTANGLE, scene);
@@ -189,7 +193,7 @@ public abstract class UIElement extends Entity {
 		this.unbind();
 		uiElements.remove(this);
 
-		if (this.hasCustomBoundingRect) {
+		if (this.hasCustomBoundingRect && this.killCustomBoundingRect) {
 			this.boundingRect.kill();
 		}
 
@@ -262,6 +266,12 @@ public abstract class UIElement extends Entity {
 
 	public void easeFrameAlignmentOffset(float xOffset, float yOffset) {
 		//for now, we can cancel a current easing animation with a new one. 
+		//if we are currently in the middle of an easing animation, then we'll just snap to the end of it. 
+
+		if (this.isEasing) {
+			this.setFrameAlignmentOffset(this.easingTargetXOffset, this.easingTargetYOffset);
+			this.isEasing = false;
+		}
 
 		this.easingStartMillis = System.currentTimeMillis();
 		this.easingStartXOffset = this.getXOffset();
@@ -378,6 +388,10 @@ public abstract class UIElement extends Entity {
 		this.boundingRect.setTextureMaterial(m);
 	}
 
+	public void setKillCustomBoundingRect(boolean b) {
+		this.killCustomBoundingRect = b;
+	}
+
 	public static void alignAllUIElements() {
 		System.out.println("ALIGN ALL UI ELEMENTS");
 		for (UIElement i : UIElement.uiElements) {
@@ -400,37 +414,37 @@ public abstract class UIElement extends Entity {
 
 		switch (this.horizontalAlignFrame) {
 		case FROM_LEFT:
-			this.x = this.xOffset;
+			this.offsetX = this.xOffset;
 			break;
 
 		case FROM_RIGHT:
-			this.x = frameWidth - this.xOffset;
+			this.offsetX = frameWidth - this.xOffset;
 			break;
 
 		case FROM_CENTER_LEFT:
-			this.x = frameWidth / 2 - this.xOffset;
+			this.offsetX = frameWidth / 2 - this.xOffset;
 			break;
 
 		case FROM_CENTER_RIGHT:
-			this.x = frameWidth / 2 + this.xOffset;
+			this.offsetX = frameWidth / 2 + this.xOffset;
 			break;
 		}
 
 		switch (this.verticalAlignFrame) {
 		case FROM_BOTTOM:
-			this.y = this.yOffset;
+			this.offsetY = this.yOffset;
 			break;
 
 		case FROM_TOP:
-			this.y = frameHeight - this.yOffset;
+			this.offsetY = frameHeight - this.yOffset;
 			break;
 
 		case FROM_CENTER_BOTTOM:
-			this.y = frameHeight / 2 - this.yOffset;
+			this.offsetY = frameHeight / 2 - this.yOffset;
 			break;
 
 		case FROM_CENTER_TOP:
-			this.y = frameHeight / 2 + this.yOffset;
+			this.offsetY = frameHeight / 2 + this.yOffset;
 			break;
 		}
 	}
@@ -461,29 +475,29 @@ public abstract class UIElement extends Entity {
 
 		switch (this.horizontalAlignContent) {
 		case ALIGN_CENTER:
-			this.alignedX = (this.x - width / 2);
+			this.alignedX = (this.offsetX - width / 2);
 			break;
 
 		case ALIGN_RIGHT:
-			this.alignedX = (this.x - width);
+			this.alignedX = (this.offsetX - width);
 			break;
 
 		case ALIGN_LEFT:
-			this.alignedX = (this.x);
+			this.alignedX = (this.offsetX);
 			break;
 		}
 
 		switch (this.verticalAlignContent) {
 		case ALIGN_CENTER:
-			this.alignedY = (this.y - height / 2);
+			this.alignedY = (this.offsetY - height / 2);
 			break;
 
 		case ALIGN_TOP:
-			this.alignedY = (this.y - height);
+			this.alignedY = (this.offsetY - height);
 			break;
 
 		case ALIGN_BOTTOM:
-			this.alignedY = (this.y);
+			this.alignedY = (this.offsetY);
 			break;
 		}
 
@@ -524,6 +538,22 @@ public abstract class UIElement extends Entity {
 
 	public float getAlignedY() {
 		return this.alignedY;
+	}
+
+	public float getGlobalAlignedX() {
+		float ret = this.getAlignedX();
+		if (this.getParent() != null) {
+			ret += this.getParent().getGlobalAlignedX();
+		}
+		return ret;
+	}
+
+	public float getGlobalAlignedY() {
+		float ret = this.getAlignedY();
+		if (this.getParent() != null) {
+			ret += this.getParent().getGlobalAlignedY();
+		}
+		return ret;
 	}
 
 	//these should be absolute coordinates, (relative to the scene origin)

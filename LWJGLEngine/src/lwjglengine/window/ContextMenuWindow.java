@@ -14,6 +14,7 @@ import lwjglengine.scene.Scene;
 import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.UIElement;
 import myutils.v10.math.Vec3;
+import myutils.v10.math.Vec4;
 
 public class ContextMenuWindow extends BorderedWindow {
 
@@ -58,6 +59,8 @@ public class ContextMenuWindow extends BorderedWindow {
 			b.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 			b.setFillWidth(true);
 			b.setFillWidthMargin(0);
+			b.setHoveredMaterial(new Material(new Vec4(1, 1, 1, 0.5f)));
+			b.setPressedMaterial(new Material(new Vec4(1, 1, 1, 0.6f)));
 			b.bind(this.rootUIElement);
 
 			b.getButtonText().setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);

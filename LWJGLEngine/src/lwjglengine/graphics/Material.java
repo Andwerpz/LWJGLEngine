@@ -128,6 +128,10 @@ public class Material {
 		this.smoothness = s;
 	}
 
+	public void setShininess(float s) {
+		this.shininess = s;
+	}
+
 	public void setSpecularProbability(float s) {
 		this.specularProbability = s;
 	}
