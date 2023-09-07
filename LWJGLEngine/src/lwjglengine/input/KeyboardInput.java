@@ -78,6 +78,9 @@ public class KeyboardInput extends GLFWKeyCallback {
 
 	@Override
 	public void invoke(long window, int key, int scancode, int action, int mods) {
+		if(key == GLFW.GLFW_KEY_UNKNOWN) {
+			return;
+		}
 		if (action == GLFW_PRESS) {
 			Main.main.keyPressed(key);
 		}
