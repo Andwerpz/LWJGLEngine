@@ -69,6 +69,9 @@ public abstract class Screen {
 	}
 
 	public void render(Framebuffer outputBuffer) {
+		//maybe we should handle this externally, and just say that screens render to whatever viewport dimensions 
+		//are currently active. 
+		//but then, the textures bound to the screen have to match in size huh.. 
 		glViewport(0, 0, this.screenWidth, this.screenHeight);
 		this._render(outputBuffer);
 		glViewport(0, 0, Main.windowWidth, Main.windowHeight);

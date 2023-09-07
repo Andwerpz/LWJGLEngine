@@ -76,7 +76,12 @@ public class ObjectEditorWindow extends Window {
 	public ObjectEditorWindow(Object object, Window parentWindow) {
 		super(parentWindow);
 		this.init();
+		this.setObject(object);
+	}
 
+	public ObjectEditorWindow(Object object) {
+		super(null);
+		this.init();
 		this.setObject(object);
 	}
 
@@ -692,6 +697,9 @@ public class ObjectEditorWindow extends Window {
 			//call the setter. 
 			try {
 				setter.invoke(this.object, val);
+			}
+			catch (IllegalArgumentException e) {
+				e.printStackTrace();
 			}
 			catch (IllegalAccessException e) {
 				e.printStackTrace();

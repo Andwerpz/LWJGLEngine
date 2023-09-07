@@ -1,11 +1,20 @@
 package lwjglengine.window;
 
+import static org.lwjgl.opengl.GL11.glViewport;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
+
 import java.io.File;
 
 import lwjglengine.graphics.Framebuffer;
+import lwjglengine.graphics.Material;
+import lwjglengine.graphics.Shader;
 import lwjglengine.graphics.Texture;
 import lwjglengine.graphics.TextureMaterial;
+import lwjglengine.input.Input;
+import lwjglengine.input.ToggleButton;
+import lwjglengine.main.Main;
 import lwjglengine.model.FilledRectangle;
+import lwjglengine.screen.ScreenQuad;
 import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
@@ -15,13 +24,18 @@ import myutils.v11.file.FileUtils;
 public class TextureViewerWindow extends Window {
 
 	private UIScreen uiScreen;
-
 	private UISection uiSection;
-
-	private UIFilledRectangle textureDisplayRect;
 
 	private boolean shouldUnload = false;
 	private Texture texture;
+
+	private ToggleButton displayRedTb;
+	private ToggleButton displayGreenTb;
+	private ToggleButton displayBlueTb;
+	private ToggleButton displayAlphaTb;
+
+	private int displayWidth, displayHeight;
+	private int displayXOffset, displayYOffset;
 
 	public TextureViewerWindow(int xOffset, int yOffset, int width, int height, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
@@ -41,12 +55,37 @@ public class TextureViewerWindow extends Window {
 		this.uiSection.getBackgroundRect().bind(this.rootUIElement);
 		this.uiSection.getBackgroundRect().setFillWidth(true);
 		this.uiSection.getBackgroundRect().setFillHeight(true);
-		this.uiSection.getBackgroundRect().setMaterial(this.contentDefaultMaterial);
+		this.uiSection.getBackgroundRect().setMaterial(Material.transparent());
 
-		this.textureDisplayRect = new UIFilledRectangle(0, 0, 0, this.getWidth(), this.getHeight(), new FilledRectangle(), this.uiSection.getBackgroundScene());
-		this.textureDisplayRect.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_BOTTOM);
-		this.textureDisplayRect.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
-		this.textureDisplayRect.bind(this.uiSection.getBackgroundRect());
+		this.displayRedTb = new ToggleButton(5, 5, 100, 20, "tb_red", "Red", 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+		this.displayRedTb.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+		this.displayRedTb.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+		this.displayRedTb.getButtonText().setDoAntialiasing(false);
+		this.displayRedTb.setIsToggled(true);
+		this.displayRedTb.bind(this.uiSection.getBackgroundRect());
+
+		this.displayGreenTb = new ToggleButton(5, 30, 100, 20, "tb_green", "Green", 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+		this.displayGreenTb.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+		this.displayGreenTb.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+		this.displayGreenTb.getButtonText().setDoAntialiasing(false);
+		this.displayGreenTb.setIsToggled(true);
+		this.displayGreenTb.bind(this.uiSection.getBackgroundRect());
+
+		this.displayBlueTb = new ToggleButton(5, 55, 100, 20, "tb_blue", "Blue", 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+		this.displayBlueTb.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+		this.displayBlueTb.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+		this.displayBlueTb.getButtonText().setDoAntialiasing(false);
+		this.displayBlueTb.setIsToggled(true);
+		this.displayBlueTb.bind(this.uiSection.getBackgroundRect());
+
+		this.displayAlphaTb = new ToggleButton(5, 80, 100, 20, "tb_alpha", "Alpha", 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+		this.displayAlphaTb.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+		this.displayAlphaTb.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+		this.displayAlphaTb.getButtonText().setDoAntialiasing(false);
+		this.displayAlphaTb.setIsToggled(false);
+		this.displayAlphaTb.bind(this.uiSection.getBackgroundRect());
+
+		this.alignTextureDisplayRect();
 
 		this._resize();
 	}
@@ -57,7 +96,6 @@ public class TextureViewerWindow extends Window {
 	}
 
 	public void setTexture(Texture texture) {
-		this.textureDisplayRect.setTextureMaterial(TextureMaterial.defaultTextureMaterial());
 		if (this.shouldUnload) {
 			if (this.texture != null) {
 				this.texture.kill();
@@ -67,7 +105,6 @@ public class TextureViewerWindow extends Window {
 		this.shouldUnload = false;
 
 		this.texture = texture;
-		this.textureDisplayRect.setTextureMaterial(new TextureMaterial(this.texture));
 
 		this.alignTextureDisplayRect();
 	}
@@ -104,7 +141,11 @@ public class TextureViewerWindow extends Window {
 			rectHeight = (int) (textureAspectRatio * this.getWidth());
 		}
 
-		this.textureDisplayRect.setDimensions(rectWidth, rectHeight);
+		this.displayWidth = rectWidth;
+		this.displayHeight = rectHeight;
+
+		this.displayXOffset = (this.getWidth() - rectWidth) / 2;
+		this.displayYOffset = (this.getHeight() - rectHeight) / 2;
 	}
 
 	@Override
@@ -126,12 +167,25 @@ public class TextureViewerWindow extends Window {
 
 	@Override
 	protected void _update() {
-		// TODO Auto-generated method stub
-
+		this.uiSection.update();
 	}
 
 	@Override
 	protected void renderContent(Framebuffer outputBuffer) {
+		//first, render the 2d texture preview
+		if (this.texture != null) {
+			glViewport(this.displayXOffset, this.displayYOffset, this.displayWidth, this.displayHeight);
+			Shader.TEXTURE_DISPLAY.enable();
+			Shader.TEXTURE_DISPLAY.setUniform1i("display_red", this.displayRedTb.isToggled() ? 1 : 0);
+			Shader.TEXTURE_DISPLAY.setUniform1i("display_blue", this.displayBlueTb.isToggled() ? 1 : 0);
+			Shader.TEXTURE_DISPLAY.setUniform1i("display_green", this.displayGreenTb.isToggled() ? 1 : 0);
+			Shader.TEXTURE_DISPLAY.setUniform1i("display_alpha", this.displayAlphaTb.isToggled() ? 1 : 0);
+			this.texture.bind(GL_TEXTURE0);
+			outputBuffer.bind();
+			ScreenQuad.screenQuad.render();
+			glViewport(0, 0, Main.windowWidth, Main.windowHeight);
+		}
+
 		this.uiSection.render(outputBuffer, this.getWindowMousePos());
 	}
 
@@ -167,32 +221,27 @@ public class TextureViewerWindow extends Window {
 
 	@Override
 	protected void _mousePressed(int button) {
-		// TODO Auto-generated method stub
-
+		this.uiSection.mousePressed(button);
 	}
 
 	@Override
 	protected void _mouseReleased(int button) {
-		// TODO Auto-generated method stub
-
+		this.uiSection.mouseReleased(button);
 	}
 
 	@Override
 	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
-		// TODO Auto-generated method stub
-
+		this.uiSection.mouseScrolled(wheelOffset, smoothOffset);
 	}
 
 	@Override
 	protected void _keyPressed(int key) {
-		// TODO Auto-generated method stub
-
+		this.uiSection.keyPressed(key);
 	}
 
 	@Override
 	protected void _keyReleased(int key) {
-		// TODO Auto-generated method stub
-
+		this.uiSection.keyReleased(key);
 	}
 
 }
