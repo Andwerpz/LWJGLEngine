@@ -55,6 +55,11 @@ public class ModelViewerWindow extends BorderedWindow {
 		this.init();
 	}
 
+	public ModelViewerWindow(Window parentWindow) {
+		super(parentWindow);
+		this.init();
+	}
+
 	public ModelViewerWindow(Model model) {
 		super(0, 0, 300, 400, null);
 		this.init();
@@ -116,7 +121,35 @@ public class ModelViewerWindow extends BorderedWindow {
 			this.horizontalGridlines[i].setMaterial(new Material(new Vec3(102 / 255.0f)));
 		}
 
+		//enable context menu
+		this.setContextMenuRightClick(true);
+		String[] contextMenuActions = new String[] { "Load .obj File" };
+		this.setContextMenuActions(contextMenuActions);
+
 		this._resize();
+	}
+
+	@Override
+	public void handleContextMenuAction(String action) {
+		switch (action) {
+		case "Load .obj File": {
+			FileExplorerWindow fileExplorer = new FileExplorerWindow(this);
+			AdjustableWindow fileExplorerAdj = new AdjustableWindow("Select .obj File", fileExplorer, this);
+			fileExplorer.setSingleEntrySelection(true);
+			break;
+		}
+		}
+	}
+
+	@Override
+	public void handleFiles(File[] f) {
+		if (f.length != 1) {
+			System.err.println("ModelViewerWindow : File amount should only be 1");
+			return;
+		}
+
+		//size of array should be exactly 1
+		this.setModel(f[0]);
 	}
 
 	@Override
@@ -141,7 +174,9 @@ public class ModelViewerWindow extends BorderedWindow {
 		this.shouldUnload = false;
 		this.modelInstance = null;
 
-		if (this.model == null) {
+		if (model == null) {
+			System.err.println("Model is null");
+			System.exit(0);
 			return;
 		}
 

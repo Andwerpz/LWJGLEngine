@@ -31,7 +31,13 @@ public abstract class BorderedWindow extends Window {
 		super(xOffset, yOffset, width, height, parentWindow);
 
 		this.uiScreen = new UIScreen();
+		this.windowBorder = new ModelInstance[4];
+	}
 
+	public BorderedWindow(Window parentWindow) {
+		super(parentWindow);
+
+		this.uiScreen = new UIScreen();
 		this.windowBorder = new ModelInstance[4];
 	}
 

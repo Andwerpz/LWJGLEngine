@@ -39,7 +39,7 @@ public class ContextMenuWindow extends BorderedWindow {
 	private boolean shouldClose = false;
 
 	public ContextMenuWindow(ArrayList<String> options, Window callbackWindow) {
-		super((int) Main.getStateManagerWindow().getGlobalMousePos().x, (int) Main.getStateManagerWindow().getGlobalMousePos().y, 100, 100, Main.getStateManagerWindow());
+		super(0, 0, 100, 100, Main.getStateManagerWindow());
 
 		this.callbackWindow = callbackWindow;
 
@@ -73,34 +73,25 @@ public class ContextMenuWindow extends BorderedWindow {
 
 		this.setDimensions(width, height);
 
-		//make it so that mouse is at top left corner. 
-		this.setYOffset(this.getYOffset() - this.getHeight());
+		int mouseX = (int) Main.getStateManagerWindow().getGlobalMousePos().x;
+		int mouseY = (int) Main.getStateManagerWindow().getGlobalMousePos().y;
+
+		int blX = mouseX;
+		int blY = mouseY - this.getHeight(); //make it so that mouse is at top left corner. 
 
 		//first, clamp the bottom of the window to the screen. 
 		//Afterwards, we clamp the top, this makes it so that the top gets priority over the bottom
 
-		//clamp bottom 
-		int windowBottom = this.getGlobalYOffset();
-		if (windowBottom < 0) {
-			this.setYOffset(this.getYOffset() - windowBottom);
-		}
+		//clamp bottom
+		blY = Math.max(0, blY);
 
 		//clamp top
-		int adjXOffset = this.getXOffset();
-		int adjYOffset = this.getYOffset();
-
-		int windowTop = this.getGlobalYOffset() + this.getHeight();
-		if (windowTop > Main.windowHeight) {
-			adjYOffset += Main.windowHeight - windowTop;
-		}
+		blY = Math.min(Main.windowHeight - this.getHeight(), blY);
 
 		//clamp right
-		int windowRight = this.getGlobalXOffset() + this.getWidth();
-		if (windowRight > Main.windowWidth) {
-			adjXOffset += Main.windowWidth - windowRight;
-		}
+		blX = Math.min(Main.windowWidth - this.getWidth(), blX);
 
-		this.setOffset(adjXOffset, adjYOffset);
+		this.setBottomLeftCoords(blX, blY);
 
 		//this is kinda jank, because it violates the principle that only one window can be selected at a time.
 		//it is required that this window is initially selected tho, because we want to know if the user clicked away from it. 

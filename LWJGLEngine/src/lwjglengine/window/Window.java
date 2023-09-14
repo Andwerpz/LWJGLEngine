@@ -48,14 +48,14 @@ public abstract class Window {
 	// - drop shadow?
 	// - force select a window?
 
+	//all these alignments will just align the nearest edge with the side of the parent window
 	public static final int FROM_LEFT = 0;
 	public static final int FROM_RIGHT = 1;
 	public static final int FROM_TOP = 2;
 	public static final int FROM_BOTTOM = 3;
-	public static final int FROM_CENTER_LEFT = 4;
-	public static final int FROM_CENTER_RIGHT = 5;
-	public static final int FROM_CENTER_TOP = 6;
-	public static final int FROM_CENTER_BOTTOM = 7;
+
+	private static int defaultHorizontalAlignmentStyle = FROM_LEFT;
+	private static int defaultVerticalAlignmentStyle = FROM_TOP;
 
 	//for now, keep all of the generic window materials here. 
 	//TODO make this better. perhaps put this into a seperate 'constants' class. 
@@ -147,8 +147,8 @@ public abstract class Window {
 		this.globalXOffset = xOffset;
 		this.globalYOffset = yOffset;
 
-		this.horizontalAlignStyle = FROM_LEFT;
-		this.verticalAlignStyle = FROM_BOTTOM;
+		this.horizontalAlignStyle = defaultHorizontalAlignmentStyle;
+		this.verticalAlignStyle = defaultVerticalAlignmentStyle;
 
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
@@ -171,8 +171,8 @@ public abstract class Window {
 		this.globalXOffset = xOffset;
 		this.globalYOffset = yOffset;
 
-		this.horizontalAlignStyle = FROM_LEFT;
-		this.verticalAlignStyle = FROM_BOTTOM;
+		this.horizontalAlignStyle = defaultHorizontalAlignmentStyle;
+		this.verticalAlignStyle = defaultVerticalAlignmentStyle;
 
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
@@ -195,8 +195,8 @@ public abstract class Window {
 		this.globalXOffset = 0;
 		this.globalYOffset = 0;
 
-		this.horizontalAlignStyle = FROM_LEFT;
-		this.verticalAlignStyle = FROM_BOTTOM;
+		this.horizontalAlignStyle = defaultHorizontalAlignmentStyle;
+		this.verticalAlignStyle = defaultVerticalAlignmentStyle;
 
 		this.xOffset = 0;
 		this.yOffset = 0;
@@ -244,6 +244,7 @@ public abstract class Window {
 	public void setAlignmentStyle(int horizontal, int vertical) {
 		this.horizontalAlignStyle = horizontal;
 		this.verticalAlignStyle = vertical;
+		this.align();
 	}
 
 	private void resize(int width, int height) {
@@ -419,15 +420,7 @@ public abstract class Window {
 			break;
 
 		case FROM_RIGHT:
-			this.alignedX = parentWidth - this.xOffset;
-			break;
-
-		case FROM_CENTER_LEFT:
-			this.alignedX = parentWidth / 2 - this.xOffset;
-			break;
-
-		case FROM_CENTER_RIGHT:
-			this.alignedX = parentWidth / 2 + this.xOffset;
+			this.alignedX = parentWidth - this.xOffset - this.width;
 			break;
 		}
 
@@ -437,15 +430,7 @@ public abstract class Window {
 			break;
 
 		case FROM_TOP:
-			this.alignedY = parentHeight - this.yOffset;
-			break;
-
-		case FROM_CENTER_BOTTOM:
-			this.alignedY = parentHeight / 2 - this.yOffset;
-			break;
-
-		case FROM_CENTER_TOP:
-			this.alignedY = parentHeight / 2 + this.yOffset;
+			this.alignedY = parentHeight - this.yOffset - this.height;
 			break;
 		}
 
@@ -470,6 +455,14 @@ public abstract class Window {
 
 	public int getYOffset() {
 		return this.yOffset;
+	}
+
+	public int getHorizontalAlignmentStyle() {
+		return this.horizontalAlignStyle;
+	}
+
+	public int getVerticalAlignmentStyle() {
+		return this.verticalAlignStyle;
 	}
 
 	public int getGlobalXOffset() {
@@ -526,6 +519,50 @@ public abstract class Window {
 		this.align();
 	}
 
+	public void setBottomLeftX(int x) {
+		this.setBottomLeftCoords(x, this.alignedY);
+	}
+
+	public void setBottomLeftY(int y) {
+		this.setBottomLeftCoords(this.alignedX, y);
+	}
+
+	//computes what offsets are required to achieve these aligned coordinates with the given alignment settings
+	public void setBottomLeftCoords(int x, int y) {
+		int rxOffset = 0;
+		int ryOffset = 0;
+
+		int parentWidth = Main.windowWidth;
+		int parentHeight = Main.windowHeight;
+
+		if (this.parentWindow != null) {
+			parentWidth = this.parentWindow.getWidth();
+			parentHeight = this.parentWindow.getHeight();
+		}
+
+		switch (this.horizontalAlignStyle) {
+		case Window.FROM_LEFT:
+			rxOffset = x;
+			break;
+
+		case Window.FROM_RIGHT:
+			rxOffset = parentWidth - x - this.width;
+			break;
+		}
+
+		switch (this.verticalAlignStyle) {
+		case Window.FROM_BOTTOM:
+			ryOffset = y;
+			break;
+
+		case Window.FROM_TOP:
+			ryOffset = parentHeight - y - this.height;
+			break;
+		}
+
+		this.setOffset(rxOffset, ryOffset);
+	}
+
 	private void updateGlobalOffset() {
 		this.globalXOffset = this.alignedX;
 		this.globalYOffset = this.alignedY;
@@ -541,7 +578,7 @@ public abstract class Window {
 	}
 
 	/**
-	 * Returns where the mouse is relative to the top left corner of the window
+	 * Returns where the mouse is relative to the bottom left corner of the window
 	 * @return
 	 */
 	public Vec2 getWindowMousePos() {

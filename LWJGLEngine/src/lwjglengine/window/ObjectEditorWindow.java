@@ -85,13 +85,6 @@ public class ObjectEditorWindow extends Window {
 		this.setObject(object);
 	}
 
-	public ObjectEditorWindow(Object object) {
-		super(null);
-		this.init();
-		
-		this.setObject(object);
-	}
-
 	private void init() {
 		this.uiScreen = new UIScreen();
 		this.uiSection = new UISection(0, 0, this.getWidth(), this.getHeight(), this.uiScreen);

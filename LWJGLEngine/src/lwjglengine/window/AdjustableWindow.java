@@ -83,6 +83,7 @@ public class AdjustableWindow extends BorderedWindow {
 	private boolean bottomEdgeGrabbed = false;
 	private boolean topEdgeGrabbed = false;
 
+	//are these variables unused??
 	protected boolean allowInputIfContentNotSelected = false;
 	protected boolean allowUpdateIfContentNotSelected = true;
 	protected boolean allowRenderIfContentNotSelected = true;
@@ -92,18 +93,26 @@ public class AdjustableWindow extends BorderedWindow {
 
 	private boolean isFullscreen = false;
 
+	//whether or not the user can resize this window,
+	//more specifically, this just enables and disables the ability to grab onto an edge of the window. 
+	private boolean allowManualResizing = true;
+
 	public AdjustableWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window contentWindow, Window parentWindow) {
-		super(xOffset, yOffset - (contentHeight + titleBarHeight), contentWidth, contentHeight + titleBarHeight, parentWindow);
+		super(xOffset, yOffset, contentWidth, contentHeight + titleBarHeight, parentWindow);
 		this.init(contentWindow, title);
 	}
 
 	public AdjustableWindow(String title, Window contentWindow, Window parentWindow) {
-		super(contentWindow.getXOffset(), contentWindow.getYOffset() - titleBarHeight, contentWindow.getWidth(), contentWindow.getHeight() + titleBarHeight, parentWindow);
+		super(0, 0, contentWindow.getWidth(), contentWindow.getHeight() + titleBarHeight, parentWindow);
+		this.setOffset(contentWindow.getXOffset(), contentWindow.getYOffset());
+		this.setAlignmentStyle(contentWindow.getHorizontalAlignmentStyle(), contentWindow.getVerticalAlignmentStyle());
 		this.init(contentWindow, title);
 	}
 
 	public AdjustableWindow(Window contentWindow, Window parentWindow) {
-		super(contentWindow.getXOffset(), contentWindow.getYOffset() - titleBarHeight, contentWindow.getWidth(), contentWindow.getHeight() + titleBarHeight, parentWindow);
+		super(0, 0, contentWindow.getWidth(), contentWindow.getHeight() + titleBarHeight, parentWindow);
+		this.setOffset(contentWindow.getXOffset(), contentWindow.getYOffset());
+		this.setAlignmentStyle(contentWindow.getHorizontalAlignmentStyle(), contentWindow.getVerticalAlignmentStyle());
 		this.init(contentWindow, contentWindow.getDefaultTitle());
 	}
 
@@ -112,7 +121,8 @@ public class AdjustableWindow extends BorderedWindow {
 		this.contentWindow.setParent(this);
 
 		this.contentWindow.setDimensions(contentWidth, contentHeight);
-		this.contentWindow.setOffset(0, 0);
+		this.contentWindow.setAlignmentStyle(Window.FROM_LEFT, Window.FROM_BOTTOM);
+		this.contentWindow.setBottomLeftCoords(0, 0);
 
 		this.setAllowModifyingChildren(false);
 
@@ -241,6 +251,14 @@ public class AdjustableWindow extends BorderedWindow {
 		}
 	}
 
+	public void setAllowManualResizing(boolean b) {
+		this.allowManualResizing = b;
+	}
+
+	public boolean allowManualResizing() {
+		return this.allowManualResizing;
+	}
+
 	@Override
 	protected void _update() {
 		//check if should close
@@ -258,14 +276,14 @@ public class AdjustableWindow extends BorderedWindow {
 			int newWidth = this.getWidth();
 			int newHeight = this.getHeight();
 
-			int newXOffset = this.getXOffset();
-			int newYOffset = this.getYOffset();
+			int newXOffset = this.getAlignedX();
+			int newYOffset = this.getAlignedY();
 			if (this.leftEdgeGrabbed) {
 				newXOffset += mouseX;
 				newWidth -= mouseX;
 				if (newWidth < this.minWidth) {
 					newWidth = this.minWidth;
-					newXOffset = this.getXOffset() - (this.minWidth - this.getWidth());
+					newXOffset = this.getAlignedX() - (this.minWidth - this.getWidth());
 				}
 			}
 			if (this.rightEdgeGrabbed) {
@@ -277,7 +295,7 @@ public class AdjustableWindow extends BorderedWindow {
 				newHeight -= mouseY;
 				if (newHeight < this.minHeight) {
 					newHeight = this.minHeight;
-					newYOffset = this.getYOffset() - (this.minHeight - this.getHeight());
+					newYOffset = this.getAlignedY() - (this.minHeight - this.getHeight());
 				}
 			}
 			if (this.topEdgeGrabbed) {
@@ -288,8 +306,8 @@ public class AdjustableWindow extends BorderedWindow {
 			if (newWidth != this.getWidth() || newHeight != this.getHeight()) {
 				this.setDimensions(newWidth, newHeight);
 			}
-			if (newXOffset != this.getXOffset() || newYOffset != this.getYOffset()) {
-				this.setOffset(newXOffset, newYOffset);
+			if (newXOffset != this.getAlignedX() || newYOffset != this.getAlignedY()) {
+				this.setBottomLeftCoords(newXOffset, newYOffset);
 			}
 		}
 
@@ -331,10 +349,10 @@ public class AdjustableWindow extends BorderedWindow {
 							}
 
 							//check if mouse is inside this window
-							int left = w.getXOffset();
-							int right = w.getXOffset() + w.getWidth();
-							int bottom = w.getYOffset();
-							int top = w.getYOffset() + w.getHeight();
+							int left = w.getAlignedX();
+							int right = w.getAlignedX() + w.getWidth();
+							int bottom = w.getAlignedY();
+							int top = w.getAlignedY() + w.getHeight();
 							if (left <= pMouseX && pMouseX <= right && bottom <= pMouseY && pMouseY <= top) {
 								foundNewParent = true;
 								curParent = w;
@@ -351,21 +369,21 @@ public class AdjustableWindow extends BorderedWindow {
 			int mouseX = (int) this.getWindowMousePosClampedToParentWindow().x;
 			int mouseY = (int) this.getWindowMousePosClampedToParentWindow().y;
 
-			int newXOffset = this.getXOffset() + (mouseX - this.titleBarGrabMouseX);
-			int newYOffset = this.getYOffset() + (mouseY - this.titleBarGrabMouseY);
-			this.setOffset(newXOffset, newYOffset);
+			int newXOffset = this.getAlignedX() + (mouseX - this.titleBarGrabMouseX);
+			int newYOffset = this.getAlignedY() + (mouseY - this.titleBarGrabMouseY);
+			this.setBottomLeftCoords(newXOffset, newYOffset);
 		}
 
 		//check if top of window goes above content portion of parent screen. If so, clamp window top to top of content. 
 		{
-			int windowTop = this.getYOffset() + this.getHeight();
+			int windowTop = this.getAlignedY() + this.getHeight();
 			int parentHeight = this.parentWindow.getHeight();
 			if (this.parentWindow instanceof AdjustableWindow) {
 				parentHeight = ((AdjustableWindow) this.parentWindow).getContentHeight();
 			}
 			if (windowTop > parentHeight) {
 				int diff = parentHeight - windowTop;
-				this.setYOffset(this.getYOffset() + diff);
+				this.setBottomLeftY(this.getAlignedY() + diff);
 			}
 		}
 	}
@@ -457,10 +475,17 @@ public class AdjustableWindow extends BorderedWindow {
 		Input.inputsPressed(this.titleBarSceneMouseEntityID, TITLE_BAR_SELECTION_SCENE);
 
 		//check if should grab the edge
-		this.leftEdgeGrabbed = this.canGrabLeftEdge();
-		this.rightEdgeGrabbed = this.canGrabRightEdge();
-		this.bottomEdgeGrabbed = this.canGrabBottomEdge();
-		this.topEdgeGrabbed = this.canGrabTopEdge();
+		this.leftEdgeGrabbed = false;
+		this.rightEdgeGrabbed = false;
+		this.bottomEdgeGrabbed = false;
+		this.topEdgeGrabbed = false;
+
+		if (this.allowManualResizing()) {
+			this.leftEdgeGrabbed = this.canGrabLeftEdge();
+			this.rightEdgeGrabbed = this.canGrabRightEdge();
+			this.bottomEdgeGrabbed = this.canGrabBottomEdge();
+			this.topEdgeGrabbed = this.canGrabTopEdge();
+		}
 
 		//next, check if should grab the title
 		if (!(this.leftEdgeGrabbed || this.rightEdgeGrabbed || this.bottomEdgeGrabbed || this.topEdgeGrabbed)) {

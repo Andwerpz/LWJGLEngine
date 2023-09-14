@@ -92,7 +92,7 @@ public class ProjectAssetViewerWindow extends Window {
 		this.topBarWindow.setEntryHeightPx(this.topBarHeightPx);
 
 		this.topBarWindow.setAlignmentStyle(Window.FROM_LEFT, Window.FROM_TOP);
-		this.topBarWindow.setOffset(0, topBarHeightPx);
+		this.topBarWindow.setBottomLeftCoords(0, topBarHeightPx);
 
 		ArrayList<String> options = new ArrayList<>();
 		options.add(STATE_STR);
@@ -223,7 +223,7 @@ public class ProjectAssetViewerWindow extends Window {
 			this.topBarWindow.setHeight(this.topBarHeightPx);
 			this.topBarWindow.setWidth(this.getWidth());
 
-			this.topBarWindow.setXOffset(this.getWidth());
+			this.topBarWindow.setBottomLeftX(this.getWidth());
 		}
 		else {
 			this.contentWindow.setHeight(this.getHeight() - this.topBarHeightPx);
@@ -232,7 +232,7 @@ public class ProjectAssetViewerWindow extends Window {
 			this.topBarWindow.setHeight(this.topBarHeightPx);
 			this.topBarWindow.setWidth(this.getWidth());
 
-			this.topBarWindow.setXOffset(0);
+			this.topBarWindow.setBottomLeftX(0);
 		}
 
 	}

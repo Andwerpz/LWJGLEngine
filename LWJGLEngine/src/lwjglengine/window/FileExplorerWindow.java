@@ -28,6 +28,9 @@ import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
 
 public class FileExplorerWindow extends Window {
+	//this class handles the interactions with navigating directories, it delegates displaying the contents of a directory
+	//and selecting to the list viewer class. 
+
 	//TODO 
 	// - figure out how other things are going to call this one, and retrieve the submitted file
 	// - qol
@@ -98,7 +101,7 @@ public class FileExplorerWindow extends Window {
 	private ListViewerWindow folderWindow;
 
 	public FileExplorerWindow(Window callbackWindow) {
-		super(0, 0, 300, 400, null);
+		super(0, 0, 400, 300, null);
 
 		this.callbackWindow = callbackWindow;
 
@@ -168,7 +171,7 @@ public class FileExplorerWindow extends Window {
 		this.folderWindow.setDisplaySelectedEntryOnTopBar(true);
 		this.folderWindow.setSubmitOnClickingSelectedListEntry(true);
 		this.folderWindow.setSortEntries(true);
-		this.folderWindow.setAllowInputWhenNotSelected(true);
+		this.folderWindow.setAllowInputWhenNotSelected(false);
 		this.folderWindow.setRenderTopBar(false);
 		this.folderWindow.setCloseOnSubmit(false);
 
@@ -222,7 +225,7 @@ public class FileExplorerWindow extends Window {
 			this.folderWindow.setWidth(this.getWidth() - this.directoryWidth);
 			this.folderWindow.setHeight(this.getHeight() - topBarHeight - bottomBarHeight);
 
-			this.folderWindow.setOffset(this.directoryWidth, bottomBarHeight);
+			this.folderWindow.setBottomLeftCoords(this.directoryWidth, bottomBarHeight);
 		}
 
 		if (this.directoryRect != null) {
@@ -316,7 +319,7 @@ public class FileExplorerWindow extends Window {
 		int minYOffset = 0;
 		int maxYOffset = (int) (directoryEntryTotalHeight - this.directoryRect.getHeight());
 		maxYOffset = Math.max(maxYOffset, 0);
-		this.directoryYOffset = (int) MathUtils.clamp(minYOffset, maxYOffset, newYOffset);
+		this.directoryYOffset = MathUtils.clamp(minYOffset, maxYOffset, newYOffset);
 
 		this.rootDirectoryEntry.align(-this.directoryYOffset);
 	}
@@ -374,7 +377,7 @@ public class FileExplorerWindow extends Window {
 		int numAbove = this.selectedDirectoryEntry.getOrder();
 		int maxYOffset = numAbove * entryHeight;
 		int minYOffset = maxYOffset - (int) this.directoryRect.getHeight() + entryHeight;
-		this.setDirectoryYOffset((int) (MathUtils.clamp(minYOffset, maxYOffset, this.directoryYOffset)));
+		this.setDirectoryYOffset((MathUtils.clamp(minYOffset, maxYOffset, this.directoryYOffset)));
 
 		//populate list window with files
 		File[] files = FileUtils.getAllFilesFromDirectory(e.getPath());
