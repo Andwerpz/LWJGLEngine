@@ -138,7 +138,7 @@ public class TextureViewerWindow extends Window {
 		else {
 			//window is width limited
 			rectWidth = this.getWidth();
-			rectHeight = (int) (textureAspectRatio * this.getWidth());
+			rectHeight = (int) (this.getWidth() / textureAspectRatio);
 		}
 
 		this.displayWidth = rectWidth;

@@ -175,8 +175,6 @@ public class ModelViewerWindow extends BorderedWindow {
 		this.modelInstance = null;
 
 		if (model == null) {
-			System.err.println("Model is null");
-			System.exit(0);
 			return;
 		}
 
