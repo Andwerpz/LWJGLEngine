@@ -21,6 +21,7 @@ import myutils.v10.math.Vec3;
 
 public class PerspectiveScreen extends Screen {
 	// renders the scene with a perspective projection matrix.
+	// uses traditional blinn-phong shading. 
 
 	//TODO move shininess out of the alpha channel, and add emissiveness buffer so we can do full bright particles. 
 	//actually, we can do full bright particles by just moving particle rendering after the lighting step. 
@@ -33,7 +34,6 @@ public class PerspectiveScreen extends Screen {
 
 	private int playermodel_scene;
 	private boolean renderPlayermodel = false;
-	private float playermodelFOV;
 	private Framebuffer playermodelBuffer;
 
 	private int particle_scene;
@@ -42,7 +42,8 @@ public class PerspectiveScreen extends Screen {
 	private static final int SHADOW_MAP_NR_CASCADES = 7;
 	private static float[] shadowCascades = new float[] { NEAR, 1, 3, 7, 15, 30, 100, FAR };
 
-	private float worldFOV;
+	private float playermodelFOV = 50f;
+	private float worldFOV = 90f;
 
 	private Framebuffer geometryBuffer;
 	private Framebuffer lightingBuffer;
@@ -69,7 +70,12 @@ public class PerspectiveScreen extends Screen {
 	private boolean renderDecals = false;
 
 	public PerspectiveScreen() {
+		Vec3 cameraPos = new Vec3();
+		Vec3 cameraFacing = new Vec3(0, 0, -1);
 
+		this.camera = new Camera((float) Math.toRadians(this.worldFOV), this.screenWidth, this.screenHeight, NEAR, FAR);
+		this.camera.setPos(cameraPos);
+		this.camera.setFacing(cameraFacing);
 	}
 
 	@Override
@@ -146,22 +152,6 @@ public class PerspectiveScreen extends Screen {
 		this.skyboxBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.skyboxColorMap.getID());
 		this.skyboxBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.skyboxBuffer.isComplete();
-
-		this.worldFOV = 90f;
-
-		Vec3 cameraPos = new Vec3();
-		Vec3 cameraFacing = new Vec3(0, 0, -1);
-
-		if (this.camera != null) {
-			cameraPos = this.camera.getPos();
-			cameraFacing = this.camera.getFacing();
-		}
-
-		this.camera = new Camera((float) Math.toRadians(this.worldFOV), this.screenWidth, this.screenHeight, NEAR, FAR);
-		this.camera.setPos(cameraPos);
-		this.camera.setFacing(cameraFacing);
-
-		this.playermodelFOV = 50f;
 	}
 
 	private void setCameraFOV(float degrees) {
@@ -256,7 +246,7 @@ public class PerspectiveScreen extends Screen {
 			Shader.DECAL.enable();
 			Shader.DECAL.setUniformMat4("pr_matrix", camera.getProjectionMatrix());
 			Shader.DECAL.setUniformMat4("vw_matrix", camera.getViewMatrix());
-			this.geometryPositionMap.bind(GL_TEXTURE4);
+			this.geometryPositionMap.bind(GL_TEXTURE5);
 			Model.renderModels(this.decal_scene);
 
 			glDisable(GL_BLEND);
@@ -473,7 +463,7 @@ public class PerspectiveScreen extends Screen {
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_ONE);
 
-			this.geometryPositionMap.bind(GL_TEXTURE4);
+			this.geometryPositionMap.bind(GL_TEXTURE5);
 
 			Shader.PARTICLE.enable();
 			this.setCameraFOV(this.worldFOV);

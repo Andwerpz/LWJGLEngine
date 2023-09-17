@@ -9,7 +9,6 @@ layout (location = 5) in mat4 md_matrix;
 uniform mat4 pr_matrix;
 uniform mat4 vw_matrix;
 
-void main()
-{
+void main() {
     gl_Position = pr_matrix * vw_matrix * md_matrix * vec4(pos, 1.0);
 }

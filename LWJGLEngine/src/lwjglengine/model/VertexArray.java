@@ -228,15 +228,18 @@ public class VertexArray {
 		glEnableVertexAttribArray(INSTANCED_COLOR_ATTRIB);
 
 		glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
-		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 0, 4, GL_FLOAT, false, 9 * 4, 0); // diffuse : 4 floats
-		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 1, 4, GL_FLOAT, false, 9 * 4, 16); // specular : 4 floats
-		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 2, 1, GL_FLOAT, false, 9 * 4, 32); // shininess : 1 float
+		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 0, 4, GL_FLOAT, false, 16 * 4, 0); // diffuse : 4 floats
+		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 1, 4, GL_FLOAT, false, 16 * 4, 16); // specular : 4 floats
+		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 2, 4, GL_FLOAT, false, 16 * 4, 32); // specular exponent, roughness, metallic, specular probability : 4 floats
+		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 3, 4, GL_FLOAT, false, 16 * 4, 48); // emissive : 4 floats
 		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 0, 1);
 		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 1, 1);
 		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 2, 1);
+		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 3, 1);
 		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 0);
 		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 1);
 		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 2);
+		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 3);
 
 		glBindVertexArray(0);
 	}

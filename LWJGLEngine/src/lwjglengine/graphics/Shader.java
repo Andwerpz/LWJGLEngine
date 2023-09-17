@@ -13,9 +13,10 @@ import myutils.v10.math.Vec3;
 public class Shader {
 
 	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS;
-	public static Shader IMG_POST_PROCESS, SPLASH, OVERWRITE_ALPHA, DECAL, RENDER_BUFFER;
-	public static Shader PARTICLE, RAYTRACING, RAYTRACING_HDR, RAYTRACING_EXTRACT_BLOOM;
+	public static Shader IMG_POST_PROCESS, SPLASH, OVERWRITE_ALPHA, RENDER_BUFFER;
+	public static Shader RAYTRACING, RAYTRACING_HDR, RAYTRACING_EXTRACT_BLOOM;
 	public static Shader GAUSSIAN_BLUR, RENDER_ALPHA, TEXTURE3D_DISPLAY, TEXTURE_DISPLAY;
+	public static Shader PARTICLE, DECAL;
 
 	private boolean enabled = false;
 
@@ -48,8 +49,9 @@ public class Shader {
 
 		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
 		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
-		Shader.GEOMETRY.setUniform1i("tex_normal", 2);
-		Shader.GEOMETRY.setUniform1i("tex_displacement", 3);
+		Shader.GEOMETRY.setUniform1i("tex_shininess", 2);
+		Shader.GEOMETRY.setUniform1i("tex_normal", 3);
+		Shader.GEOMETRY.setUniform1i("tex_displacement", 4);
 		Shader.GEOMETRY.setUniform1i("enableParallaxMapping", 0);
 		Shader.GEOMETRY.setUniform1i("enableTexScaling", 1);
 
@@ -77,15 +79,17 @@ public class Shader {
 
 		Shader.DECAL.setUniform1i("tex_diffuse", 0);
 		Shader.DECAL.setUniform1i("tex_specular", 1);
-		Shader.DECAL.setUniform1i("tex_normal", 2);
-		Shader.DECAL.setUniform1i("tex_displacement", 3);
-		Shader.DECAL.setUniform1i("tex_position", 4);
+		Shader.DECAL.setUniform1i("tex_shininess", 2);
+		Shader.DECAL.setUniform1i("tex_normal", 3);
+		Shader.DECAL.setUniform1i("tex_displacement", 4);
+		Shader.DECAL.setUniform1i("tex_position", 5);
 
 		Shader.PARTICLE.setUniform1i("tex_diffuse", 0);
 		Shader.PARTICLE.setUniform1i("tex_specular", 1);
-		Shader.PARTICLE.setUniform1i("tex_normal", 2);
-		Shader.PARTICLE.setUniform1i("tex_displacement", 3);
-		Shader.PARTICLE.setUniform1i("tex_pos", 4);
+		Shader.PARTICLE.setUniform1i("tex_shininess", 2);
+		Shader.PARTICLE.setUniform1i("tex_normal", 3);
+		Shader.PARTICLE.setUniform1i("tex_displacement", 4);
+		Shader.PARTICLE.setUniform1i("tex_pos", 5);
 		Shader.PARTICLE.setUniform1i("enableParallaxMapping", 0);
 		Shader.PARTICLE.setUniform1i("enableTexScaling", 1);
 

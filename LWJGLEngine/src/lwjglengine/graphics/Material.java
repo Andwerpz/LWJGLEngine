@@ -10,14 +10,16 @@ import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;
 
 public class Material {
+	//generally, these material attributes will just scale whatever attributes the texture has. 
+
 	private Vec4 diffuse; //RGBA
 	private Vec4 specular; //Reflection RGB,
 	private Vec4 emissive; //xyz = emissive rgb, a = strength 
 
-	private float shininess; // also known as specular exponent
-	private float smoothness = 0; //between 0 and 1, 0 is like ceramic, and 1 is mirror
-	private float specularProbability = 0; //between 0 and 1, probability of ray bouncing specularly off of the surface. 
-	private float metallic = 0; //0 is not metal (dielectric) and 1 is metal
+	private float specularExponent = 64f;
+	private float roughness = 1; //between 0 and 1, 0 is like mirror, and 1 is ceramic
+	private float specularProbability = 1; //between 0 and 1, probability of ray bouncing specularly off of the surface. 
+	private float metalness = 1; //0 is not metal (dielectric) and 1 is metal
 
 	public static Material defaultMaterial() {
 		return new Material(new Vec3(1f), new Vec3(1), 64f);
@@ -31,8 +33,8 @@ public class Material {
 		this.diffuse = new Vec4(m.diffuse);
 		this.specular = new Vec4(m.specular);
 		this.emissive = new Vec4(m.emissive);
-		this.shininess = m.shininess;
-		this.smoothness = m.smoothness;
+		this.specularExponent = m.specularExponent;
+		this.roughness = m.roughness;
 		this.specularProbability = m.specularProbability;
 	}
 
@@ -40,52 +42,52 @@ public class Material {
 		this.diffuse = new Vec4(diffuse, 1);
 		this.specular = new Vec4(1);
 		this.emissive = new Vec4(0);
-		this.shininess = 64f;
+		this.specularExponent = 64f;
 	}
 
 	public Material(Vec4 diffuse) {
 		this.diffuse = new Vec4(diffuse);
 		this.specular = new Vec4(1);
 		this.emissive = new Vec4(0);
-		this.shininess = 64f;
+		this.specularExponent = 64f;
 	}
 
 	public Material(Color diffuse) {
 		this.diffuse = new Vec4(diffuse.getRed() / 255f, diffuse.getGreen() / 255f, diffuse.getBlue() / 255f, 1);
 		this.specular = new Vec4(1);
 		this.emissive = new Vec4(0);
-		this.shininess = 64f;
+		this.specularExponent = 64f;
 	}
 
-	public Material(Vec3 diffuse, Vec3 specular, float shininess) {
+	public Material(Vec3 diffuse, Vec3 specular, float specularExponent) {
 		this.diffuse = new Vec4(diffuse, 1);
 		this.specular = new Vec4(specular, 1);
 		this.emissive = new Vec4(0);
-		this.shininess = shininess;
+		this.specularExponent = specularExponent;
 	}
 
-	public Material(Vec4 diffuse, Vec4 specular, float shininess) {
+	public Material(Vec4 diffuse, Vec4 specular, float specularExponent) {
 		this.diffuse = new Vec4(diffuse);
 		this.specular = new Vec4(specular);
 		this.emissive = new Vec4(0);
-		this.shininess = shininess;
+		this.specularExponent = specularExponent;
 	}
 
-	public Material(AIColor4D diffuse, AIColor4D specular, AIColor4D shininess) {
+	public Material(AIColor4D diffuse, AIColor4D specular, AIColor4D specularExponent) {
 		this.diffuse = new Vec4(diffuse.r(), diffuse.g(), diffuse.b(), diffuse.a());
 		this.specular = new Vec4(specular.r(), specular.g(), specular.b(), specular.a());
 		this.emissive = new Vec4(0);
-		this.shininess = shininess.r();
+		this.specularExponent = specularExponent.r();
 	}
 
 	public void set(Material m) {
 		this.diffuse.set(m.getDiffuse());
 		this.specular.set(m.getSpecular());
 		this.emissive.set(m.getEmissive());
-		this.shininess = m.getShininess();
-		this.smoothness = m.getSmoothness();
+		this.specularExponent = m.getSpecularExponent();
+		this.roughness = m.getRoughness();
 		this.specularProbability = m.getSpecularProbability();
-		this.metallic = m.getMetallic();
+		this.metalness = m.getMetalness();
 	}
 
 	public Vec4 getDiffuse() {
@@ -96,12 +98,12 @@ public class Material {
 		return this.specular;
 	}
 
-	public float getShininess() {
-		return this.shininess;
+	public float getSpecularExponent() {
+		return this.specularExponent;
 	}
 
-	public float getMetallic() {
-		return this.metallic;
+	public float getMetalness() {
+		return this.metalness;
 	}
 
 	public void setDiffuse(Vec4 diffuse) {
@@ -124,12 +126,12 @@ public class Material {
 		this.diffuse.w = alpha;
 	}
 
-	public void setSmoothness(float s) {
-		this.smoothness = s;
+	public void setRoughness(float s) {
+		this.roughness = s;
 	}
 
-	public void setShininess(float s) {
-		this.shininess = s;
+	public void setSpecularExponent(float s) {
+		this.specularExponent = s;
 	}
 
 	public void setSpecularProbability(float s) {
@@ -140,8 +142,8 @@ public class Material {
 		this.emissive.set(e);
 	}
 
-	public float getSmoothness() {
-		return this.smoothness;
+	public float getRoughness() {
+		return this.roughness;
 	}
 
 	public float getSpecularProbability() {
@@ -152,21 +154,23 @@ public class Material {
 		return this.emissive;
 	}
 
-	public void setMetallic(float m) {
-		this.metallic = m;
+	public void setMetalness(float m) {
+		this.metalness = m;
 	}
 
 	@Override
 	public String toString() {
 		String ans = "Diffuse : " + this.diffuse + "\n";
 		ans += "Specular : " + this.specular + "\n";
-		ans += "Emissive : " + this.emissive + "\n";
-		ans += "Shininess : " + this.shininess + "\n";
-		ans += "Smoothness : " + this.smoothness + "\n";
+		ans += "Specular Exponent : " + this.specularExponent + "\n";
+		ans += "Roughness : " + this.roughness + "\n";
+		ans += "Metalness : " + this.metalness + "\n";
 		ans += "Specular Probability : " + this.specularProbability;
+		ans += "Emissive : " + this.emissive + "\n";
 		return ans;
 	}
 
+	//this is only used in raytracing, vertex array manually extracts stuff. 
 	public float[] toFloatArr() {
 		float[] res = new float[4 + 4 + 4 + 1 + 1 + 1];
 		res[0] = this.diffuse.x;
@@ -181,8 +185,8 @@ public class Material {
 		res[9] = this.emissive.y;
 		res[10] = this.emissive.z;
 		res[11] = this.emissive.w;
-		res[12] = this.shininess;
-		res[13] = this.smoothness;
+		res[12] = this.specularExponent;
+		res[13] = this.roughness;
 		res[14] = this.specularProbability;
 		return res;
 	}

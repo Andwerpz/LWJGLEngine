@@ -19,7 +19,6 @@ import lwjglengine.scene.Scene;
 import lwjglengine.screen.RaytracingScreen;
 import lwjglengine.window.AdjustableWindow;
 import lwjglengine.window.FileExplorerWindow;
-import lwjglengine.window.RaytracingWindow;
 import lwjglengine.window.Window;
 import myutils.v10.math.Vec3;
 import myutils.v10.math.Vec4;

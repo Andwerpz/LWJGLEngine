@@ -325,6 +325,20 @@ public class Model {
 				}
 			}
 
+			// map_Ns in .mtl
+			path = AIString.calloc();
+			aiGetMaterialTexture(AIMat, aiTextureType_SHININESS, 0, path, (IntBuffer) null, null, null, null, null, null);
+			String shininessPath = path.dataString();
+			if (shininessPath != null && shininessPath.length() != 0) {
+				try {
+					Texture shininessTexture = new Texture(loadImage(parentFilepath + shininessPath));
+					material.setTexture(shininessTexture, TextureMaterial.SHININESS);
+				}
+				catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+
 			// norm in .mtl
 			path = AIString.calloc();
 			aiGetMaterialTexture(AIMat, aiTextureType_NORMALS, 0, path, (IntBuffer) null, null, null, null, null, null);
@@ -359,13 +373,13 @@ public class Model {
 		String fileExtension = FileUtils.getFileExtension(path);
 		switch (fileExtension) {
 		case "png":
-			return GraphicsTools.verticalFlip(FileUtils.loadImage(path));
+			return FileUtils.loadImage(path);
 
 		case "jpg":
-			return GraphicsTools.verticalFlip(FileUtils.loadImage(path));
+			return FileUtils.loadImage(path);
 
 		case "jpeg":
-			return GraphicsTools.verticalFlip(FileUtils.loadImage(path));
+			return FileUtils.loadImage(path);
 
 		case "tga":
 			return TargaReader.getImage(path);
