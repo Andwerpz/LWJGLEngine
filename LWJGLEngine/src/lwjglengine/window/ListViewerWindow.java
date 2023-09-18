@@ -274,7 +274,7 @@ public class ListViewerWindow extends Window {
 	}
 
 	public void setFilter(String filter) {
-		this.filterString = filter;
+		this.filterString = filter.toLowerCase();
 		this.alignEntries();
 	}
 
@@ -367,12 +367,12 @@ public class ListViewerWindow extends Window {
 		if (this.isHorizontal) {
 			this.contentBaseYOffset = 0;
 			int minBaseXOffset = (int) Math.min(0, this.contentSection.getBackgroundRect().getWidth() - horizontalAlignWidthSum);
-			this.contentBaseXOffset = (int) MathUtils.clamp(minBaseXOffset, 0, this.contentBaseXOffset);
+			this.contentBaseXOffset = MathUtils.clamp(minBaseXOffset, 0, this.contentBaseXOffset);
 		}
 		else {
 			this.contentBaseXOffset = 0;
 			int minBaseYOffset = Math.min(0, (int) this.contentSection.getBackgroundRect().getHeight() - this.entryList.size() * entryHeightPx);
-			this.contentBaseYOffset = (int) MathUtils.clamp(minBaseYOffset, 0, this.contentBaseYOffset);
+			this.contentBaseYOffset = MathUtils.clamp(minBaseYOffset, 0, this.contentBaseYOffset);
 		}
 
 		int xOffset = this.contentBaseXOffset;

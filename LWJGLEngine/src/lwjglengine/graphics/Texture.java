@@ -74,6 +74,10 @@ public class Texture {
 		this.textureID = Texture.createTexture(data, width, height, minSampleType, magSampleType, 5);
 	}
 
+	public Texture(int textureID) {
+		this.textureID = textureID;
+	}
+
 	//initializes a texture with a solid color
 	public Texture(int r, int g, int b, float a) {
 		BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);

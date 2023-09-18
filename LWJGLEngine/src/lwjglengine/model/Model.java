@@ -224,9 +224,17 @@ public class Model {
 			}
 
 			AIVector3D.Buffer AIuvs = mesh.mTextureCoords(0);
-			for (int j = 0; j < AIuvs.limit(); j++) {
-				AIVector3D v = AIuvs.get(j);
-				uvs.get(matIndex).add(new Vec2(v.x(), v.y()));
+			if (AIuvs == null) {
+				System.err.println("Model : Mesh UVS missing");
+				for (int j = 0; j < AIVertices.limit(); j++) {
+					uvs.get(matIndex).add(new Vec2(Math.random(), Math.random()));
+				}
+			}
+			else {
+				for (int j = 0; j < AIuvs.limit(); j++) {
+					AIVector3D v = AIuvs.get(j);
+					uvs.get(matIndex).add(new Vec2(v.x(), v.y()));
+				}
 			}
 
 			AIFace.Buffer AIFaces = mesh.mFaces();

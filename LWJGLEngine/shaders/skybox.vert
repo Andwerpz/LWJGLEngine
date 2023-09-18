@@ -11,8 +11,7 @@ uniform mat4 vw_matrix;
 
 out vec3 frag_dir;
 
-void main()
-{
+void main() {
     gl_Position = pr_matrix * mat4(mat3(vw_matrix)) * md_matrix * vec4(pos, 1.0);
     frag_dir = vec3(md_matrix * vec4(pos, 1.0));
 }

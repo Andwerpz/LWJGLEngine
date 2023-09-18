@@ -165,7 +165,7 @@ public class Material {
 		ans += "Specular Exponent : " + this.specularExponent + "\n";
 		ans += "Roughness : " + this.roughness + "\n";
 		ans += "Metalness : " + this.metalness + "\n";
-		ans += "Specular Probability : " + this.specularProbability;
+		ans += "Specular Probability : " + this.specularProbability + "\n";
 		ans += "Emissive : " + this.emissive + "\n";
 		return ans;
 	}

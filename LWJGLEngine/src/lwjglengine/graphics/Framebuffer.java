@@ -23,14 +23,12 @@ import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
 
 public class Framebuffer {
-
 	// after creating a new instance, you need to add either one color buffer, or a render buffer
-	//this is so that the gpu can actually write to the buffer. 
+	// this is so that the gpu can actually write to the buffer. 
 	// check if complete using the isComplete function.
 
 	private int fbo;
-	private int renderBuffer, depthBuffer;
-	private ArrayList<Integer> buffers;
+	private HashMap<Integer, Integer> buffers; //bound location, buffer id
 
 	private int width, height;
 
@@ -38,14 +36,14 @@ public class Framebuffer {
 		this.width = width;
 		this.height = height;
 
-		this.buffers = new ArrayList<>();
+		this.buffers = new HashMap<>();
 
-		fbo = glGenFramebuffers();
+		this.fbo = glGenFramebuffers();
 	}
 
 	public Framebuffer(int framebufferID) {
 		this.fbo = framebufferID;
-		this.buffers = new ArrayList<>();
+		this.buffers = new HashMap<>();
 	}
 
 	public int getWidth() {
@@ -58,14 +56,14 @@ public class Framebuffer {
 
 	public int addRenderBuffer() {
 		this.bind();
-		renderBuffer = glGenRenderbuffers();
+		int renderBuffer = glGenRenderbuffers();
 		glBindRenderbuffer(GL_RENDERBUFFER, renderBuffer);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBuffer);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 		this.unbind();
 
-		this.buffers.add(renderBuffer);
+		this.buffers.put(GL_RENDERBUFFER, renderBuffer);
 		return renderBuffer;
 	}
 
@@ -80,13 +78,13 @@ public class Framebuffer {
 		glBindTexture(GL_TEXTURE_2D, 0);
 		this.unbind();
 
-		this.buffers.add(id);
+		this.buffers.put(layoutLocation, id);
 		return id;
 	}
 
 	public int addDepthBuffer() {
 		this.bind();
-		depthBuffer = glGenTextures();
+		int depthBuffer = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, depthBuffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, (FloatBuffer) null);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -99,7 +97,7 @@ public class Framebuffer {
 		glBindTexture(GL_TEXTURE_2D, 0);
 		this.unbind();
 
-		this.buffers.add(depthBuffer);
+		this.buffers.put(GL_DEPTH_ATTACHMENT, depthBuffer);
 		return depthBuffer;
 	}
 
@@ -111,7 +109,15 @@ public class Framebuffer {
 	public void bindTextureToBuffer(int bufferType, int textureType, int textureID) {
 		this.bind();
 		glFramebufferTexture2D(GL_FRAMEBUFFER, bufferType, textureType, textureID, 0);
-		this.buffers.add(textureID);
+		this.buffers.put(bufferType, textureID);
+	}
+
+	public void unbindTextureAtBuffer(int bufferType) {
+		this.bind();
+		glFramebufferTexture2D(GL_FRAMEBUFFER, bufferType, GL_TEXTURE_2D, 0, 0);
+		if (this.buffers.containsKey(bufferType)) {
+			this.buffers.remove(bufferType);
+		}
 	}
 
 	public boolean isComplete() {
@@ -135,11 +141,11 @@ public class Framebuffer {
 	}
 
 	public int getRenderBuffer() {
-		return this.renderBuffer;
+		return this.buffers.get(GL_RENDERBUFFER);
 	}
 
 	public int getDepthBuffer() {
-		return this.depthBuffer;
+		return this.buffers.get(GL_DEPTH_ATTACHMENT);
 	}
 
 	public void bind() {
@@ -152,7 +158,7 @@ public class Framebuffer {
 
 	//also kills any textures associated with it. 
 	public void kill() {
-		for (int ID : this.buffers) {
+		for (int ID : this.buffers.values()) {
 			glDeleteTextures(BufferUtils.createIntBuffer(new int[] { ID }));
 		}
 		glDeleteFramebuffers(BufferUtils.createIntBuffer(new int[] { this.fbo }));
