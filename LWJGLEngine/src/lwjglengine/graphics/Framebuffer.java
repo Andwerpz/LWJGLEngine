@@ -21,6 +21,7 @@ import lwjglengine.model.Model;
 import lwjglengine.util.BufferUtils;
 import myutils.v10.math.Vec2;
 import myutils.v10.math.Vec3;
+import myutils.v10.misc.Triple;
 
 public class Framebuffer {
 	// after creating a new instance, you need to add either one color buffer, or a render buffer
@@ -28,7 +29,7 @@ public class Framebuffer {
 	// check if complete using the isComplete function.
 
 	private int fbo;
-	private HashMap<Integer, Integer> buffers; //bound location, buffer id
+	private HashMap<Integer, Triple<Integer, Integer, Integer>> buffers; //bound location, {textureType, textureID, mipLevel}
 
 	private int width, height;
 
@@ -63,7 +64,7 @@ public class Framebuffer {
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 		this.unbind();
 
-		this.buffers.put(GL_RENDERBUFFER, renderBuffer);
+		this.buffers.put(GL_RENDERBUFFER, new Triple<>(GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderBuffer));
 		return renderBuffer;
 	}
 
@@ -78,7 +79,7 @@ public class Framebuffer {
 		glBindTexture(GL_TEXTURE_2D, 0);
 		this.unbind();
 
-		this.buffers.put(layoutLocation, id);
+		this.buffers.put(layoutLocation, new Triple<>(GL_TEXTURE_2D, id, 0));
 		return id;
 	}
 
@@ -97,7 +98,7 @@ public class Framebuffer {
 		glBindTexture(GL_TEXTURE_2D, 0);
 		this.unbind();
 
-		this.buffers.put(GL_DEPTH_ATTACHMENT, depthBuffer);
+		this.buffers.put(GL_DEPTH_ATTACHMENT, new Triple<>(GL_TEXTURE_2D, depthBuffer, 0));
 		return depthBuffer;
 	}
 
@@ -109,12 +110,24 @@ public class Framebuffer {
 	public void bindTextureToBuffer(int bufferType, int textureType, int textureID) {
 		this.bind();
 		glFramebufferTexture2D(GL_FRAMEBUFFER, bufferType, textureType, textureID, 0);
-		this.buffers.put(bufferType, textureID);
+		this.buffers.put(bufferType, new Triple<>(textureType, textureID, 0));
+	}
+
+	public void bindTextureToBuffer(int bufferType, int textureType, int textureID, int mipLevel) {
+		this.bind();
+		glFramebufferTexture2D(GL_FRAMEBUFFER, bufferType, textureType, textureID, mipLevel);
+		this.buffers.put(bufferType, new Triple<>(textureType, textureID, mipLevel));
 	}
 
 	public void unbindTextureAtBuffer(int bufferType) {
+		if (!this.buffers.containsKey(bufferType)) {
+			return;
+		}
+
+		int textureType = this.buffers.get(bufferType).first;
+		int mipLevel = this.buffers.get(bufferType).third;
 		this.bind();
-		glFramebufferTexture2D(GL_FRAMEBUFFER, bufferType, GL_TEXTURE_2D, 0, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, bufferType, textureType, 0, mipLevel);
 		if (this.buffers.containsKey(bufferType)) {
 			this.buffers.remove(bufferType);
 		}
@@ -141,11 +154,11 @@ public class Framebuffer {
 	}
 
 	public int getRenderBuffer() {
-		return this.buffers.get(GL_RENDERBUFFER);
+		return this.buffers.get(GL_RENDERBUFFER).second;
 	}
 
 	public int getDepthBuffer() {
-		return this.buffers.get(GL_DEPTH_ATTACHMENT);
+		return this.buffers.get(GL_DEPTH_ATTACHMENT).second;
 	}
 
 	public void bind() {
@@ -158,8 +171,9 @@ public class Framebuffer {
 
 	//also kills any textures associated with it. 
 	public void kill() {
-		for (int ID : this.buffers.values()) {
-			glDeleteTextures(BufferUtils.createIntBuffer(new int[] { ID }));
+		for (int layoutLocation : this.buffers.keySet()) {
+			int id = this.buffers.get(layoutLocation).second;
+			glDeleteTextures(BufferUtils.createIntBuffer(new int[] { id }));
 		}
 		glDeleteFramebuffers(BufferUtils.createIntBuffer(new int[] { this.fbo }));
 		System.out.println("KILL FRAMEBUFFER " + this.fbo);

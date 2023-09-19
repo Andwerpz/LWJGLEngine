@@ -347,7 +347,7 @@ public class Model {
 				}
 			}
 
-			// norm in .mtl
+			// norm or map_Kn in .mtl
 			path = AIString.calloc();
 			aiGetMaterialTexture(AIMat, aiTextureType_NORMALS, 0, path, (IntBuffer) null, null, null, null, null, null);
 			String normalsPath = path.dataString();

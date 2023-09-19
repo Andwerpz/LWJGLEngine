@@ -28,11 +28,11 @@ public class Cubemap {
 	public Cubemap(BufferedImage right, BufferedImage left, BufferedImage top, BufferedImage bottom, BufferedImage front, BufferedImage back) {
 		// front and back are in wrong order?
 		BufferedImage[] sides = new BufferedImage[] { right, left, top, bottom, back, front };
-		cubemapID = load(sides, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+		this.cubemapID = load(sides, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
 	}
 
 	public Cubemap(BufferedImage[] sides) {
-		cubemapID = load(sides, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+		this.cubemapID = load(sides, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
 	}
 
 	/**
@@ -50,11 +50,15 @@ public class Cubemap {
 			sides[i] = JarUtils.loadImage("/cubemap_default.png");
 		}
 
-		cubemapID = load(sides, internalFormat, dataFormat, dataType);
+		this.cubemapID = load(sides, internalFormat, dataFormat, dataType);
 	}
 
 	public Cubemap(int internalFormat, int dataFormat, int dataType, int resolution) {
-		cubemapID = load(internalFormat, dataFormat, dataType, resolution);
+		this.cubemapID = load(internalFormat, dataFormat, dataType, resolution);
+	}
+
+	public Cubemap(int textureID) {
+		this.cubemapID = textureID;
 	}
 
 	public int load(Texture[] sides) {

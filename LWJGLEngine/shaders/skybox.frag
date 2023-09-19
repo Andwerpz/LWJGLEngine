@@ -5,9 +5,8 @@ in vec3 frag_dir;
 
 uniform samplerCube skybox;
 
-void main()
-{	
-	color = vec4(texture(skybox, frag_dir).rgb, 1.0);
-	//color = vec4(vec3(texture(skybox, frag_dir).r), 1.0);
+void main() {	
+	color = vec4(texture(skybox, normalize(frag_dir)).rgb, 1.0);
+	//color = vec4(textureLod(skybox, normalize(frag_dir), 1).rgb, 1.0);
 } 
 
