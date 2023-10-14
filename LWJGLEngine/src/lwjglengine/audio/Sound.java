@@ -13,8 +13,8 @@ import java.util.HashSet;
 import org.lwjgl.BufferUtils;
 
 import lwjglengine.model.Model;
-import myutils.v10.file.FileUtils;
-import myutils.v10.math.Vec3;
+import myutils.file.FileUtils;
+import myutils.math.Vec3;
 
 public class Sound {
 	//only mono audio sources can get the 3D effect
@@ -32,9 +32,9 @@ public class Sound {
 
 	private boolean loops;
 
-	public Sound(String filepath, boolean loops) {
-		String absoluteFilepath = FileUtils.loadFile(filepath).getAbsolutePath();
-		String fileExtension = FileUtils.getFileExtension(filepath);
+	public Sound(String relativeFilepath, boolean loops) {
+		String absoluteFilepath = FileUtils.loadFileRelative(relativeFilepath).getAbsolutePath();
+		String fileExtension = FileUtils.getFileExtension(relativeFilepath);
 		IntBuffer channelsBuffer = null;
 		IntBuffer sampleRateBuffer = null;
 		ShortBuffer rawAudioBuffer = null;
@@ -47,7 +47,7 @@ public class Sound {
 			break;
 		}
 
-		assert rawAudioBuffer != null : filepath + " Failed to load";
+		assert rawAudioBuffer != null : relativeFilepath + " Failed to load";
 
 		this.init(channelsBuffer, sampleRateBuffer, rawAudioBuffer, loops);
 	}

@@ -14,7 +14,7 @@ import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
 import lwjglengine.window.AdjustableWindow;
 import lwjglengine.window.Window;
-import myutils.v10.misc.Pair;
+import myutils.misc.Pair;
 
 public class NewStaticModelWindow extends Window {
 

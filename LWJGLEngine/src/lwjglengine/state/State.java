@@ -5,7 +5,7 @@ import lwjglengine.graphics.Texture;
 import lwjglengine.model.Model;
 import lwjglengine.scene.Light;
 import lwjglengine.ui.UIElement;
-import myutils.v10.math.Vec2;
+import myutils.math.Vec2;
 
 public abstract class State {
 	// each state manages its own logic and rendering.

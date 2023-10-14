@@ -6,8 +6,8 @@ import java.io.IOException;
 
 import lwjglengine.graphics.Texture;
 import lwjglengine.project.Project;
-import myutils.v10.file.TargaReader;
-import myutils.v11.file.FileUtils;
+import myutils.file.FileUtils;
+import myutils.file.TargaReader;
 
 public class TextureAsset extends Asset {
 

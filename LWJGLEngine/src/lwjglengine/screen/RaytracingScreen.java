@@ -25,7 +25,7 @@ import lwjglengine.graphics.Texture;
 import lwjglengine.player.Camera;
 import lwjglengine.scene.Scene;
 import lwjglengine.util.BufferUtils;
-import myutils.v10.math.Vec3;
+import myutils.math.Vec3;
 
 public class RaytracingScreen extends Screen {
 	//raytracing, wowee, very nice

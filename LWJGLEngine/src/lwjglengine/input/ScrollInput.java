@@ -9,7 +9,7 @@ import org.lwjgl.glfw.GLFWMouseButtonCallback;
 import org.lwjgl.glfw.GLFWScrollCallback;
 
 import lwjglengine.main.Main;
-import myutils.v10.math.Vec2;
+import myutils.math.Vec2;
 
 public class ScrollInput extends GLFWScrollCallback {
 

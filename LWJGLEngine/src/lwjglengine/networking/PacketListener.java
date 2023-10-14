@@ -6,9 +6,9 @@ import java.net.Socket;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
-import myutils.v10.misc.Pair;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
+import myutils.misc.Pair;
 
 public class PacketListener implements Runnable {
 	//each packet starts with an int denoting it's length

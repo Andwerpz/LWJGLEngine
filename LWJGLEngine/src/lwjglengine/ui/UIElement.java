@@ -11,8 +11,8 @@ import lwjglengine.model.FilledRectangle;
 import lwjglengine.model.Model;
 import lwjglengine.model.ModelInstance;
 import lwjglengine.model.ModelTransform;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec2;
+import myutils.math.Mat4;
+import myutils.math.Vec2;
 
 public abstract class UIElement extends Entity {
 	//am i overengineering ui element alignment? no i am not. Maybe i should make it so that less boilerplate is required. 

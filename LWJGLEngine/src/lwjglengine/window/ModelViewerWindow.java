@@ -18,8 +18,8 @@ import lwjglengine.screen.PerspectiveScreen;
 import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.Vec3;
 
 public class ModelViewerWindow extends BorderedWindow {
 	//TODO

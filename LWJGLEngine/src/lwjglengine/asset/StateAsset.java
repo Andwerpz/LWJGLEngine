@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 import lwjglengine.model.ModelTransform;
 import lwjglengine.project.Project;
-import myutils.v10.misc.Pair;
+import myutils.misc.Pair;
 
 public class StateAsset extends Asset {
 

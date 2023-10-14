@@ -35,8 +35,8 @@ import lwjglengine.graphics.TextureMaterial;
 import lwjglengine.model.Model;
 import lwjglengine.model.VertexArray;
 import lwjglengine.project.Project;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
 
 public class ModelAsset extends Asset {
 	//this should use assimp to load the vertex arrays, and figure out what texture dependencies it has. 

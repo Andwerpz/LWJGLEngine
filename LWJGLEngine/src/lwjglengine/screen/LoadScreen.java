@@ -7,9 +7,9 @@ import static org.lwjgl.opengl.GL30.*;
 import lwjglengine.graphics.Framebuffer;
 import lwjglengine.graphics.Shader;
 import lwjglengine.graphics.Texture;
-import myutils.v10.math.MathUtils;
-import myutils.v11.file.FileUtils;
-import myutils.v11.file.JarUtils;
+import myutils.file.FileUtils;
+import myutils.file.JarUtils;
+import myutils.math.MathUtils;
 
 public class LoadScreen extends Screen {
 

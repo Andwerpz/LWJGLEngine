@@ -13,8 +13,8 @@ import lwjglengine.model.Model;
 import lwjglengine.scene.Scene;
 import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.UIElement;
-import myutils.v10.math.Vec3;
-import myutils.v10.math.Vec4;
+import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 public class ContextMenuWindow extends BorderedWindow {
 

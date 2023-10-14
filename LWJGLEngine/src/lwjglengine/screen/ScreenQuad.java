@@ -10,9 +10,9 @@ import lwjglengine.main.Main;
 import lwjglengine.model.ModelTransform;
 import lwjglengine.model.VertexArray;
 import lwjglengine.scene.Scene;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
 
 public class ScreenQuad {
 	// a quad that covers the entire screen in normalized device coords (NDC)

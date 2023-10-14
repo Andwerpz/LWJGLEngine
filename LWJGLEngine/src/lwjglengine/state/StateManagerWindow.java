@@ -35,10 +35,10 @@ import lwjglengine.window.AdjustableWindow;
 import lwjglengine.window.FileExplorerWindow;
 import lwjglengine.window.ModelViewerWindow;
 import lwjglengine.window.Window;
-import myutils.v10.math.Vec3;
-import myutils.v10.math.Vec4;
-import myutils.v11.file.FileUtils;
-import myutils.v11.file.JarUtils;
+import myutils.file.FileUtils;
+import myutils.file.JarUtils;
+import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 public class StateManagerWindow extends Window {
 	//this window is it's own root window?

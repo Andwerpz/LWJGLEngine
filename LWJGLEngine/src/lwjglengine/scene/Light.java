@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import lwjglengine.graphics.Shader;
-import myutils.v10.math.Vec3;
+import myutils.math.Vec3;
 
 public abstract class Light {
 

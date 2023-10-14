@@ -11,8 +11,8 @@ import lwjglengine.input.MouseInput;
 import lwjglengine.main.Main;
 import lwjglengine.model.Model;
 import lwjglengine.player.Camera;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec2;
+import myutils.math.Mat4;
+import myutils.math.Vec2;
 
 public class UIScreen extends Screen {
 	// higher values of z will go over lower values.

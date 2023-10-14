@@ -15,7 +15,7 @@ import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.window.AdjustableWindow;
 import lwjglengine.window.FileExplorerWindow;
 import lwjglengine.window.Window;
-import myutils.v10.math.Vec3;
+import myutils.math.Vec3;
 
 public class ProjectImportAssetWindow extends Window {
 

@@ -3,13 +3,13 @@ package lwjglengine.util;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
-import myutils.v10.file.FileUtils;
+import myutils.file.FileUtils;
 
 public class ShaderUtils {
 
 	public static int load(String vertPath, String fragPath) {
-		String vert = FileUtils.loadAsString(vertPath);
-		String frag = FileUtils.loadAsString(fragPath);
+		String vert = FileUtils.loadAsStringRelative(vertPath);
+		String frag = FileUtils.loadAsStringRelative(fragPath);
 
 		return create(vert, frag);
 	}

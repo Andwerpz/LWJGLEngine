@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import lwjglengine.input.KeyboardInput;
 import lwjglengine.input.MouseInput;
 import lwjglengine.model.Model;
-import myutils.v10.math.MathUtils;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
+import myutils.math.MathUtils;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
 
 public class PlayerInputController {
 

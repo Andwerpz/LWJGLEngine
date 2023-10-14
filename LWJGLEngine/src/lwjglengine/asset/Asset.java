@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.HashSet;
 
 import lwjglengine.project.Project;
-import myutils.v11.file.FileUtils;
+import myutils.file.FileUtils;
 
 public abstract class Asset {
 	//asset class is only responsible for loading itself. 

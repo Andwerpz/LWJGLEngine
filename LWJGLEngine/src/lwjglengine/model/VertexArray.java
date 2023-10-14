@@ -13,10 +13,10 @@ import java.util.HashSet;
 import lwjglengine.graphics.Material;
 import lwjglengine.scene.Scene;
 import lwjglengine.util.BufferUtils;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
-import myutils.v10.misc.Pair;
+import myutils.math.Mat4;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
+import myutils.misc.Pair;
 
 public class VertexArray {
 

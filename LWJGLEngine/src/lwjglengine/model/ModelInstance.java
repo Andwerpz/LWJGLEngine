@@ -3,7 +3,7 @@ package lwjglengine.model;
 import java.util.ArrayList;
 
 import lwjglengine.graphics.Material;
-import myutils.v10.math.Mat4;
+import myutils.math.Mat4;
 
 public class ModelInstance {
 	//wrapper class to more easily manage model instances

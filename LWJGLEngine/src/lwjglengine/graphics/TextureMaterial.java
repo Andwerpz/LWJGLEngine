@@ -7,10 +7,10 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import lwjglengine.util.BufferUtils;
-import myutils.v10.graphics.GraphicsTools;
-import myutils.v10.math.Vec3;
-import myutils.v11.file.FileUtils;
-import myutils.v11.file.JarUtils;
+import myutils.file.FileUtils;
+import myutils.file.JarUtils;
+import myutils.graphics.GraphicsTools;
+import myutils.math.Vec3;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
@@ -40,7 +40,7 @@ public class TextureMaterial {
 
 	public static final Texture DIFFUSE_DEFAULT = new Texture(255, 255, 255, 1);
 	public static final Texture SPECULAR_DEFAULT = new Texture(255, 255, 255, 1);
-	public static final Texture SHININESS_DEFAULT = new Texture(0, 0, 0, 1);
+	public static final Texture SHININESS_DEFAULT = new Texture(255, 255, 255, 1);
 	public static final Texture NORMAL_DEFAULT = new Texture(JarUtils.loadImage("/tex_normal_default.png"));
 	public static final Texture DISPLACEMENT_DEFAULT = new Texture(JarUtils.loadImage("/tex_displacement_default.png"), Texture.INVERT_COLORS_BIT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
 

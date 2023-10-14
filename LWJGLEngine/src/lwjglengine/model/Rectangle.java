@@ -4,8 +4,8 @@ import static org.lwjgl.opengl.GL11.*;
 
 import lwjglengine.graphics.Material;
 import lwjglengine.graphics.TextureMaterial;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.Vec3;
 
 public class Rectangle extends Model {
 	// this rectangle is not filled, it's just a wireframe.

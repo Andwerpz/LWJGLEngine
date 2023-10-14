@@ -35,11 +35,11 @@ import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
-import myutils.v10.graphics.GraphicsTools;
-import myutils.v10.math.MathUtils;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec4;
-import myutils.v10.misc.Pair;
+import myutils.graphics.GraphicsTools;
+import myutils.math.MathUtils;
+import myutils.math.Vec2;
+import myutils.math.Vec4;
+import myutils.misc.Pair;
 
 public class TextEditorWindow extends Window {
 	//should be able to open .txt files to edit them like text files. 
@@ -234,6 +234,21 @@ public class TextEditorWindow extends Window {
 		this.selectLine(0);
 
 		this._resize();
+	}
+
+	/**
+	 * Returns whatever text is currently stored inside the editor. 
+	 * @return
+	 */
+	public String getText() {
+		StringBuilder res = new StringBuilder();
+		for (int i = 0; i < this.lines.size(); i++) {
+			res.append(this.lines.get(i).getText());
+			if (i != this.lines.size() - 1) {
+				res.append("\n");
+			}
+		}
+		return res.toString();
 	}
 
 	private void addLine(int index) {
@@ -657,6 +672,14 @@ public class TextEditorWindow extends Window {
 			this.textBackgroundRect.setFillWidth(true);
 			this.textBackgroundRect.setFillWidthMargin(2);
 			this.textBackgroundRect.bind(lineContainer);
+		}
+
+		public String getText() {
+			char[] arr = new char[this.chars.size()];
+			for (int i = 0; i < this.chars.size(); i++) {
+				arr[i] = this.chars.get(i);
+			}
+			return new String(arr);
 		}
 
 		public void kill() {

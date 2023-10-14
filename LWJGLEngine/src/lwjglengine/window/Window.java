@@ -27,11 +27,11 @@ import lwjglengine.screen.ScreenQuad;
 import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.util.BufferUtils;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.MathUtils;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
-import myutils.v10.misc.Pair;
+import myutils.math.Mat4;
+import myutils.math.MathUtils;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
+import myutils.misc.Pair;
 
 public abstract class Window {
 	//A window should be a container for rendering. 

@@ -7,7 +7,7 @@ import java.util.HashSet;
 import lwjglengine.graphics.Material;
 import lwjglengine.model.Model;
 import lwjglengine.model.ModelInstance;
-import myutils.v10.math.Mat4;
+import myutils.math.Mat4;
 
 public abstract class Entity {
 	// Entities each have their own id

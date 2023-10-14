@@ -18,11 +18,11 @@ import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
-import myutils.v10.math.Vec4;
-import myutils.v10.misc.Pair;
-import myutils.v10.misc.Triple;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
+import myutils.math.Vec4;
+import myutils.misc.Pair;
+import myutils.misc.Triple;
 
 public class ObjectEditorWindow extends Window {
 	//this is an editor that we should be able to put any object inside and edit. 

@@ -7,9 +7,9 @@ import java.nio.DoubleBuffer;
 import org.lwjgl.BufferUtils;
 
 import lwjglengine.main.Main;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
 
 public class Camera {
 

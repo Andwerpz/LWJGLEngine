@@ -5,7 +5,7 @@ import lwjglengine.graphics.Texture;
 import lwjglengine.scene.Scene;
 import lwjglengine.screen.LoadScreen;
 import lwjglengine.screen.Screen;
-import myutils.v10.math.MathUtils;
+import myutils.math.MathUtils;
 
 public class LoadState extends State {
 

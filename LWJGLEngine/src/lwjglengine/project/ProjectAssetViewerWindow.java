@@ -16,8 +16,8 @@ import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.window.ListViewerWindow;
 import lwjglengine.window.ModelViewerWindow;
 import lwjglengine.window.Window;
+import myutils.math.Vec3;
 import lwjglengine.window.AdjustableWindow;
-import myutils.v10.math.Vec3;
 
 public class ProjectAssetViewerWindow extends Window {
 

@@ -37,9 +37,9 @@ import lwjglengine.state.StateManagerWindow;
 import lwjglengine.state.TestState;
 import lwjglengine.state.TestStateFactory;
 import lwjglengine.ui.UIElement;
-import myutils.v10.graphics.FontUtils;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec2;
+import myutils.graphics.FontUtils;
+import myutils.math.Mat4;
+import myutils.math.Vec2;
 
 import static org.lwjgl.opengl.GL.*;
 

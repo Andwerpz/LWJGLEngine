@@ -16,11 +16,11 @@ import lwjglengine.graphics.TextureMaterial;
 import lwjglengine.main.Main;
 import lwjglengine.model.FilledRectangle;
 import lwjglengine.model.Model;
-import myutils.v10.graphics.FontUtils;
-import myutils.v10.graphics.GraphicsTools;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec3;
-import myutils.v10.math.Vec4;
+import myutils.graphics.FontUtils;
+import myutils.graphics.GraphicsTools;
+import myutils.math.Mat4;
+import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 public class Text extends UIElement {
 	// utilizes java.fx to generate the text texture, which it then draws onto the screen using a filled rectangle

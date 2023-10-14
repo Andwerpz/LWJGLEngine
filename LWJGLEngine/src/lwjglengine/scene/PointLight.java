@@ -1,7 +1,7 @@
 package lwjglengine.scene;
 
 import lwjglengine.graphics.Shader;
-import myutils.v10.math.Vec3;
+import myutils.math.Vec3;
 
 public class PointLight extends Light {
 

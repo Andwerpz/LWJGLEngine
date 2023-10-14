@@ -14,8 +14,8 @@ import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import lwjglengine.util.BufferUtils;
-import myutils.v10.file.SystemUtils;
-import myutils.v11.file.JarUtils;
+import myutils.file.JarUtils;
+import myutils.file.SystemUtils;
 
 public class Cubemap {
 

@@ -3,8 +3,8 @@ package lwjglengine.model;
 import static org.lwjgl.opengl.GL11.*;
 
 import lwjglengine.graphics.TextureMaterial;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.Vec3;
 
 public class FilledRectangle extends Model {
 	// as the name suggests, this rectangle is indeed filled

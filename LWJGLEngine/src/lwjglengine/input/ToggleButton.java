@@ -7,9 +7,9 @@ import lwjglengine.graphics.Material;
 import lwjglengine.model.FilledRectangle;
 import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
-import myutils.v10.graphics.FontUtils;
-import myutils.v10.graphics.GraphicsTools;
-import myutils.v10.math.Vec4;
+import myutils.graphics.FontUtils;
+import myutils.graphics.GraphicsTools;
+import myutils.math.Vec4;
 
 public class ToggleButton extends Input {
 

@@ -9,10 +9,10 @@ import java.util.HashSet;
 import javax.imageio.ImageIO;
 
 import lwjglengine.util.BufferUtils;
-import myutils.v11.file.FileUtils;
-import myutils.v10.graphics.GraphicsTools;
-import myutils.v10.math.MathUtils;
-import myutils.v10.math.Vec3;
+import myutils.file.FileUtils;
+import myutils.graphics.GraphicsTools;
+import myutils.math.MathUtils;
+import myutils.math.Vec3;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;

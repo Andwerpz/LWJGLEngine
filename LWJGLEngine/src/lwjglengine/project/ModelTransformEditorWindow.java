@@ -14,11 +14,11 @@ import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
 import lwjglengine.window.Window;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.MathUtils;
-import myutils.v10.math.Quaternion;
-import myutils.v10.math.Vec3;
-import myutils.v10.math.Vec4;
+import myutils.math.Mat4;
+import myutils.math.MathUtils;
+import myutils.math.Quaternion;
+import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 public class ModelTransformEditorWindow extends Window {
 

@@ -19,9 +19,9 @@ import lwjglengine.input.MouseInput;
 import lwjglengine.main.Main;
 import lwjglengine.model.Model;
 import lwjglengine.util.BufferUtils;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
-import myutils.v10.misc.Triple;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
+import myutils.misc.Triple;
 
 public class Framebuffer {
 	// after creating a new instance, you need to add either one color buffer, or a render buffer

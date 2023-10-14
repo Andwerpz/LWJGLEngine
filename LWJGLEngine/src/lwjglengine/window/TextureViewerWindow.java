@@ -19,7 +19,7 @@ import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
-import myutils.v11.file.FileUtils;
+import myutils.file.FileUtils;
 
 public class TextureViewerWindow extends Window {
 

@@ -21,11 +21,11 @@ import lwjglengine.model.VertexArray;
 import lwjglengine.scene.Scene;
 import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
-import myutils.v10.graphics.FontUtils;
-import myutils.v10.graphics.GraphicsTools;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec3;
-import myutils.v10.math.Vec4;
+import myutils.graphics.FontUtils;
+import myutils.graphics.GraphicsTools;
+import myutils.math.Mat4;
+import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 public class Button extends Input {
 	// the button isn't responsible for checking if it is pressed, another class, probably ButtonManager

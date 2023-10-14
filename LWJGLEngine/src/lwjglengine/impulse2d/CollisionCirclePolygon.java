@@ -1,6 +1,6 @@
 package lwjglengine.impulse2d;
 
-import myutils.v10.math.Vec2;
+import myutils.math.Vec2;
 
 public class CollisionCirclePolygon implements CollisionCallback {
 	public static final CollisionCirclePolygon instance = new CollisionCirclePolygon();

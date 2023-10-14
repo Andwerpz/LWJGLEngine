@@ -7,8 +7,8 @@ import java.util.Map;
 
 import lwjglengine.util.BufferUtils;
 import lwjglengine.util.ShaderUtils;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.Vec3;
 
 public class Shader {
 

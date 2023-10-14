@@ -3,9 +3,9 @@ package lwjglengine.model;
 import static org.lwjgl.opengl.GL11.*;
 
 import lwjglengine.graphics.TextureMaterial;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
 
 public class Line extends Model {
 	// you can render any line with a linear scaling of the line (0, 0, 0) to (1, 1, 1).

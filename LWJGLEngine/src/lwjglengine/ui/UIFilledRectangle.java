@@ -4,7 +4,7 @@ import lwjglengine.graphics.Material;
 import lwjglengine.graphics.TextureMaterial;
 import lwjglengine.model.FilledRectangle;
 import lwjglengine.model.Model;
-import myutils.v10.math.Mat4;
+import myutils.math.Mat4;
 
 public class UIFilledRectangle extends UIElement {
 

@@ -22,10 +22,10 @@ import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
-import myutils.v11.file.FileUtils;
-import myutils.v10.math.MathUtils;
-import myutils.v10.math.Vec3;
-import myutils.v10.math.Vec4;
+import myutils.file.FileUtils;
+import myutils.math.MathUtils;
+import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 public class FileExplorerWindow extends Window {
 	//this class handles the interactions with navigating directories, it delegates displaying the contents of a directory

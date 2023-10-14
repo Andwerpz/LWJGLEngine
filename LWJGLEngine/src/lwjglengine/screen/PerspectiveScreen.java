@@ -16,8 +16,8 @@ import lwjglengine.model.Model;
 import lwjglengine.player.Camera;
 import lwjglengine.scene.Light;
 import lwjglengine.scene.Scene;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.Vec3;
 
 public class PerspectiveScreen extends Screen {
 	// renders the scene with a perspective projection matrix.

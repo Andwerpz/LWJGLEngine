@@ -22,10 +22,10 @@ import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
-import myutils.v10.graphics.GraphicsTools;
-import myutils.v10.math.MathUtils;
-import myutils.v10.math.Vec3;
-import myutils.v10.math.Vec4;
+import myutils.graphics.GraphicsTools;
+import myutils.math.MathUtils;
+import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 public class ListViewerWindow extends Window {
 

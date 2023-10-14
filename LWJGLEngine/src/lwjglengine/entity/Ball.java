@@ -3,8 +3,8 @@ package lwjglengine.entity;
 import java.util.ArrayList;
 
 import lwjglengine.model.Model;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.Vec3;
 
 public class Ball extends Entity {
 

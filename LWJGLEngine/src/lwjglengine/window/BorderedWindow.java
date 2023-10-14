@@ -7,7 +7,7 @@ import lwjglengine.model.Model;
 import lwjglengine.model.ModelInstance;
 import lwjglengine.scene.Scene;
 import lwjglengine.screen.UIScreen;
-import myutils.v10.math.Vec3;
+import myutils.math.Vec3;
 
 public abstract class BorderedWindow extends Window {
 	//1px wide window borders. 

@@ -18,9 +18,9 @@ import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
-import myutils.v10.math.Vec4;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 public class AdjustableWindow extends BorderedWindow {
 	//TODO 

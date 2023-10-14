@@ -22,9 +22,9 @@ import lwjglengine.asset.StateAsset;
 import lwjglengine.asset.TextureAsset;
 import lwjglengine.graphics.Texture;
 import lwjglengine.model.Model;
-import myutils.v10.algorithm.GraphUtils;
-import myutils.v10.misc.BiMap;
-import myutils.v11.file.FileUtils;
+import myutils.algorithm.GraphUtils;
+import myutils.file.FileUtils;
+import myutils.misc.BiMap;
 
 public class Project {
 	//stores information related to a project :D

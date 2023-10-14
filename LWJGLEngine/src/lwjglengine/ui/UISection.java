@@ -5,8 +5,8 @@ import lwjglengine.graphics.Material;
 import lwjglengine.input.Input;
 import lwjglengine.scene.Scene;
 import lwjglengine.screen.UIScreen;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec4;
+import myutils.math.Vec2;
+import myutils.math.Vec4;
 
 public class UISection {
 	//just making ui easier. 

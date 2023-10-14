@@ -7,7 +7,7 @@ import java.util.HashSet;
 import lwjglengine.entity.Entity;
 import lwjglengine.model.FilledRectangle;
 import lwjglengine.ui.UIElement;
-import myutils.v10.math.Vec2;
+import myutils.math.Vec2;
 
 public abstract class Input extends UIElement {
 	//the scene in this refers to the selection scene. 

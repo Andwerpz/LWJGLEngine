@@ -20,8 +20,8 @@ import lwjglengine.screen.RaytracingScreen;
 import lwjglengine.window.AdjustableWindow;
 import lwjglengine.window.FileExplorerWindow;
 import lwjglengine.window.Window;
-import myutils.v10.math.Vec3;
-import myutils.v10.math.Vec4;
+import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 public class TestState extends State {
 

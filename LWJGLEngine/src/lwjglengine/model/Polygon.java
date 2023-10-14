@@ -6,10 +6,10 @@ import java.util.ArrayList;
 
 import lwjglengine.graphics.Material;
 import lwjglengine.graphics.TextureMaterial;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.MathUtils;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.MathUtils;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
 
 public class Polygon extends Model {
 	// render simple polygons

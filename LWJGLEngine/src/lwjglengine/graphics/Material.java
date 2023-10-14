@@ -6,8 +6,8 @@ import java.awt.Color;
 
 import org.lwjgl.assimp.AIColor4D;
 
-import myutils.v10.math.Vec3;
-import myutils.v10.math.Vec4;
+import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 public class Material {
 	//generally, these material attributes will just scale whatever attributes the texture has. 

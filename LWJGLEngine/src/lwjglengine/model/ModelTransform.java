@@ -2,10 +2,10 @@ package lwjglengine.model;
 
 import java.util.StringTokenizer;
 
-import myutils.v10.math.Mat4;
-import myutils.v10.math.MathUtils;
-import myutils.v10.math.Quaternion;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.MathUtils;
+import myutils.math.Quaternion;
+import myutils.math.Vec3;
 
 public class ModelTransform implements Comparable<ModelTransform> {
 	//just a utility class for creating a model matrix. 

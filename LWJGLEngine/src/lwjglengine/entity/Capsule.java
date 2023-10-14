@@ -3,9 +3,9 @@ package lwjglengine.entity;
 import java.util.ArrayList;
 
 import lwjglengine.model.Model;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.MathUtils;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.MathUtils;
+import myutils.math.Vec3;
 
 public class Capsule extends Entity {
 

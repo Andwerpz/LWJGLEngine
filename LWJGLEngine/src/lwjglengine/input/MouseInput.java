@@ -8,7 +8,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWMouseButtonCallback;
 
 import lwjglengine.main.Main;
-import myutils.v10.math.Vec2;
+import myutils.math.Vec2;
 
 public class MouseInput extends GLFWMouseButtonCallback {
 

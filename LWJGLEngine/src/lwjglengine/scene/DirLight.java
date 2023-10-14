@@ -2,7 +2,7 @@ package lwjglengine.scene;
 
 import lwjglengine.graphics.Framebuffer;
 import lwjglengine.graphics.Shader;
-import myutils.v10.math.Vec3;
+import myutils.math.Vec3;
 
 public class DirLight extends Light {
 

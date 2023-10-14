@@ -2,7 +2,7 @@ package lwjglengine.impulse2d;
 
 import java.util.ArrayList;
 
-import myutils.v10.math.Vec2;
+import myutils.math.Vec2;
 
 public class Polygon extends Shape {
 	public static final int MAX_POLY_VERTEX_COUNT = 64;

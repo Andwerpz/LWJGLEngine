@@ -20,9 +20,9 @@ import lwjglengine.screen.UIScreen;
 import lwjglengine.window.AdjustableWindow;
 import lwjglengine.window.ListViewerWindow;
 import lwjglengine.window.Window;
-import myutils.v10.math.Vec3;
-import myutils.v10.misc.Pair;
-import myutils.v10.misc.Triple;
+import myutils.math.Vec3;
+import myutils.misc.Pair;
+import myutils.misc.Triple;
 
 public class ProjectStateEditorWindow extends Window {
 

@@ -1,6 +1,6 @@
 package lwjglengine.impulse2d;
 
-import myutils.v10.math.Mat2;
+import myutils.math.Mat2;
 
 public abstract class Shape {
 	public enum Type {

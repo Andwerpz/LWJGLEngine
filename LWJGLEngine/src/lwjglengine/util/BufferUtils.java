@@ -6,8 +6,8 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import lwjglengine.graphics.Material;
-import myutils.v10.math.Mat4;
-import myutils.v10.math.Vec3;
+import myutils.math.Mat4;
+import myutils.math.Vec3;
 
 import java.nio.ByteOrder;
 

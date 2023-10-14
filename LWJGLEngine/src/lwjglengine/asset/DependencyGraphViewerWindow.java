@@ -20,10 +20,10 @@ import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
 import lwjglengine.window.Window;
-import myutils.v10.algorithm.Graph;
-import myutils.v10.graphics.GraphicsTools;
-import myutils.v10.math.MathUtils;
-import myutils.v10.math.Vec2;
+import myutils.algorithm.Graph;
+import myutils.graphics.GraphicsTools;
+import myutils.math.MathUtils;
+import myutils.math.Vec2;
 
 public class DependencyGraphViewerWindow extends Window {
 

@@ -18,7 +18,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWKeyCallback;
 
 import lwjglengine.main.Main;
-import myutils.v10.math.Vec2;
+import myutils.math.Vec2;
 
 public class KeyboardInput extends GLFWKeyCallback {
 

@@ -34,13 +34,13 @@ import lwjglengine.graphics.Material;
 import lwjglengine.graphics.Shader;
 import lwjglengine.graphics.Texture;
 import lwjglengine.graphics.TextureMaterial;
-import myutils.v11.file.FileUtils;
-import myutils.v10.graphics.GraphicsTools;
-import myutils.v10.math.Mat4;
-import myutils.v10.file.SystemUtils;
-import myutils.v10.file.TargaReader;
-import myutils.v10.math.Vec2;
-import myutils.v10.math.Vec3;
+import myutils.file.FileUtils;
+import myutils.file.SystemUtils;
+import myutils.file.TargaReader;
+import myutils.graphics.GraphicsTools;
+import myutils.math.Mat4;
+import myutils.math.Vec2;
+import myutils.math.Vec3;
 
 public class Model {
 	// always instanced rendering
