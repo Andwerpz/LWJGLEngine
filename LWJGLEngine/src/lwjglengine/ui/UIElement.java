@@ -89,6 +89,11 @@ public abstract class UIElement extends Entity {
 	private boolean isEasing = false; //the flag that says yes we're doing an animation
 	private int easingStyle = EASE_OUT_EXPO;
 
+	//if this is true, if a new ease animation is called when an old one is still going, it will just snap to the target of
+	//the old one before starting the new one
+	//if it is false, then it will just start the old animation at the current location. 
+	private boolean snapEasingOnCancel = true;
+
 	private long easingDurationMillis = 1000;
 	private long easingStartMillis;
 
@@ -264,12 +269,18 @@ public abstract class UIElement extends Entity {
 		this.setFrameAlignmentOffset(this.getXOffset(), yOffset);
 	}
 
+	public void setSnapEasingOnCancel(boolean b) {
+		this.snapEasingOnCancel = b;
+	}
+
 	public void easeFrameAlignmentOffset(float xOffset, float yOffset) {
 		//for now, we can cancel a current easing animation with a new one. 
 		//if we are currently in the middle of an easing animation, then we'll just snap to the end of it. 
 
 		if (this.isEasing) {
-			this.setFrameAlignmentOffset(this.easingTargetXOffset, this.easingTargetYOffset);
+			if (this.snapEasingOnCancel) {
+				this.setFrameAlignmentOffset(this.easingTargetXOffset, this.easingTargetYOffset);
+			}
 			this.isEasing = false;
 		}
 

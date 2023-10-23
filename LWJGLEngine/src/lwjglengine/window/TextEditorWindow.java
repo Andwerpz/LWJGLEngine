@@ -53,11 +53,15 @@ public class TextEditorWindow extends Window {
 	//and, line wrapping as well. 
 
 	//TODO
+	// OPTIMIZATIONS
 	// - optimize rendering
 	//   - only render whatever can be seen on the screen.
+	//   - i'll do this when i have all the important features implemented. 
 	// - optimize writing
 	//   - when we press enter, we have to realign all the lines, and in turn, all the individual characters, which causes lag spike
 	//   - perhaps, if we are only rendering stuff on screen, we should only realign the stuff that is visible. 
+	//   - we will call the realign function on all the lines below the cursor, and if a line has visible stuff, it will realign it. 
+	// FEATURES
 	// - scroll bar on the right side to let user know how much they can scroll. 
 	// - highlight the line that the cursor is currently on. 
 	//   - can't really do that in the background, since the characters are rendered on top of a solid backing plate. 
@@ -65,8 +69,6 @@ public class TextEditorWindow extends Window {
 	//   - hold any character to continuously press it. 
 	//   - this should also include binds, like ctrl + v.
 	// - interactions with highlighted chars
-	//   - ctrl + x to cut highlighted chars
-	//   - press backspace to delete all highlighted chars
 	//   - press and drag highlighted chars to move them around. 
 	// - load / save using text files. 
 
@@ -101,20 +103,29 @@ public class TextEditorWindow extends Window {
 	private ArrayList<Line> lines;
 	private Line selectedLine;
 
+	//just like the name suggests, these should always point towards the first and last visible line. 
+	//the selected line is not guaranteed to be visible. The user can always just scroll off the line. 
+	private int firstVisibleLine, lastVisibleLine;
+
 	private boolean shouldAlignLines = false;
 
 	private static int cursorWidthPx = 2;
 	private UIFilledRectangle cursorRect;
+
+	//this should be done only once per update. 
+	private boolean shouldUpdateCosmeticCursorPos = false;
 
 	private int lineHeightSum = 0;
 	private int maxScrollOffset = 0;
 	private int scrollOffset = 0;
 
 	private boolean isHighlighting = false; //this is true when the user presses the mouse somewhere on a line. 
+
 	//saves the cursor position where the user first pressed
 	private int highlightFirstLineIndex = -1; //which line is it?
 	private int highlightFirstCharIndex = -1; //index within the line
 
+	//cursor position of the 'moving' highlight end. 
 	private int highlightCurLineIndex = -1;
 	private int highlightCurCharIndex = -1;
 
@@ -215,6 +226,7 @@ public class TextEditorWindow extends Window {
 
 		//tab character
 		{
+			//4 spaces
 			String tab = "    ";
 			int width = GraphicsTools.calculateTextWidth(tab, charFont);
 
@@ -232,6 +244,9 @@ public class TextEditorWindow extends Window {
 		this.lines = new ArrayList<>();
 		this.addLine(0);
 		this.selectLine(0);
+
+		this.firstVisibleLine = 0;
+		this.lastVisibleLine = 0;
 
 		this._resize();
 	}
@@ -257,7 +272,7 @@ public class TextEditorWindow extends Window {
 			return;
 		}
 		this.lines.add(index, new Line());
-		this.alignLines();
+		this.alignLines(index);
 	}
 
 	private void removeLine(int index) {
@@ -267,7 +282,7 @@ public class TextEditorWindow extends Window {
 		}
 		this.lines.get(index).kill();
 		this.lines.remove(index);
-		this.alignLines();
+		this.alignLines(index);
 	}
 
 	public void appendTextAtCursor(String text) {
@@ -285,11 +300,13 @@ public class TextEditorWindow extends Window {
 		}
 	}
 
-	private void alignLines() {
+	private void alignLines(int startInd) {
 		int yOffset = 0;
 		for (int i = 0; i < this.lines.size(); i++) {
 			Line l = this.lines.get(i);
-			l.alignLine(i, yOffset);
+			if (i >= startInd) {
+				l.alignLine(i, yOffset);
+			}
 
 			yOffset += l.height;
 		}
@@ -299,8 +316,14 @@ public class TextEditorWindow extends Window {
 		this.scrollOffset = Math.min(this.scrollOffset, this.maxScrollOffset);
 
 		if (this.selectedLine != null) {
-			this.selectedLine.updateCosmeticCursorPos();
+			this.shouldUpdateCosmeticCursorPos = true;
 		}
+
+		//TODO update the visibility of lines. 
+	}
+
+	private void alignAllLines() {
+		this.alignLines(0);
 	}
 
 	private void selectLine(int index) {
@@ -354,7 +377,7 @@ public class TextEditorWindow extends Window {
 
 		this.lineContainer.setWidth(this.getWidth() - lineNumberSidebarWidth);
 
-		this.alignLines();
+		this.alignAllLines();
 	}
 
 	@Override
@@ -369,7 +392,7 @@ public class TextEditorWindow extends Window {
 		this.cursorSection.update();
 
 		if (this.shouldAlignLines) {
-			this.alignLines();
+			this.alignAllLines();
 			this.shouldAlignLines = false;
 		}
 
@@ -473,6 +496,11 @@ public class TextEditorWindow extends Window {
 			this.selectLine(this.highlightCurLineIndex);
 			this.selectedLine.setCursorPos(this.highlightCurCharIndex);
 		}
+
+		if (this.shouldUpdateCosmeticCursorPos) {
+			this.selectedLine.updateCosmeticCursorPos();
+			this.shouldUpdateCosmeticCursorPos = false;
+		}
 	}
 
 	@Override
@@ -518,14 +546,7 @@ public class TextEditorWindow extends Window {
 	@Override
 	protected void _mousePressed(int button) {
 		//clear all highlighting.
-		this.highlightFirstCharIndex = -1;
-		this.highlightFirstLineIndex = -1;
-		this.highlightCurCharIndex = -1;
-		this.highlightCurLineIndex = -1;
-		for (UIFilledRectangle rect : this.highlightRects.values()) {
-			rect.kill();
-		}
-		this.highlightRects.clear();
+		this.resetHighlighting();
 
 		//find which line was pressed
 		long lineID = this.textEditorSection.getHoveredEntityID();
@@ -557,81 +578,186 @@ public class TextEditorWindow extends Window {
 		}
 	}
 
+	private void resetHighlighting() {
+		this.highlightFirstCharIndex = -1;
+		this.highlightFirstLineIndex = -1;
+		this.highlightCurCharIndex = -1;
+		this.highlightCurLineIndex = -1;
+		for (UIFilledRectangle rect : this.highlightRects.values()) {
+			rect.kill();
+		}
+		this.highlightRects.clear();
+
+		this.isHighlighting = false;
+	}
+
+	private boolean areCharactersHighlighted() {
+		if (this.highlightFirstCharIndex == this.highlightCurCharIndex && this.highlightFirstLineIndex == this.highlightCurLineIndex) {
+			return false;
+		}
+		return true;
+	}
+
+	private void removeHighlightedCharacters() {
+		if (!this.areCharactersHighlighted()) {
+			return;
+		}
+
+		int firstChar = this.highlightFirstCharIndex;
+		int firstLine = this.highlightFirstLineIndex;
+		int lastChar = this.highlightCurCharIndex;
+		int lastLine = this.highlightCurLineIndex;
+
+		//make sure they are in correct order
+		if (firstLine > lastLine || (firstLine == lastLine && firstChar > lastChar)) {
+			{
+				int tmp = firstLine;
+				firstLine = lastLine;
+				lastLine = tmp;
+			}
+			{
+				int tmp = firstChar;
+				firstChar = lastChar;
+				lastChar = tmp;
+			}
+		}
+
+		//remove characters from the end lines. 
+		if (firstLine == lastLine) {
+			this.lines.get(firstLine).removeCharactersBetweenIndex(firstChar, lastChar);
+		}
+		else {
+			this.lines.get(firstLine).removeCharactersAfterIndex(firstChar);
+			this.lines.get(lastLine).removeCharactersBeforeIndex(lastChar);
+		}
+
+		//if we deleted from multiple lines, append the last line onto the first one, and delete the last one. 
+		if (firstLine != lastLine) {
+			this.lines.get(firstLine).appendCharacters(this.lines.get(lastLine).chars);
+			this.removeLine(lastLine);
+		}
+
+		//remove all lines we should remove
+		for (int i = lastLine - 1; i > firstLine; i--) {
+			this.removeLine(i);
+		}
+
+		//set the first line as selected
+		this.selectLine(firstLine);
+		this.lines.get(firstLine).setCursorPos(firstChar);
+
+		System.out.println("ERASED HIGHLIGHTING : " + firstLine + " " + firstChar + " " + lastLine + " " + lastChar);
+		System.out.println("SELECTING LINE : " + firstLine);
+
+		this.resetHighlighting();
+	}
+
 	@Override
 	protected void _mouseReleased(int button) {
 		this.isHighlighting = false;
 	}
 
+	private void setScrollOffset(int offset) {
+		this.scrollOffset = MathUtils.clamp(0, this.maxScrollOffset, offset);
+
+		//TODO update the visibility of lines
+	}
+
 	@Override
 	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
 		int scrollAmt = (int) (smoothOffset * charHeight);
-		this.scrollOffset = MathUtils.clamp(0, this.maxScrollOffset, this.scrollOffset - scrollAmt);
+		this.setScrollOffset(this.scrollOffset - scrollAmt);
 	}
 
 	@Override
 	protected void _keyPressed(int key) {
-		if (this.selectedLine != null) {
-			// ctrl + v
-			if ((KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL)) && key == GLFW.GLFW_KEY_V) {
+		//this shouldn't ever happen hmm
+		if (this.selectedLine == null) {
+			System.err.println("TextEditorWindow : selectedLine shouldn't equal null");
+			return;
+		}
+
+		if (key == GLFW.GLFW_KEY_LEFT_CONTROL || key == GLFW.GLFW_KEY_RIGHT_CONTROL) {
+			return;
+		}
+		if (key == GLFW.GLFW_KEY_LEFT_SHIFT || key == GLFW.GLFW_KEY_RIGHT_SHIFT) {
+			return;
+		}
+
+		// ctrl + c or ctrl + x
+		if ((KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL)) && (key == GLFW.GLFW_KEY_C || key == GLFW.GLFW_KEY_X)) {
+			if (this.areCharactersHighlighted()) {
+				ArrayList<Character> chars = new ArrayList<>();
+				int lineIndex = this.highlightFirstLineIndex;
+				int charIndex = this.highlightFirstCharIndex;
+
+				int lastLineIndex = this.highlightCurLineIndex;
+				int lastCharIndex = this.highlightCurCharIndex;
+				if (this.highlightCurLineIndex < lineIndex || (this.highlightCurLineIndex == lineIndex && this.highlightCurCharIndex < charIndex)) {
+					lineIndex = this.highlightCurLineIndex;
+					charIndex = this.highlightCurCharIndex;
+
+					lastLineIndex = this.highlightFirstLineIndex;
+					lastCharIndex = this.highlightFirstCharIndex;
+				}
+
+				while (lineIndex != lastLineIndex || charIndex != lastCharIndex) {
+					Line l = this.lines.get(lineIndex);
+					if (charIndex == l.chars.size()) {
+						charIndex = 0;
+						lineIndex++;
+						chars.add('\n');
+						continue;
+					}
+
+					chars.add(l.chars.get(charIndex));
+					charIndex++;
+				}
+
+				char[] charArr = new char[chars.size()];
+				for (int i = 0; i < chars.size(); i++) {
+					charArr[i] = chars.get(i);
+				}
+				String result = new String(charArr);
+
+				StringSelection stringSelection = new StringSelection(result);
 				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-				String result = "";
-				try {
-					result = (String) clipboard.getData(DataFlavor.stringFlavor);
-				}
-				catch (UnsupportedFlavorException e) {
-					e.printStackTrace();
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-				}
-				this.appendTextAtCursor(result);
+				clipboard.setContents(stringSelection, null);
+			}
+
+			if (key == GLFW.GLFW_KEY_X) {
+				this.removeHighlightedCharacters();
+			}
+			return;
+		}
+
+		if (this.areCharactersHighlighted()) {
+			//remove the highlighted characters
+			this.removeHighlightedCharacters();
+
+			if (key == GLFW.GLFW_KEY_BACKSPACE) {
 				return;
 			}
-			// ctrl + c
-			else if ((KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL)) && key == GLFW.GLFW_KEY_C) {
-				if (this.highlightRects.size() != 0) {
-					ArrayList<Character> chars = new ArrayList<>();
-					int lineIndex = this.highlightFirstLineIndex;
-					int charIndex = this.highlightFirstCharIndex;
+		}
 
-					int lastLineIndex = this.highlightCurLineIndex;
-					int lastCharIndex = this.highlightCurCharIndex;
-					if (this.highlightCurLineIndex < lineIndex || (this.highlightCurLineIndex == lineIndex && this.highlightCurCharIndex < charIndex)) {
-						lineIndex = this.highlightCurLineIndex;
-						charIndex = this.highlightCurCharIndex;
-
-						lastLineIndex = this.highlightFirstLineIndex;
-						lastCharIndex = this.highlightFirstCharIndex;
-					}
-
-					while (lineIndex != lastLineIndex || charIndex != lastCharIndex) {
-						Line l = this.lines.get(lineIndex);
-						if (charIndex == l.chars.size()) {
-							charIndex = 0;
-							lineIndex++;
-							chars.add('\n');
-							continue;
-						}
-
-						chars.add(l.chars.get(charIndex));
-						charIndex++;
-					}
-
-					char[] charArr = new char[chars.size()];
-					for (int i = 0; i < chars.size(); i++) {
-						charArr[i] = chars.get(i);
-					}
-					String result = new String(charArr);
-
-					StringSelection stringSelection = new StringSelection(result);
-					Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-					clipboard.setContents(stringSelection, null);
-				}
-				return;
+		// ctrl + v
+		if ((KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL)) && key == GLFW.GLFW_KEY_V) {
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			String result = "";
+			try {
+				result = (String) clipboard.getData(DataFlavor.stringFlavor);
 			}
-			else {
-				this.selectedLine.keyPressed(key);
+			catch (UnsupportedFlavorException e) {
+				e.printStackTrace();
 			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+			this.appendTextAtCursor(result);
+			return;
+		}
+		else {
+			this.selectedLine.keyPressed(key);
 		}
 	}
 
@@ -692,12 +818,31 @@ public class TextEditorWindow extends Window {
 				char c = s.charAt(i);
 				this.addCharacter(this.chars.size(), c);
 			}
+			this.alignCharacters();
 		}
 
 		public void appendCharacters(ArrayList<Character> clist) {
 			for (char c : clist) {
 				this.addCharacter(this.chars.size(), c);
 			}
+			this.alignCharacters();
+		}
+
+		private void _addCharacter(int index, char c) {
+			UIFilledRectangle charRect = (UIFilledRectangle) createCharUIElement(c);
+			charRect.bind(this.textBackgroundRect);
+
+			this.chars.add(index, c);
+			this.charRects.add(index, charRect);
+			this.charSubline.add(index, 0);
+		}
+
+		private void _removeCharacter(int index) {
+			this.charRects.get(index).kill();
+
+			this.chars.remove(index);
+			this.charRects.remove(index);
+			this.charSubline.remove(index);
 		}
 
 		private void addCharacter(int index, char c) {
@@ -706,14 +851,15 @@ public class TextEditorWindow extends Window {
 				return;
 			}
 
-			UIFilledRectangle charRect = (UIFilledRectangle) createCharUIElement(c);
-			charRect.bind(this.textBackgroundRect);
-
-			this.chars.add(index, c);
-			this.charRects.add(index, charRect);
-			this.charSubline.add(index, 0);
-
+			this._addCharacter(index, c);
 			this.alignCharacters();
+
+			if (this.isSelected) {
+				//update cursor pos
+				if (index >= this.cursorPos) {
+					this.setCursorPos(this.cursorPos + 1);
+				}
+			}
 		}
 
 		private void removeCharacter(int index) {
@@ -722,19 +868,75 @@ public class TextEditorWindow extends Window {
 				return;
 			}
 
-			this.charRects.get(index).kill();
-
-			this.chars.remove(index);
-			this.charRects.remove(index);
-			this.charSubline.remove(index);
-
+			this._removeCharacter(index);
 			this.alignCharacters();
+
+			if (this.isSelected) {
+				//update cursor pos
+				if (index < this.cursorPos) {
+					this.setCursorPos(this.cursorPos - 1);
+				}
+			}
+		}
+
+		//if the cursor was positioned at the given index, all characters before it would be removed. 
+		public void removeCharactersBeforeIndex(int index) {
+			for (int i = index - 1; i >= 0; i--) {
+				this.removeCharacter(i);
+			}
+			this.alignCharacters();
+
+			if (this.isSelected) {
+				//update cursor pos
+				if (index < this.cursorPos) {
+					this.setCursorPos(this.cursorPos - index);
+				}
+				else {
+					this.setCursorPos(0);
+				}
+			}
+		}
+
+		//if the cursor was positioned at the given index, all characters after it would be removed. 
+		public void removeCharactersAfterIndex(int index) {
+			while (this.chars.size() > index) {
+				int n_ind = this.chars.size() - 1;
+				this.removeCharacter(n_ind);
+			}
+			this.alignCharacters();
+
+			if (this.isSelected) {
+				//update cursor pos
+				if (index > this.cursorPos) {
+					this.setCursorPos(index);
+				}
+			}
+		}
+
+		public void removeCharactersBetweenIndex(int f_index, int l_index) {
+			for (int i = l_index - 1; i >= f_index; i--) {
+				this.removeCharacter(i);
+			}
+			this.alignCharacters();
+
+			if (this.isSelected) {
+				//update cursor pos
+				if (l_index < this.cursorPos) {
+					this.setCursorPos(this.cursorPos - (l_index - f_index + 1));
+				}
+				else if (f_index < this.cursorPos && this.cursorPos < l_index) {
+					this.setCursorPos(f_index);
+				}
+			}
+		}
+
+		public void removeAllCharacters() {
+			this.removeCharactersAfterIndex(0);
 		}
 
 		//adds the character at the cursor location, and then moves the cursor up 1 character. 
 		public void addCharacterAtCursor(char c) {
 			this.addCharacter(this.cursorPos, c);
-			this.setCursorPos(this.cursorPos + 1);
 		}
 
 		//makes a new line directly after this one, and puts everything to the right of the cursor on that new line. 
@@ -764,7 +966,6 @@ public class TextEditorWindow extends Window {
 			if (this.cursorPos != 0) {
 				//normal backspace action
 				this.removeCharacter(this.cursorPos - 1);
-				this.setCursorPos(this.cursorPos - 1);
 			}
 			else if (this.lineIndex != 0) {
 				//make the selected line the previous line
@@ -827,7 +1028,12 @@ public class TextEditorWindow extends Window {
 			this.lineIndexText.setYOffset(yOffset + charHeight / 2 - 2);
 		}
 
-		private void updateCosmeticCursorPos() {
+		public void updateCosmeticCursorPos() {
+			if (!this.isSelected) {
+				System.err.println("TextEditorWindow{Line} : Tried to set cosmetic cursor pos of unselected line");
+				return;
+			}
+
 			if (this.cursorPos == -1) {
 				this.cursorPos = 0;
 			}
@@ -836,13 +1042,30 @@ public class TextEditorWindow extends Window {
 			int xOffset = (int) this.textBackgroundRect.getXOffset();
 			int yOffset = (int) this.textBackgroundRect.getYOffset();
 
-			if (cursorPos != 0) {
+			if (this.cursorPos != 0) {
 				UIFilledRectangle charRect = this.charRects.get(this.cursorPos - 1);
 				xOffset += charRect.getXOffset() + charRect.getWidth();
 				yOffset += charRect.getYOffset();
 			}
 
 			cursorRect.easeFrameAlignmentOffset(xOffset, yOffset);
+
+			//if cursor is not visible, then set the scroll offset so that it is
+			int n_scrollOffset = scrollOffset;
+
+			int screenTopY = scrollOffset;
+			int screenBottomY = scrollOffset + getHeight();
+			int cursorTopY = yOffset;
+			int cursorBottomY = yOffset + charHeight;
+
+			if (cursorTopY < screenTopY) {
+				n_scrollOffset += cursorTopY - screenTopY;
+			}
+			else if (cursorBottomY > screenBottomY) {
+				n_scrollOffset += cursorBottomY - screenBottomY;
+			}
+
+			setScrollOffset(n_scrollOffset);
 		}
 
 		public void setCursorPos(int index) {
@@ -857,15 +1080,13 @@ public class TextEditorWindow extends Window {
 
 			this.cursorPos = index;
 
-			this.updateCosmeticCursorPos();
+			shouldUpdateCosmeticCursorPos = true;
 		}
 
 		//find the closest cursor location to the given offset point. 
 		//input mouse offset has to be relative to textBackgroundRect
 		public void setCursorPos(Vec2 mouseOffset) {
-			this.cursorPos = this.findBestCursorPos(mouseOffset);
-
-			this.updateCosmeticCursorPos();
+			this.setCursorPos(this.findBestCursorPos(mouseOffset));
 		}
 
 		public int findBestCursorPos(Vec2 relLineContainerOffset) {
@@ -904,6 +1125,7 @@ public class TextEditorWindow extends Window {
 
 		public void select() {
 			this.isSelected = true;
+			this.setCursorPos(0);
 		}
 
 		public void deselect() {
