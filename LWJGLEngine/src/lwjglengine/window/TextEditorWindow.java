@@ -55,8 +55,7 @@ public class TextEditorWindow extends Window {
 	//TODO
 	// OPTIMIZATIONS
 	// - optimize rendering
-	//   - only render whatever can be seen on the screen.
-	//   - i'll do this when i have all the important features implemented. 
+	//   - make it so that all characters can be rendered using 1 texture, so that we can just use one render call. 
 	// - optimize writing
 	//   - when we press enter, we have to realign all the lines, and in turn, all the individual characters, which causes lag spike
 	//   - perhaps, if we are only rendering stuff on screen, we should only realign the stuff that is visible. 
@@ -71,6 +70,7 @@ public class TextEditorWindow extends Window {
 	// - interactions with highlighted chars
 	//   - press and drag highlighted chars to move them around. 
 	// - load / save using text files. 
+	// - ctrl + z, ctrl + y
 
 	private static char[] charList = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
 			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '`', '-', '=', '[', ']', '\\', ';', '\'', ',', '.', '/', '~', '_', '+', '{', '}', '|', ':', '"', '<', '>', '?', ' ' };
@@ -130,7 +130,6 @@ public class TextEditorWindow extends Window {
 	private int highlightCurCharIndex = -1;
 
 	private static Material highlightMaterial = new Material(new Vec4(48, 197, 255, 120).mul(1.0f / 255.0f));
-	private HashMap<Pair<Integer, Integer>, UIFilledRectangle> highlightRects;
 
 	public TextEditorWindow(Window parentWindow) {
 		super(parentWindow);
@@ -144,8 +143,6 @@ public class TextEditorWindow extends Window {
 
 	private void init() {
 		this.uiScreen = new UIScreen();
-
-		this.highlightRects = new HashMap<>();
 
 		// -- COSMETIC UNDERLAY --
 		this.cosmeticUnderlaySection = new UISection(0, 0, this.getWidth(), this.getHeight(), this.uiScreen);
@@ -300,6 +297,46 @@ public class TextEditorWindow extends Window {
 		}
 	}
 
+	private void updateLineVisibility() {
+		//linear search to find the new visible ranges. 
+		int n_firstVisible = -1;
+		int n_lastVisible = -1;
+		{
+			int yOffset = 0;
+			int screenTop = this.scrollOffset;
+			int screenBottom = this.scrollOffset + this.getHeight();
+			for (int i = 0; i < this.lines.size(); i++) {
+				Line l = this.lines.get(i);
+				if (yOffset <= screenBottom) {
+					n_lastVisible = i;
+				}
+				if (n_firstVisible == -1 && yOffset + l.height >= screenTop) {
+					n_firstVisible = i;
+				}
+				yOffset += l.height;
+			}
+		}
+
+		//update the visibility of the lines within the old range
+		for (int i = this.firstVisibleLine; i <= this.lastVisibleLine; i++) {
+			if (i >= this.lines.size()) {
+				continue;
+			}
+			if (n_firstVisible <= i && i <= n_lastVisible) {
+				continue;
+			}
+			this.lines.get(i).setIsVisible(false);
+		}
+
+		//update visibility of lines in new range
+		for (int i = n_firstVisible; i <= n_lastVisible; i++) {
+			this.lines.get(i).setIsVisible(true);
+		}
+
+		this.firstVisibleLine = n_firstVisible;
+		this.lastVisibleLine = n_lastVisible;
+	}
+
 	private void alignLines(int startInd) {
 		int yOffset = 0;
 		for (int i = 0; i < this.lines.size(); i++) {
@@ -319,7 +356,8 @@ public class TextEditorWindow extends Window {
 			this.shouldUpdateCosmeticCursorPos = true;
 		}
 
-		//TODO update the visibility of lines. 
+		//update the visibility of lines. 
+		this.updateLineVisibility();
 	}
 
 	private void alignAllLines() {
@@ -363,6 +401,13 @@ public class TextEditorWindow extends Window {
 		return charRect;
 	}
 
+	private int getCharWidth(char c) {
+		if (this.charWidths.get(c) == null) {
+			return this.charWidths.get(' ');
+		}
+		return this.charWidths.get(c);
+	}
+
 	@Override
 	protected void _kill() {
 		this.uiScreen.kill();
@@ -387,6 +432,8 @@ public class TextEditorWindow extends Window {
 
 	@Override
 	protected void _update() {
+		System.out.println("LINE VISIBILITY RANGE : " + this.firstVisibleLine + " " + this.lastVisibleLine);
+
 		this.cosmeticUnderlaySection.update();
 		this.textEditorSection.update();
 		this.cursorSection.update();
@@ -438,20 +485,11 @@ public class TextEditorWindow extends Window {
 				while (lineIndex != this.highlightCurLineIndex || charIndex != this.highlightCurCharIndex) {
 					Line l = this.lines.get(this.highlightCurLineIndex);
 					if (l.chars.size() != this.highlightCurCharIndex) {
-						Pair<Integer, Integer> p = new Pair<>(this.highlightCurLineIndex, this.highlightCurCharIndex);
-						if (this.highlightRects.containsKey(p)) {
-							this.highlightRects.get(p).kill();
-							this.highlightRects.remove(p);
+						if (l.isCharHighlighted(this.highlightCurCharIndex)) {
+							l.unhighlightChar(this.highlightCurCharIndex);
 						}
 						else {
-							UIFilledRectangle charRect = l.charRects.get(this.highlightCurCharIndex);
-							UIFilledRectangle highlightRect = new UIFilledRectangle(0, 0, 0, charRect.getWidth(), charRect.getHeight(), cursorSection.getBackgroundScene());
-							highlightRect.setFillWidth(true);
-							highlightRect.setFillHeight(true);
-							highlightRect.setMaterial(highlightMaterial);
-							highlightRect.bind(charRect);
-
-							this.highlightRects.put(p, highlightRect);
+							l.highlightChar(this.highlightCurCharIndex);
 						}
 					}
 					this.highlightCurCharIndex++;
@@ -473,20 +511,11 @@ public class TextEditorWindow extends Window {
 					}
 
 					if (this.highlightCurCharIndex != l.chars.size()) {
-						Pair<Integer, Integer> p = new Pair<>(this.highlightCurLineIndex, this.highlightCurCharIndex);
-						if (this.highlightRects.containsKey(p)) {
-							this.highlightRects.get(p).kill();
-							this.highlightRects.remove(p);
+						if (l.isCharHighlighted(this.highlightCurCharIndex)) {
+							l.unhighlightChar(this.highlightCurCharIndex);
 						}
 						else {
-							UIFilledRectangle charRect = l.charRects.get(this.highlightCurCharIndex);
-							UIFilledRectangle highlightRect = new UIFilledRectangle(0, 0, 0, charRect.getWidth(), charRect.getHeight(), cursorSection.getBackgroundScene());
-							highlightRect.setFillWidth(true);
-							highlightRect.setFillHeight(true);
-							highlightRect.setMaterial(highlightMaterial);
-							highlightRect.bind(charRect);
-
-							this.highlightRects.put(p, highlightRect);
+							l.highlightChar(this.highlightCurCharIndex);
 						}
 					}
 				}
@@ -579,14 +608,22 @@ public class TextEditorWindow extends Window {
 	}
 
 	private void resetHighlighting() {
+		if (!this.areCharactersHighlighted()) {
+			return;
+		}
+
+		//remove all highlighting
+		int f_line = Math.min(this.highlightFirstLineIndex, this.highlightCurLineIndex);
+		int l_line = Math.max(this.highlightFirstLineIndex, this.highlightCurLineIndex);
+		for (int i = f_line; i <= l_line; i++) {
+			this.lines.get(i).unhighlightAllChars();
+		}
+
+		//reset highlighting variables. 
 		this.highlightFirstCharIndex = -1;
 		this.highlightFirstLineIndex = -1;
 		this.highlightCurCharIndex = -1;
 		this.highlightCurLineIndex = -1;
-		for (UIFilledRectangle rect : this.highlightRects.values()) {
-			rect.kill();
-		}
-		this.highlightRects.clear();
 
 		this.isHighlighting = false;
 	}
@@ -603,6 +640,7 @@ public class TextEditorWindow extends Window {
 			return;
 		}
 
+		//record where to remove. 
 		int firstChar = this.highlightFirstCharIndex;
 		int firstLine = this.highlightFirstLineIndex;
 		int lastChar = this.highlightCurCharIndex;
@@ -621,6 +659,9 @@ public class TextEditorWindow extends Window {
 				lastChar = tmp;
 			}
 		}
+
+		//erase all the highlighting. 
+		this.resetHighlighting();
 
 		//remove characters from the end lines. 
 		if (firstLine == lastLine) {
@@ -645,11 +686,6 @@ public class TextEditorWindow extends Window {
 		//set the first line as selected
 		this.selectLine(firstLine);
 		this.lines.get(firstLine).setCursorPos(firstChar);
-
-		System.out.println("ERASED HIGHLIGHTING : " + firstLine + " " + firstChar + " " + lastLine + " " + lastChar);
-		System.out.println("SELECTING LINE : " + firstLine);
-
-		this.resetHighlighting();
 	}
 
 	@Override
@@ -660,7 +696,8 @@ public class TextEditorWindow extends Window {
 	private void setScrollOffset(int offset) {
 		this.scrollOffset = MathUtils.clamp(0, this.maxScrollOffset, offset);
 
-		//TODO update the visibility of lines
+		//update the visibility of lines
+		this.updateLineVisibility();
 	}
 
 	@Override
@@ -769,9 +806,13 @@ public class TextEditorWindow extends Window {
 	class Line {
 
 		private ArrayList<Character> chars;
-		private ArrayList<UIFilledRectangle> charRects;
+		private ArrayList<Pair<Integer, Integer>> charOffsets;
 		private ArrayList<Integer> charSubline; //if the window is narrow enough, each line can be wrapped into sublines. 
 		private int maxSubline = 0;
+		private ArrayList<Boolean> charHighlighted;
+
+		private ArrayList<UIFilledRectangle> charRects;
+		private ArrayList<UIFilledRectangle> highlightRects;
 
 		private int height;
 
@@ -784,10 +825,16 @@ public class TextEditorWindow extends Window {
 		private boolean isSelected = false;
 		private int cursorPos = -1;
 
+		private boolean isVisible = false;
+
 		public Line() {
 			this.chars = new ArrayList<>();
-			this.charRects = new ArrayList<>();
+			this.charOffsets = new ArrayList<>();
 			this.charSubline = new ArrayList<>();
+			this.charHighlighted = new ArrayList<>();
+
+			this.charRects = null;
+			this.highlightRects = null;
 
 			this.height = charHeight;
 
@@ -828,21 +875,120 @@ public class TextEditorWindow extends Window {
 			this.alignCharacters();
 		}
 
-		private void _addCharacter(int index, char c) {
-			UIFilledRectangle charRect = (UIFilledRectangle) createCharUIElement(c);
-			charRect.bind(this.textBackgroundRect);
+		public void setIsVisible(boolean b) {
+			if (this.isVisible == b) {
+				return;
+			}
 
+			this.isVisible = b;
+
+			if (this.isVisible) {
+				//create all the char rects
+				this.charRects = new ArrayList<>();
+				this.highlightRects = new ArrayList<>();
+
+				for (int i = 0; i < this.chars.size(); i++) {
+					UIFilledRectangle charRect = (UIFilledRectangle) createCharUIElement(this.chars.get(i));
+					charRect.setFrameAlignmentOffset(this.charOffsets.get(i).first, this.charOffsets.get(i).second);
+					charRect.bind(this.textBackgroundRect);
+					this.charRects.add(charRect);
+
+					if (this.isCharHighlighted(i)) {
+						UIFilledRectangle highlightRect = new UIFilledRectangle(0, 0, 0, charRect.getWidth(), charRect.getHeight(), cursorSection.getBackgroundScene());
+						highlightRect.setFillWidth(true);
+						highlightRect.setFillHeight(true);
+						highlightRect.setMaterial(highlightMaterial);
+						highlightRect.bind(charRect);
+						this.highlightRects.add(highlightRect);
+					}
+					else {
+						this.highlightRects.add(null);
+					}
+				}
+			}
+			else {
+				//delete all the char rects. 
+				for (int i = 0; i < this.chars.size(); i++) {
+					this.charRects.get(i).kill();
+				}
+				this.charRects.clear();
+
+				this.charRects = null;
+				this.highlightRects = null;
+			}
+		}
+
+		public boolean isCharHighlighted(int index) {
+			return this.charHighlighted.get(index);
+		}
+
+		public void highlightChar(int index) {
+			if (this.charHighlighted.get(index) == true) {
+				return;
+			}
+			this.charHighlighted.set(index, true);
+
+			//check if line is visible
+			if (this.isVisible) {
+				//add highlighting rect
+				UIFilledRectangle charRect = this.charRects.get(index);
+				UIFilledRectangle highlightRect = new UIFilledRectangle(0, 0, 0, charRect.getWidth(), charRect.getHeight(), cursorSection.getBackgroundScene());
+				highlightRect.setFillWidth(true);
+				highlightRect.setFillHeight(true);
+				highlightRect.setMaterial(highlightMaterial);
+				highlightRect.bind(charRect);
+
+				this.highlightRects.set(index, highlightRect);
+			}
+		}
+
+		public void unhighlightChar(int index) {
+			if (this.charHighlighted.get(index) == false) {
+				return;
+			}
+			this.charHighlighted.set(index, false);
+
+			//check if line is visible. 
+			if (this.isVisible) {
+				//remove highlighting rect
+				this.highlightRects.get(index).kill();
+				this.highlightRects.set(index, null);
+			}
+		}
+
+		public void unhighlightAllChars() {
+			for (int i = 0; i < this.chars.size(); i++) {
+				unhighlightChar(i);
+			}
+		}
+
+		private void _addCharacter(int index, char c) {
 			this.chars.add(index, c);
-			this.charRects.add(index, charRect);
+			this.charOffsets.add(new Pair<>(0, 0));
 			this.charSubline.add(index, 0);
+			this.charHighlighted.add(false);
+
+			//check if line is visible
+			if (this.isVisible) {
+				UIFilledRectangle charRect = (UIFilledRectangle) createCharUIElement(c);
+				charRect.bind(this.textBackgroundRect);
+				this.charRects.add(index, charRect);
+				this.highlightRects.add(index, null);
+			}
 		}
 
 		private void _removeCharacter(int index) {
-			this.charRects.get(index).kill();
-
 			this.chars.remove(index);
-			this.charRects.remove(index);
+			this.charOffsets.remove(index);
 			this.charSubline.remove(index);
+			this.charHighlighted.remove(index);
+
+			//check if line is visible
+			if (this.isVisible) {
+				this.charRects.get(index).kill();
+				this.charRects.remove(index);
+				this.highlightRects.remove(index);
+			}
 		}
 
 		private void addCharacter(int index, char c) {
@@ -988,17 +1134,28 @@ public class TextEditorWindow extends Window {
 			this.maxSubline = 0;
 
 			for (int i = 0; i < this.chars.size(); i++) {
-				UIFilledRectangle rect = this.charRects.get(i);
-				if (rect.getWidth() + xOffset > this.textBackgroundRect.getWidth()) {
+				int curCharWidth = getCharWidth(this.chars.get(i));
+
+				if (curCharWidth + xOffset > this.textBackgroundRect.getWidth()) {
 					yOffset += charHeight;
 					xOffset = 0;
 					this.maxSubline++;
 				}
 
-				rect.setFrameAlignmentOffset(xOffset, yOffset);
+				this.charOffsets.get(i).first = xOffset;
+				this.charOffsets.get(i).second = yOffset;
 				this.charSubline.set(i, this.maxSubline);
 
-				xOffset += rect.getWidth();
+				xOffset += curCharWidth;
+			}
+
+			//update char rect alignments
+			if (this.isVisible) {
+				for (int i = 0; i < this.chars.size(); i++) {
+					int x = this.charOffsets.get(i).first;
+					int y = this.charOffsets.get(i).second;
+					this.charRects.get(i).setFrameAlignmentOffset(x, y);
+				}
 			}
 
 			if (this.height != yOffset + charHeight) {
@@ -1043,9 +1200,11 @@ public class TextEditorWindow extends Window {
 			int yOffset = (int) this.textBackgroundRect.getYOffset();
 
 			if (this.cursorPos != 0) {
-				UIFilledRectangle charRect = this.charRects.get(this.cursorPos - 1);
-				xOffset += charRect.getXOffset() + charRect.getWidth();
-				yOffset += charRect.getYOffset();
+				int charX = this.charOffsets.get(this.cursorPos - 1).first;
+				int charY = this.charOffsets.get(this.cursorPos - 1).second;
+				int charWidth = getCharWidth(this.chars.get(this.cursorPos - 1));
+				xOffset += charX + charWidth;
+				yOffset += charY;
 			}
 
 			cursorRect.easeFrameAlignmentOffset(xOffset, yOffset);
@@ -1093,10 +1252,14 @@ public class TextEditorWindow extends Window {
 			int bestCursorPos = 0;
 			float minDist = Vec2.distanceSq(relLineContainerOffset, new Vec2(this.textBackgroundRect.getGlobalAlignedX(), this.textBackgroundRect.getGlobalAlignedY() + this.textBackgroundRect.getHeight() - charHeight / 2));
 			for (int i = 0; i < this.chars.size(); i++) {
-				UIFilledRectangle charRect = this.charRects.get(i);
-				Vec2 nextCharPos = new Vec2(charRect.getGlobalAlignedX(), charRect.getGlobalAlignedY());
-				nextCharPos.x += charRect.getWidth();
-				nextCharPos.y += charHeight / 2;
+				float globalAlignedX = this.textBackgroundRect.getGlobalAlignedX();
+				float globalAlignedY = this.textBackgroundRect.getGlobalAlignedY();
+
+				//char offsets is the offset from the top left, so convert to bottom left. 
+				globalAlignedX += this.charOffsets.get(i).first + getCharWidth(this.chars.get(i));
+				globalAlignedY += this.textBackgroundRect.getHeight() - (this.charOffsets.get(i).second + charHeight) + charHeight / 2;
+
+				Vec2 nextCharPos = new Vec2(globalAlignedX, globalAlignedY);
 				if (Math.abs(nextCharPos.y - relLineContainerOffset.y) > charHeight / 2) {
 					continue;
 				}
@@ -1116,9 +1279,15 @@ public class TextEditorWindow extends Window {
 				ret.y = this.textBackgroundRect.getGlobalAlignedY() + this.textBackgroundRect.getHeight() - charHeight / 2;
 			}
 			else {
-				UIFilledRectangle charRect = this.charRects.get(this.cursorPos - 1);
-				ret.x = charRect.getGlobalAlignedX() + charRect.getWidth();
-				ret.y = charRect.getGlobalAlignedY() + charHeight / 2;
+				float globalAlignedX = this.textBackgroundRect.getGlobalAlignedX();
+				float globalAlignedY = this.textBackgroundRect.getGlobalAlignedY();
+
+				//char offsets is the offset from the top left, so convert to bottom left. 
+				globalAlignedX += this.charOffsets.get(this.cursorPos - 1).first + getCharWidth(this.chars.get(this.cursorPos - 1));
+				globalAlignedY += this.textBackgroundRect.getHeight() - (this.charOffsets.get(this.cursorPos - 1).second + charHeight) + charHeight / 2;
+
+				ret.x = globalAlignedX;
+				ret.y = globalAlignedY;
 			}
 			return ret;
 		}
