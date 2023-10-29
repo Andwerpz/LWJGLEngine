@@ -78,7 +78,7 @@ public class KeyboardInput extends GLFWKeyCallback {
 
 	@Override
 	public void invoke(long window, int key, int scancode, int action, int mods) {
-		if(key == GLFW.GLFW_KEY_UNKNOWN) {
+		if (key == GLFW.GLFW_KEY_UNKNOWN) {
 			return;
 		}
 		if (action == GLFW_PRESS) {
@@ -92,6 +92,18 @@ public class KeyboardInput extends GLFWKeyCallback {
 
 	public static boolean isKeyPressed(int code) {
 		return keys[code];
+	}
+
+	public static boolean isControlPressed() {
+		return isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL);
+	}
+
+	public static boolean isShiftPressed() {
+		return isKeyPressed(GLFW.GLFW_KEY_LEFT_SHIFT) || isKeyPressed(GLFW.GLFW_KEY_RIGHT_SHIFT);
+	}
+
+	public static boolean isAltPressed() {
+		return isKeyPressed(GLFW.GLFW_KEY_LEFT_ALT) || isKeyPressed(GLFW.GLFW_KEY_RIGHT_ALT);
 	}
 
 }

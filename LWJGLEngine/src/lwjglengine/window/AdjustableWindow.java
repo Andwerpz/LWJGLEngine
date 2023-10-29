@@ -470,6 +470,52 @@ public class AdjustableWindow extends BorderedWindow {
 		return -this.edgeGrabTolerancePx <= my && my <= 0 && -this.edgeGrabTolerancePx <= mx && mx <= this.edgeGrabTolerancePx + this.getWidth();
 	}
 
+	private boolean canGrabTitleBar() {
+		//next, check if should grab the title
+		if (!(this.canGrabLeftEdge() || this.canGrabRightEdge() || this.canGrabBottomEdge() || this.canGrabTopEdge())) {
+			if (this.titleBarSceneMouseEntityID == this.titleBarRect.getID()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public int getCursorShape() {
+		if ((this.leftEdgeGrabbed && this.bottomEdgeGrabbed) || (this.rightEdgeGrabbed && this.topEdgeGrabbed)) {
+			return GLFW.GLFW_RESIZE_NESW_CURSOR;
+		}
+		if ((this.leftEdgeGrabbed && this.topEdgeGrabbed) || (this.rightEdgeGrabbed && this.bottomEdgeGrabbed)) {
+			return GLFW.GLFW_RESIZE_NWSE_CURSOR;
+		}
+		if (this.leftEdgeGrabbed || this.rightEdgeGrabbed) {
+			return GLFW.GLFW_HRESIZE_CURSOR;
+		}
+		if (this.bottomEdgeGrabbed || this.topEdgeGrabbed) {
+			return GLFW.GLFW_VRESIZE_CURSOR;
+		}
+		if (this.titleBarGrabbed) {
+			return GLFW.GLFW_HAND_CURSOR;
+		}
+
+		if ((this.canGrabLeftEdge() && this.canGrabBottomEdge()) || (this.canGrabRightEdge() && this.canGrabTopEdge())) {
+			return GLFW.GLFW_RESIZE_NESW_CURSOR;
+		}
+		if ((this.canGrabLeftEdge() && this.canGrabTopEdge()) || (this.canGrabRightEdge() && this.canGrabBottomEdge())) {
+			return GLFW.GLFW_RESIZE_NWSE_CURSOR;
+		}
+		if (this.canGrabLeftEdge() || this.canGrabRightEdge()) {
+			return GLFW.GLFW_HRESIZE_CURSOR;
+		}
+		if (this.canGrabBottomEdge() || this.canGrabTopEdge()) {
+			return GLFW.GLFW_VRESIZE_CURSOR;
+		}
+		if (this.canGrabTitleBar()) {
+			return GLFW.GLFW_HAND_CURSOR;
+		}
+		return GLFW.GLFW_ARROW_CURSOR;
+	}
+
 	@Override
 	protected void _mousePressed(int button) {
 		Input.inputsPressed(this.titleBarSceneMouseEntityID, TITLE_BAR_SELECTION_SCENE);
@@ -488,12 +534,10 @@ public class AdjustableWindow extends BorderedWindow {
 		}
 
 		//next, check if should grab the title
-		if (!(this.leftEdgeGrabbed || this.rightEdgeGrabbed || this.bottomEdgeGrabbed || this.topEdgeGrabbed)) {
-			if (this.titleBarSceneMouseEntityID == this.titleBarRect.getID()) {
-				this.titleBarGrabbed = true;
-				this.titleBarGrabMouseX = (int) this.getWindowMousePos().x;
-				this.titleBarGrabMouseY = (int) this.getWindowMousePos().y;
-			}
+		if (this.canGrabTitleBar()) {
+			this.titleBarGrabbed = true;
+			this.titleBarGrabMouseX = (int) this.getWindowMousePos().x;
+			this.titleBarGrabMouseY = (int) this.getWindowMousePos().y;
 		}
 	}
 

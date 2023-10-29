@@ -35,6 +35,8 @@ import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
+import myutils.file.JarUtils;
+import myutils.graphics.FontUtils;
 import myutils.graphics.GraphicsTools;
 import myutils.math.MathUtils;
 import myutils.math.Vec2;
@@ -56,6 +58,8 @@ public class TextEditorWindow extends Window {
 	// OPTIMIZATIONS
 	// - optimize rendering
 	//   - make it so that all characters can be rendered using 1 texture, so that we can just use one render call. 
+	//   - in order to do this, we need to be able to have instanced uvs. 
+	//   - If we want to do this, we're going to have to overhaul text rendering. 
 	// - optimize writing
 	//   - when we press enter, we have to realign all the lines, and in turn, all the individual characters, which causes lag spike
 	//   - perhaps, if we are only rendering stuff on screen, we should only realign the stuff that is visible. 
@@ -71,11 +75,14 @@ public class TextEditorWindow extends Window {
 	//   - press and drag highlighted chars to move them around. 
 	// - load / save using text files. 
 	// - ctrl + z, ctrl + y
+	// - ctrl + a
+
+	private static final boolean DO_FONT_ANTIALIASING = true;
 
 	private static char[] charList = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
 			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '`', '-', '=', '[', ']', '\\', ';', '\'', ',', '.', '/', '~', '_', '+', '{', '}', '|', ':', '"', '<', '>', '?', ' ' };
 
-	private static Font charFont = new Font("Consolas", Font.PLAIN, 14);
+	private static Font charFont = FontUtils.deriveSize(13, JarUtils.loadFont("/font/lucida_console.ttf"));
 	private static Color charColor = Color.WHITE;
 	private static int charHorizontalPaddingPx = 0;
 	private static int charAscent = GraphicsTools.getFontSampleAscent(charFont);
@@ -116,8 +123,9 @@ public class TextEditorWindow extends Window {
 	private boolean shouldUpdateCosmeticCursorPos = false;
 
 	private int lineHeightSum = 0;
+	private int minScrollOffset = -1;
 	private int maxScrollOffset = 0;
-	private int scrollOffset = 0;
+	private int scrollOffset = -1;
 
 	private boolean isHighlighting = false; //this is true when the user presses the mouse somewhere on a line. 
 
@@ -210,7 +218,7 @@ public class TextEditorWindow extends Window {
 			String c = charList[i] + "";
 			int charWidth = GraphicsTools.calculateTextWidth(c, charFont);
 
-			BufferedImage img = GraphicsTools.generateTextImage(c, charFont, charColor, charWidth, lineBackgroundColor, true);
+			BufferedImage img = GraphicsTools.generateTextImage(c, charFont, charColor, charWidth, lineBackgroundColor, DO_FONT_ANTIALIASING);
 			Texture charTexture = new Texture(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
 			TextureMaterial charTextureMaterial = new TextureMaterial(charTexture);
 
@@ -227,7 +235,7 @@ public class TextEditorWindow extends Window {
 			String tab = "    ";
 			int width = GraphicsTools.calculateTextWidth(tab, charFont);
 
-			BufferedImage img = GraphicsTools.generateTextImage(tab, charFont, charColor, width, lineBackgroundColor, true);
+			BufferedImage img = GraphicsTools.generateTextImage(tab, charFont, charColor, width, lineBackgroundColor, DO_FONT_ANTIALIASING);
 			Texture charTexture = new Texture(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
 			TextureMaterial charTextureMaterial = new TextureMaterial(charTexture);
 
@@ -261,6 +269,15 @@ public class TextEditorWindow extends Window {
 			}
 		}
 		return res.toString();
+	}
+
+	public int getScrollOffset() {
+		return this.scrollOffset;
+	}
+
+	@Override
+	public int getCursorShape() {
+		return GLFW.GLFW_IBEAM_CURSOR;
 	}
 
 	private void addLine(int index) {
@@ -349,8 +366,8 @@ public class TextEditorWindow extends Window {
 		}
 
 		this.lineHeightSum = yOffset;
-		this.maxScrollOffset = Math.max(this.lineHeightSum - this.getHeight(), 0);
-		this.scrollOffset = Math.min(this.scrollOffset, this.maxScrollOffset);
+		this.maxScrollOffset = Math.max(this.lineHeightSum - this.lines.get(this.lines.size() - 1).height, 0);
+		this.scrollOffset = MathUtils.clamp(this.minScrollOffset, this.maxScrollOffset, this.scrollOffset);
 
 		if (this.selectedLine != null) {
 			this.shouldUpdateCosmeticCursorPos = true;
@@ -432,8 +449,6 @@ public class TextEditorWindow extends Window {
 
 	@Override
 	protected void _update() {
-		System.out.println("LINE VISIBILITY RANGE : " + this.firstVisibleLine + " " + this.lastVisibleLine);
-
 		this.cosmeticUnderlaySection.update();
 		this.textEditorSection.update();
 		this.cursorSection.update();
@@ -694,7 +709,7 @@ public class TextEditorWindow extends Window {
 	}
 
 	private void setScrollOffset(int offset) {
-		this.scrollOffset = MathUtils.clamp(0, this.maxScrollOffset, offset);
+		this.scrollOffset = MathUtils.clamp(this.minScrollOffset, this.maxScrollOffset, offset);
 
 		//update the visibility of lines
 		this.updateLineVisibility();

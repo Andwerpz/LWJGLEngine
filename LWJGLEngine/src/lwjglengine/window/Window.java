@@ -57,6 +57,10 @@ public abstract class Window {
 	private static int defaultHorizontalAlignmentStyle = FROM_LEFT;
 	private static int defaultVerticalAlignmentStyle = FROM_TOP;
 
+	//keep track of the selected window here. 
+	public static Window selectedWindow = null;
+	public static Window hoveredWindow = null;
+
 	//for now, keep all of the generic window materials here. 
 	//TODO make this better. perhaps put this into a seperate 'constants' class. 
 	protected Material topBarDefaultMaterial = new Material(new Vec3((float) (20 / 255.0)));
@@ -109,6 +113,10 @@ public abstract class Window {
 	//if this is false, then no inputs will get to this window, regardless of if it's selected. 
 	private boolean allowInput = true;
 
+	//if this is true, then input is allowed if this window, or some child of this window is selected
+	private boolean allowInputWhenSubtreeSelected = false;
+
+	//if this is true, input is allowed regardless of selected status
 	private boolean allowInputWhenNotSelected = false;
 
 	//for debugging
@@ -218,6 +226,11 @@ public abstract class Window {
 		}
 		this.isAlive = false;
 
+		//check if this is the selected window
+		if (this.isSelected()) {
+			Window.setSelectedWindow(null);
+		}
+
 		this.colorBuffer.kill();
 		this.rootUIElement.kill();
 		Scene.removeScene(ROOT_UI_SCENE);
@@ -320,6 +333,10 @@ public abstract class Window {
 		/* keeping it optional to implement */
 	}
 
+	public int getCursorShape() {
+		return GLFW.GLFW_ARROW_CURSOR;
+	}
+
 	protected void setRenderWhenNotSelected(boolean b) {
 		this.renderWhenNotSelected = b;
 	}
@@ -330,6 +347,10 @@ public abstract class Window {
 
 	public void setAllowInput(boolean b) {
 		this.allowInput = b;
+	}
+
+	public void setAllowInputWhenSubtreeSelected(boolean b) {
+		this.allowInputWhenSubtreeSelected = b;
 	}
 
 	public void setAllowInputWhenNotSelected(boolean b) {
@@ -403,6 +424,10 @@ public abstract class Window {
 			this.parentWindow.removeChild(this);
 		}
 		newParent.addChild(this);
+	}
+
+	public Window getParent() {
+		return this.parentWindow;
 	}
 
 	public void align() {
@@ -754,9 +779,14 @@ public abstract class Window {
 		if (this.isSelected) {
 			return;
 		}
+		if (selectedWindow != null) {
+			selectedWindow.deselect();
+		}
 
 		this.isSelected = true;
+		selectedWindow = this;
 		this.selected();
+		this.subtreeSelect();
 
 		if (this.lockCursorOnSelect) {
 			this.lockCursor();
@@ -767,9 +797,14 @@ public abstract class Window {
 		if (!this.isSelected) {
 			return;
 		}
+		if (selectedWindow != this) {
+			System.err.println("Window : window is selected, but is not equal to selectedWindow");
+		}
 
 		this.isSelected = false;
+		selectedWindow = null;
 		this.deselected();
+		this.subtreeDeselect();
 
 		this.unlockCursor();
 	}
@@ -786,6 +821,9 @@ public abstract class Window {
 		}
 
 		this.isSubtreeSelected = true;
+		if (this.parentWindow != null) {
+			this.parentWindow.subtreeSelect();
+		}
 		this.subtreeSelected();
 	}
 
@@ -795,6 +833,9 @@ public abstract class Window {
 		}
 
 		this.isSubtreeSelected = false;
+		if (this.parentWindow != null) {
+			this.parentWindow.subtreeDeselect();
+		}
 		this.subtreeDeselected();
 	}
 
@@ -832,52 +873,67 @@ public abstract class Window {
 		return -1;
 	}
 
+	public static void setSelectedWindow(Window w) {
+		if (w == selectedWindow) {
+			return;
+		}
+		if (selectedWindow != null) {
+			selectedWindow.deselect();
+		}
+		if (w != null) {
+			w.select();
+		}
+		selectedWindow = w;
+	}
+
+	public static void setHoveredWindow(Window w) {
+		if (w == hoveredWindow) {
+			return;
+		}
+		hoveredWindow = w;
+	}
+
 	//this should be called every time the mousePressed function is called externally
-	public void selectWindow(int x, int y, boolean covered) {
+	//will return the topmost window that is at the x, y, position
+	public Window selectWindow(int x, int y, boolean forceToTop) {
 		//if the cursor is locked, we shouldn't change the selected window
 		if (Main.isCursorLocked()) {
-			return;
+			return null;
 		}
-
-		int selectedWindow = getClickedWindowIndex(x, y);
-		if (covered) {
-			this.deselect();
-			this.subtreeDeselect();
-			for (Window w : this.childWindows) {
-				w.selectWindow(x - w.alignedX, y - w.alignedY, true);
-			}
-			return;
-		}
-
-		this.subtreeSelect();
 
 		//deal with this window
-		if (selectedWindow == -1) {
-			this.select();
+		int selectedWindow = getClickedWindowIndex(x, y);
+		if (selectedWindow == -2) {
+			return null;
 		}
-		else {
-			this.deselect();
+		if (selectedWindow == -1) {
+			return this;
 		}
 
 		//deal with children 
 		//propogate selection to children
-		for (int i = 0; i < this.childWindows.size(); i++) {
-			Window w = this.childWindows.get(i);
-			w.selectWindow(x - w.alignedX, y - w.alignedY, i != selectedWindow);
-		}
+		Window w = this.childWindows.get(selectedWindow);
+		Window selected = this.childWindows.get(selectedWindow).selectWindow(x - w.alignedX, y - w.alignedY, forceToTop);
 
 		//make the newly selected window the top one
-		if (selectedWindow >= 0 && selectedWindow < this.childWindows.size()) {
-			Window w = this.childWindows.get(selectedWindow);
-			this.childWindows.remove(selectedWindow);
-			this.childWindows.add(0, w);
+		if (forceToTop) {
+			if (selectedWindow >= 0 && selectedWindow < this.childWindows.size()) {
+				Window wind = this.childWindows.get(selectedWindow);
+				this.childWindows.remove(selectedWindow);
+				this.childWindows.add(0, wind);
+			}
 		}
+
+		return selected;
 	}
 
 	//helper to check if this window should allow inputs at this moment
 	private boolean shouldAllowInput() {
 		if (!this.allowInput) {
 			return false;
+		}
+		if (this.isSubtreeSelected && this.allowInputWhenSubtreeSelected) {
+			return true;
 		}
 		if (this.isSelected || this.allowInputWhenNotSelected) {
 			return true;

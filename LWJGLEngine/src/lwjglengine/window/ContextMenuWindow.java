@@ -93,12 +93,8 @@ public class ContextMenuWindow extends BorderedWindow {
 
 		this.setBottomLeftCoords(blX, blY);
 
-		//this is kinda jank, because it violates the principle that only one window can be selected at a time.
-		//it is required that this window is initially selected tho, because we want to know if the user clicked away from it. 
-		//perhaps some sort of event on click that unselected windows have?
-		//or maybe some way to force select a specific window. 
-		//TODO decide whether or not to fix this. 
-		this.select();
+		//force select this window. 
+		Window.setSelectedWindow(this);
 	}
 
 	@Override

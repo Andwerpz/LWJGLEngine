@@ -1,6 +1,7 @@
 package lwjglengine.main;
 
 import static org.lwjgl.glfw.GLFW.*;
+import org.lwjgl.glfw.GLFW;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
@@ -37,6 +38,8 @@ import lwjglengine.state.StateManagerWindow;
 import lwjglengine.state.TestState;
 import lwjglengine.state.TestStateFactory;
 import lwjglengine.ui.UIElement;
+import lwjglengine.window.AdjustableWindow;
+import lwjglengine.window.Window;
 import myutils.graphics.FontUtils;
 import myutils.math.Mat4;
 import myutils.math.Vec2;
@@ -82,6 +85,8 @@ public class Main implements Runnable {
 	private static boolean cursorLocked = false;
 
 	private Framebuffer outputBuffer;
+
+	private static int currentCursorShape;
 
 	public static void main(String[] args) {
 		Main main = new Main();
@@ -139,6 +144,8 @@ public class Main implements Runnable {
 		glCullFace(GL_BACK);
 		System.out.println("OpenGL : " + glGetString(GL_VERSION));
 
+		setCursorShape(GLFW.GLFW_ARROW_CURSOR);
+
 		// INIT
 		Shader.init();
 		this.sm = new StateManagerWindow(Main.initialStateFactory);
@@ -154,6 +161,14 @@ public class Main implements Runnable {
 
 	public static float getDeltaSeconds() {
 		return Main.main.deltaMillis / 1000.0f;
+	}
+
+	private static void setCursorShape(int shape) {
+		if (currentCursorShape == shape) {
+			return;
+		}
+		currentCursorShape = shape;
+		GLFW.glfwSetCursor(window, GLFW.glfwCreateStandardCursor(currentCursorShape));
 	}
 
 	class WindowSizeCallback extends GLFWWindowSizeCallback {
@@ -269,6 +284,24 @@ public class Main implements Runnable {
 
 		this.sm.update();
 
+		//update hovered window
+		Vec2 mousePos = MouseInput.getMousePos();
+		Window.setHoveredWindow(this.sm.selectWindow((int) mousePos.x, (int) mousePos.y, false));
+
+		//set cursor
+		if (Window.hoveredWindow != null) {
+			int adjCursorShape = GLFW.GLFW_ARROW_CURSOR;
+			if (Window.hoveredWindow.getParent() instanceof AdjustableWindow) {
+				adjCursorShape = Window.hoveredWindow.getParent().getCursorShape();
+			}
+			if (adjCursorShape == GLFW.GLFW_ARROW_CURSOR) {
+				setCursorShape(Window.hoveredWindow.getCursorShape());
+			}
+			else {
+				setCursorShape(adjCursorShape);
+			}
+		}
+
 		//normal updating stuff
 		//we want to update this stuff after we modify them in sm.update so that they render correctly. 
 		Entity.updateEntities();
@@ -317,7 +350,7 @@ public class Main implements Runnable {
 
 	public void mousePressed(int button) {
 		Vec2 mousePos = MouseInput.getMousePos();
-		this.sm.selectWindow((int) mousePos.x, (int) mousePos.y, false);
+		Window.setSelectedWindow(this.sm.selectWindow((int) mousePos.x, (int) mousePos.y, true));
 		this.sm.mousePressed(button);
 	}
 
