@@ -63,7 +63,7 @@ public class Main implements Runnable {
 	private boolean running = false;
 
 	public static long window;
-	private boolean fullscreen = false;
+	private static boolean fullscreen = false;
 
 	public static final float ASPECT_RATIO = (float) Main.windowWidth / (float) Main.windowHeight;
 	public static final float FOV = (float) Math.toRadians(90f); // vertical FOV
@@ -175,42 +175,36 @@ public class Main implements Runnable {
 		@Override
 		public void invoke(long window, int width, int height) {
 			//for now, assume that the window is referring to the main game window
-			Main.windowWidth = width;
-			Main.windowHeight = height;
-			Main.main.sm.setDimensions(width, height);
+			Main.setWindowDimensions(width, height);
 		}
 	}
 
-	public void toggleFullscreen() {
+	public static void setWindowDimensions(int width, int height) {
+		Main.windowWidth = width;
+		Main.windowHeight = height;
+		Main.main.sm.setDimensions(width, height);
+		System.out.println("NEW RESOLUTION : " + Main.windowWidth + " " + Main.windowHeight);
+	}
+
+	public static void setWindowPosition(int x, int y) {
+		glfwSetWindowPos(Main.window, x, y);
+	}
+
+	public static void toggleFullscreen() {
 		GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 		long primaryMonitor = glfwGetPrimaryMonitor();
-		if (this.fullscreen) {
-			Main.windowWidth = Main.windowedWidth;
-			Main.windowHeight = Main.windowedHeight;
+		if (Main.fullscreen) {
+			Main.setWindowDimensions(Main.windowedWidth, Main.windowedHeight);
 			glfwSetWindowMonitor(window, NULL, 0, 0, Main.windowWidth, Main.windowHeight, vidmode.refreshRate());
 			glfwSetWindowSize(window, Main.windowWidth, Main.windowHeight);
 			glfwSetWindowPos(window, (vidmode.width() - windowWidth) / 2, (vidmode.height() - windowHeight) / 2);
 		}
 		else {
 			glfwSetWindowMonitor(window, primaryMonitor, 0, 0, vidmode.width(), vidmode.height(), vidmode.refreshRate());
-			Main.windowWidth = vidmode.width();
-			Main.windowHeight = vidmode.height();
+			Main.setWindowDimensions(vidmode.width(), vidmode.height());
 		}
 
-		System.out.println("NEW RESOLUTION : " + Main.windowWidth + " " + Main.windowHeight);
-
-		UIElement.shouldAlignUIElements = true;
-
-		glViewport(0, 0, Main.windowWidth, Main.windowHeight);
-		this.fullscreen = !this.fullscreen;
-	}
-
-	public void setWindowDimensions(int width, int height) {
-		glfwSetWindowSize(window, width, height);
-	}
-
-	public void setWindowPosition(int x, int y) {
-		glfwSetWindowPos(window, x, y);
+		Main.fullscreen = !Main.fullscreen;
 	}
 
 	public static void lockCursor() {
@@ -322,7 +316,6 @@ public class Main implements Runnable {
 				error = glGetError();
 			}
 		}
-
 	}
 
 	public void exit() {
@@ -363,6 +356,11 @@ public class Main implements Runnable {
 	}
 
 	public void keyPressed(int key) {
+		if (key == GLFW.GLFW_KEY_F11) {
+			Main.toggleFullscreen();
+			return;
+		}
+
 		this.sm.keyPressed(key);
 	}
 

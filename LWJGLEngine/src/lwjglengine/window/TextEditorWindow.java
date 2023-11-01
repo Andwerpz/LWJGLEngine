@@ -139,6 +139,16 @@ public class TextEditorWindow extends Window {
 
 	private static Material highlightMaterial = new Material(new Vec4(48, 197, 255, 120).mul(1.0f / 255.0f));
 
+	//when typing a bracket, will automatically put the appropriate closing bracket right after the cursor position. 
+	//if typing a closing bracket, and the next character is a closing bracket, will just move the cursor after the closing bracket. 
+	private boolean bracketFinishMode = false;
+
+	//when pressing enter on a line, will copy over all of the prefix whitespace of the old line onto the new line. 
+	private boolean prefixWhitespaceIndentingMode = false;
+
+	//when pressing enter directly between two curly brackets, will create two new lines, one normally, and another one with an extra tab.
+	private boolean curlyBracketIndentingMode = false;
+
 	public TextEditorWindow(Window parentWindow) {
 		super(parentWindow);
 		this.init();
@@ -275,8 +285,20 @@ public class TextEditorWindow extends Window {
 		return this.scrollOffset;
 	}
 
+	public void setBracketFinishMode(boolean b) {
+		this.bracketFinishMode = b;
+	}
+
+	public void setPrefixWhitespaceIndentingMode(boolean b) {
+		this.prefixWhitespaceIndentingMode = b;
+	}
+
+	public void setCurlyBracketIndentingMode(boolean b) {
+		this.curlyBracketIndentingMode = b;
+	}
+
 	@Override
-	public int getCursorShape() {
+	protected int _getCursorShape() {
 		return GLFW.GLFW_IBEAM_CURSOR;
 	}
 
@@ -1119,6 +1141,15 @@ public class TextEditorWindow extends Window {
 			//make the selected line the next line
 			selectLine(this.lineIndex + 1);
 			selectedLine.setCursorPos(0);
+
+			if (prefixWhitespaceIndentingMode) {
+				for (int i = 0; i < this.chars.size(); i++) {
+					if (!Character.isWhitespace(this.chars.get(i))) {
+						break;
+					}
+					selectedLine.addCharacterAtCursor(this.chars.get(i));
+				}
+			}
 		}
 
 		//removes the character before the cursor location, if there is one. 
@@ -1240,6 +1271,12 @@ public class TextEditorWindow extends Window {
 			}
 
 			setScrollOffset(n_scrollOffset);
+		}
+
+		//positive for right, negative for left. Clamped to the ends of the line
+		public void shiftCursor(int amount) {
+			int n_cursorPos = MathUtils.clamp(0, this.chars.size(), this.cursorPos + amount);
+			this.setCursorPos(n_cursorPos);
 		}
 
 		public void setCursorPos(int index) {
@@ -1376,6 +1413,17 @@ public class TextEditorWindow extends Window {
 			}
 
 			case GLFW.GLFW_KEY_ENTER: {
+				if (curlyBracketIndentingMode) {
+					if (this.cursorPos != this.chars.size() && this.cursorPos != 0 && this.chars.get(cursorPos - 1) == '{' && this.chars.get(cursorPos) == '}') {
+						this.pressEnterAtCursor();
+						selectLine(this.lineIndex);
+						this.cursorPos = this.chars.size();
+						this.pressEnterAtCursor();
+						selectedLine.addCharacterAtCursor((char) 9);
+						break;
+					}
+				}
+
 				this.pressEnterAtCursor();
 				break;
 			}
@@ -1394,6 +1442,38 @@ public class TextEditorWindow extends Window {
 				char k = keyName.charAt(0);
 				if (KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_LEFT_SHIFT) || KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_RIGHT_SHIFT)) {
 					k = KeyboardInput.shiftMap.get(k);
+				}
+
+				if (bracketFinishMode) {
+					if (k == '(' || k == '{' || k == '[') {
+						//auto finish this bracket. 
+						this.addCharacterAtCursor(k);
+						switch (k) {
+						case '(':
+							this.addCharacterAtCursor(')');
+							break;
+
+						case '{':
+							this.addCharacterAtCursor('}');
+							break;
+
+						case '[':
+							this.addCharacterAtCursor(']');
+							break;
+						}
+						this.shiftCursor(-1);
+						break;
+					}
+					else if (k == ')' || k == '}' || k == ']') {
+						//check if end bracket already is there at cursor pos. 
+						if (this.cursorPos != this.chars.size() && this.chars.get(this.cursorPos) == k) {
+							this.shiftCursor(1);
+						}
+						else {
+							this.addCharacterAtCursor(k);
+						}
+						break;
+					}
 				}
 
 				this.addCharacterAtCursor(k);

@@ -9,6 +9,7 @@ import javax.imageio.ImageIO;
 import lwjglengine.util.BufferUtils;
 import myutils.file.FileUtils;
 import myutils.file.JarUtils;
+import myutils.file.SystemUtils;
 import myutils.graphics.GraphicsTools;
 import myutils.math.Vec3;
 
@@ -51,43 +52,40 @@ public class TextureMaterial {
 	}
 
 	public TextureMaterial() {
+		this.init();
+	}
+
+	public TextureMaterial(int r, int g, int b, float a, float specular) {
+		this.init();
+		this.setTexture(new Texture(r, g, b, a), DIFFUSE);
+		this.setTexture(new Texture((int) (specular * 255), (int) (specular * 255), (int) (specular * 255), 1f), SPECULAR);
+	}
+
+	public TextureMaterial(BufferedImage diffuse) {
+		this.init();
+		this.setTexture(new Texture(diffuse), DIFFUSE);
+	}
+
+	public TextureMaterial(Texture diffuse) {
+		this.init();
+		this.setTexture(diffuse, DIFFUSE);
+	}
+
+	public TextureMaterial(Texture diffuse, Texture specular, Texture shininess, Texture normal, Texture displacement) {
+		this.init();
+		this.setTexture(diffuse, DIFFUSE);
+		this.setTexture(specular, SPECULAR);
+		this.setTexture(shininess, SHININESS);
+		this.setTexture(normal, NORMAL);
+		this.setTexture(displacement, DISPLACEMENT);
+	}
+
+	private void init() {
 		this.diffuse = DIFFUSE_DEFAULT;
 		this.specular = SPECULAR_DEFAULT;
 		this.shininess = SHININESS_DEFAULT;
 		this.normal = NORMAL_DEFAULT;
 		this.displacement = DISPLACEMENT_DEFAULT;
-	}
-
-	public TextureMaterial(int r, int g, int b, float a, float specular) {
-		this.diffuse = new Texture(r, g, b, a);
-		this.specular = new Texture((int) (specular * 255), (int) (specular * 255), (int) (specular * 255), 1f);
-		this.shininess = SHININESS_DEFAULT;
-		this.normal = NORMAL_DEFAULT;
-		this.displacement = DISPLACEMENT_DEFAULT;
-	}
-
-	public TextureMaterial(BufferedImage diffuse) {
-		this.diffuse = new Texture(diffuse);
-		this.specular = SPECULAR_DEFAULT;
-		this.shininess = SHININESS_DEFAULT;
-		this.normal = NORMAL_DEFAULT;
-		this.displacement = DISPLACEMENT_DEFAULT;
-	}
-
-	public TextureMaterial(Texture diffuse) {
-		this.diffuse = diffuse;
-		this.specular = SPECULAR_DEFAULT;
-		this.shininess = SHININESS_DEFAULT;
-		this.normal = NORMAL_DEFAULT;
-		this.displacement = DISPLACEMENT_DEFAULT;
-	}
-
-	public TextureMaterial(Texture diffuse, Texture specular, Texture shininess, Texture normal, Texture displacement) {
-		this.diffuse = diffuse;
-		this.specular = specular;
-		this.shininess = shininess;
-		this.normal = normal;
-		this.displacement = displacement;
 	}
 
 	public void setTexture(String path, int which) {
@@ -99,6 +97,11 @@ public class TextureMaterial {
 	}
 
 	public void setTexture(Texture tex, int which) {
+		if (tex == null) {
+			System.err.println("TextureMaterial : Tried to set texture to null of type " + which);
+			return;
+		}
+
 		switch (which) {
 		case DIFFUSE:
 			diffuse = tex;

@@ -460,6 +460,7 @@ public class Model {
 	protected static void updateInstance(long ID) {
 		if (IDtoScene.get(ID) == null) {
 			System.err.println("Model: Can't find model instance " + ID + " when updating");
+			return;
 		}
 		int scene = IDtoScene.get(ID);
 		Model model = IDtoModel.get(ID);
@@ -655,5 +656,12 @@ public class Model {
 		}
 
 		models.remove(this);
+	}
+
+	public static void printAliveInstanceIDs() {
+		System.out.println("ALIVE INSTANCE IDS : ");
+		for (Long id : modelInstanceIDs) {
+			System.out.println(id);
+		}
 	}
 }

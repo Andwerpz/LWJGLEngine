@@ -147,6 +147,9 @@ public abstract class Window {
 
 	private boolean deselectOnEscPressed = false;
 
+	//if true, then will use parent's cursor shape if parent exists. 
+	private boolean inheritParentCursor = false;
+
 	public Window(int xOffset, int yOffset, int width, int height, Window parentWindow) {
 		this.childWindows = new ArrayList<>();
 
@@ -334,7 +337,21 @@ public abstract class Window {
 	}
 
 	public int getCursorShape() {
+		if (this.inheritParentCursor) {
+			if (this.parentWindow != null) {
+				return this.parentWindow.getCursorShape();
+			}
+		}
+		return this._getCursorShape();
+	}
+
+	protected int _getCursorShape() {
+		/* keeping it optional to implement */
 		return GLFW.GLFW_ARROW_CURSOR;
+	}
+
+	public void setInheritParentCursor(boolean b) {
+		this.inheritParentCursor = b;
 	}
 
 	protected void setRenderWhenNotSelected(boolean b) {
@@ -903,14 +920,14 @@ public abstract class Window {
 
 		//deal with this window
 		int selectedWindow = getClickedWindowIndex(x, y);
-		if (selectedWindow == -2) {
+		if (selectedWindow == -2) { //the cursor is outside of this window
 			return null;
 		}
-		if (selectedWindow == -1) {
+		if (selectedWindow == -1) { //the cursor is inside of this window, but none of the child windows. 
 			return this;
 		}
 
-		//deal with children 
+		//the cursor is inside one of the child windows
 		//propogate selection to children
 		Window w = this.childWindows.get(selectedWindow);
 		Window selected = this.childWindows.get(selectedWindow).selectWindow(x - w.alignedX, y - w.alignedY, forceToTop);

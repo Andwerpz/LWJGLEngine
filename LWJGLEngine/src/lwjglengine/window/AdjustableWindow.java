@@ -481,7 +481,7 @@ public class AdjustableWindow extends BorderedWindow {
 	}
 
 	@Override
-	public int getCursorShape() {
+	protected int _getCursorShape() {
 		if ((this.leftEdgeGrabbed && this.bottomEdgeGrabbed) || (this.rightEdgeGrabbed && this.topEdgeGrabbed)) {
 			return GLFW.GLFW_RESIZE_NESW_CURSOR;
 		}
