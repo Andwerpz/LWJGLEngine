@@ -139,6 +139,9 @@ public class TextEditorWindow extends Window {
 
 	private static Material highlightMaterial = new Material(new Vec4(48, 197, 255, 120).mul(1.0f / 255.0f));
 
+	//this is false when pasting text. 
+	private boolean shouldApplyInputModifiers = true;
+
 	//when typing a bracket, will automatically put the appropriate closing bracket right after the cursor position. 
 	//if typing a closing bracket, and the next character is a closing bracket, will just move the cursor after the closing bracket. 
 	private boolean bracketFinishMode = false;
@@ -297,6 +300,18 @@ public class TextEditorWindow extends Window {
 		this.curlyBracketIndentingMode = b;
 	}
 
+	public boolean getBracketFinishMode() {
+		return this.shouldApplyInputModifiers && this.bracketFinishMode;
+	}
+
+	public boolean getPrefixWhitespaceIndentingMode() {
+		return this.shouldApplyInputModifiers && this.prefixWhitespaceIndentingMode;
+	}
+
+	public boolean getCurlyBracketIndentingMode() {
+		return this.shouldApplyInputModifiers && this.curlyBracketIndentingMode;
+	}
+
 	@Override
 	protected int _getCursorShape() {
 		return GLFW.GLFW_IBEAM_CURSOR;
@@ -325,6 +340,7 @@ public class TextEditorWindow extends Window {
 		if (this.selectedLine == null) {
 			return;
 		}
+		this.shouldApplyInputModifiers = false;
 		for (int i = 0; i < text.length(); i++) {
 			char c = text.charAt(i);
 			if (c == '\n') {
@@ -334,6 +350,7 @@ public class TextEditorWindow extends Window {
 				this.selectedLine.addCharacterAtCursor(c);
 			}
 		}
+		this.shouldApplyInputModifiers = true;
 	}
 
 	private void updateLineVisibility() {
@@ -1142,7 +1159,7 @@ public class TextEditorWindow extends Window {
 			selectLine(this.lineIndex + 1);
 			selectedLine.setCursorPos(0);
 
-			if (prefixWhitespaceIndentingMode) {
+			if (getPrefixWhitespaceIndentingMode()) {
 				for (int i = 0; i < this.chars.size(); i++) {
 					if (!Character.isWhitespace(this.chars.get(i))) {
 						break;
@@ -1413,7 +1430,7 @@ public class TextEditorWindow extends Window {
 			}
 
 			case GLFW.GLFW_KEY_ENTER: {
-				if (curlyBracketIndentingMode) {
+				if (getCurlyBracketIndentingMode()) {
 					if (this.cursorPos != this.chars.size() && this.cursorPos != 0 && this.chars.get(cursorPos - 1) == '{' && this.chars.get(cursorPos) == '}') {
 						this.pressEnterAtCursor();
 						selectLine(this.lineIndex);
@@ -1444,7 +1461,7 @@ public class TextEditorWindow extends Window {
 					k = KeyboardInput.shiftMap.get(k);
 				}
 
-				if (bracketFinishMode) {
+				if (getBracketFinishMode()) {
 					if (k == '(' || k == '{' || k == '[') {
 						//auto finish this bracket. 
 						this.addCharacterAtCursor(k);
