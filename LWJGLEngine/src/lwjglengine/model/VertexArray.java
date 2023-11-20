@@ -171,6 +171,9 @@ public class VertexArray {
 
 	// orr, we can have a seperate method for removing a model instance.
 	// but then, we'd have to modify the entire buffer data anyways.
+
+	//ok, if the size of the buffer doesn't change, then we just use glBufferSubData, 
+	//but if it does, then we have to reallocate the buffer. 
 	public void updateInstances(ArrayList<Long> idList, ArrayList<ModelTransform> transformList, ArrayList<Material> materialList, int whichScene) {
 		int numInstances = idList.size();
 		Mat4[] modelMats = new Mat4[numInstances];
@@ -184,22 +187,40 @@ public class VertexArray {
 			materials[i] = materialList.get(i);
 		}
 
-		if (scenes.get(whichScene) == null) {
-			// instanced model buffer doesn't exist yet
-			scenes.put(whichScene, new int[] { numInstances, glGenBuffers(), glGenBuffers(), glGenBuffers() });
-		}
-		int[] scene = scenes.get(whichScene);
-		scene[0] = numInstances;
-		int modelMatBuffer = scene[1];
-		int colorIDBuffer = scene[2];
-		int materialBuffer = scene[3];
+		if (scenes.get(whichScene) == null || scenes.get(whichScene)[0] != numInstances) {
+			// instanced model buffer doesn't exist yet, or we need to change size of buffer
+			if (scenes.get(whichScene) == null) {
+				// time to allocate new buffers
+				scenes.put(whichScene, new int[] { numInstances, glGenBuffers(), glGenBuffers(), glGenBuffers() });
+			}
 
-		glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
-		glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
-		glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
-		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(materials), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
+			int[] scene = scenes.get(whichScene);
+			scene[0] = numInstances;
+			int modelMatBuffer = scene[1];
+			int colorIDBuffer = scene[2];
+			int materialBuffer = scene[3];
+
+			glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);
+			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
+			glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
+			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
+			glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
+			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(materials), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
+		}
+		else {
+			//just replace the data in the buffer, the size of the buffer isn't changing. 
+			int[] scene = scenes.get(whichScene);
+			int modelMatBuffer = scene[1];
+			int colorIDBuffer = scene[2];
+			int materialBuffer = scene[3];
+
+			glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, BufferUtils.createFloatBuffer(modelMats));
+			glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, BufferUtils.createFloatBuffer(colorIDs));
+			glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, BufferUtils.createFloatBuffer(materials));
+		}
 	}
 
 	public void bindScene(int whichScene) {

@@ -56,6 +56,9 @@ public class Model {
 	public static final Material DEFAULT_MATERIAL = Material.defaultMaterial();
 	public static final TextureMaterial DEFAULT_TEXTURE_MATERIAL = TextureMaterial.defaultTextureMaterial();
 
+	private static long updateModelsMillis; //how long did it take the last tick to update all the models
+	private static HashMap<Integer, Long> renderModelsMillis = new HashMap<>(); //likewise but for rendering. 
+
 	private static HashSet<Model> models = new HashSet<>();
 
 	private static HashMap<Long, ModelInstance> IDtoInstance = new HashMap<>();
@@ -71,7 +74,7 @@ public class Model {
 	//for each model, map each scene to a set of model instance ids
 	private HashMap<Integer, HashSet<Long>> sceneToID;
 
-	private ArrayList<Integer> scenesNeedingUpdates;
+	private HashSet<Integer> scenesNeedingUpdates;
 
 	// per model 3D vertex information
 	protected ArrayList<VertexArray> meshes;
@@ -123,9 +126,7 @@ public class Model {
 		for (VertexArray vao : meshes) {
 			this.collisionMeshes.add(new CollisionMesh(vao));
 		}
-		this.scenesNeedingUpdates = new ArrayList<Integer>();
-		//this.modelMats = new HashMap<Integer, HashMap<Long, Mat4>>();
-		//this.materials = new HashMap<Integer, HashMap<Long, ArrayList<Material>>>();
+		this.scenesNeedingUpdates = new HashSet<Integer>();
 		this.sceneToID = new HashMap<Integer, HashSet<Long>>();
 		models.add(this);
 	}
@@ -501,11 +502,13 @@ public class Model {
 	}
 
 	public static void updateModels() {
+		long startMillis = System.currentTimeMillis();
 		for (Model m : models) {
 			if (m.scenesNeedingUpdates.size() != 0) {
 				m.updateModelMats();
 			}
 		}
+		updateModelsMillis = System.currentTimeMillis() - startMillis;
 	}
 
 	private void updateModelMats() {
@@ -615,9 +618,11 @@ public class Model {
 	}
 
 	public static void renderModels(int scene) {
+		long startMillis = System.currentTimeMillis();
 		for (Model m : models) {
 			m.render(scene);
 		}
+		renderModelsMillis.put(scene, System.currentTimeMillis() - startMillis);
 	}
 
 	protected void render(int scene) {
@@ -663,5 +668,16 @@ public class Model {
 		for (Long id : modelInstanceIDs) {
 			System.out.println(id);
 		}
+	}
+
+	public static long getUpdateModelsMillis() {
+		return updateModelsMillis;
+	}
+
+	public static long getRenderModelsMillis(int scene) {
+		if (renderModelsMillis.containsKey(scene)) {
+			return renderModelsMillis.get(scene);
+		}
+		return -1;
 	}
 }
