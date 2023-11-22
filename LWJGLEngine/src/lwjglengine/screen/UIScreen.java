@@ -13,6 +13,7 @@ import lwjglengine.model.Model;
 import lwjglengine.player.Camera;
 import myutils.math.Mat4;
 import myutils.math.Vec2;
+import myutils.math.Vec3;
 
 public class UIScreen extends Screen {
 	// higher values of z will go over lower values.
@@ -169,7 +170,7 @@ public class UIScreen extends Screen {
 		this.ui_scene = scene;
 	}
 
-	//assumes that the ui screen covers the entire screen
+	//	assumes that the ui screen covers the entire screen
 	public long getEntityIDAtMouse() {
 		Vec2 mousePos = MouseInput.getMousePos();
 		return getEntityIDAtCoord((int) (mousePos.x), (int) (mousePos.y));
@@ -182,7 +183,8 @@ public class UIScreen extends Screen {
 	 * @return
 	 */
 	public long getEntityIDAtCoord(int x, int y) {
-		long modelInstanceID = Model.convertRGBToID(colorIDBuffer.sampleColorAtPoint(x, y, GL_COLOR_ATTACHMENT0));
+		Vec3 color = this.colorIDBuffer.sampleColorAtPoint(x, y, GL_COLOR_ATTACHMENT0);
+		long modelInstanceID = Model.convertRGBToID(color);
 		long entityID = Entity.getEntityIDFromModelID(modelInstanceID);
 		return entityID;
 	}

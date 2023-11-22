@@ -165,15 +165,11 @@ public class VertexArray {
 		this.init(v.getVertices(), v.getNormals(), v.getTangents(), v.getBitangents(), v.getUVs(), v.getIndices(), v.getRenderType());
 	}
 
-	// seperate methods for updating materials and updating model mats??
-	// but updating instances is the way that we can get rid of them...
-	// there has to be one method for updating both, no other way around it.
-
-	// orr, we can have a seperate method for removing a model instance.
-	// but then, we'd have to modify the entire buffer data anyways.
-
 	//ok, if the size of the buffer doesn't change, then we just use glBufferSubData, 
 	//but if it does, then we have to reallocate the buffer. 
+
+	//the issue that if one instance changes, then they all change still remains, but
+	//it's acceptable to just update all of them for now. 
 	public void updateInstances(ArrayList<Long> idList, ArrayList<ModelTransform> transformList, ArrayList<Material> materialList, int whichScene) {
 		int numInstances = idList.size();
 		Mat4[] modelMats = new Mat4[numInstances];
@@ -201,11 +197,11 @@ public class VertexArray {
 			int materialBuffer = scene[3];
 
 			glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);
-			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
+			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
-			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
+			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
-			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(materials), GL_DYNAMIC_DRAW); // TODO switch to glBufferSubData
+			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(materials), GL_DYNAMIC_DRAW);
 		}
 		else {
 			//just replace the data in the buffer, the size of the buffer isn't changing. 

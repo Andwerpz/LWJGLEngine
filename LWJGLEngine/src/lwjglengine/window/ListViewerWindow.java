@@ -491,14 +491,14 @@ public class ListViewerWindow extends Window {
 		int mouseY = (int) this.getWindowMousePos().y;
 
 		this.contentSection.render(outputBuffer, getWindowMousePos());
-		if (this.contentSection.sectionHovered()) {
+		if (this.contentSection.isSectionHovered()) {
 			this.hoveredSectionID = this.contentSection.getBackgroundRect().getID();
 		}
 		this.hoveredContentID = this.contentSection.getHoveredEntityID();
 
 		if (this.renderTopBar) {
 			this.topBarSection.render(outputBuffer, getWindowMousePos());
-			if (this.topBarSection.sectionHovered()) {
+			if (this.topBarSection.isSectionHovered()) {
 				this.hoveredSectionID = this.topBarSection.getBackgroundRect().getID();
 			}
 			this.hoveredTopBarID = this.topBarSection.getHoveredEntityID();
@@ -506,7 +506,7 @@ public class ListViewerWindow extends Window {
 
 		if (this.renderBottomBar) {
 			this.bottomBarSection.render(outputBuffer, this.getWindowMousePos());
-			if (this.bottomBarSection.sectionHovered()) {
+			if (this.bottomBarSection.isSectionHovered()) {
 				this.hoveredSectionID = this.bottomBarSection.getBackgroundRect().getID();
 			}
 		}

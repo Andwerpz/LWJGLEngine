@@ -18,6 +18,7 @@ import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
+import lwjglengine.ui.UISection;
 import myutils.math.Vec2;
 import myutils.math.Vec3;
 import myutils.math.Vec4;
@@ -29,9 +30,7 @@ public class AdjustableWindow extends BorderedWindow {
 
 	private final int BACKGROUND_SCENE = Scene.generateScene();
 
-	private final int TITLE_BAR_BACKGROUND_SCENE = Scene.generateScene();
-	private final int TITLE_BAR_SELECTION_SCENE = Scene.generateScene();
-	private final int TITLE_BAR_TEXT_SCENE = Scene.generateScene();
+	private UISection titleBarSection;
 
 	private final int BORDER_SCENE = Scene.generateScene();
 
@@ -72,7 +71,6 @@ public class AdjustableWindow extends BorderedWindow {
 
 	//if an edge is grabbed, then the title bar cannot be grabbed, and vice versa
 	private boolean titleBarGrabbed = false;
-	private long titleBarSceneMouseEntityID = -1;
 	private int titleBarGrabMouseX, titleBarGrabMouseY;
 
 	//how many pixels away from the edge can you be to still grab it?
@@ -89,7 +87,7 @@ public class AdjustableWindow extends BorderedWindow {
 	protected boolean allowRenderIfContentNotSelected = true;
 
 	private boolean renderBackground = true;
-	private boolean renderTopBar = true;
+	private boolean renderTitleBar = true;
 
 	private boolean isFullscreen = false;
 
@@ -144,7 +142,12 @@ public class AdjustableWindow extends BorderedWindow {
 		this.backgroundRect.setMaterial(this.deselectedBackgroundMaterial);
 		this.backgroundRect.bind(this.rootUIElement);
 
-		this.titleBarRect = new UIFilledRectangle(0, 0, -9, this.getWidth(), titleBarHeight, TITLE_BAR_BACKGROUND_SCENE);
+		this.titleBarSection = new UISection(this.uiScreen);
+
+		this.titleBarRect = this.titleBarSection.getBackgroundRect();
+		this.titleBarRect.setZ(-9);
+		this.titleBarRect.setFrameAlignmentOffset(0, 0);
+		this.titleBarRect.setHeight(titleBarHeight);
 		this.titleBarRect.setFillWidth(true);
 		this.titleBarRect.setFillWidthMargin(0);
 		this.titleBarRect.setMaterial(this.titleBarMaterial);
@@ -153,13 +156,13 @@ public class AdjustableWindow extends BorderedWindow {
 		this.titleBarRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 
 		this.title = title;
-		this.titleBarText = new Text(this.titleLeftMargin, 0, this.title, 12, this.deselectedTitleTextMaterial, TITLE_BAR_TEXT_SCENE);
+		this.titleBarText = new Text(this.titleLeftMargin, 0, this.title, 12, this.deselectedTitleTextMaterial, this.titleBarSection.getTextScene());
 		this.titleBarText.setDoAntialiasing(false);
 		this.titleBarText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.titleBarText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.titleBarText.bind(this.titleBarRect);
 
-		this.titleBarCloseBtn = new Button(0, 0, titleBarHeight, titleBarHeight, "btn_close", "X", 12, TITLE_BAR_SELECTION_SCENE, TITLE_BAR_TEXT_SCENE);
+		this.titleBarCloseBtn = new Button(0, 0, titleBarHeight, titleBarHeight, "btn_close", "X", 12, this.titleBarSection.getSelectionScene(), this.titleBarSection.getTextScene());
 		this.titleBarCloseBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 		this.titleBarCloseBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
 		this.titleBarCloseBtn.getButtonText().setDoAntialiasing(false);
@@ -179,10 +182,8 @@ public class AdjustableWindow extends BorderedWindow {
 	@Override
 	protected void __kill() {
 		this.uiScreen.kill();
+		this.titleBarSection.kill();
 		Scene.removeScene(BACKGROUND_SCENE);
-		Scene.removeScene(TITLE_BAR_BACKGROUND_SCENE);
-		Scene.removeScene(TITLE_BAR_SELECTION_SCENE);
-		Scene.removeScene(TITLE_BAR_TEXT_SCENE);
 		Scene.removeScene(BORDER_SCENE);
 	}
 
@@ -193,12 +194,12 @@ public class AdjustableWindow extends BorderedWindow {
 		this.isFullscreen = b;
 
 		if (this.isFullscreen) {
-			this.renderTopBar = false;
+			this.renderTitleBar = false;
 
 			this.setDimensions(this.parentWindow.getWidth(), this.parentWindow.getHeight());
 		}
 		else {
-			this.renderTopBar = true;
+			this.renderTitleBar = true;
 
 			this.__resize();
 		}
@@ -266,7 +267,7 @@ public class AdjustableWindow extends BorderedWindow {
 			this.close();
 		}
 
-		Input.inputsHovered(this.titleBarSceneMouseEntityID, TITLE_BAR_SELECTION_SCENE);
+		this.titleBarSection.update();
 
 		//update size and / or offset if the edges are grabbed
 		{
@@ -398,15 +399,8 @@ public class AdjustableWindow extends BorderedWindow {
 
 	@Override
 	protected void _renderOverlay(Framebuffer outputBuffer) {
-		if (this.renderTopBar) {
-			this.uiScreen.setUIScene(TITLE_BAR_BACKGROUND_SCENE);
-			this.uiScreen.render(outputBuffer);
-			this.uiScreen.setUIScene(TITLE_BAR_SELECTION_SCENE);
-			this.uiScreen.render(outputBuffer);
-			Vec2 mousePos = this.getWindowMousePos();
-			this.titleBarSceneMouseEntityID = this.uiScreen.getEntityIDAtCoord((int) mousePos.x, (int) (mousePos.y));
-			this.uiScreen.setUIScene(TITLE_BAR_TEXT_SCENE);
-			this.uiScreen.render(outputBuffer);
+		if (this.renderTitleBar) {
+			this.titleBarSection.render(outputBuffer, this.getWindowMousePos());
 		}
 	}
 
@@ -473,7 +467,7 @@ public class AdjustableWindow extends BorderedWindow {
 	private boolean canGrabTitleBar() {
 		//next, check if should grab the title
 		if (!(this.canGrabLeftEdge() || this.canGrabRightEdge() || this.canGrabBottomEdge() || this.canGrabTopEdge())) {
-			if (this.titleBarSceneMouseEntityID == this.titleBarRect.getID()) {
+			if (this.titleBarSection.getHoveredEntityID() == this.titleBarRect.getID()) {
 				return true;
 			}
 		}
@@ -518,7 +512,7 @@ public class AdjustableWindow extends BorderedWindow {
 
 	@Override
 	protected void _mousePressed(int button) {
-		Input.inputsPressed(this.titleBarSceneMouseEntityID, TITLE_BAR_SELECTION_SCENE);
+		this.titleBarSection.mousePressed(button);
 
 		//check if should grab the edge
 		this.leftEdgeGrabbed = false;
@@ -543,9 +537,9 @@ public class AdjustableWindow extends BorderedWindow {
 
 	@Override
 	protected void _mouseReleased(int button) {
-		Input.inputsReleased(this.titleBarSceneMouseEntityID, TITLE_BAR_SELECTION_SCENE);
+		this.titleBarSection.mouseReleased(button);
 
-		switch (Input.getClicked(TITLE_BAR_SELECTION_SCENE)) {
+		switch (Input.getClicked(this.titleBarSection.getSelectionScene())) {
 		case "btn_close":
 			this.close();
 			break;

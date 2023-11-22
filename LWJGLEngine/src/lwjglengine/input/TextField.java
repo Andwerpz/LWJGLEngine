@@ -28,6 +28,7 @@ import myutils.graphics.FontUtils;
 import myutils.graphics.GraphicsTools;
 import myutils.math.Mat4;
 import myutils.math.MathUtils;
+import myutils.math.Vec2;
 import myutils.math.Vec3;
 import myutils.math.Vec4;
 
@@ -140,7 +141,8 @@ public class TextField extends Input {
 			if (this.isPressed() && this.text.matches(this.validInputRegex)) {
 				//increment current input
 				double curFloat = Double.parseDouble(this.getText());
-				int horizontalDiff = (int) Math.abs(this.mouseDiff.x) * (this.mouseDiff.x < 0 ? -1 : 1);
+				Vec2 mouseDiff = MouseInput.getMouseDiff();
+				int horizontalDiff = (int) Math.abs(mouseDiff.x) * (mouseDiff.x < 0 ? -1 : 1);
 				curFloat += horizontalDiff * this.floatFieldDragIncrement;
 				curFloat = MathUtils.clamp(this.floatFieldMinimum, this.floatFieldMaximum, curFloat);
 

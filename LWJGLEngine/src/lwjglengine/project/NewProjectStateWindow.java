@@ -92,7 +92,7 @@ public class NewProjectStateWindow extends Window {
 	@Override
 	protected void renderContent(Framebuffer outputBuffer) {
 		this.newStateDialogue.render(outputBuffer, this.getWindowMousePos());
-		if (this.newStateDialogue.sectionHovered()) {
+		if (this.newStateDialogue.isSectionHovered()) {
 			this.hoveredSectionID = this.newStateDialogue.getBackgroundRect().getID();
 		}
 	}

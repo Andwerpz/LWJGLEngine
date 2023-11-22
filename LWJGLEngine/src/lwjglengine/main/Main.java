@@ -11,6 +11,8 @@ import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
+import java.text.DecimalFormat;
+
 import static org.lwjgl.openal.ALC10.*;
 
 import org.lwjgl.glfw.GLFWVidMode;
@@ -65,10 +67,10 @@ public class Main implements Runnable {
 	public static long window;
 	private static boolean fullscreen = false;
 
-	public static final float ASPECT_RATIO = (float) Main.windowWidth / (float) Main.windowHeight;
-	public static final float FOV = (float) Math.toRadians(90f); // vertical FOV
+	//public static final float ASPECT_RATIO = (float) Main.windowWidth / (float) Main.windowHeight;
+	//public static final float FOV = (float) Math.toRadians(90f); // vertical FOV
 
-	public static long selectedEntityID = 0;
+	//public static long selectedEntityID = 0;
 
 	public long deltaMillis = 0;
 	public int lastSecondUpdates = 0;
@@ -231,6 +233,10 @@ public class Main implements Runnable {
 		double ns = 1000000000.0 / 60;
 		long timer = System.currentTimeMillis();
 
+		DecimalFormat df = new DecimalFormat("#.##");
+		float renderAvgMillis = 0;
+		float updateAvgMillis = 0;
+
 		int updates = 0;
 		int frames = 0;
 		while (running) {
@@ -238,22 +244,30 @@ public class Main implements Runnable {
 			delta += (now - lastTime) / ns;
 			lastTime = now;
 			if (delta >= 1.0) {
+				long startMillis = System.currentTimeMillis();
 				this.deltaMillis = (System.nanoTime() - lastUpdateTime) / 1000000;
 				lastUpdateTime = now;
 				update();
 				delta--;
 				delta = Math.min(delta, 1);
 				updates++;
+				updateAvgMillis += System.currentTimeMillis() - startMillis;
 			}
 
-			render();
-			frames++;
+			{
+				long startMillis = System.currentTimeMillis();
+				render();
+				frames++;
+				renderAvgMillis += System.currentTimeMillis() - startMillis;
+			}
 
 			if (System.currentTimeMillis() - timer > 1000) {
 				timer += 1000;
 				this.lastSecondFrames = frames;
 				this.lastSecondUpdates = updates;
-				System.out.println(frames + " fps \\ " + updates + " ups");
+				renderAvgMillis /= frames;
+				updateAvgMillis /= updates;
+				System.out.println(frames + " fps \\ " + updates + " ups, millis avg : " + df.format(renderAvgMillis) + " \\ " + df.format(updateAvgMillis));
 				updates = 0;
 				frames = 0;
 			}
@@ -271,6 +285,7 @@ public class Main implements Runnable {
 
 	private void update() {
 		glfwPollEvents();
+		MouseInput.updateMousePos();
 
 		if (UIElement.shouldAlignUIElements) {
 			UIElement.alignAllUIElements();
@@ -278,23 +293,23 @@ public class Main implements Runnable {
 
 		this.sm.update();
 
-		//update hovered window
-		Vec2 mousePos = MouseInput.getMousePos();
-		Window.setHoveredWindow(this.sm.selectWindow((int) mousePos.x, (int) mousePos.y, false));
-
-		//set cursor
-		if (Window.hoveredWindow != null) {
-			int adjCursorShape = GLFW.GLFW_ARROW_CURSOR;
-			if (Window.hoveredWindow.getParent() instanceof AdjustableWindow) {
-				adjCursorShape = Window.hoveredWindow.getParent().getCursorShape();
-			}
-			if (adjCursorShape == GLFW.GLFW_ARROW_CURSOR) {
-				setCursorShape(Window.hoveredWindow.getCursorShape());
-			}
-			else {
-				setCursorShape(adjCursorShape);
-			}
-		}
+		//		//update hovered window
+		//		Vec2 mousePos = MouseInput.getMousePos();
+		//		Window.setHoveredWindow(this.sm.selectWindow((int) mousePos.x, (int) mousePos.y, false));
+		//
+		//		//set cursor
+		//		if (Window.hoveredWindow != null) {
+		//			int adjCursorShape = GLFW.GLFW_ARROW_CURSOR;
+		//			if (Window.hoveredWindow.getParent() instanceof AdjustableWindow) {
+		//				adjCursorShape = Window.hoveredWindow.getParent().getCursorShape();
+		//			}
+		//			if (adjCursorShape == GLFW.GLFW_ARROW_CURSOR) {
+		//				setCursorShape(Window.hoveredWindow.getCursorShape());
+		//			}
+		//			else {
+		//				setCursorShape(adjCursorShape);
+		//			}
+		//		}
 
 		//normal updating stuff
 		//we want to update this stuff after we modify them in sm.update so that they render correctly. 

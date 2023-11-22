@@ -28,6 +28,16 @@ public class Framebuffer {
 	// this is so that the gpu can actually write to the buffer. 
 	// check if complete using the isComplete function.
 
+	//TODO
+	// - sampleColorAtPoint() is really slow, taking around 2-3ms to execute.
+	//   - the problem probably lies in the fact that we have to wait for the gpu to be done with this buffer before we can
+	//   - read in the info, and the sync takes the majority of the 2-3 ms. 
+	//   - another theory is that the act of reading memory from the gpu buffer just takes that long, and we need to use a 
+	//   - renderbuffer instead of a normal color buffer. 
+	//   - one solution might be to make the function async and make some other thread responsible for querying colors, updating
+	//   - the hovered color when the function finishes executing. 
+	//   - this might work for the purpose of entity selection. 
+
 	private int fbo;
 	private HashMap<Integer, Triple<Integer, Integer, Integer>> buffers; //bound location, {textureType, textureID, mipLevel}
 
@@ -147,7 +157,6 @@ public class Framebuffer {
 
 	public Vec3 sampleColorAtPoint(int x, int y, int attachmentID) {
 		this.bind();
-		glReadBuffer(attachmentID);
 		ByteBuffer pixels = BufferUtils.createByteBuffer(4);
 		glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 		return new Vec3((pixels.get(0) & 0xFF), (pixels.get(1) & 0xFF), (pixels.get(2) & 0xFF));

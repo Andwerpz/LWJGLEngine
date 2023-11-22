@@ -26,8 +26,14 @@ public class UISection {
 	private boolean sectionHovered = false;
 	private long hoveredEntityID;
 
+	private boolean doHoverChecks = true;
+
 	public UISection(int x, int y, int width, int height, UIScreen uiScreen) {
 		this.init(x, y, width, height, uiScreen);
+	}
+
+	public UISection(UIScreen uiScreen) {
+		this.init(0, 0, 100, 100, uiScreen);
 	}
 
 	public void init(int x, int y, int width, int height, UIScreen uiScreen) {
@@ -47,21 +53,29 @@ public class UISection {
 		Input.inputsHovered(hoveredEntityID, SELECTION_SCENE);
 	}
 
+	public void setDoHoverChecks(boolean b) {
+		this.doHoverChecks = b;
+	}
+
 	public void render(Framebuffer outputBuffer, Vec2 mousePos) {
 		int mouseX = (int) mousePos.x;
 		int mouseY = (int) mousePos.y;
 
 		this.uiScreen.setUIScene(BACKGROUND_SCENE);
 		this.uiScreen.render(outputBuffer);
-		this.sectionHovered = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.backgroundRect.getID();
+		if (this.doHoverChecks) {
+			this.sectionHovered = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.backgroundRect.getID();
+		}
 		this.uiScreen.setUIScene(SELECTION_SCENE);
 		this.uiScreen.render(outputBuffer);
-		this.hoveredEntityID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
+		if (this.doHoverChecks) {
+			this.hoveredEntityID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
+		}
 		this.uiScreen.setUIScene(TEXT_SCENE);
 		this.uiScreen.render(outputBuffer);
 	}
 
-	public boolean sectionHovered() {
+	public boolean isSectionHovered() {
 		return this.sectionHovered;
 	}
 
@@ -86,7 +100,9 @@ public class UISection {
 	}
 
 	public void mousePressed(int button) {
-		Input.inputsPressed(this.hoveredEntityID, SELECTION_SCENE);
+		if (this.sectionHovered) {
+			Input.inputsPressed(this.hoveredEntityID, SELECTION_SCENE);
+		}
 	}
 
 	public void mouseReleased(int button) {

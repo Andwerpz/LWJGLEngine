@@ -13,6 +13,7 @@ import lwjglengine.model.Model;
 import lwjglengine.scene.Scene;
 import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.UIElement;
+import lwjglengine.ui.UISection;
 import myutils.math.Vec3;
 import myutils.math.Vec4;
 
@@ -21,16 +22,12 @@ public class ContextMenuWindow extends BorderedWindow {
 	private static int entryHeight = 20;
 	private static int entryTextHorizontalMargin = 5;
 
-	private final int BACKGROUND_SCENE = Scene.generateScene();
-	private final int SELECTION_SCENE = Scene.generateScene();
-	private final int TEXT_SCENE = Scene.generateScene();
-
 	private UIScreen uiScreen;
+
+	private UISection uiSection;
 
 	private ArrayList<String> options;
 	private ArrayList<Button> buttons;
-
-	private long hoveredInputID;
 
 	//when an option is pressed, call the callback window's handle context menu action function. 
 	private Window callbackWindow;
@@ -47,13 +44,19 @@ public class ContextMenuWindow extends BorderedWindow {
 
 		this.uiScreen = new UIScreen();
 
+		this.uiSection = new UISection(this.uiScreen);
+		this.uiSection.getBackgroundRect().setFillWidth(true);
+		this.uiSection.getBackgroundRect().setFillHeight(true);
+		this.uiSection.getBackgroundRect().setMaterial(Material.transparent());
+		this.uiSection.getBackgroundRect().bind(rootUIElement);
+
 		int height = this.options.size() * entryHeight;
 		int width = 100;
 
 		this.buttons = new ArrayList<>();
 
 		for (int i = 0; i < this.options.size(); i++) {
-			Button b = new Button(0, i * entryHeight, 100, entryHeight, "btn " + this.options.get(i), this.options.get(i), new Font("Dialogue", Font.PLAIN, 12), 12, SELECTION_SCENE, TEXT_SCENE);
+			Button b = new Button(0, i * entryHeight, 100, entryHeight, "btn " + this.options.get(i), this.options.get(i), new Font("Dialogue", Font.PLAIN, 12), 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
 			width = Math.max(width, b.getButtonText().getTextWidth() + entryTextHorizontalMargin * 2);
 			b.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 			b.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
@@ -105,10 +108,7 @@ public class ContextMenuWindow extends BorderedWindow {
 	@Override
 	protected void __kill() {
 		this.uiScreen.kill();
-
-		Scene.removeScene(BACKGROUND_SCENE);
-		Scene.removeScene(SELECTION_SCENE);
-		Scene.removeScene(TEXT_SCENE);
+		this.uiSection.kill();
 	}
 
 	@Override
@@ -118,16 +118,7 @@ public class ContextMenuWindow extends BorderedWindow {
 
 	@Override
 	protected void renderContent(Framebuffer outputBuffer) {
-		int mouseX = (int) this.getWindowMousePos().x;
-		int mouseY = (int) this.getWindowMousePos().y;
-
-		this.uiScreen.setUIScene(BACKGROUND_SCENE);
-		this.uiScreen.render(outputBuffer);
-		this.uiScreen.setUIScene(SELECTION_SCENE);
-		this.uiScreen.render(outputBuffer);
-		this.hoveredInputID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
-		this.uiScreen.setUIScene(TEXT_SCENE);
-		this.uiScreen.render(outputBuffer);
+		this.uiSection.render(outputBuffer, this.getWindowMousePos());
 	}
 
 	@Override
@@ -138,7 +129,7 @@ public class ContextMenuWindow extends BorderedWindow {
 
 	@Override
 	protected void _update() {
-		Input.inputsHovered(this.hoveredInputID, SELECTION_SCENE);
+		this.uiSection.update();
 
 		if (this.shouldClose) {
 			this.kill();
@@ -170,14 +161,14 @@ public class ContextMenuWindow extends BorderedWindow {
 
 	@Override
 	protected void _mousePressed(int button) {
-		Input.inputsPressed(this.hoveredInputID, SELECTION_SCENE);
+		this.uiSection.mousePressed(button);
 	}
 
 	@Override
 	protected void _mouseReleased(int button) {
-		Input.inputsReleased(this.hoveredInputID, SELECTION_SCENE);
+		this.uiSection.mouseReleased(button);
 
-		String which = Input.getClicked(SELECTION_SCENE);
+		String which = Input.getClicked(this.uiSection.getSelectionScene());
 
 		if (which != "") {
 			this.callbackWindow.handleContextMenuAction(which.substring(which.indexOf(" ") + 1));

@@ -33,8 +33,6 @@ public abstract class Input extends UIElement {
 	//if this is true, then it means that this is the last input to be clicked. 
 	private boolean clicked;
 
-	protected Vec2 mousePos, mouseDiff; //TODO move this to MouseInput
-
 	private String sID;
 
 	public Input(float x, float y, float z, float width, float height, String sID, FilledRectangle baseRect, int scene) {
@@ -55,9 +53,6 @@ public abstract class Input extends UIElement {
 		this.pressed = false;
 		this.hovered = false;
 		this.clicked = false;
-
-		this.mousePos = MouseInput.getMousePos();
-		this.mouseDiff = new Vec2(0);
 
 		Input.addInput(sID, this);
 	}
@@ -226,10 +221,6 @@ public abstract class Input extends UIElement {
 
 	@Override
 	protected void _update() {
-		Vec2 nextMousePos = MouseInput.getMousePos();
-		this.mouseDiff.set(new Vec2(this.mousePos, nextMousePos));
-		this.mousePos.set(nextMousePos);
-
 		this.__update();
 	}
 
