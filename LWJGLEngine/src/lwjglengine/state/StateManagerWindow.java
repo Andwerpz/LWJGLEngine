@@ -25,7 +25,6 @@ import lwjglengine.graphics.TextureMaterial;
 import lwjglengine.main.Main;
 import lwjglengine.model.FilledRectangle;
 import lwjglengine.model.Model;
-import lwjglengine.project.ProjectManagerWindow;
 import lwjglengine.scene.Scene;
 import lwjglengine.screen.ScreenQuad;
 import lwjglengine.screen.UIScreen;
@@ -115,10 +114,6 @@ public class StateManagerWindow extends Window {
 		switch (action) {
 		case "New File Explorer Window":
 			Window fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "File Explorer", new FileExplorerWindow(this), this);
-			break;
-
-		case "New Project Manager Window":
-			Window projectManager = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "Project Manager", new ProjectManagerWindow(), this);
 			break;
 		}
 	}

@@ -34,6 +34,7 @@ import lwjglengine.networking.Server;
 import lwjglengine.scene.Scene;
 import lwjglengine.screen.Screen;
 import lwjglengine.screen.ScreenQuad;
+import lwjglengine.screen.UIScreen;
 import lwjglengine.state.SplashState;
 import lwjglengine.state.StateFactory;
 import lwjglengine.state.StateManagerWindow;
@@ -293,23 +294,27 @@ public class Main implements Runnable {
 
 		this.sm.update();
 
-		//		//update hovered window
-		//		Vec2 mousePos = MouseInput.getMousePos();
-		//		Window.setHoveredWindow(this.sm.selectWindow((int) mousePos.x, (int) mousePos.y, false));
-		//
-		//		//set cursor
-		//		if (Window.hoveredWindow != null) {
-		//			int adjCursorShape = GLFW.GLFW_ARROW_CURSOR;
-		//			if (Window.hoveredWindow.getParent() instanceof AdjustableWindow) {
-		//				adjCursorShape = Window.hoveredWindow.getParent().getCursorShape();
-		//			}
-		//			if (adjCursorShape == GLFW.GLFW_ARROW_CURSOR) {
-		//				setCursorShape(Window.hoveredWindow.getCursorShape());
-		//			}
-		//			else {
-		//				setCursorShape(adjCursorShape);
-		//			}
-		//		}
+		//update hovered window
+		Vec2 mousePos = MouseInput.getMousePos();
+		Window.setHoveredWindow(this.sm.selectWindow((int) mousePos.x, (int) mousePos.y, false));
+
+		//set cursor
+		if (Window.hoveredWindow != null) {
+			int adjCursorShape = GLFW.GLFW_ARROW_CURSOR;
+			if (Window.hoveredWindow.getParent() instanceof AdjustableWindow) {
+				adjCursorShape = Window.hoveredWindow.getParent().getCursorShape();
+			}
+			if (adjCursorShape == GLFW.GLFW_ARROW_CURSOR) {
+				setCursorShape(Window.hoveredWindow.getCursorShape());
+			}
+			else {
+				setCursorShape(adjCursorShape);
+			}
+		}
+
+		//long startMillis = System.currentTimeMillis();
+		Screen.updateActiveScreens();
+		//System.out.println("UPDATE SCREEN TIME : " + (System.currentTimeMillis() - startMillis));
 
 		//normal updating stuff
 		//we want to update this stuff after we modify them in sm.update so that they render correctly. 

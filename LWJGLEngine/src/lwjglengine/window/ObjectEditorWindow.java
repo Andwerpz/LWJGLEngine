@@ -51,7 +51,6 @@ public class ObjectEditorWindow extends Window {
 	private static final int CLASS_TYPE_VEC3 = 10;
 	private static final int CLASS_TYPE_VEC4 = 11;
 
-	private UIScreen uiScreen;
 	private UISection uiSection;
 
 	//bounding boxes for all the input fields. 
@@ -86,8 +85,7 @@ public class ObjectEditorWindow extends Window {
 	}
 
 	private void init() {
-		this.uiScreen = new UIScreen();
-		this.uiSection = new UISection(0, 0, this.getWidth(), this.getHeight(), this.uiScreen);
+		this.uiSection = new UISection();
 		this.uiSection.getBackgroundRect().setFillWidth(true);
 		this.uiSection.getBackgroundRect().setFillHeight(true);
 		this.uiSection.getBackgroundRect().setMaterial(this.topBarDefaultMaterial);
@@ -527,13 +525,12 @@ public class ObjectEditorWindow extends Window {
 
 	@Override
 	protected void _kill() {
-		// TODO Auto-generated method stub
-
+		this.uiSection.kill();
 	}
 
 	@Override
 	protected void _resize() {
-		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.uiSection.setScreenDimensions(this.getWidth(), this.getHeight());
 	}
 
 	@Override

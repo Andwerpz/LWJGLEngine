@@ -47,8 +47,6 @@ public class ListViewerWindow extends Window {
 
 	private Window callbackWindow;
 
-	private UIScreen uiScreen;
-
 	private TextField topBarSearchTf;
 	private Text topBarSelectedEntryText;
 
@@ -101,11 +99,9 @@ public class ListViewerWindow extends Window {
 	}
 
 	private void init(Window callbackWindow) {
-		this.uiScreen = new UIScreen();
-
-		this.topBarSection = new UISection(0, 0, this.getWidth(), this.topBarHeightPx, this.uiScreen);
-		this.contentSection = new UISection(0, 0, this.getWidth(), this.getHeight(), this.uiScreen);
-		this.bottomBarSection = new UISection(0, 0, this.getWidth(), this.bottomBarHeightPx, this.uiScreen);
+		this.topBarSection = new UISection();
+		this.contentSection = new UISection();
+		this.bottomBarSection = new UISection();
 
 		this.entryList = new ArrayList<>();
 
@@ -430,8 +426,6 @@ public class ListViewerWindow extends Window {
 
 	@Override
 	protected void _kill() {
-		this.uiScreen.kill();
-
 		this.topBarSection.kill();
 		this.contentSection.kill();
 		this.bottomBarSection.kill();
@@ -439,7 +433,9 @@ public class ListViewerWindow extends Window {
 
 	@Override
 	protected void _resize() {
-		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.topBarSection.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.bottomBarSection.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.contentSection.setScreenDimensions(this.getWidth(), this.getHeight());
 
 		this.topBarSection.getBackgroundRect().setHeight(this.topBarHeightPx);
 		this.bottomBarSection.getBackgroundRect().setHeight(this.bottomBarHeightPx);

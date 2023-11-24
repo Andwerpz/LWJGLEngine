@@ -16,8 +16,10 @@ public class UISection {
 	private final int SELECTION_SCENE = Scene.generateScene();
 	private final int TEXT_SCENE = Scene.generateScene();
 
-	//this class isn't responsible for removing the ui screen. 
-	private UIScreen uiScreen;
+	//	//this class isn't responsible for removing the ui screen. 
+	//	private UIScreen uiScreen;
+
+	private UIScreen backgroundScreen, selectionScreen, textScreen;
 
 	//initially, this will be transparent, and not bound to anything. 
 	//used for checking if this section is selected. 
@@ -28,19 +30,33 @@ public class UISection {
 
 	private boolean doHoverChecks = true;
 
-	public UISection(int x, int y, int width, int height, UIScreen uiScreen) {
-		this.init(x, y, width, height, uiScreen);
+	public UISection() {
+		this.init();
 	}
 
-	public UISection(UIScreen uiScreen) {
-		this.init(0, 0, 100, 100, uiScreen);
-	}
+	public void init() {
+		this.backgroundScreen = new UIScreen();
+		this.selectionScreen = new UIScreen();
+		this.textScreen = new UIScreen();
 
-	public void init(int x, int y, int width, int height, UIScreen uiScreen) {
-		this.uiScreen = uiScreen;
+		this.backgroundScreen.setUIScene(BACKGROUND_SCENE);
+		this.selectionScreen.setUIScene(SELECTION_SCENE);
+		this.textScreen.setUIScene(TEXT_SCENE);
 
-		this.backgroundRect = new UIFilledRectangle(x, y, 0, width, height, BACKGROUND_SCENE);
+		this.backgroundRect = new UIFilledRectangle(0, 0, 0, 400, 300, BACKGROUND_SCENE);
 		this.backgroundRect.setMaterial(new Material(new Vec4(0)));
+	}
+
+	/**
+	 * Resizes the underlying UIScreens. 
+	 * You have to handle the background rect seperately though
+	 * @param width
+	 * @param height
+	 */
+	public void setScreenDimensions(int width, int height) {
+		this.backgroundScreen.setScreenDimensions(width, height);
+		this.selectionScreen.setScreenDimensions(width, height);
+		this.textScreen.setScreenDimensions(width, height);
 	}
 
 	public void kill() {
@@ -57,22 +73,22 @@ public class UISection {
 		this.doHoverChecks = b;
 	}
 
+	public void setViewportOffset(Vec2 offset) {
+		this.backgroundScreen.setViewportOffset(offset);
+		this.selectionScreen.setViewportOffset(offset);
+		this.textScreen.setViewportOffset(offset);
+	}
+
 	public void render(Framebuffer outputBuffer, Vec2 mousePos) {
 		int mouseX = (int) mousePos.x;
 		int mouseY = (int) mousePos.y;
 
-		this.uiScreen.setUIScene(BACKGROUND_SCENE);
-		this.uiScreen.render(outputBuffer);
-		if (this.doHoverChecks) {
-			this.sectionHovered = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY) == this.backgroundRect.getID();
-		}
-		this.uiScreen.setUIScene(SELECTION_SCENE);
-		this.uiScreen.render(outputBuffer);
-		if (this.doHoverChecks) {
-			this.hoveredEntityID = this.uiScreen.getEntityIDAtCoord(mouseX, mouseY);
-		}
-		this.uiScreen.setUIScene(TEXT_SCENE);
-		this.uiScreen.render(outputBuffer);
+		this.backgroundScreen.render(outputBuffer);
+		this.selectionScreen.render(outputBuffer);
+		this.textScreen.render(outputBuffer);
+
+		this.sectionHovered = this.backgroundScreen.getEntityIDAtCoordDelayed(mouseX, mouseY) == this.backgroundRect.getID();
+		this.hoveredEntityID = this.selectionScreen.getEntityIDAtCoordDelayed(mouseX, mouseY);
 	}
 
 	public boolean isSectionHovered() {

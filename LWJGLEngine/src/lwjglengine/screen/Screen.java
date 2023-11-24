@@ -68,6 +68,16 @@ public abstract class Screen {
 		this.camera = c;
 	}
 
+	public static void updateActiveScreens() {
+		for (Screen s : activeScreens) {
+			s.update();
+		}
+	}
+
+	protected void update() {
+		/* Keeping it optional to implement */
+	}
+
 	public void render(Framebuffer outputBuffer) {
 		//maybe we should handle this externally, and just say that screens render to whatever viewport dimensions 
 		//are currently active. 

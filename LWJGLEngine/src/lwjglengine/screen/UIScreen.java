@@ -14,6 +14,7 @@ import lwjglengine.player.Camera;
 import myutils.math.Mat4;
 import myutils.math.Vec2;
 import myutils.math.Vec3;
+import myutils.misc.Pair;
 
 public class UIScreen extends Screen {
 	// higher values of z will go over lower values.
@@ -170,12 +171,6 @@ public class UIScreen extends Screen {
 		this.ui_scene = scene;
 	}
 
-	//	assumes that the ui screen covers the entire screen
-	public long getEntityIDAtMouse() {
-		Vec2 mousePos = MouseInput.getMousePos();
-		return getEntityIDAtCoord((int) (mousePos.x), (int) (mousePos.y));
-	}
-
 	/**
 	 * Coordinate is relative to the bottom left corner
 	 * @param x
@@ -187,6 +182,36 @@ public class UIScreen extends Screen {
 		long modelInstanceID = Model.convertRGBToID(color);
 		long entityID = Entity.getEntityIDFromModelID(modelInstanceID);
 		return entityID;
+	}
+
+	@Override
+	protected void update() {
+		if (this.shouldSampleEntityIDDelayed) {
+			this.updateEntityIDDelayed();
+		}
+	}
+
+	public void updateEntityIDDelayed() {
+		this.shouldSampleEntityIDDelayed = false;
+		this.entityIDDelayed = this.getEntityIDAtCoord(this.entityIDCoordDelayed.first, this.entityIDCoordDelayed.second);
+	}
+
+	private Pair<Integer, Integer> entityIDCoordDelayed = new Pair<Integer, Integer>(-1, -1);
+	private long entityIDDelayed = -1;
+	private boolean shouldSampleEntityIDDelayed = false;
+
+	/**
+	 * Returns the entity ID that was sampled on the previous frame.
+	 * Calling this also prompts UIScreen to resample the entity ID for the next frame. 
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public long getEntityIDAtCoordDelayed(int x, int y) {
+		this.shouldSampleEntityIDDelayed = true;
+		this.entityIDCoordDelayed.first = x;
+		this.entityIDCoordDelayed.second = y;
+		return this.entityIDDelayed;
 	}
 
 	public void clearColorIDBuffer() {

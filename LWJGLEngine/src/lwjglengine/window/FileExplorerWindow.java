@@ -51,8 +51,6 @@ public class FileExplorerWindow extends Window {
 	public static int entryXOffsetInterval = 10;
 	public static int entryXOffsetBase = 5;
 
-	private UIScreen uiScreen;
-
 	public static int topBarHeight = 24;
 	private UIFilledRectangle topBarRect;
 	public static Material topBarMaterial = new Material(new Vec3((float) (20 / 255.0)));
@@ -97,11 +95,9 @@ public class FileExplorerWindow extends Window {
 
 		this.callbackWindow = callbackWindow;
 
-		this.uiScreen = new UIScreen();
-
-		this.directorySection = new UISection(this.uiScreen);
-		this.topBarSection = new UISection(this.uiScreen);
-		this.bottomBarSection = new UISection(this.uiScreen);
+		this.directorySection = new UISection();
+		this.topBarSection = new UISection();
+		this.bottomBarSection = new UISection();
 
 		this.directoryRect = this.directorySection.getBackgroundRect();
 		this.directoryRect.setFrameAlignmentOffset(0, topBarHeight);
@@ -199,13 +195,10 @@ public class FileExplorerWindow extends Window {
 
 			this.setSelectedDirectoryEntry(e);
 		}
-
 	}
 
 	@Override
 	protected void _kill() {
-		this.uiScreen.kill();
-
 		this.directorySection.kill();
 		this.topBarSection.kill();
 		this.bottomBarSection.kill();
@@ -213,9 +206,9 @@ public class FileExplorerWindow extends Window {
 
 	@Override
 	protected void _resize() {
-		if (this.uiScreen != null) {
-			this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
-		}
+		this.topBarSection.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.bottomBarSection.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.directorySection.setScreenDimensions(this.getWidth(), this.getHeight());
 
 		if (this.folderWindow != null) {
 			this.folderWindow.setWidth(this.getWidth() - this.directoryWidth);

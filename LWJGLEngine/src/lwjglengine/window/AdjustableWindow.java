@@ -142,7 +142,7 @@ public class AdjustableWindow extends BorderedWindow {
 		this.backgroundRect.setMaterial(this.deselectedBackgroundMaterial);
 		this.backgroundRect.bind(this.rootUIElement);
 
-		this.titleBarSection = new UISection(this.uiScreen);
+		this.titleBarSection = new UISection();
 
 		this.titleBarRect = this.titleBarSection.getBackgroundRect();
 		this.titleBarRect.setZ(-9);
@@ -219,6 +219,8 @@ public class AdjustableWindow extends BorderedWindow {
 
 		this.uiScreen.setViewportWidth(this.getWidth());
 		this.uiScreen.setViewportHeight(this.getHeight());
+
+		this.titleBarSection.setScreenDimensions(this.getWidth(), this.getHeight());
 
 		this.contentRootUIElement.setHeight(this.getContentHeight());
 	}
@@ -465,9 +467,8 @@ public class AdjustableWindow extends BorderedWindow {
 	}
 
 	private boolean canGrabTitleBar() {
-		//next, check if should grab the title
 		if (!(this.canGrabLeftEdge() || this.canGrabRightEdge() || this.canGrabBottomEdge() || this.canGrabTopEdge())) {
-			if (this.titleBarSection.getHoveredEntityID() == this.titleBarRect.getID()) {
+			if (this.titleBarSection.isSectionHovered() && this.titleBarSection.getHoveredEntityID() == 0) {
 				return true;
 			}
 		}

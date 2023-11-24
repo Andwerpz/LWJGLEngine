@@ -44,7 +44,7 @@ public class ContextMenuWindow extends BorderedWindow {
 
 		this.uiScreen = new UIScreen();
 
-		this.uiSection = new UISection(this.uiScreen);
+		this.uiSection = new UISection();
 		this.uiSection.getBackgroundRect().setFillWidth(true);
 		this.uiSection.getBackgroundRect().setFillHeight(true);
 		this.uiSection.getBackgroundRect().setMaterial(Material.transparent());
@@ -114,6 +114,7 @@ public class ContextMenuWindow extends BorderedWindow {
 	@Override
 	protected void __resize() {
 		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.uiSection.setScreenDimensions(this.getWidth(), this.getHeight());
 	}
 
 	@Override

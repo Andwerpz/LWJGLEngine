@@ -91,7 +91,6 @@ public class TextEditorWindow extends Window {
 	private static int charMaxAscent = GraphicsTools.getFontMaxAscent(charFont);
 	private static int charHeight = charMaxAscent + charMaxDescent;
 
-	private UIScreen uiScreen;
 	private UISection cosmeticUnderlaySection; //this will just sit statically on the screen. 
 	private UISection textEditorSection; //want this seperate to be able to scroll up and down using glViewport
 	private UISection cursorSection; //reserved for the cursor, and highlighting. 
@@ -163,10 +162,8 @@ public class TextEditorWindow extends Window {
 	}
 
 	private void init() {
-		this.uiScreen = new UIScreen();
-
 		// -- COSMETIC UNDERLAY --
-		this.cosmeticUnderlaySection = new UISection(0, 0, this.getWidth(), this.getHeight(), this.uiScreen);
+		this.cosmeticUnderlaySection = new UISection();
 		UIFilledRectangle underlayBackgroundRect = this.cosmeticUnderlaySection.getBackgroundRect();
 		underlayBackgroundRect.setFillWidth(true);
 		underlayBackgroundRect.setFillHeight(true);
@@ -190,7 +187,7 @@ public class TextEditorWindow extends Window {
 		lineContainerBackground.bind(underlayBackgroundRect);
 
 		// -- TEXT EDITOR --
-		this.textEditorSection = new UISection(0, 0, this.getWidth(), this.getHeight(), this.uiScreen);
+		this.textEditorSection = new UISection();
 		UIFilledRectangle textEditorBackgroundRect = this.textEditorSection.getBackgroundRect();
 		textEditorBackgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		textEditorBackgroundRect.setContentAlignmentStyle(UIElement.FROM_LEFT, UIElement.ALIGN_TOP);
@@ -210,7 +207,7 @@ public class TextEditorWindow extends Window {
 		this.lineNumberSidebar.bind(textEditorBackgroundRect);
 
 		// -- CURSOR --
-		this.cursorSection = new UISection(0, 0, this.getWidth(), this.getHeight(), this.uiScreen);
+		this.cursorSection = new UISection();
 		UIFilledRectangle cursorBackgroundRect = this.cursorSection.getBackgroundRect();
 		cursorBackgroundRect.setFillWidth(true);
 		cursorBackgroundRect.setFillHeight(true);
@@ -466,7 +463,6 @@ public class TextEditorWindow extends Window {
 
 	@Override
 	protected void _kill() {
-		this.uiScreen.kill();
 		this.cosmeticUnderlaySection.kill();
 		this.textEditorSection.kill();
 		this.cursorSection.kill();
@@ -474,7 +470,9 @@ public class TextEditorWindow extends Window {
 
 	@Override
 	protected void _resize() {
-		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.cosmeticUnderlaySection.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.textEditorSection.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.cursorSection.setScreenDimensions(this.getWidth(), this.getHeight());
 
 		this.lineContainer.setWidth(this.getWidth() - lineNumberSidebarWidth);
 
@@ -590,10 +588,10 @@ public class TextEditorWindow extends Window {
 	protected void renderContent(Framebuffer outputBuffer) {
 		this.cosmeticUnderlaySection.render(outputBuffer, this.getWindowMousePos());
 
-		this.uiScreen.setViewportOffset(new Vec2(0, -this.scrollOffset));
+		this.textEditorSection.setViewportOffset(new Vec2(0, -this.scrollOffset));
+		this.cursorSection.setViewportOffset(new Vec2(0, -this.scrollOffset));
 		this.textEditorSection.render(outputBuffer, this.getWindowMousePos());
 		this.cursorSection.render(outputBuffer, this.getWindowMousePos());
-		this.uiScreen.setViewportOffset(new Vec2(0, 0));
 	}
 
 	@Override

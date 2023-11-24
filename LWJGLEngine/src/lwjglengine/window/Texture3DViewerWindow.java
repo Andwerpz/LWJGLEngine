@@ -22,7 +22,6 @@ import lwjglengine.ui.UISection;
 
 public class Texture3DViewerWindow extends Window {
 
-	private UIScreen uiScreen;
 	private UISection uiSection;
 
 	private Texture3D texture;
@@ -41,9 +40,7 @@ public class Texture3DViewerWindow extends Window {
 	}
 
 	private void init() {
-		this.uiScreen = new UIScreen();
-
-		this.uiSection = new UISection(0, 0, this.getWidth(), this.getHeight(), this.uiScreen);
+		this.uiSection = new UISection();
 		this.uiSection.getBackgroundRect().bind(this.rootUIElement);
 		this.uiSection.getBackgroundRect().setFillWidth(true);
 		this.uiSection.getBackgroundRect().setFillHeight(true);
@@ -133,13 +130,12 @@ public class Texture3DViewerWindow extends Window {
 
 	@Override
 	protected void _kill() {
-		this.uiScreen.kill();
 		this.uiSection.kill();
 	}
 
 	@Override
 	protected void _resize() {
-		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.uiSection.setScreenDimensions(this.getWidth(), this.getHeight());
 		this.alignTextureDisplayRect();
 	}
 
