@@ -8,6 +8,7 @@ import java.util.Map;
 import lwjglengine.util.BufferUtils;
 import lwjglengine.util.ShaderUtils;
 import myutils.math.Mat4;
+import myutils.math.Vec2;
 import myutils.math.Vec3;
 
 public class Shader {
@@ -23,29 +24,29 @@ public class Shader {
 	private final int ID;
 	private Map<String, Integer> locationCache = new HashMap<>();
 
-	public Shader(String vertex, String fragment) {
-		ID = ShaderUtils.load(vertex, fragment);
+	public Shader(int programID) {
+		ID = programID;
 	}
 
 	public static void init() {
-		GEOMETRY = new Shader("/geometry.vert", "/geometry.frag");
-		SKYBOX = new Shader("/skybox.vert", "/skybox.frag");
-		LIGHTING = new Shader("/lighting.vert", "/lighting.frag");
-		DEPTH = new Shader("/simpleDepthShader.vert", "/simpleDepthShader.frag");
-		CUBE_DEPTH = new Shader("/cubemapDepthShader.vert", "/cubemapDepthShader.frag");
-		GEOM_POST_PROCESS = new Shader("/geom_postprocessing.vert", "/geom_postprocessing.frag"); // post processing with geometry information
-		IMG_POST_PROCESS = new Shader("/img_postprocessing.vert", "/img_postprocessing.frag"); // post processing with only final color information
-		SPLASH = new Shader("/splash.vert", "/splash.frag"); // takes in a texture and alpha value.
-		OVERWRITE_ALPHA = new Shader("/splash.vert", "/overwrite_alpha.frag"); // uses the first textures color, and the second textures alpha.
-		DECAL = new Shader("/decal.vert", "/decal.frag");
-		PARTICLE = new Shader("/particle.vert", "/particle.frag");
-		RAYTRACING = new Shader("/raytracing.vert", "/raytracing.frag");
-		RAYTRACING_HDR = new Shader("/raytracing_hdr.vert", "/raytracing_hdr.frag");
-		RAYTRACING_EXTRACT_BLOOM = new Shader("/raytracing_extract_bloom.vert", "/raytracing_extract_bloom.frag");
-		GAUSSIAN_BLUR = new Shader("/gaussian_blur.vert", "/gaussian_blur.frag");
-		RENDER_ALPHA = new Shader("/render_alpha.vert", "/render_alpha.frag");
-		TEXTURE3D_DISPLAY = new Shader("/texture3d_display.vert", "/texture3d_display.frag");
-		TEXTURE_DISPLAY = new Shader("/texture_display.vert", "/texture_display.frag");
+		GEOMETRY = ShaderUtils.createShader("/geometry.vert", "/geometry.frag");
+		SKYBOX = ShaderUtils.createShader("/skybox.vert", "/skybox.frag");
+		LIGHTING = ShaderUtils.createShader("/lighting.vert", "/lighting.frag");
+		DEPTH = ShaderUtils.createShader("/simpleDepthShader.vert", "/simpleDepthShader.frag");
+		CUBE_DEPTH = ShaderUtils.createShader("/cubemapDepthShader.vert", "/cubemapDepthShader.frag");
+		GEOM_POST_PROCESS = ShaderUtils.createShader("/geom_postprocessing.vert", "/geom_postprocessing.frag"); // post processing with geometry information
+		IMG_POST_PROCESS = ShaderUtils.createShader("/img_postprocessing.vert", "/img_postprocessing.frag"); // post processing with only final color information
+		SPLASH = ShaderUtils.createShader("/splash.vert", "/splash.frag"); // takes in a texture and alpha value.
+		OVERWRITE_ALPHA = ShaderUtils.createShader("/splash.vert", "/overwrite_alpha.frag"); // uses the first textures color, and the second textures alpha.
+		DECAL = ShaderUtils.createShader("/decal.vert", "/decal.frag");
+		PARTICLE = ShaderUtils.createShader("/particle.vert", "/particle.frag");
+		RAYTRACING = ShaderUtils.createShader("/raytracing.vert", "/raytracing.frag");
+		RAYTRACING_HDR = ShaderUtils.createShader("/raytracing_hdr.vert", "/raytracing_hdr.frag");
+		RAYTRACING_EXTRACT_BLOOM = ShaderUtils.createShader("/raytracing_extract_bloom.vert", "/raytracing_extract_bloom.frag");
+		GAUSSIAN_BLUR = ShaderUtils.createShader("/gaussian_blur.vert", "/gaussian_blur.frag");
+		RENDER_ALPHA = ShaderUtils.createShader("/render_alpha.vert", "/render_alpha.frag");
+		TEXTURE3D_DISPLAY = ShaderUtils.createShader("/texture3d_display.vert", "/texture3d_display.frag");
+		TEXTURE_DISPLAY = ShaderUtils.createShader("/texture_display.vert", "/texture_display.frag");
 
 		Shader.GEOMETRY.setUniform1i("tex_diffuse", 0);
 		Shader.GEOMETRY.setUniform1i("tex_specular", 1);
@@ -139,6 +140,12 @@ public class Shader {
 		if (!enabled)
 			enable();
 		glUniform2f(getUniform(name), x, y);
+	}
+
+	public void setUniform2f(String name, Vec2 v) {
+		if (!enabled)
+			enable();
+		glUniform2f(getUniform(name), v.x, v.y);
 	}
 
 	public void setUniform3f(String name, Vec3 v) {

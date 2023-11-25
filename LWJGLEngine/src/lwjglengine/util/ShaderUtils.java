@@ -3,37 +3,28 @@ package lwjglengine.util;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
+import lwjglengine.graphics.Shader;
 import myutils.file.FileUtils;
 
 public class ShaderUtils {
 
-	public static int load(String vertPath, String fragPath) {
-		String vert = FileUtils.loadAsStringRelative(vertPath);
-		String frag = FileUtils.loadAsStringRelative(fragPath);
-
-		return create(vert, frag);
+	private static int load(String srcPath, int shaderType) {
+		String src = FileUtils.loadAsStringRelative(srcPath);
+		int shaderID = glCreateShader(shaderType);
+		glShaderSource(shaderID, src);
+		glCompileShader(shaderID);
+		if (glGetShaderi(shaderID, GL_COMPILE_STATUS) == GL_FALSE) {
+			System.err.println("Failed to compile vertex shader");
+			System.err.println(glGetShaderInfoLog(shaderID));
+			return -1;
+		}
+		return shaderID;
 	}
 
-	public static int create(String vert, String frag) {
+	public static Shader createShader(String vertPath, String fragPath) {
 		int program = glCreateProgram();
-		int vertID = glCreateShader(GL_VERTEX_SHADER);
-		int fragID = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(vertID, vert);
-		glShaderSource(fragID, frag);
-
-		glCompileShader(vertID);
-		if (glGetShaderi(vertID, GL_COMPILE_STATUS) == GL_FALSE) {
-			System.err.println("Failed to compile vertex shader");
-			System.err.println(glGetShaderInfoLog(vertID));
-			return -1;
-		}
-
-		glCompileShader(fragID);
-		if (glGetShaderi(fragID, GL_COMPILE_STATUS) == GL_FALSE) {
-			System.err.println("Failed to compile vertex shader");
-			System.err.println(glGetShaderInfoLog(fragID));
-			return -1;
-		}
+		int vertID = load(vertPath, GL_VERTEX_SHADER);
+		int fragID = load(fragPath, GL_FRAGMENT_SHADER);
 
 		glAttachShader(program, vertID);
 		glAttachShader(program, fragID);
@@ -43,7 +34,20 @@ public class ShaderUtils {
 		glDeleteShader(vertID);
 		glDeleteShader(fragID);
 
-		return program;
+		return new Shader(program);
+	}
+
+	public static Shader createShader(String srcPath, int shaderType) {
+		int program = glCreateProgram();
+		int shaderID = load(srcPath, shaderType);
+
+		glAttachShader(program, shaderID);
+		glLinkProgram(program);
+		glValidateProgram(program);
+
+		glDeleteShader(shaderID);
+
+		return new Shader(program);
 	}
 
 }

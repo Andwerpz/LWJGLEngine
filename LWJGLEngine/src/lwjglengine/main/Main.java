@@ -8,6 +8,8 @@ import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL42.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;
+import static org.lwjgl.opengl.GL42.glMemoryBarrier;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
@@ -124,6 +126,9 @@ public class Main implements Runnable {
 		glfwWindowHint(GLFW_RESIZABLE, Main.allowWindowResizing ? GL_TRUE : GL_FALSE);
 		long primaryMonitor = glfwGetPrimaryMonitor();
 		window = glfwCreateWindow(windowWidth, windowHeight, windowTitle, fullscreen ? primaryMonitor : NULL, NULL);
+
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
 		if (window == NULL) {
 			return;

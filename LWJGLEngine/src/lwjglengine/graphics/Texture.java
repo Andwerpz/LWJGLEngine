@@ -25,8 +25,6 @@ import static org.lwjgl.opengl.GL42.glTexStorage2D;
 import static org.lwjgl.opengl.GL46.*;
 
 public class Texture {
-	//note that this is only for texture2D, texture3D is going to have to be implemented seperately.
-
 	//internalFormat is like data format, but it can be more specific with how many bits each channel gets, eg GL_RGBA8
 	//dataFormat specifies what is being stored, and the ordering, eg GL_RGB, GL_ARGB, GL_RED
 	//dataType specifies how exactly the data is being stored, eg GL_BYTE, GL_FLOAT, GL_INT
@@ -103,11 +101,15 @@ public class Texture {
 
 	// -- BUFFER TEXTURE CONSTRUCTORS -- 
 	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType) {
-		this.textureID = Texture.createTexture(internalFormat, width, height, dataFormat, dataType, GL_LINEAR, GL_LINEAR);
+		this.textureID = Texture.createTexture(internalFormat, width, height, dataFormat, dataType, GL_NEAREST, GL_NEAREST, null);
 	}
 
 	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType, int sampleType) {
-		this.textureID = Texture.createTexture(internalFormat, width, height, dataFormat, dataType, sampleType, sampleType);
+		this.textureID = Texture.createTexture(internalFormat, width, height, dataFormat, dataType, sampleType, sampleType, null);
+	}
+
+	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType, float[] pixels) {
+		this.textureID = Texture.createTexture(internalFormat, width, height, dataFormat, dataType, GL_NEAREST, GL_NEAREST, pixels);
 	}
 
 	public int getID() {
@@ -203,10 +205,10 @@ public class Texture {
 	 * Creates an empty texture, and returns the handle. 
 	 * @return
 	 */
-	public static int createTexture(int internalFormat, int width, int height, int dataFormat, int dataType, int minSampleType, int magSampleType) {
+	public static int createTexture(int internalFormat, int width, int height, int dataFormat, int dataType, int minSampleType, int magSampleType, float[] data) {
 		int textureID = glGenTextures();
 		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, dataType, (FloatBuffer) null);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, dataType, data);
 		//glGenerateMipmap(GL_TEXTURE_2D);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minSampleType);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magSampleType);
