@@ -23,6 +23,7 @@ import org.lwjgl.openal.AL;
 import org.lwjgl.openal.ALC;
 import org.lwjgl.openal.ALCCapabilities;
 import org.lwjgl.openal.ALCapabilities;
+import org.lwjgl.opengl.GLUtil;
 
 import lwjglengine.entity.Entity;
 import lwjglengine.graphics.Framebuffer;
@@ -161,6 +162,9 @@ public class Main implements Runnable {
 		Main.main = this;
 
 		this.outputBuffer = new Framebuffer(0);
+
+		//DEBUG MODE
+		//GLUtil.setupDebugMessageCallback();
 	}
 
 	public static long getDeltaMillis() {
@@ -367,8 +371,10 @@ public class Main implements Runnable {
 	}
 
 	public void mousePressed(int button) {
-		Vec2 mousePos = MouseInput.getMousePos();
-		Window.setSelectedWindow(this.sm.selectWindow((int) mousePos.x, (int) mousePos.y, true));
+		if (!Main.cursorLocked) {
+			Vec2 mousePos = MouseInput.getMousePos();
+			Window.setSelectedWindow(this.sm.selectWindow((int) mousePos.x, (int) mousePos.y, true));
+		}
 		this.sm.mousePressed(button);
 	}
 

@@ -692,17 +692,19 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			//call the setter. 
-			try {
-				setter.invoke(this.object, val);
-			}
-			catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			}
-			catch (IllegalAccessException e) {
-				e.printStackTrace();
-			}
-			catch (InvocationTargetException e) {
-				e.printStackTrace();
+			if (val != null) {
+				try {
+					setter.invoke(this.object, val);
+				}
+				catch (IllegalArgumentException e) {
+					e.printStackTrace();
+				}
+				catch (IllegalAccessException e) {
+					e.printStackTrace();
+				}
+				catch (InvocationTargetException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
