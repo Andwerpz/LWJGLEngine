@@ -21,8 +21,15 @@ public class ShaderStorageBuffer {
 
 	private int ssbo;
 
+	private int usage = GL_STATIC_READ;
+
 	public ShaderStorageBuffer() {
 		this.ssbo = glGenBuffers();
+	}
+
+	public ShaderStorageBuffer(long size) {
+		this.ssbo = glGenBuffers();
+		this.setSize(size);
 	}
 
 	public void bind() {
@@ -33,9 +40,23 @@ public class ShaderStorageBuffer {
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
+	public void setUsage(int usage) {
+		this.usage = usage;
+	}
+
+	public void setSize(long nrBytes) {
+		this.bind();
+		glBufferData(GL_SHADER_STORAGE_BUFFER, nrBytes, this.usage);
+	}
+
 	public void setData(int[] data) {
 		this.bind();
-		glBufferData(GL_SHADER_STORAGE_BUFFER, data, GL_STATIC_READ);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, data, this.usage);
+	}
+
+	public void setSubData(int[] data, long byteOffset) {
+		this.bind();
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, byteOffset, data);
 	}
 
 	public void bindToBase(int which) {
