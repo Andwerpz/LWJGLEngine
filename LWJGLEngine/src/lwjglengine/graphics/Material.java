@@ -18,8 +18,8 @@ public class Material {
 
 	private float specularExponent = 64f;
 	private float roughness = 1; //between 0 and 1, 0 is like mirror, and 1 is ceramic
-	private float specularProbability = 1; //between 0 and 1, probability of ray bouncing specularly off of the surface. 
-	private float metalness = 1; //0 is not metal (dielectric) and 1 is metal
+	private float specularProbability = 0; //between 0 and 1, probability of ray bouncing specularly off of the surface. 
+	private float metalness = 0; //0 is not metal (dielectric) and 1 is metal
 
 	public static Material defaultMaterial() {
 		return new Material(new Vec3(1f), new Vec3(1), 64f);

@@ -53,8 +53,18 @@ public class ShaderStorageBuffer {
 		this.bind();
 		glBufferData(GL_SHADER_STORAGE_BUFFER, data, this.usage);
 	}
+	
+	public void setData(float[] data) {
+		this.bind();
+		glBufferData(GL_SHADER_STORAGE_BUFFER, data, this.usage);
+	}
 
 	public void setSubData(int[] data, long byteOffset) {
+		this.bind();
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, byteOffset, data);
+	}
+	
+	public void setSubData(float[] data, long byteOffset) {
 		this.bind();
 		glBufferSubData(GL_SHADER_STORAGE_BUFFER, byteOffset, data);
 	}

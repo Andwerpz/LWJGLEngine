@@ -70,6 +70,12 @@ import static org.lwjgl.opengl.GL.*;
 
 public class Main implements Runnable {
 	// seems like the maximum size the viewport can be is equal to the dimensions of the window
+	
+	//OpenGL Error Code Key:
+	//1280: invalid enum
+	//1281: invalid value, maybe when binding?
+	//1282: invalid operation, probably a framebuffer operation
+	//1285: something to do with out of memory
 
 	private static int windowedWidth = 1280;
 	private static int windowedHeight = 720;
@@ -181,7 +187,6 @@ public class Main implements Runnable {
 
 		//DEBUG MODE
 		//GLUtil.setupDebugMessageCallback();
-
 		//System.err.println("Max SSBO Size : " + glGetInteger(GL_MAX_SHADER_STORAGE_BLOCK_SIZE));
 	}
 
