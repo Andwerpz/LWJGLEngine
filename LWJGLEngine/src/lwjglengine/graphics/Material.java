@@ -22,7 +22,7 @@ public class Material {
 	private float metalness = 0; //0 is not metal (dielectric) and 1 is metal
 
 	public static Material defaultMaterial() {
-		return new Material(new Vec3(1f), new Vec3(1), 64f);
+		return new Material(new Vec3(1f), new Vec3(1f), 64f);
 	}
 
 	public static Material transparent() {
@@ -36,11 +36,12 @@ public class Material {
 		this.specularExponent = m.specularExponent;
 		this.roughness = m.roughness;
 		this.specularProbability = m.specularProbability;
+		this.metalness = m.metalness;
 	}
 
 	public Material(Vec3 diffuse) {
 		this.diffuse = new Vec4(diffuse, 1);
-		this.specular = new Vec4(1);
+		this.specular = new Vec4(1f);
 		this.emissive = new Vec4(0);
 		this.specularExponent = 64f;
 	}
@@ -172,7 +173,7 @@ public class Material {
 
 	//this is only used in raytracing, vertex array manually extracts stuff. 
 	public float[] toFloatArr() {
-		float[] res = new float[4 + 4 + 4 + 1 + 1 + 1];
+		float[] res = new float[4 + 4 + 4 + 1 + 1 + 1 + 1];
 		res[0] = this.diffuse.x;
 		res[1] = this.diffuse.y;
 		res[2] = this.diffuse.z;
@@ -188,6 +189,7 @@ public class Material {
 		res[12] = this.specularExponent;
 		res[13] = this.roughness;
 		res[14] = this.specularProbability;
+		res[15] = this.metalness;
 		return res;
 	}
 
