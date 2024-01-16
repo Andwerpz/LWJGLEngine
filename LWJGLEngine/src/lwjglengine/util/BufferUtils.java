@@ -76,7 +76,7 @@ public class BufferUtils {
 			elements[i * eSize + 8] = array[i].getSpecularExponent();
 			elements[i * eSize + 9] = array[i].getRoughness();
 			elements[i * eSize + 10] = array[i].getMetalness();
-			elements[i * eSize + 11] = array[i].getSpecularProbability();
+			elements[i * eSize + 11] = array[i].getRefractiveIndex();
 			elements[i * eSize + 12] = array[i].getEmissive().x;
 			elements[i * eSize + 13] = array[i].getEmissive().y;
 			elements[i * eSize + 14] = array[i].getEmissive().z;

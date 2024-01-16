@@ -18,7 +18,7 @@ public class Material {
 
 	private float specularExponent = 64f;
 	private float roughness = 1; //between 0 and 1, 0 is like mirror, and 1 is ceramic
-	private float specularProbability = 0; //between 0 and 1, probability of ray bouncing specularly off of the surface. 
+	private float refractiveIndex = 0; //if greater than 1, the material is transmissive
 	private float metalness = 0; //0 is not metal (dielectric) and 1 is metal
 
 	public static Material defaultMaterial() {
@@ -35,7 +35,7 @@ public class Material {
 		this.emissive = new Vec4(m.emissive);
 		this.specularExponent = m.specularExponent;
 		this.roughness = m.roughness;
-		this.specularProbability = m.specularProbability;
+		this.refractiveIndex = m.refractiveIndex;
 		this.metalness = m.metalness;
 	}
 
@@ -87,7 +87,7 @@ public class Material {
 		this.emissive.set(m.getEmissive());
 		this.specularExponent = m.getSpecularExponent();
 		this.roughness = m.getRoughness();
-		this.specularProbability = m.getSpecularProbability();
+		this.refractiveIndex = m.getRefractiveIndex();
 		this.metalness = m.getMetalness();
 	}
 
@@ -135,8 +135,8 @@ public class Material {
 		this.specularExponent = s;
 	}
 
-	public void setSpecularProbability(float s) {
-		this.specularProbability = s;
+	public void setRefractiveIndex(float s) {
+		this.refractiveIndex = s;
 	}
 
 	public void setEmissive(Vec4 e) {
@@ -147,8 +147,8 @@ public class Material {
 		return this.roughness;
 	}
 
-	public float getSpecularProbability() {
-		return this.specularProbability;
+	public float getRefractiveIndex() {
+		return this.refractiveIndex;
 	}
 
 	public Vec4 getEmissive() {
@@ -166,7 +166,7 @@ public class Material {
 		ans += "Specular Exponent : " + this.specularExponent + "\n";
 		ans += "Roughness : " + this.roughness + "\n";
 		ans += "Metalness : " + this.metalness + "\n";
-		ans += "Specular Probability : " + this.specularProbability + "\n";
+		ans += "Refractive Index : " + this.refractiveIndex + "\n";
 		ans += "Emissive : " + this.emissive + "\n";
 		return ans;
 	}
@@ -188,8 +188,8 @@ public class Material {
 		res[11] = this.emissive.w;
 		res[12] = this.specularExponent;
 		res[13] = this.roughness;
-		res[14] = this.specularProbability;
-		res[15] = this.metalness;
+		res[14] = this.metalness;
+		res[15] = this.refractiveIndex;
 		return res;
 	}
 
