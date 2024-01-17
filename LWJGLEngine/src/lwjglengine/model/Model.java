@@ -167,7 +167,7 @@ public class Model {
 	public void setTextureMaterial(TextureMaterial m) {
 		this.setTextureMaterial(m, 0);
 	}
-	
+
 	public ArrayList<VertexArray> getMeshes() {
 		return this.meshes;
 	}

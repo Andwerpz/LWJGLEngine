@@ -287,10 +287,15 @@ public abstract class Window {
 	private void buildBuffers() {
 		if (this.colorBuffer != null) {
 			this.colorBuffer.kill();
+			this.colorBuffer = null;
+		}
+
+		if (this.width <= 0 || this.height <= 0) {
+			return;
 		}
 
 		this.colorBuffer = new Framebuffer(this.width, this.height);
-		this.colorTexture = new Texture(GL_RGBA, this.width, this.height, GL_RGBA, GL_FLOAT);
+		this.colorTexture = new Texture(GL_RGBA16F, this.width, this.height, GL_RGBA, GL_FLOAT);
 		this.colorBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.colorTexture.getID());
 		this.colorBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.colorBuffer.isComplete();

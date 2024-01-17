@@ -16,7 +16,6 @@ import lwjglengine.graphics.Material;
 import lwjglengine.main.Main;
 import lwjglengine.player.PlayerInputController;
 import lwjglengine.scene.Scene;
-import lwjglengine.screen.RaytracingScreen;
 import lwjglengine.window.AdjustableWindow;
 import lwjglengine.window.FileExplorerWindow;
 import lwjglengine.window.Window;

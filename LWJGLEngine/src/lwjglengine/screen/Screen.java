@@ -41,6 +41,11 @@ public abstract class Screen {
 	public void setScreenDimensions(int width, int height) {
 		this.screenWidth = width;
 		this.screenHeight = height;
+
+		if (this.screenWidth <= 0 || this.screenHeight <= 0) {
+			return;
+		}
+
 		this.buildBuffers();
 	}
 

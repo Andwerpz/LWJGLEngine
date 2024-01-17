@@ -16,6 +16,9 @@ public class BufferUtils {
 	// FloatBuffer.flip() is deprecated, need to cast as Buffer to use.
 
 	public static ByteBuffer createByteBuffer(byte[] array) {
+		if (array == null) {
+			return null;
+		}
 		ByteBuffer result = ByteBuffer.allocateDirect(array.length).order(ByteOrder.nativeOrder());
 		((Buffer) result.put(array)).flip();
 		return result;
@@ -27,12 +30,18 @@ public class BufferUtils {
 	}
 
 	public static FloatBuffer createFloatBuffer(float[] array) {
+		if (array == null) {
+			return null;
+		}
 		FloatBuffer result = ByteBuffer.allocateDirect(array.length << 2).order(ByteOrder.nativeOrder()).asFloatBuffer();
 		((Buffer) result.put(array)).flip();
 		return result;
 	}
 
 	public static IntBuffer createIntBuffer(int[] array) {
+		if (array == null) {
+			return null;
+		}
 		IntBuffer result = ByteBuffer.allocateDirect(array.length << 2).order(ByteOrder.nativeOrder()).asIntBuffer();
 		((Buffer) result.put(array)).flip();
 		return result;

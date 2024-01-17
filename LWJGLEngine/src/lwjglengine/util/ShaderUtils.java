@@ -5,11 +5,12 @@ import static org.lwjgl.opengl.GL20.*;
 
 import lwjglengine.graphics.Shader;
 import myutils.file.FileUtils;
+import myutils.file.JarUtils;
 
 public class ShaderUtils {
 
 	private static int load(String srcPath, int shaderType) {
-		String src = FileUtils.loadAsStringRelative(srcPath);
+		String src = JarUtils.loadString(srcPath);
 		int shaderID = glCreateShader(shaderType);
 		glShaderSource(shaderID, src);
 		glCompileShader(shaderID);

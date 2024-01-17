@@ -19,6 +19,7 @@ import lwjglengine.input.MouseInput;
 import lwjglengine.main.Main;
 import lwjglengine.model.Model;
 import lwjglengine.util.BufferUtils;
+import myutils.file.SystemUtils;
 import myutils.math.Vec2;
 import myutils.math.Vec3;
 import myutils.misc.Triple;
@@ -145,14 +146,15 @@ public class Framebuffer {
 
 	public boolean isComplete() {
 		this.bind();
-		boolean ans = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
-		if (ans) {
+		int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status == GL_FRAMEBUFFER_COMPLETE) {
 			System.out.println("Framebuffer " + fbo + " generated successfully");
+			return true;
 		}
 		else {
-			System.err.println("Framebuffer " + fbo + " generation unsuccessful");
+			System.err.println("Framebuffer " + fbo + " generation unsuccessful : " + status);
+			return false;
 		}
-		return ans;
 	}
 
 	public Vec3 sampleColorAtPoint(int x, int y, int attachmentID) {

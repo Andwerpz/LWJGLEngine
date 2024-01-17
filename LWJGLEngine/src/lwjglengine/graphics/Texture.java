@@ -10,6 +10,7 @@ import javax.imageio.ImageIO;
 
 import lwjglengine.util.BufferUtils;
 import myutils.file.FileUtils;
+import myutils.file.SystemUtils;
 import myutils.graphics.GraphicsTools;
 import myutils.math.MathUtils;
 import myutils.math.Vec3;
@@ -69,7 +70,11 @@ public class Texture {
 	}
 
 	public Texture(int[] data, int width, int height, int minSampleType, int magSampleType) {
-		this.textureID = Texture.createTexture(data, width, height, minSampleType, magSampleType, 5);
+		this.textureID = Texture.createTexture(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, minSampleType, magSampleType, 5, data);
+	}
+
+	public Texture(int width, int height) {
+		this.textureID = Texture.createTexture(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5, null);
 	}
 
 	public Texture(int textureID) {
@@ -101,15 +106,15 @@ public class Texture {
 
 	// -- BUFFER TEXTURE CONSTRUCTORS -- 
 	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType) {
-		this.textureID = Texture.createTexture(internalFormat, width, height, dataFormat, dataType, GL_NEAREST, GL_NEAREST, null);
+		this.textureID = Texture.createTexture(width, height, internalFormat, dataFormat, dataType, GL_NEAREST, GL_NEAREST, 1, null);
 	}
 
 	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType, int sampleType) {
-		this.textureID = Texture.createTexture(internalFormat, width, height, dataFormat, dataType, sampleType, sampleType, null);
+		this.textureID = Texture.createTexture(width, height, internalFormat, dataFormat, dataType, sampleType, sampleType, 1, null);
 	}
 
-	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType, float[] pixels) {
-		this.textureID = Texture.createTexture(internalFormat, width, height, dataFormat, dataType, GL_NEAREST, GL_NEAREST, pixels);
+	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType, int[] pixels) {
+		this.textureID = Texture.createTexture(width, height, internalFormat, dataFormat, dataType, GL_NEAREST, GL_NEAREST, 1, pixels);
 	}
 
 	public int getID() {
@@ -195,24 +200,46 @@ public class Texture {
 				b = 255 - b;
 			}
 
-			data[i] = a << 24 | b << 16 | g << 8 | r;
+			data[i] = (a << 24) | (b << 16) | (g << 8) | (r << 0);
 		}
 
 		return data;
 	}
 
 	/**
-	 * Creates an empty texture, and returns the handle. 
+	 * Creates a texture, and returns the handle. 
+	 * @param width
+	 * @param height
+	 * @param internalFormat
+	 * @param dataFormat
+	 * @param dataType
+	 * @param minSampleType
+	 * @param magSampleType
+	 * @param nrMipmapLevels
+	 * @param data
 	 * @return
 	 */
-	public static int createTexture(int internalFormat, int width, int height, int dataFormat, int dataType, int minSampleType, int magSampleType, float[] data) {
-		int textureID = glGenTextures();
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, dataType, data);
-		//glGenerateMipmap(GL_TEXTURE_2D);
+	public static int createTexture(int width, int height, int internalFormat, int dataFormat, int dataType, int minSampleType, int magSampleType, int nrMipmapLevels, int[] data) {
+		if (width <= 0 || height <= 0) {
+			SystemUtils.printStackTrace();
+			System.exit(0);
+		}
+
+		//make sure that mip level is low enough for texture
+		nrMipmapLevels = Math.min(1 + (int) Math.floor(Math.log(Math.min(width, height)) / Math.log(2)), nrMipmapLevels);
+
+		int textureID = glGenTextures(); //create texture handle
+		glBindTexture(GL_TEXTURE_2D, textureID); //set as active texture
+		glTexStorage2D(GL_TEXTURE_2D, nrMipmapLevels, internalFormat, width, height); //allocate storage for texture
+		if (data != null) {
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, dataFormat, dataType, data); //initialize 0th mipmap layer of texture
+		}
+		glGenerateMipmap(GL_TEXTURE_2D); //generate mipmaps
+		//set interpolation filters
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minSampleType);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magSampleType);
-		if (internalFormat == GL_DEPTH_COMPONENT) {
+		//set border behaviour
+		if (internalFormat == GL_DEPTH_COMPONENT) { //special case for depth textures
 			//we make depth textures clamp to border because of how perspective screen does directional lighting. 
 			//if it didn't clamp to border, any pixel outside of the shadow cascade will appear lit as default, or it will wrap. 
 			//probably want to make this sort of thing something to choose. 
@@ -239,25 +266,6 @@ public class Texture {
 		int width = outWH[0];
 		int height = outWH[1];
 
-		return createTexture(data, width, height, minSampleType, magSampleType, numMipmapLevels);
-	}
-
-	/**
-	 * Creates a texture initialized with the given data, and returns the handle
-	 * @return
-	 */
-	public static int createTexture(int[] data, int width, int height, int minSampleType, int magSampleType, int numMipmapLevels) {
-		int textureID = glGenTextures();
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexStorage2D(GL_TEXTURE_2D, numMipmapLevels, GL_RGBA8, width, height);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, BufferUtils.createIntBuffer(data));
-		glGenerateMipmap(GL_TEXTURE_2D); //Generate num_mipmaps number of mipmaps here.
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16); //enable anisotropic filtering
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minSampleType);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magSampleType); // magnification filter
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); //enable texture wrapping
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		return textureID;
+		return createTexture(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, minSampleType, magSampleType, numMipmapLevels, data);
 	}
 }

@@ -70,7 +70,7 @@ import static org.lwjgl.opengl.GL.*;
 
 public class Main implements Runnable {
 	// seems like the maximum size the viewport can be is equal to the dimensions of the window
-	
+
 	//OpenGL Error Code Key:
 	//1280: invalid enum
 	//1281: invalid value, maybe when binding?
