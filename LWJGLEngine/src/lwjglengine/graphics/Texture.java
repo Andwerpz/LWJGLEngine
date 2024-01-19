@@ -50,23 +50,27 @@ public class Texture {
 	// -- IMAGE TEXTURE CONSTRUCTORS --
 	//uses relative path
 	public Texture(String path) {
-		this.textureID = Texture.createTexture(FileUtils.loadImageRelative(path), 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
+		this.textureID = Texture.createTexture(FileUtils.loadImageRelative(path), 0, GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
 	}
 
 	public Texture(BufferedImage img) {
-		this.textureID = Texture.createTexture(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
+		this.textureID = Texture.createTexture(img, 0, GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
 	}
 
 	public Texture(String path, int loadOptions) {
-		this.textureID = Texture.createTexture(FileUtils.loadImageRelative(path), loadOptions, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
+		this.textureID = Texture.createTexture(FileUtils.loadImageRelative(path), loadOptions, GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
 	}
 
 	public Texture(BufferedImage img, int loadOptions) {
-		this.textureID = Texture.createTexture(img, loadOptions, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
+		this.textureID = Texture.createTexture(img, loadOptions, GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5);
 	}
 
 	public Texture(BufferedImage img, int loadOptions, int minSampleType, int magSampleType) {
-		this.textureID = Texture.createTexture(img, loadOptions, minSampleType, magSampleType, 5);
+		this.textureID = Texture.createTexture(img, loadOptions, GL_RGBA8, minSampleType, magSampleType, 5);
+	}
+
+	public Texture(String path, int loadOptions, int internalFormat, int minSampleType, int magSampleType, int nrMipmapLevels) {
+		this.textureID = Texture.createTexture(FileUtils.loadImageRelative(path), 0, internalFormat, minSampleType, magSampleType, nrMipmapLevels);
 	}
 
 	public Texture(int[] data, int width, int height, int minSampleType, int magSampleType) {
@@ -93,15 +97,15 @@ public class Texture {
 		rgb <<= 8;
 		rgb |= MathUtils.clamp(0, 255, b);
 		img.setRGB(0, 0, rgb);
-		this.textureID = Texture.createTexture(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
+		this.textureID = Texture.createTexture(img, 0, GL_RGBA8, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
 	}
 
 	public Texture(BufferedImage img, int loadOptions, int minSampleType, int magSampleType, int numMipmapLevels) {
-		this.textureID = Texture.createTexture(img, loadOptions, minSampleType, magSampleType, numMipmapLevels);
+		this.textureID = Texture.createTexture(img, loadOptions, GL_RGBA8, minSampleType, magSampleType, numMipmapLevels);
 	}
 
 	public Texture(String path, int loadOptions, int minSampleType, int magSampleType, int numMipmapLevels) {
-		this.textureID = Texture.createTexture(FileUtils.loadImageRelative(path), loadOptions, minSampleType, magSampleType, numMipmapLevels);
+		this.textureID = Texture.createTexture(FileUtils.loadImageRelative(path), loadOptions, GL_RGBA8, minSampleType, magSampleType, numMipmapLevels);
 	}
 
 	// -- BUFFER TEXTURE CONSTRUCTORS -- 
@@ -260,12 +264,12 @@ public class Texture {
 	 * Creates a texture initialized with the given image, and returns the handle
 	 * @return
 	 */
-	public static int createTexture(BufferedImage img, int loadOptions, int minSampleType, int magSampleType, int numMipmapLevels) {
+	public static int createTexture(BufferedImage img, int loadOptions, int internalFormat, int minSampleType, int magSampleType, int numMipmapLevels) {
 		int[] outWH = new int[2];
 		int[] data = Texture.getDataFromImage(img, loadOptions, outWH);
 		int width = outWH[0];
 		int height = outWH[1];
 
-		return createTexture(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, minSampleType, magSampleType, numMipmapLevels, data);
+		return createTexture(width, height, internalFormat, GL_RGBA, GL_UNSIGNED_BYTE, minSampleType, magSampleType, numMipmapLevels, data);
 	}
 }

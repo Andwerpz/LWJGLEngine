@@ -10,6 +10,9 @@ import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.opengl.GL43.*;
+
+import myutils.file.SystemUtils;
+
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
@@ -45,6 +48,10 @@ public class ShaderStorageBuffer {
 	}
 
 	public void setSize(long nrBytes) {
+		if (nrBytes < 0) {
+			System.err.println("ShaderStorageBuffer : Size cannot be negative");
+			return;
+		}
 		this.bind();
 		glBufferData(GL_SHADER_STORAGE_BUFFER, nrBytes, this.usage);
 	}
@@ -53,7 +60,7 @@ public class ShaderStorageBuffer {
 		this.bind();
 		glBufferData(GL_SHADER_STORAGE_BUFFER, data, this.usage);
 	}
-	
+
 	public void setData(float[] data) {
 		this.bind();
 		glBufferData(GL_SHADER_STORAGE_BUFFER, data, this.usage);
@@ -63,10 +70,20 @@ public class ShaderStorageBuffer {
 		this.bind();
 		glBufferSubData(GL_SHADER_STORAGE_BUFFER, byteOffset, data);
 	}
-	
+
 	public void setSubData(float[] data, long byteOffset) {
 		this.bind();
 		glBufferSubData(GL_SHADER_STORAGE_BUFFER, byteOffset, data);
+	}
+
+	public void getSubData(int[] arr, long byteOffset) {
+		this.bind();
+		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, byteOffset, arr);
+	}
+
+	public void getSubData(float[] arr, long byteOffset) {
+		this.bind();
+		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, byteOffset, arr);
 	}
 
 	public void bindToBase(int which) {

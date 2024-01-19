@@ -10,6 +10,7 @@ import lwjglengine.util.ShaderUtils;
 import myutils.math.Mat4;
 import myutils.math.Vec2;
 import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 public class Shader {
 
@@ -154,10 +155,16 @@ public class Shader {
 		glUniform3f(getUniform(name), v.x, v.y, v.z);
 	}
 
+	public void setUniform4f(String name, Vec4 v) {
+		if (!enabled)
+			enable();
+		glUniform4f(getUniform(name), v.x, v.y, v.z, v.w);
+	}
+
 	public void setUniformMat4(String name, Mat4 mat) {
 		if (!enabled)
 			enable();
-		glUniformMatrix4fv(getUniform(name), false, BufferUtils.createFloatBuffer(new Mat4[] { mat }));
+		glUniformMatrix4fv(getUniform(name), true, mat.toFloatArray());
 	}
 
 	public void enable() {
