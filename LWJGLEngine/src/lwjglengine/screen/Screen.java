@@ -34,8 +34,13 @@ public abstract class Screen {
 		this.screenWidth = Main.windowWidth;
 		this.screenHeight = Main.windowHeight;
 
-		this.buildBuffers();
 		Screen.activeScreens.add(this);
+
+		if (this.screenWidth == 0 || this.screenHeight == 0) {
+			return;
+		}
+
+		this.buildBuffers();
 	}
 
 	public void setScreenDimensions(int width, int height) {

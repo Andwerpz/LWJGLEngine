@@ -8,6 +8,7 @@ import java.nio.IntBuffer;
 import lwjglengine.graphics.Material;
 import myutils.math.Mat4;
 import myutils.math.Vec3;
+import myutils.math.Vec4;
 
 import java.nio.ByteOrder;
 
@@ -38,12 +39,22 @@ public class BufferUtils {
 		return result;
 	}
 
+	public static FloatBuffer createFloatBuffer(int capacity) {
+		FloatBuffer result = ByteBuffer.allocateDirect(capacity << 2).order(ByteOrder.nativeOrder()).asFloatBuffer();
+		return result;
+	}
+
 	public static IntBuffer createIntBuffer(int[] array) {
 		if (array == null) {
 			return null;
 		}
 		IntBuffer result = ByteBuffer.allocateDirect(array.length << 2).order(ByteOrder.nativeOrder()).asIntBuffer();
 		((Buffer) result.put(array)).flip();
+		return result;
+	}
+
+	public static IntBuffer createIntBuffer(int capacity) {
+		IntBuffer result = ByteBuffer.allocateDirect(capacity << 2).order(ByteOrder.nativeOrder()).asIntBuffer();
 		return result;
 	}
 
@@ -90,6 +101,17 @@ public class BufferUtils {
 			elements[i * eSize + 13] = array[i].getEmissive().y;
 			elements[i * eSize + 14] = array[i].getEmissive().z;
 			elements[i * eSize + 15] = array[i].getEmissive().w;
+		}
+		return createFloatBuffer(elements);
+	}
+
+	public static FloatBuffer createFloatBuffer(Vec4[] hues) {
+		float[] elements = new float[hues.length * 4];
+		for (int i = 0; i < hues.length; i++) {
+			elements[i * 4 + 0] = hues[i].x;
+			elements[i * 4 + 1] = hues[i].y;
+			elements[i * 4 + 2] = hues[i].z;
+			elements[i * 4 + 3] = hues[i].w;
 		}
 		return createFloatBuffer(elements);
 	}

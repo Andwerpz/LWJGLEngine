@@ -747,6 +747,10 @@ public abstract class Window {
 	// - color buffer
 	// - window id buffer
 	public void render(Framebuffer outputBuffer) {
+		if (this.colorBuffer == null) {
+			return;
+		}
+
 		this.colorBuffer.bind();
 		glClear(GL_COLOR_BUFFER_BIT);
 

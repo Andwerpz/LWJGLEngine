@@ -41,7 +41,8 @@ public class FileExplorerWindow extends Window {
 	// - ability to create folder inside selected directory
 	// - when selecting a folder or directory entry, just make sure that it exists first.
 	// - set root directory when creating an instance of file explorer
-	// - ability to select multiple files. 
+	// - ability to save files
+	//   - user should give file name and extension. 
 
 	private UISection directorySection;
 	private UISection topBarSection;
@@ -92,7 +93,10 @@ public class FileExplorerWindow extends Window {
 
 	public FileExplorerWindow(Window callbackWindow) {
 		super(0, 0, 400, 300, null);
+		this.init(callbackWindow);
+	}
 
+	private void init(Window callbackWindow) {
 		this.callbackWindow = callbackWindow;
 
 		this.directorySection = new UISection();

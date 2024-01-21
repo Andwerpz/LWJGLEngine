@@ -76,6 +76,7 @@ public class Main implements Runnable {
 	//1281: invalid value, maybe when binding?
 	//1282: invalid operation, probably a framebuffer operation
 	//1285: something to do with out of memory
+	//1286: invalid framebuffer operation
 
 	private static int windowedWidth = 1280;
 	private static int windowedHeight = 720;
@@ -151,7 +152,7 @@ public class Main implements Runnable {
 		window = glfwCreateWindow(windowWidth, windowHeight, windowTitle, fullscreen ? primaryMonitor : NULL, NULL);
 
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 
 		if (window == NULL) {
 			return;

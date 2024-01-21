@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.HashSet;
 
 import javax.imageio.ImageIO;
@@ -45,7 +46,7 @@ public class Texture {
 	// probably should move that functionality into the model object. 
 	public static boolean bindingEnabled = true;
 
-	private int textureID;
+	private final int textureID;
 
 	// -- IMAGE TEXTURE CONSTRUCTORS --
 	//uses relative path
@@ -67,6 +68,10 @@ public class Texture {
 
 	public Texture(BufferedImage img, int loadOptions, int minSampleType, int magSampleType) {
 		this.textureID = Texture.createTexture(img, loadOptions, GL_RGBA8, minSampleType, magSampleType, 5);
+	}
+
+	public Texture(BufferedImage img, int loadOptions, int internalFormat, int minSampleType, int magSampleType, int nrMipmapLevels) {
+		this.textureID = Texture.createTexture(img, 0, internalFormat, minSampleType, magSampleType, nrMipmapLevels);
 	}
 
 	public Texture(String path, int loadOptions, int internalFormat, int minSampleType, int magSampleType, int nrMipmapLevels) {
@@ -113,6 +118,25 @@ public class Texture {
 		this.textureID = Texture.createTexture(width, height, internalFormat, dataFormat, dataType, GL_NEAREST, GL_NEAREST, 1, null);
 	}
 
+	/**
+	 * Initializes the texture with given dimensions and uniform color. Color components are to be given in the range [0, 255]. 
+	 * @param internalFormat
+	 * @param width
+	 * @param height
+	 * @param r
+	 * @param g
+	 * @param b
+	 * @param a
+	 */
+	public Texture(int internalFormat, int width, int height, int r, int g, int b, int a) {
+		int[] pixels = new int[width * height];
+		int rgba = (r << 0) | (g << 8) | (b << 16) | (a << 24);
+		for (int i = 0; i < pixels.length; i++) {
+			pixels[i] = rgba;
+		}
+		this.textureID = Texture.createTexture(width, height, internalFormat, GL_RGBA, GL_UNSIGNED_BYTE, GL_NEAREST, GL_NEAREST, 1, pixels);
+	}
+
 	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType, int sampleType) {
 		this.textureID = Texture.createTexture(width, height, internalFormat, dataFormat, dataType, sampleType, sampleType, 1, null);
 	}
@@ -157,6 +181,33 @@ public class Texture {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	public BufferedImage toBufferedImage() {
+		glBindTexture(GL_TEXTURE_2D, this.textureID);
+		int width = this.getWidth();
+		int height = this.getHeight();
+
+		IntBuffer data = BufferUtils.createIntBuffer(width * height);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				int bits = data.get();
+				int a = (bits & 0xff000000) >> 24;
+				int b = (bits & 0x00ff0000) >> 16;
+				int g = (bits & 0x0000ff00) >> 8;
+				int r = (bits & 0x000000ff) >> 0;
+
+				int x = j;
+				int y = height - 1 - i;
+
+				img.setRGB(x, y, (a << 24) + (r << 16) + (g << 8) + (b << 0));
+			}
+		}
+
+		return img;
+	}
+
 	public void kill() {
 		glDeleteTextures(BufferUtils.createIntBuffer(new int[] { this.textureID }));
 	}
@@ -195,7 +246,7 @@ public class Texture {
 			int a = (pixels[i] & 0xff000000) >> 24;
 			int r = (pixels[i] & 0xff0000) >> 16;
 			int g = (pixels[i] & 0xff00) >> 8;
-			int b = (pixels[i] & 0xff);
+			int b = (pixels[i] & 0xff) >> 0;
 
 			if ((loadOptions & INVERT_COLORS_BIT) != 0) {
 				a = 255 - a;
