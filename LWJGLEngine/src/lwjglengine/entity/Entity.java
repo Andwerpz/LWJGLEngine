@@ -3,6 +3,7 @@ package lwjglengine.entity;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Observable;
 
 import lwjglengine.graphics.Material;
 import lwjglengine.model.Model;

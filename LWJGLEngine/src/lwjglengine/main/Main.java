@@ -78,6 +78,13 @@ public class Main implements Runnable {
 	//1285: something to do with out of memory
 	//1286: invalid framebuffer operation
 
+	//TODO :
+	// - make screens faster by making them render directly to the window, or framebuffer 0
+	//   - instead of using intermediate framebuffers, we can just make screens render in the correct order. 
+	//   - use glViewport and glScissor to control what pixels are rendered. 
+	//   - i suppose in the ui pipeline, we're using intermediate framebuffers, so this won't be that much of a performance increase i think...
+	// - make list viewer use scroll bar feature from uiSection
+
 	private static int windowedWidth = 1280;
 	private static int windowedHeight = 720;
 
@@ -93,11 +100,6 @@ public class Main implements Runnable {
 
 	public static long window;
 	private static boolean fullscreen = false;
-
-	//public static final float ASPECT_RATIO = (float) Main.windowWidth / (float) Main.windowHeight;
-	//public static final float FOV = (float) Math.toRadians(90f); // vertical FOV
-
-	//public static long selectedEntityID = 0;
 
 	public long deltaMillis = 0;
 	public int lastSecondUpdates = 0;
@@ -345,9 +347,7 @@ public class Main implements Runnable {
 			}
 		}
 
-		//long startMillis = System.currentTimeMillis();
 		Screen.updateActiveScreens();
-		//System.out.println("UPDATE SCREEN TIME : " + (System.currentTimeMillis() - startMillis));
 
 		//normal updating stuff
 		//we want to update this stuff after we modify them in sm.update so that they render correctly. 

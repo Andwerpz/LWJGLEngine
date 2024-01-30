@@ -46,7 +46,6 @@ public class FileExplorerWindow extends Window {
 
 	private UISection directorySection;
 	private UISection topBarSection;
-	private UISection bottomBarSection;
 
 	public static int entryHeight = 16;
 	public static int entryXOffsetInterval = 10;
@@ -70,12 +69,6 @@ public class FileExplorerWindow extends Window {
 	public static int directoryGrabTolerancePx = 4;
 	private boolean directoryGrabbed = false;
 
-	private static int bottomBarHeight = 24;
-	private UIFilledRectangle bottomBarRect;
-	public static Material bottomBarMaterial = new Material(new Vec3((float) (20 / 255.0)));
-	private Text bottomBarSelectedFileText;
-	private Button bottomBarSubmitFileButton;
-
 	private DirectoryEntry rootDirectoryEntry;
 	private int directoryYOffset = 0;
 
@@ -85,27 +78,21 @@ public class FileExplorerWindow extends Window {
 
 	private long hoveredDirectoryEntryID = -1;
 	private long hoveredTopBarID = -1;
-	private long hoveredBottomBarID = -1;
-
-	private Window callbackWindow;
 
 	private ListViewerWindow folderWindow;
 
-	public FileExplorerWindow(Window callbackWindow) {
-		super(0, 0, 400, 300, null);
-		this.init(callbackWindow);
+	public FileExplorerWindow(Window parentWindow) {
+		super(0, 0, 400, 300, parentWindow);
+		this.init();
 	}
 
-	private void init(Window callbackWindow) {
-		this.callbackWindow = callbackWindow;
-
+	private void init() {
 		this.directorySection = new UISection();
 		this.topBarSection = new UISection();
-		this.bottomBarSection = new UISection();
 
 		this.directoryRect = this.directorySection.getBackgroundRect();
 		this.directoryRect.setFrameAlignmentOffset(0, topBarHeight);
-		this.directoryRect.setDimensions(this.directoryWidth, this.getHeight() - topBarHeight - bottomBarHeight);
+		this.directoryRect.setDimensions(this.directoryWidth, this.getHeight() - topBarHeight);
 		this.directoryRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		this.directoryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		this.directoryRect.setMaterial(directoryMaterial);
@@ -120,16 +107,6 @@ public class FileExplorerWindow extends Window {
 		this.topBarRect.setFillWidthMargin(0);
 		this.topBarRect.setMaterial(topBarMaterial);
 		this.topBarRect.bind(this.rootUIElement);
-
-		this.bottomBarRect = this.bottomBarSection.getBackgroundRect();
-		this.bottomBarRect.setFrameAlignmentOffset(0, 0);
-		this.bottomBarRect.setDimensions(this.getWidth(), bottomBarHeight);
-		this.bottomBarRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
-		this.bottomBarRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
-		this.bottomBarRect.setFillWidth(true);
-		this.bottomBarRect.setFillWidthMargin(0);
-		this.bottomBarRect.setMaterial(bottomBarMaterial);
-		this.bottomBarRect.bind(this.rootUIElement);
 
 		this.rootDirectoryEntry = new DirectoryEntry(null, "", "", this.directoryRect, this.directorySection.getSelectionScene(), this.directorySection.getTextScene());
 		this.rootDirectoryEntry.display();
@@ -156,18 +133,6 @@ public class FileExplorerWindow extends Window {
 		this.topBarPathText.setDoAntialiasing(false);
 		this.topBarPathText.bind(this.topBarRect);
 
-		this.bottomBarSelectedFileText = new Text(3, 0, "            ", 12, Color.WHITE, this.bottomBarSection.getTextScene());
-		this.bottomBarSelectedFileText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
-		this.bottomBarSelectedFileText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-		this.bottomBarSelectedFileText.setDoAntialiasing(false);
-		this.bottomBarSelectedFileText.bind(this.bottomBarRect);
-
-		this.bottomBarSubmitFileButton = new Button(3, 0, 100, 20, "btn_submit_file", "Select File", new Font("Dialog", Font.PLAIN, 12), 12, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
-		this.bottomBarSubmitFileButton.getButtonText().setDoAntialiasing(false);
-		this.bottomBarSubmitFileButton.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
-		this.bottomBarSubmitFileButton.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-		this.bottomBarSubmitFileButton.bind(this.bottomBarRect);
-
 		this.folderWindow = new ListViewerWindow(this, this);
 		this.folderWindow.setRenderBottomBar(false);
 		this.folderWindow.setDisplaySelectedEntryOnTopBar(true);
@@ -180,11 +145,7 @@ public class FileExplorerWindow extends Window {
 		this._resize();
 	}
 
-	@Override
-	public String getDefaultTitle() {
-		return "File Explorer";
-	}
-
+	//this is how we switch directories by double clicking a folder entry. 
 	@Override
 	public void handleObjects(Object[] objects) {
 		if (objects.length != 1) {
@@ -202,28 +163,34 @@ public class FileExplorerWindow extends Window {
 	}
 
 	@Override
+	public String getDefaultTitle() {
+		return "File Explorer";
+	}
+
+	public File[] getSelectedFiles() {
+		return (File[]) this.folderWindow.getSelectedListEntryObjects();
+	}
+
+	@Override
 	protected void _kill() {
 		this.directorySection.kill();
-		this.topBarSection.kill();
-		this.bottomBarSection.kill();
 	}
 
 	@Override
 	protected void _resize() {
 		this.topBarSection.setScreenDimensions(this.getWidth(), this.getHeight());
-		this.bottomBarSection.setScreenDimensions(this.getWidth(), this.getHeight());
 		this.directorySection.setScreenDimensions(this.getWidth(), this.getHeight());
 
 		if (this.folderWindow != null) {
 			this.folderWindow.setWidth(this.getWidth() - this.directoryWidth);
-			this.folderWindow.setHeight(this.getHeight() - topBarHeight - bottomBarHeight);
+			this.folderWindow.setHeight(this.getHeight() - topBarHeight);
 
-			this.folderWindow.setBottomLeftCoords(this.directoryWidth, bottomBarHeight);
+			this.folderWindow.setBottomLeftCoords(this.directoryWidth, 0);
 		}
 
 		if (this.directoryRect != null) {
 			this.directoryRect.setWidth(this.directoryWidth);
-			this.directoryRect.setHeight(this.getHeight() - topBarHeight - bottomBarHeight);
+			this.directoryRect.setHeight(this.getHeight() - topBarHeight);
 
 			//realign entries
 			this.setDirectoryYOffset(this.directoryYOffset);
@@ -232,16 +199,11 @@ public class FileExplorerWindow extends Window {
 		if (this.topBarRect != null) {
 			this.topBarPathText.setWidth(this.topBarRect.getWidth() - topBarFilterTextFieldWidth - this.topBarBackButton.getWidth() - 10);
 		}
-
-		if (this.bottomBarRect != null) {
-			this.bottomBarSelectedFileText.setWidth(this.bottomBarRect.getWidth() - this.bottomBarSubmitFileButton.getWidth() - 6);
-		}
 	}
 
 	@Override
 	protected void _update() {
 		this.topBarSection.update();
-		this.bottomBarSection.update();
 
 		this.rootDirectoryEntry.hovered(this.hoveredDirectoryEntryID);
 		this.rootDirectoryEntry.update();
@@ -259,11 +221,9 @@ public class FileExplorerWindow extends Window {
 	protected void renderContent(Framebuffer outputBuffer) {
 		this.directorySection.render(outputBuffer, this.getWindowMousePos());
 		this.topBarSection.render(outputBuffer, this.getWindowMousePos());
-		this.bottomBarSection.render(outputBuffer, this.getWindowMousePos());
 
 		this.hoveredDirectoryEntryID = this.directorySection.getHoveredEntityID();
 		this.hoveredTopBarID = this.topBarSection.getHoveredEntityID();
-		this.hoveredBottomBarID = this.bottomBarSection.getHoveredEntityID();
 
 		this.hoveredSectionID = -1;
 		if (this.directorySection.isSectionHovered()) {
@@ -271,9 +231,6 @@ public class FileExplorerWindow extends Window {
 		}
 		else if (this.topBarSection.isSectionHovered()) {
 			this.hoveredSectionID = this.topBarRect.getID();
-		}
-		else if (this.bottomBarSection.isSectionHovered()) {
-			this.hoveredSectionID = this.bottomBarRect.getID();
 		}
 	}
 
@@ -295,6 +252,16 @@ public class FileExplorerWindow extends Window {
 		this.directoryYOffset = MathUtils.clamp(minYOffset, maxYOffset, newYOffset);
 
 		this.rootDirectoryEntry.align(-this.directoryYOffset);
+	}
+
+	public void setCurrentDirectory(String path) {
+		this.rootDirectoryEntry.selected(path);
+		DirectoryEntry e = this.rootDirectoryEntry.getSelected();
+		this.setSelectedDirectoryEntry(e);
+	}
+
+	public String getCurrentDirectory() {
+		return this.selectedDirectoryEntry.getPath();
 	}
 
 	private void setSelectedDirectoryEntry(DirectoryEntry e) {
@@ -388,7 +355,6 @@ public class FileExplorerWindow extends Window {
 	@Override
 	protected void _mousePressed(int button) {
 		this.topBarSection.mousePressed(button);
-		this.bottomBarSection.mousePressed(button);
 
 		int mouseX = (int) this.getWindowMousePos().x;
 		int mouseY = (int) this.getWindowMousePos().y;
@@ -416,26 +382,11 @@ public class FileExplorerWindow extends Window {
 	protected void _mouseReleased(int button) {
 		this.directorySection.mouseReleased(button);
 		this.topBarSection.mouseReleased(button);
-		this.bottomBarSection.mouseReleased(button);
 
 		switch (Input.getClicked(this.topBarSection.getSelectionScene())) {
 		case "btn_directory_back":
 			if (this.selectedDirectoryEntry != null && this.selectedDirectoryEntry.getParent() != this.rootDirectoryEntry) {
 				this.setSelectedDirectoryEntry(this.selectedDirectoryEntry.getParent());
-			}
-			break;
-		}
-
-		switch (Input.getClicked(this.bottomBarSection.getSelectionScene())) {
-		case "btn_submit_file":
-			Object[] objects = this.folderWindow.getSelectedListEntryObjects();
-			if (objects.length != 0) {
-				File[] files = new File[objects.length];
-				for (int i = 0; i < files.length; i++) {
-					files[i] = (File) objects[i];
-				}
-				this.callbackWindow.handleFiles(files);
-				this.close();
 			}
 			break;
 		}

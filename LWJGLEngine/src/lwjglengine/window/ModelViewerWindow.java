@@ -133,7 +133,7 @@ public class ModelViewerWindow extends BorderedWindow {
 	public void handleContextMenuAction(String action) {
 		switch (action) {
 		case "Load .obj File": {
-			FileExplorerWindow fileExplorer = new FileExplorerWindow(this);
+			FileSelectorWindow fileExplorer = new FileSelectorWindow(this);
 			AdjustableWindow fileExplorerAdj = new AdjustableWindow("Select .obj File", fileExplorer, this);
 			fileExplorer.setSingleEntrySelection(true);
 			break;

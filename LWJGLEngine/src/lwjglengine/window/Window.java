@@ -452,6 +452,34 @@ public abstract class Window {
 		return this.parentWindow;
 	}
 
+	public int getParentWidth() {
+		if (this.parentWindow != null) {
+			return this.parentWindow.getWidth();
+		}
+		return Main.windowWidth;
+	}
+
+	public int getParentHeight() {
+		if (this.parentWindow != null) {
+			return this.parentWindow.getHeight();
+		}
+		return Main.windowHeight;
+	}
+
+	public int getParentGlobalXOffset() {
+		if (this.parentWindow != null) {
+			return this.parentWindow.getGlobalXOffset();
+		}
+		return 0;
+	}
+
+	public int getParentGlobalYOffset() {
+		if (this.parentWindow != null) {
+			return this.parentWindow.getGlobalYOffset();
+		}
+		return 0;
+	}
+
 	public void align() {
 		int parentWidth = Main.windowWidth;
 		int parentHeight = Main.windowHeight;
@@ -787,6 +815,29 @@ public abstract class Window {
 		ScreenQuad.screenQuad.render();
 
 		glViewport(0, 0, Main.windowWidth, Main.windowHeight);
+		glScissor(0, 0, Main.windowWidth, Main.windowHeight);
+		glDisable(GL_SCISSOR_TEST);
+	}
+
+	//renders whatever is in the current color buffer to the glfw screen. 
+	private void renderToGLFWScreen() {
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		glViewport(this.globalXOffset, this.globalYOffset, this.width, this.height);
+		glScissor(this.getParentGlobalXOffset(), this.getParentGlobalYOffset(), this.getParentWidth(), this.getParentHeight());
+		glEnable(GL_SCISSOR_TEST);
+
+		Shader.SPLASH.enable();
+		Shader.SPLASH.setUniform1f("alpha", 1);
+
+		this.colorTexture.bind(GL_TEXTURE0);
+		ScreenQuad.screenQuad.render();
+
+		glViewport(0, 0, Main.windowWidth, Main.windowHeight);
+		glScissor(0, 0, Main.windowWidth, Main.windowHeight);
+		glDisable(GL_SCISSOR_TEST);
 	}
 
 	/**

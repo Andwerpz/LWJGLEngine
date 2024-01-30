@@ -5,6 +5,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -18,6 +21,7 @@ import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
+import myutils.math.MathUtils;
 import myutils.math.Vec2;
 import myutils.math.Vec3;
 import myutils.math.Vec4;
@@ -32,8 +36,11 @@ public class ObjectEditorWindow extends Window {
 
 	//it will only generate input fields for some predetermined set of basic types. 
 
-	//TODO only call the get and set functions when we need to. 
-	// - calling the setters every frame is actually very expensive. 
+	//TODO 
+	// - only call the get and set functions when we need to. 
+	//   - calling the setters every frame is actually very expensive. 
+	// - cosmetic scroll bar overlay. 
+	//   - perhaps should abstract away scrolling into uisection?
 
 	private static final int CLASS_TYPE_UNKNOWN = -1;
 
@@ -51,7 +58,7 @@ public class ObjectEditorWindow extends Window {
 	private static final int CLASS_TYPE_VEC3 = 10;
 	private static final int CLASS_TYPE_VEC4 = 11;
 
-	private UISection uiSection;
+	private UISection editorSection;
 
 	//bounding boxes for all the input fields. 
 	//we'll use these to adjust spacing and placement of inputs. 
@@ -62,10 +69,14 @@ public class ObjectEditorWindow extends Window {
 
 	private Object object;
 
-	private int verticalMargin = 5;
-	private int horizontalMargin = 5;
+	private static int verticalMargin = 5;
+	private static int horizontalMargin = 5;
 
-	private int verticalPadding = 5;
+	private static int verticalPadding = 5;
+
+	private UIFilledRectangle editorBackgroundRect;
+	private int editorHeight = 0;
+	private int scrollOffset = 0;
 
 	public ObjectEditorWindow(Window parentWindow) {
 		super(parentWindow);
@@ -85,11 +96,18 @@ public class ObjectEditorWindow extends Window {
 	}
 
 	private void init() {
-		this.uiSection = new UISection();
-		this.uiSection.getBackgroundRect().setFillWidth(true);
-		this.uiSection.getBackgroundRect().setFillHeight(true);
-		this.uiSection.getBackgroundRect().setMaterial(this.topBarDefaultMaterial);
-		this.uiSection.getBackgroundRect().bind(this.rootUIElement);
+		this.editorSection = new UISection();
+		this.editorSection.getBackgroundRect().setFillWidth(true);
+		this.editorSection.getBackgroundRect().setFillHeight(true);
+		this.editorSection.getBackgroundRect().setMaterial(this.topBarDefaultMaterial);
+		this.editorSection.getBackgroundRect().bind(this.rootUIElement);
+		this.editorSection.getBackgroundRect().setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+		this.editorSection.getBackgroundRect().setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+
+		this.editorSection.setIsScrollable(true);
+		this.editorBackgroundRect = this.editorSection.getScrollBackgroundRect();
+
+		this.rootUIElement.setMaterial(this.topBarDefaultMaterial);
 
 		this.inputFields = new ArrayList<>();
 
@@ -106,7 +124,6 @@ public class ObjectEditorWindow extends Window {
 	}
 
 	private void generateInputFields() {
-		UIFilledRectangle backgroundRect = this.uiSection.getBackgroundRect();
 		this.removeInputFields();
 
 		if (this.object == null) {
@@ -144,6 +161,11 @@ public class ObjectEditorWindow extends Window {
 			validMethodPairs.add(new Pair<Method, Method>(getMethods.get(variableName), m));
 		}
 
+		//sort method pairs for easier navigation of generated editor. 
+		validMethodPairs.sort((a, b) -> {
+			return a.first.getName().compareTo(b.first.getName());
+		});
+
 		//For all pairs of 'set' and 'get' functions, generate inputs for each. 
 		for (Pair<Method, Method> p : validMethodPairs) {
 			UIFilledRectangle inputRect = this.generateInputField(p.first);
@@ -160,14 +182,16 @@ public class ObjectEditorWindow extends Window {
 		}
 
 		//properly align input fields
-		int yptr = this.verticalMargin;
+		int yptr = verticalMargin;
 		for (int i = 0; i < this.inputFields.size(); i++) {
 			UIFilledRectangle boundingRect = this.inputFields.get(i);
 			boundingRect.setYOffset(yptr);
-			boundingRect.bind(backgroundRect);
+			boundingRect.bind(this.editorBackgroundRect);
 
-			yptr += boundingRect.getHeight() + this.verticalPadding;
+			yptr += boundingRect.getHeight() + verticalPadding;
 		}
+		this.editorBackgroundRect.setHeight(yptr);
+		this.editorHeight = yptr;
 	}
 
 	private static int getClassType(Class<?> c) {
@@ -224,14 +248,14 @@ public class ObjectEditorWindow extends Window {
 		c[0] = Character.toLowerCase(c[0]);
 		variableName = new String(c);
 
-		UIFilledRectangle boundingRect = new UIFilledRectangle(0, 0, 0, 1, 1, this.uiSection.getBackgroundScene());
+		UIFilledRectangle boundingRect = new UIFilledRectangle(0, 0, 0, 1, 1, this.editorSection.getBackgroundScene());
 		boundingRect.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_TOP);
 		boundingRect.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_TOP);
 		boundingRect.setFillWidth(true);
 		boundingRect.setFillWidthMargin(5);
 		boundingRect.setMaterial(this.topBarDefaultMaterial);
 
-		Text variableNameText = new Text(0, 0, variableName, 12, Color.WHITE, this.uiSection.getTextScene());
+		Text variableNameText = new Text(0, 0, variableName, 12, Color.WHITE, this.editorSection.getTextScene());
 		variableNameText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		variableNameText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		variableNameText.setDoAntialiasing(false);
@@ -239,7 +263,7 @@ public class ObjectEditorWindow extends Window {
 
 		if (classType == CLASS_TYPE_FLOAT || classType == CLASS_TYPE_DOUBLE || classType == CLASS_TYPE_BYTE || classType == CLASS_TYPE_SHORT || classType == CLASS_TYPE_INTEGER || classType == CLASS_TYPE_LONG) {
 			//numerical primitives
-			TextField textField = new TextField(0, 0, 150, 20, variableName, variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+			TextField textField = new TextField(0, 0, 150, 20, variableName, variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 			textField.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			textField.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 			textField.getTextUIElement().setDoAntialiasing(false);
@@ -290,7 +314,7 @@ public class ObjectEditorWindow extends Window {
 		}
 		else if (classType == CLASS_TYPE_BOOLEAN) {
 			//toggle button
-			ToggleButton toggleButton = new ToggleButton(0, 0, 150, 20, variableName, variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+			ToggleButton toggleButton = new ToggleButton(0, 0, 150, 20, variableName, variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 			toggleButton.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			toggleButton.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 			toggleButton.getButtonText().setDoAntialiasing(false);
@@ -312,7 +336,7 @@ public class ObjectEditorWindow extends Window {
 		}
 		else if (classType == CLASS_TYPE_STRING || classType == CLASS_TYPE_CHAR) {
 			//free text field
-			TextField textField = new TextField(0, 0, 150, 20, variableName, variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+			TextField textField = new TextField(0, 0, 150, 20, variableName, variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 			textField.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			textField.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 			textField.getTextUIElement().setDoAntialiasing(false);
@@ -342,14 +366,14 @@ public class ObjectEditorWindow extends Window {
 
 			switch (classType) {
 			case CLASS_TYPE_VEC2: {
-				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfX.setIsFloatField(true);
 				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
-				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfY.setIsFloatField(true);
@@ -368,13 +392,13 @@ public class ObjectEditorWindow extends Window {
 					e.printStackTrace();
 				}
 
-				Text tX = new Text(0, 25, "X", 12, Color.WHITE, this.uiSection.getTextScene());
+				Text tX = new Text(0, 25, "X", 12, Color.WHITE, this.editorSection.getTextScene());
 				tX.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tX.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 				tX.setDoAntialiasing(false);
 				tX.bind(boundingRect);
 
-				Text tY = new Text(0, 50, "Y", 12, Color.WHITE, this.uiSection.getTextScene());
+				Text tY = new Text(0, 50, "Y", 12, Color.WHITE, this.editorSection.getTextScene());
 				tY.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tY.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 				tY.setDoAntialiasing(false);
@@ -385,21 +409,21 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_VEC3: {
-				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfX.setIsFloatField(true);
 				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
-				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfY.setIsFloatField(true);
 				tfY.getTextUIElement().setDoAntialiasing(false);
 				tfY.bind(boundingRect);
 
-				TextField tfZ = new TextField(0, 75, 150, 20, variableName + ".z", variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+				TextField tfZ = new TextField(0, 75, 150, 20, variableName + ".z", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfZ.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfZ.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfZ.setIsFloatField(true);
@@ -419,19 +443,19 @@ public class ObjectEditorWindow extends Window {
 					e.printStackTrace();
 				}
 
-				Text tX = new Text(0, 25, "X", 12, Color.WHITE, this.uiSection.getTextScene());
+				Text tX = new Text(0, 25, "X", 12, Color.WHITE, this.editorSection.getTextScene());
 				tX.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tX.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 				tX.setDoAntialiasing(false);
 				tX.bind(boundingRect);
 
-				Text tY = new Text(0, 50, "Y", 12, Color.WHITE, this.uiSection.getTextScene());
+				Text tY = new Text(0, 50, "Y", 12, Color.WHITE, this.editorSection.getTextScene());
 				tY.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tY.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 				tY.setDoAntialiasing(false);
 				tY.bind(boundingRect);
 
-				Text tZ = new Text(0, 75, "Z", 12, Color.WHITE, this.uiSection.getTextScene());
+				Text tZ = new Text(0, 75, "Z", 12, Color.WHITE, this.editorSection.getTextScene());
 				tZ.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tZ.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 				tZ.setDoAntialiasing(false);
@@ -442,28 +466,28 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_VEC4: {
-				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfX.setIsFloatField(true);
 				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
-				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfY.setIsFloatField(true);
 				tfY.getTextUIElement().setDoAntialiasing(false);
 				tfY.bind(boundingRect);
 
-				TextField tfZ = new TextField(0, 75, 150, 20, variableName + ".z", variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+				TextField tfZ = new TextField(0, 75, 150, 20, variableName + ".z", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfZ.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfZ.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfZ.setIsFloatField(true);
 				tfZ.getTextUIElement().setDoAntialiasing(false);
 				tfZ.bind(boundingRect);
 
-				TextField tfW = new TextField(0, 100, 150, 20, variableName + ".w", variableName, 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+				TextField tfW = new TextField(0, 100, 150, 20, variableName + ".w", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfW.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfW.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfW.setIsFloatField(true);
@@ -484,25 +508,25 @@ public class ObjectEditorWindow extends Window {
 					e.printStackTrace();
 				}
 
-				Text tX = new Text(0, 25, "X", 12, Color.WHITE, this.uiSection.getTextScene());
+				Text tX = new Text(0, 25, "X", 12, Color.WHITE, this.editorSection.getTextScene());
 				tX.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tX.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 				tX.setDoAntialiasing(false);
 				tX.bind(boundingRect);
 
-				Text tY = new Text(0, 50, "Y", 12, Color.WHITE, this.uiSection.getTextScene());
+				Text tY = new Text(0, 50, "Y", 12, Color.WHITE, this.editorSection.getTextScene());
 				tY.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tY.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 				tY.setDoAntialiasing(false);
 				tY.bind(boundingRect);
 
-				Text tZ = new Text(0, 75, "Z", 12, Color.WHITE, this.uiSection.getTextScene());
+				Text tZ = new Text(0, 75, "Z", 12, Color.WHITE, this.editorSection.getTextScene());
 				tZ.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tZ.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 				tZ.setDoAntialiasing(false);
 				tZ.bind(boundingRect);
 
-				Text tW = new Text(0, 100, "W", 12, Color.WHITE, this.uiSection.getTextScene());
+				Text tW = new Text(0, 100, "W", 12, Color.WHITE, this.editorSection.getTextScene());
 				tW.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tW.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 				tW.setDoAntialiasing(false);
@@ -525,12 +549,13 @@ public class ObjectEditorWindow extends Window {
 
 	@Override
 	protected void _kill() {
-		this.uiSection.kill();
+		this.editorSection.kill();
 	}
 
 	@Override
 	protected void _resize() {
-		this.uiSection.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.editorSection.setScreenDimensions(this.getWidth(), this.getHeight());
+		this.setScrollOffset(this.scrollOffset);
 	}
 
 	@Override
@@ -540,7 +565,7 @@ public class ObjectEditorWindow extends Window {
 
 	@Override
 	protected void _update() {
-		this.uiSection.update();
+		this.editorSection.update();
 
 		//go through all method pairs, and run all the setters. 
 		for (String variableName : this.variableNameToMethods.keySet()) {
@@ -553,7 +578,7 @@ public class ObjectEditorWindow extends Window {
 			//just call the setter. TODO first check if the getter is equal to whatever is in the input fields. 
 			switch (classType) {
 			case CLASS_TYPE_FLOAT: {
-				TextField tf = (TextField) Input.getInput(variableName, this.uiSection.getSelectionScene());
+				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
 				if (!tf.isInputValid()) {
 					break;
 				}
@@ -562,7 +587,7 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_DOUBLE: {
-				TextField tf = (TextField) Input.getInput(variableName, this.uiSection.getSelectionScene());
+				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
 				if (!tf.isInputValid()) {
 					break;
 				}
@@ -571,7 +596,7 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_BYTE: {
-				TextField tf = (TextField) Input.getInput(variableName, this.uiSection.getSelectionScene());
+				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
 				if (!tf.isInputValid()) {
 					break;
 				}
@@ -580,7 +605,7 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_SHORT: {
-				TextField tf = (TextField) Input.getInput(variableName, this.uiSection.getSelectionScene());
+				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
 				if (!tf.isInputValid()) {
 					break;
 				}
@@ -589,7 +614,7 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_INTEGER: {
-				TextField tf = (TextField) Input.getInput(variableName, this.uiSection.getSelectionScene());
+				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
 				if (!tf.isInputValid()) {
 					break;
 				}
@@ -598,7 +623,7 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_LONG: {
-				TextField tf = (TextField) Input.getInput(variableName, this.uiSection.getSelectionScene());
+				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
 				if (!tf.isInputValid()) {
 					break;
 				}
@@ -607,7 +632,7 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_CHAR: {
-				TextField tf = (TextField) Input.getInput(variableName, this.uiSection.getSelectionScene());
+				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
 				if (!tf.isInputValid()) {
 					break;
 				}
@@ -616,7 +641,7 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_STRING: {
-				TextField tf = (TextField) Input.getInput(variableName, this.uiSection.getSelectionScene());
+				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
 				if (!tf.isInputValid()) {
 					break;
 				}
@@ -625,17 +650,17 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_BOOLEAN: {
-				ToggleButton tb = (ToggleButton) Input.getInput(variableName, this.uiSection.getSelectionScene());
+				ToggleButton tb = (ToggleButton) Input.getInput(variableName, this.editorSection.getSelectionScene());
 				val = tb.isToggled();
 				break;
 			}
 
 			case CLASS_TYPE_VEC2: {
-				TextField tfX = (TextField) Input.getInput(variableName + ".x", this.uiSection.getSelectionScene());
+				TextField tfX = (TextField) Input.getInput(variableName + ".x", this.editorSection.getSelectionScene());
 				if (!tfX.isInputValid()) {
 					break;
 				}
-				TextField tfY = (TextField) Input.getInput(variableName + ".y", this.uiSection.getSelectionScene());
+				TextField tfY = (TextField) Input.getInput(variableName + ".y", this.editorSection.getSelectionScene());
 				if (!tfY.isInputValid()) {
 					break;
 				}
@@ -646,15 +671,15 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_VEC3: {
-				TextField tfX = (TextField) Input.getInput(variableName + ".x", this.uiSection.getSelectionScene());
+				TextField tfX = (TextField) Input.getInput(variableName + ".x", this.editorSection.getSelectionScene());
 				if (!tfX.isInputValid()) {
 					break;
 				}
-				TextField tfY = (TextField) Input.getInput(variableName + ".y", this.uiSection.getSelectionScene());
+				TextField tfY = (TextField) Input.getInput(variableName + ".y", this.editorSection.getSelectionScene());
 				if (!tfY.isInputValid()) {
 					break;
 				}
-				TextField tfZ = (TextField) Input.getInput(variableName + ".z", this.uiSection.getSelectionScene());
+				TextField tfZ = (TextField) Input.getInput(variableName + ".z", this.editorSection.getSelectionScene());
 				if (!tfZ.isInputValid()) {
 					break;
 				}
@@ -666,19 +691,19 @@ public class ObjectEditorWindow extends Window {
 			}
 
 			case CLASS_TYPE_VEC4: {
-				TextField tfX = (TextField) Input.getInput(variableName + ".x", this.uiSection.getSelectionScene());
+				TextField tfX = (TextField) Input.getInput(variableName + ".x", this.editorSection.getSelectionScene());
 				if (!tfX.isInputValid()) {
 					break;
 				}
-				TextField tfY = (TextField) Input.getInput(variableName + ".y", this.uiSection.getSelectionScene());
+				TextField tfY = (TextField) Input.getInput(variableName + ".y", this.editorSection.getSelectionScene());
 				if (!tfY.isInputValid()) {
 					break;
 				}
-				TextField tfZ = (TextField) Input.getInput(variableName + ".z", this.uiSection.getSelectionScene());
+				TextField tfZ = (TextField) Input.getInput(variableName + ".z", this.editorSection.getSelectionScene());
 				if (!tfZ.isInputValid()) {
 					break;
 				}
-				TextField tfW = (TextField) Input.getInput(variableName + ".w", this.uiSection.getSelectionScene());
+				TextField tfW = (TextField) Input.getInput(variableName + ".w", this.editorSection.getSelectionScene());
 				if (!tfW.isInputValid()) {
 					break;
 				}
@@ -711,7 +736,8 @@ public class ObjectEditorWindow extends Window {
 
 	@Override
 	protected void renderContent(Framebuffer outputBuffer) {
-		this.uiSection.render(outputBuffer, this.getWindowMousePos());
+		this.editorBackgroundRect.setYOffset(-this.scrollOffset);
+		this.editorSection.render(outputBuffer, this.getWindowMousePos());
 	}
 
 	@Override
@@ -744,29 +770,36 @@ public class ObjectEditorWindow extends Window {
 
 	}
 
+	private void setScrollOffset(int offset) {
+		int minScrollOffset = 0;
+		int maxScrollOffset = Math.max(0, this.editorHeight - this.getHeight());
+		this.scrollOffset = MathUtils.clamp(minScrollOffset, maxScrollOffset, offset);
+	}
+
 	@Override
 	protected void _mousePressed(int button) {
-		this.uiSection.mousePressed(button);
+		this.editorSection.mousePressed(button);
 	}
 
 	@Override
 	protected void _mouseReleased(int button) {
-		this.uiSection.mouseReleased(button);
+		this.editorSection.mouseReleased(button);
 	}
 
 	@Override
 	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
-		this.uiSection.mouseScrolled(wheelOffset, smoothOffset);
+		this.editorSection.mouseScrolled(wheelOffset, smoothOffset);
+		//this.setScrollOffset((int) (this.scrollOffset - smoothOffset * 10.0f));
 	}
 
 	@Override
 	protected void _keyPressed(int key) {
-		this.uiSection.keyPressed(key);
+		this.editorSection.keyPressed(key);
 	}
 
 	@Override
 	protected void _keyReleased(int key) {
-		this.uiSection.keyReleased(key);
+		this.editorSection.keyReleased(key);
 	}
 
 }

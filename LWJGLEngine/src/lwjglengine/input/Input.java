@@ -33,6 +33,10 @@ public abstract class Input extends UIElement {
 	//if this is true, then it means that this is the last input to be clicked. 
 	private boolean clicked;
 
+	//if true, this input will be disabled, and it won't interact with the user. 
+	//TODO implement this
+	private boolean isDisabled;
+
 	private String sID;
 
 	public Input(float x, float y, float z, float width, float height, String sID, FilledRectangle baseRect, int scene) {

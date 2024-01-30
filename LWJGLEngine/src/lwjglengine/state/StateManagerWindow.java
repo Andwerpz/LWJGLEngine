@@ -93,8 +93,6 @@ public class StateManagerWindow extends Window {
 		this.logoIconRect.setTextureMaterial(logoTexture);
 		this.logoIconRect.bind(this.rootUIElement);
 
-		//this.setContextMenuRightClick(true);
-
 		ArrayList<String> contextMenuOptions = new ArrayList<>();
 		contextMenuOptions.add("New File Explorer Window");
 		contextMenuOptions.add("New Raytracing Window");
@@ -107,15 +105,6 @@ public class StateManagerWindow extends Window {
 	@Override
 	public String getDefaultTitle() {
 		return "State Manager";
-	}
-
-	@Override
-	public void handleContextMenuAction(String action) {
-		switch (action) {
-		case "New File Explorer Window":
-			Window fileExplorer = new AdjustableWindow((int) this.getWindowMousePos().x, (int) this.getWindowMousePos().y, 400, 400, "File Explorer", new FileExplorerWindow(this), this);
-			break;
-		}
 	}
 
 	// trigger a load screen

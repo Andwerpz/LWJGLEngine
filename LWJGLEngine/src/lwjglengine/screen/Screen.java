@@ -64,12 +64,6 @@ public abstract class Screen {
 
 	public abstract void buildBuffers();
 
-	public static void rebuildAllBuffers() {
-		for (Screen s : activeScreens) {
-			s.buildBuffers();
-		}
-	}
-
 	public Camera getCamera() {
 		return this.camera;
 	}
