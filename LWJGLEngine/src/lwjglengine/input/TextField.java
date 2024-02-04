@@ -42,14 +42,22 @@ public class TextField extends Input {
 	private int textRightMargin = 5;
 	private Font font;
 
+	public static final int FIELD_TYPE_DEFAULT = 0;
+	public static final int FIELD_TYPE_INT = 1;
+	public static final int FIELD_TYPE_FLOAT = 2;
+
+	private int fieldType = FIELD_TYPE_DEFAULT;
+
+	private static final String INT_REGEX = "[-+]?[0-9]+";
+	private long intFieldDragIncrement = 1;
+	private long intFieldMinimum = Long.MIN_VALUE;
+	private long intFieldMaximum = Long.MAX_VALUE;
+
 	//same as text field, but only allows floats. 
 	//supports dragging to the left/right to increment/decrement the value held in the field by a set amount. 
-	private boolean isFloatField = false;
-	private static final String FLOAT_REGEX = "[-+]?[0-9]*\\.?[0-9]+";
-
 	//use doubles here for more precision and range
+	private static final String FLOAT_REGEX = "[-+]?[0-9]*\\.?[0-9]+";
 	private double floatFieldDragIncrement = 0.01; //how much will the input change per pixel
-
 	private double floatFieldMinimum = -Double.MAX_VALUE;
 	private double floatFieldMaximum = Double.MAX_VALUE;
 	private DecimalFormat floatFieldFormat = new DecimalFormat("0.00####;-0.00####");
@@ -136,8 +144,22 @@ public class TextField extends Input {
 			this.setMaterial(this.currentMaterial);
 		}
 
-		// -- FLOAT FIELD --
-		if (this.isFloatField) {
+		// -- NUMERICAL DRAG INPUTS --
+		switch (this.fieldType) {
+		case FIELD_TYPE_INT: {
+			if (this.isPressed() && this.text.matches(this.validInputRegex)) {
+				//increment current input
+				long curInt = Long.parseLong(this.getText());
+				Vec2 mouseDiff = MouseInput.getMouseDiff();
+				int horizontalDiff = (int) Math.abs(mouseDiff.x) * (mouseDiff.x < 0 ? -1 : 1);
+				curInt += horizontalDiff * this.intFieldDragIncrement;
+				curInt = MathUtils.clamp(this.intFieldMinimum, this.intFieldMaximum, curInt);
+				this.setText(curInt + "");
+			}
+			break;
+		}
+
+		case FIELD_TYPE_FLOAT: {
 			if (this.isPressed() && this.text.matches(this.validInputRegex)) {
 				//increment current input
 				double curFloat = Double.parseDouble(this.getText());
@@ -145,9 +167,10 @@ public class TextField extends Input {
 				int horizontalDiff = (int) Math.abs(mouseDiff.x) * (mouseDiff.x < 0 ? -1 : 1);
 				curFloat += horizontalDiff * this.floatFieldDragIncrement;
 				curFloat = MathUtils.clamp(this.floatFieldMinimum, this.floatFieldMaximum, curFloat);
-
 				this.setText(this.floatFieldFormat.format(curFloat));
 			}
+			break;
+		}
 		}
 	}
 
@@ -207,16 +230,30 @@ public class TextField extends Input {
 			return;
 		}
 
-		if (this.isFloatField()) {
+		switch (this.fieldType) {
+		case FIELD_TYPE_INT: {
+			long curInt = Long.parseLong(this.text);
+			if (curInt < this.intFieldMinimum || curInt > this.intFieldMaximum) {
+				this.isInputValid = false;
+			}
+			break;
+		}
+
+		case FIELD_TYPE_FLOAT: {
 			double curFloat = Double.parseDouble(this.text);
 			if (curFloat < this.floatFieldMinimum || curFloat > this.floatFieldMaximum) {
 				this.isInputValid = false;
 			}
+			break;
+		}
 		}
 	}
 
 	public void setValidInputRegex(String regex) {
-		if (this.isFloatField && !regex.equals(FLOAT_REGEX)) {
+		if (this.fieldType == FIELD_TYPE_INT && !regex.equals(INT_REGEX)) {
+			return;
+		}
+		if (this.fieldType == FIELD_TYPE_FLOAT && !regex.equals(FLOAT_REGEX)) {
 			return;
 		}
 
@@ -224,19 +261,38 @@ public class TextField extends Input {
 		this.checkIfInputTextIsValid();
 	}
 
-	public void setIsFloatField(boolean b) {
-		this.isFloatField = b;
-		if (this.isFloatField) {
+	public void setFieldType(int type) {
+		this.fieldType = type;
+		switch (type) {
+		case FIELD_TYPE_DEFAULT: {
+			//do nothing
+			break;
+		}
+
+		case FIELD_TYPE_INT: {
+			this.setValidInputRegex(INT_REGEX);
+			this.setText("0");
+			break;
+		}
+
+		case FIELD_TYPE_FLOAT: {
 			this.setValidInputRegex(FLOAT_REGEX);
 			this.setText(this.floatFieldFormat.format(0));
+			break;
 		}
-		else {
-			this.setValidInputRegex(DEFAULT_REGEX);
 		}
 	}
 
-	public boolean isFloatField() {
-		return this.isFloatField;
+	public void setIntFieldMinimum(long i) {
+		this.intFieldMinimum = i;
+	}
+
+	public void setIntFieldMaximum(long i) {
+		this.intFieldMaximum = i;
+	}
+
+	public void setIntFieldDragIncrement(long i) {
+		this.intFieldDragIncrement = i;
 	}
 
 	public void setFloatFieldMinimum(double f) {

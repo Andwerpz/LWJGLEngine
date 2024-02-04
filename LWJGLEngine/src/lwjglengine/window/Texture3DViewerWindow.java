@@ -51,7 +51,7 @@ public class Texture3DViewerWindow extends Window {
 		zLevelTf.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		zLevelTf.getTextUIElement().setDoAntialiasing(false);
 		zLevelTf.setFloatFieldDragIncrement(0.01f);
-		zLevelTf.setIsFloatField(true);
+		zLevelTf.setFieldType(TextField.FIELD_TYPE_FLOAT);
 		zLevelTf.bind(this.uiSection.getBackgroundRect());
 
 		this.displayRedTb = new ToggleButton(5, 30, 100, 20, "tb_red", "Red", 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());

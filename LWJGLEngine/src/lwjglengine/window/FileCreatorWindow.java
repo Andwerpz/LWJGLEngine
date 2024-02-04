@@ -66,7 +66,7 @@ public class FileCreatorWindow extends Window {
 		this.bottomBarRect.setMaterial(bottomBarMaterial);
 		this.bottomBarRect.bind(this.rootUIElement);
 
-		this.bottomBarFilenameTf = new TextField(3, 3, this.getWidth() - 4, bottomBarHeight - 5, "tf_filename", "Enter New File Name", 12, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
+		this.bottomBarFilenameTf = new TextField(3, 3, this.getWidth() - confirmBtnWidth - 8, bottomBarHeight - 5, "tf_filename", "Enter New File Name", 12, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
 		this.bottomBarFilenameTf.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
 		this.bottomBarFilenameTf.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 		this.bottomBarFilenameTf.getTextUIElement().setDoAntialiasing(false);
@@ -90,7 +90,7 @@ public class FileCreatorWindow extends Window {
 	protected void _resize() {
 		this.bottomBarSection.setScreenDimensions(this.getWidth(), this.getHeight());
 
-		this.bottomBarFilenameTf.setWidth(this.getWidth() - confirmBtnWidth - 4);
+		this.bottomBarFilenameTf.setWidth(this.getWidth() - confirmBtnWidth - 8);
 
 		this.fileExplorer.setHeight(this.getHeight() - bottomBarHeight);
 	}

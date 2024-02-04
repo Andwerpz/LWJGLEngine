@@ -168,7 +168,12 @@ public class FileExplorerWindow extends Window {
 	}
 
 	public File[] getSelectedFiles() {
-		return (File[]) this.folderWindow.getSelectedListEntryObjects();
+		Object[] objects = this.folderWindow.getSelectedListEntryObjects();
+		File[] files = new File[objects.length];
+		for (int i = 0; i < files.length; i++) {
+			files[i] = (File) objects[i];
+		}
+		return files;
 	}
 
 	@Override

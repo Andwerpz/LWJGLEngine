@@ -267,26 +267,14 @@ public class ObjectEditorWindow extends Window {
 			textField.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			textField.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 			textField.getTextUIElement().setDoAntialiasing(false);
-			textField.setIsFloatField(true);
+			textField.setFieldType(TextField.FIELD_TYPE_FLOAT);
 			textField.bind(boundingRect);
 
-			try {
-				String floatText = getter.invoke(this.object) + "";
-				textField.setText(floatText);
-			}
-			catch (IllegalAccessException e) {
-				e.printStackTrace();
-			}
-			catch (InvocationTargetException e) {
-				e.printStackTrace();
-			}
-
 			if (classType == CLASS_TYPE_BYTE || classType == CLASS_TYPE_SHORT || classType == CLASS_TYPE_INTEGER || classType == CLASS_TYPE_LONG) {
-				textField.setFloatFieldDragIncrement(1);
-				textField.setFloatFieldFormat(new DecimalFormat("0;-0"));
+				textField.setFieldType(TextField.FIELD_TYPE_INT);
 
 				//set bounds
-				double fieldMin = 0, fieldMax = 0;
+				long fieldMin = 0, fieldMax = 0;
 				switch (classType) {
 				case CLASS_TYPE_BYTE:
 					fieldMin = Byte.MIN_VALUE;
@@ -306,8 +294,18 @@ public class ObjectEditorWindow extends Window {
 					break;
 				}
 
-				textField.setFloatFieldMinimum(fieldMin);
-				textField.setFloatFieldMaximum(fieldMax);
+				textField.setIntFieldMinimum(fieldMin);
+				textField.setIntFieldMaximum(fieldMax);
+			}
+
+			try {
+				textField.setText(getter.invoke(this.object) + "");
+			}
+			catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+			catch (InvocationTargetException e) {
+				e.printStackTrace();
 			}
 
 			boundingRect.setHeight(20);
@@ -369,14 +367,14 @@ public class ObjectEditorWindow extends Window {
 				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-				tfX.setIsFloatField(true);
+				tfX.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
 				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-				tfY.setIsFloatField(true);
+				tfY.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfY.getTextUIElement().setDoAntialiasing(false);
 				tfY.bind(boundingRect);
 
@@ -412,21 +410,21 @@ public class ObjectEditorWindow extends Window {
 				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-				tfX.setIsFloatField(true);
+				tfX.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
 				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-				tfY.setIsFloatField(true);
+				tfY.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfY.getTextUIElement().setDoAntialiasing(false);
 				tfY.bind(boundingRect);
 
 				TextField tfZ = new TextField(0, 75, 150, 20, variableName + ".z", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfZ.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfZ.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-				tfZ.setIsFloatField(true);
+				tfZ.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfZ.getTextUIElement().setDoAntialiasing(false);
 				tfZ.bind(boundingRect);
 
@@ -469,28 +467,28 @@ public class ObjectEditorWindow extends Window {
 				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-				tfX.setIsFloatField(true);
+				tfX.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
 				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-				tfY.setIsFloatField(true);
+				tfY.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfY.getTextUIElement().setDoAntialiasing(false);
 				tfY.bind(boundingRect);
 
 				TextField tfZ = new TextField(0, 75, 150, 20, variableName + ".z", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfZ.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfZ.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-				tfZ.setIsFloatField(true);
+				tfZ.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfZ.getTextUIElement().setDoAntialiasing(false);
 				tfZ.bind(boundingRect);
 
 				TextField tfW = new TextField(0, 100, 150, 20, variableName + ".w", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfW.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfW.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-				tfW.setIsFloatField(true);
+				tfW.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfW.getTextUIElement().setDoAntialiasing(false);
 				tfW.bind(boundingRect);
 
