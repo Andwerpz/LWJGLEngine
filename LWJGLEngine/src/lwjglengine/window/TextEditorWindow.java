@@ -66,6 +66,7 @@ public class TextEditorWindow extends Window {
 	//   - we will call the realign function on all the lines below the cursor, and if a line has visible stuff, it will realign it. 
 	// FEATURES
 	// - scroll bar on the right side to let user know how much they can scroll. 
+	//   - perhaps implement this seperately? or use the scroll feature by uiSection
 	// - highlight the line that the cursor is currently on. 
 	//   - can't really do that in the background, since the characters are rendered on top of a solid backing plate. 
 	// - hold backspace to continuously delete

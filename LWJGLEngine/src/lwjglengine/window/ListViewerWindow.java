@@ -29,7 +29,7 @@ import myutils.math.Vec4;
 
 public class ListViewerWindow extends Window {
 
-	protected UISection topBarSection, contentSection, bottomBarSection;
+	protected UISection topBarSection, bottomBarSection, contentSection;
 
 	private Button bottomBarSubmitBtn;
 
@@ -51,7 +51,7 @@ public class ListViewerWindow extends Window {
 	private Text topBarSelectedEntryText;
 
 	private ArrayList<ListEntry> entryList;
-
+	private ArrayList<ListEntry> filteredEntryList;
 	private HashSet<ListEntry> selectedListEntries;
 
 	private boolean closeOnSubmit = true;
@@ -59,15 +59,14 @@ public class ListViewerWindow extends Window {
 	private long hoveredSectionID;
 	private long hoveredTopBarID, hoveredContentID;
 
-	private int contentBaseYOffset = 0;
-	private int contentBaseXOffset = 0;
-
-	private boolean isHorizontal = false;
 	private boolean renderTopBar = true;
 
 	private String filterString = "";
+	private boolean shouldRefilterList = false;
+	private boolean filterCaseSensitive = false;
 
 	private boolean sortEntries = true;
+	private boolean shouldResortList = false;
 
 	//if there are no displayable list entries, then we'll display a message saying so. 
 	private boolean noListEntries = false;
@@ -103,8 +102,11 @@ public class ListViewerWindow extends Window {
 		this.contentSection = new UISection();
 		this.bottomBarSection = new UISection();
 
-		this.entryList = new ArrayList<>();
+		this.contentSection.setIsScrollable(true);
+		this.contentSection.setRenderScrollBar(true);
 
+		this.entryList = new ArrayList<>();
+		this.filteredEntryList = new ArrayList<>();
 		this.selectedListEntries = new HashSet<>();
 
 		this.callbackWindow = callbackWindow;
@@ -169,13 +171,12 @@ public class ListViewerWindow extends Window {
 			i.kill();
 		}
 		this.entryList.clear();
-
-		this.selectedPivotEntryIndex = 0;
-
 		this.selectedListEntries.clear();
 
+		this.selectedPivotEntryIndex = 0;
 		this.topBarSelectedEntryText.setText("        ");
 
+		this.shouldRefilterList = true;
 		this.alignEntries();
 	}
 
@@ -204,10 +205,12 @@ public class ListViewerWindow extends Window {
 		this.clearList();
 
 		for (int i = 0; i < list.size(); i++) {
-			ListEntry e = new ListEntry(list.get(i), this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s.get(i), this.contentSection.getBackgroundRect(), this.contentSection.getSelectionScene(), this.contentSection.getTextScene());
+			ListEntry e = new ListEntry(list.get(i), this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s.get(i), this.contentSection.getScrollBackgroundRect(), this.contentSection.getSelectionScene(), this.contentSection.getTextScene());
 			this.entryList.add(e);
 		}
 
+		this.shouldRefilterList = true;
+		this.shouldResortList = true;
 		this.alignEntries();
 	}
 
@@ -225,9 +228,11 @@ public class ListViewerWindow extends Window {
 			return;
 		}
 
-		ListEntry e = new ListEntry(elem, this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s, this.contentSection.getBackgroundRect(), this.contentSection.getSelectionScene(), this.contentSection.getTextScene());
+		ListEntry e = new ListEntry(elem, this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s, this.contentSection.getScrollBackgroundRect(), this.contentSection.getSelectionScene(), this.contentSection.getTextScene());
 		this.entryList.add(e);
 
+		this.shouldRefilterList = true;
+		this.shouldResortList = true;
 		this.alignEntries();
 	}
 
@@ -270,7 +275,14 @@ public class ListViewerWindow extends Window {
 	}
 
 	public void setFilter(String filter) {
-		this.filterString = filter.toLowerCase();
+		this.filterString = filter;
+		this.shouldRefilterList = true;
+		this.alignEntries();
+	}
+
+	public void setFilterCaseSensitive(boolean b) {
+		this.filterCaseSensitive = b;
+		this.shouldRefilterList = true;
 		this.alignEntries();
 	}
 
@@ -295,16 +307,6 @@ public class ListViewerWindow extends Window {
 	public void setTopBarHeight(int h) {
 		this.topBarHeightPx = h;
 		this._resize();
-	}
-
-	private void setContentBaseXOffset(int offset) {
-		this.contentBaseXOffset = offset;
-		this.alignEntries();
-	}
-
-	private void setContentBaseYOffset(int offset) {
-		this.contentBaseYOffset = offset;
-		this.alignEntries();
 	}
 
 	public void setEntryHeightPx(int height) {
@@ -332,67 +334,54 @@ public class ListViewerWindow extends Window {
 		return ret;
 	}
 
+	//TODO fix this
 	private void alignEntries() {
-		this.contentSection.getBackgroundRect().align();
-
-		if (this.sortEntries) {
+		if (this.shouldResortList) {
 			this.sortList();
 		}
 
-		int horizontalAlignWidthSum = 0;
-		ArrayList<ListEntry> filteredEntries = new ArrayList<>();
-		for (ListEntry i : this.entryList) {
-			if (i.getText().toLowerCase().contains(this.filterString)) {
-				filteredEntries.add(i);
-				horizontalAlignWidthSum += i.getHorizontalAlignWidth();
-			}
-			else {
-				i.align(this.getWidth() * 2, this.getHeight() * 2);
+		if (this.shouldRefilterList) {
+			this.shouldRefilterList = false;
+			this.filteredEntryList.clear();
+			for (ListEntry i : this.entryList) {
+				boolean passFilter = this.filterCaseSensitive && i.getText().contains(this.filterString);
+				passFilter |= !this.filterCaseSensitive && i.getText().toLowerCase().contains(this.filterString.toLowerCase());
+				if (passFilter) {
+					this.filteredEntryList.add(i);
+				}
+				else {
+					//just make it not visible
+					i.align(this.getWidth() * 2, this.getHeight() * 2);
+				}
 			}
 		}
 
-		if (filteredEntries.size() == 0) {
+		if (this.filteredEntryList.size() == 0) {
 			this.noListEntries = true;
 			this.noListEntriesText.setFrameAlignmentOffset(0, 0);
 		}
 		else {
+			this.noListEntries = false;
 			this.noListEntriesText.setFrameAlignmentOffset(this.getWidth(), this.getHeight());
 		}
 
-		//make sure offset is within bounds. 
-		if (this.isHorizontal) {
-			this.contentBaseYOffset = 0;
-			int minBaseXOffset = (int) Math.min(0, this.contentSection.getBackgroundRect().getWidth() - horizontalAlignWidthSum);
-			this.contentBaseXOffset = MathUtils.clamp(minBaseXOffset, 0, this.contentBaseXOffset);
-		}
-		else {
-			this.contentBaseXOffset = 0;
-			int minBaseYOffset = Math.min(0, (int) this.contentSection.getBackgroundRect().getHeight() - this.entryList.size() * entryHeightPx);
-			this.contentBaseYOffset = MathUtils.clamp(minBaseYOffset, 0, this.contentBaseYOffset);
-		}
+		this.contentSection.setScrollRectHeight(this.filteredEntryList.size() * this.entryHeightPx);
 
-		int xOffset = this.contentBaseXOffset;
-		int yOffset = this.contentBaseYOffset;
-		for (ListEntry i : filteredEntries) {
+		int xOffset = 0;
+		int yOffset = 0;
+		for (ListEntry i : this.filteredEntryList) {
 			i.setEntryHeightPx(this.entryHeightPx);
-
-			if (this.isHorizontal) {
-				i.doFillWidth(false);
-			}
-			else {
-				i.doFillWidth(true);
-			}
+			i.doFillWidth(true);
 			i.align(xOffset, yOffset);
-			if (this.isHorizontal) {
-				xOffset += i.getHorizontalAlignWidth();
-			}
-			else {
-				yOffset += entryHeightPx;
-			}
+
+			yOffset += entryHeightPx;
 		}
 	}
 
 	private void sortList() {
+		if (!this.sortEntries) {
+			return;
+		}
 		Collections.sort(this.entryList, (a, b) -> {
 			return a.getText().compareTo(b.getText());
 		});
@@ -400,19 +389,13 @@ public class ListViewerWindow extends Window {
 
 	public void setSortEntries(boolean b) {
 		this.sortEntries = b;
+
+		this.shouldResortList = true;
+		this.alignEntries();
 	}
 
 	public void setCloseOnSubmit(boolean b) {
 		this.closeOnSubmit = b;
-	}
-
-	public void setIsHorizontal(boolean b) {
-		if (this.isHorizontal == b) {
-			return;
-		}
-		this.isHorizontal = b;
-
-		this.alignEntries();
 	}
 
 	public void setRenderTopBar(boolean b) {
@@ -657,12 +640,8 @@ public class ListViewerWindow extends Window {
 	@Override
 	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
 		if (this.hoveredSectionID == this.contentSection.getBackgroundRect().getID()) {
-			if (this.isHorizontal) {
-				this.setContentBaseXOffset(this.contentBaseXOffset + (int) ((smoothOffset) * entryHeightPx));
-			}
-			else {
-				this.setContentBaseYOffset(this.contentBaseYOffset + (int) ((smoothOffset) * entryHeightPx));
-			}
+			this.contentSection.mouseScrolled(wheelOffset, smoothOffset);
+			this.alignEntries();
 		}
 	}
 
@@ -671,10 +650,8 @@ public class ListViewerWindow extends Window {
 		this.topBarSection.keyPressed(key);
 
 		if (this.topBarSearchTf.isClicked()) {
-			this.filterString = this.topBarSearchTf.getText().toLowerCase();
+			this.setFilter(this.topBarSearchTf.getText());
 		}
-
-		this.alignEntries();
 	}
 
 	@Override
@@ -767,8 +744,11 @@ public class ListViewerWindow extends Window {
 		}
 
 		public void align(int xOffset, int yOffset) {
-			this.isVisible = -this.entryHeightPx <= yOffset && yOffset <= this.baseUIElement.getHeight();
-			this.isVisible &= -this.horizontalAlignWidth <= xOffset && xOffset <= this.baseUIElement.getWidth();
+			int g_xOffset = xOffset;
+			int g_yOffset = yOffset - contentSection.getScrollOffset();
+
+			this.isVisible = -this.entryHeightPx <= g_yOffset && g_yOffset <= contentSection.getBackgroundRect().getHeight();
+			this.isVisible &= -this.horizontalAlignWidth <= g_xOffset && g_xOffset <= this.baseUIElement.getWidth();
 
 			if (this.isVisible) {
 				if (this.entryRect == null) {
@@ -786,7 +766,6 @@ public class ListViewerWindow extends Window {
 
 					this.doFillWidth(this.doFillWidth);
 				}
-
 				this.entryRect.setFrameAlignmentOffset(xOffset, yOffset);
 			}
 			else {

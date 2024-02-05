@@ -303,6 +303,9 @@ public abstract class UIElement extends Entity {
 	}
 
 	public void setContentAlignmentStyle(int horizontalAlign, int verticalAlign) {
+		if (horizontalAlign == this.horizontalAlignContent && verticalAlign == this.verticalAlignContent) {
+			return;
+		}
 		this.horizontalAlignContent = horizontalAlign;
 		this.verticalAlignContent = verticalAlign;
 		this.shouldAlign = true;

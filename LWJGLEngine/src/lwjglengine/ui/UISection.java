@@ -35,7 +35,7 @@ public class UISection {
 	//the min and max scroll distance is based off of the background rect, and scroll background rect's heights. 
 	private boolean isScrollable = false;
 	private UIFilledRectangle scrollBackgroundRect, scrollBarRect;
-	private static int scrollBarWidth = 15;
+	private static int scrollBarWidth = 15; //or height if horizontal scroll is enabled
 	private static int minScrollBarHeight = 30;
 	private static Material scrollBarMaterial = new Material(new Vec4(1, 1, 1, 0.3f));
 	private int scrollOffset = 0;
@@ -120,6 +120,12 @@ public class UISection {
 
 	public void setIsScrollable(boolean b) {
 		this.isScrollable = b;
+		if (this.isScrollable) {
+			this.setScrollOffset(this.scrollOffset);
+		}
+		else {
+			this.setScrollOffset(0);
+		}
 	}
 
 	public void setRenderScrollBar(boolean b) {
@@ -128,6 +134,21 @@ public class UISection {
 
 	public void setIsHorizontalScroll(boolean b) {
 		this.isHorizontalScroll = b;
+
+		if (this.isHorizontalScroll) {
+			this.scrollBarRect.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_BOTTOM);
+			this.scrollBarRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_BOTTOM);
+			this.scrollBarRect.setWidth(scrollBarWidth);
+		}
+		else {
+			this.scrollBarRect.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
+			this.scrollBarRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
+			this.scrollBarRect.setHeight(scrollBarWidth);
+		}
+
+		if (this.isScrollable) {
+			this.setScrollOffset(this.scrollOffset);
+		}
 	}
 
 	public int getScrollOffset() {
@@ -138,23 +159,54 @@ public class UISection {
 		return this.scrollBackgroundRect;
 	}
 
-	private void setScrollOffset(int offset) {
-		int minOffset = 0;
-		int maxOffset = Math.max(0, (int) (this.scrollBackgroundRect.getHeight() - this.backgroundRect.getHeight()));
-		this.scrollOffset = MathUtils.clamp(minOffset, maxOffset, offset);
-		this.scrollBackgroundRect.setYOffset(-this.scrollOffset);
+	public void setScrollRectHeight(int height) {
+		this.scrollBackgroundRect.setHeight(height);
+		this.setScrollOffset(this.scrollOffset);
+	}
 
-		int scrollBarHeight = (int) (this.backgroundRect.getHeight() * (this.backgroundRect.getHeight() / this.scrollBackgroundRect.getHeight()));
-		scrollBarHeight = Math.max(scrollBarHeight, minScrollBarHeight);
-		if (scrollBarHeight >= this.backgroundRect.getHeight()) {
-			this.scrollBarRect.setMaterial(Material.transparent());
+	public void setScrollRectWidth(int width) {
+		this.scrollBackgroundRect.setWidth(width);
+		this.setScrollOffset(this.scrollOffset);
+	}
+
+	private void setScrollOffset(int offset) {
+		if (this.isHorizontalScroll) {
+			int minOffset = 0;
+			int maxOffset = Math.max(0, (int) (this.scrollBackgroundRect.getWidth() - this.backgroundRect.getWidth()));
+			this.scrollOffset = MathUtils.clamp(minOffset, maxOffset, offset);
+			this.scrollBackgroundRect.setFrameAlignmentOffset(-this.scrollOffset, 0);
+
+			int scrollBarWidth = (int) (this.backgroundRect.getWidth() * (this.backgroundRect.getWidth() / this.scrollBackgroundRect.getWidth()));
+			scrollBarWidth = Math.max(scrollBarWidth, minScrollBarHeight);
+			if (scrollBarWidth >= this.backgroundRect.getWidth()) {
+				this.scrollBarRect.setMaterial(Material.transparent());
+			}
+			else {
+				this.scrollBarRect.setMaterial(scrollBarMaterial);
+				this.scrollBarRect.setWidth(scrollBarWidth);
+
+				int scrollBarOffset = (int) ((this.backgroundRect.getWidth() - scrollBarWidth) * (this.scrollOffset / (this.scrollBackgroundRect.getWidth() - this.backgroundRect.getWidth())));
+				this.scrollBarRect.setYOffset(scrollBarOffset);
+			}
 		}
 		else {
-			this.scrollBarRect.setMaterial(scrollBarMaterial);
-			this.scrollBarRect.setHeight(scrollBarHeight);
+			int minOffset = 0;
+			int maxOffset = Math.max(0, (int) (this.scrollBackgroundRect.getHeight() - this.backgroundRect.getHeight()));
+			this.scrollOffset = MathUtils.clamp(minOffset, maxOffset, offset);
+			this.scrollBackgroundRect.setFrameAlignmentOffset(0, -this.scrollOffset);
 
-			int scrollBarOffset = (int) (this.backgroundRect.getHeight() * (this.scrollOffset / this.scrollBackgroundRect.getHeight()));
-			this.scrollBarRect.setYOffset(scrollBarOffset);
+			int scrollBarHeight = (int) (this.backgroundRect.getHeight() * (this.backgroundRect.getHeight() / this.scrollBackgroundRect.getHeight()));
+			scrollBarHeight = Math.max(scrollBarHeight, minScrollBarHeight);
+			if (scrollBarHeight >= this.backgroundRect.getHeight()) {
+				this.scrollBarRect.setMaterial(Material.transparent());
+			}
+			else {
+				this.scrollBarRect.setMaterial(scrollBarMaterial);
+				this.scrollBarRect.setHeight(scrollBarHeight);
+
+				int scrollBarOffset = (int) ((this.backgroundRect.getHeight() - scrollBarHeight) * (this.scrollOffset / (this.scrollBackgroundRect.getHeight() - this.backgroundRect.getHeight())));
+				this.scrollBarRect.setYOffset(scrollBarOffset);
+			}
 		}
 	}
 
