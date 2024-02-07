@@ -38,6 +38,8 @@ public abstract class UIElement extends Entity {
 	//   - lines will be nice for rendering arrows. 
 	//   - currently this class is built with the assumption that you will only render rectangles. 
 
+	private HashSet<UIElementListener> listeners;
+
 	private static HashSet<UIElement> uiElements = new HashSet<UIElement>();
 	public static boolean shouldAlignUIElements = false; //TODO remove this
 
@@ -158,6 +160,8 @@ public abstract class UIElement extends Entity {
 	}
 
 	private void init(float xOffset, float yOffset, float z, float width, float height, FilledRectangle boundingRect, int scene) {
+		this.listeners = new HashSet<>();
+
 		this.horizontalAlignFrame = FROM_LEFT;
 		this.verticalAlignFrame = FROM_BOTTOM;
 
@@ -210,6 +214,14 @@ public abstract class UIElement extends Entity {
 	}
 
 	protected abstract void __kill();
+
+	public void addListener(UIElementListener l) {
+		this.listeners.add(l);
+	}
+
+	public void removeListener(UIElementListener l) {
+		this.listeners.remove(l);
+	}
 
 	public static void removeAllUIElementsFromScene(int scene) {
 		ArrayList<UIElement> toRemove = new ArrayList<>();
@@ -365,6 +377,14 @@ public abstract class UIElement extends Entity {
 		this.shouldAlign = true;
 	}
 
+	public boolean getFillWidth() {
+		return this.fillWidth;
+	}
+
+	public boolean getFillHeight() {
+		return this.fillHeight;
+	}
+
 	public void setFillWidthMargin(float margin) {
 		this.fillWidthMargin = margin;
 		this.shouldAlign = true;
@@ -396,7 +416,7 @@ public abstract class UIElement extends Entity {
 
 	public void setTextureMaterial(TextureMaterial m) {
 		if (!this.hasCustomBoundingRect) {
-			System.err.println("Should not change texture material of default filled rect");
+			System.err.println("UIElement : Should not change texture material of default filled rect");
 			return;
 		}
 		this.boundingRect.setTextureMaterial(m);
@@ -464,20 +484,27 @@ public abstract class UIElement extends Entity {
 	}
 
 	protected void alignContents() {
-		if (this.fillWidth) {
-			float parentWidth = Main.windowWidth;
-			if (this.isBound()) {
-				parentWidth = this.getParent().getWidth();
+		//fill width / height
+		if (this.fillWidth || this.fillHeight) {
+			float n_width = this.width;
+			float n_height = this.height;
+			if (this.fillWidth) {
+				float parentWidth = Main.windowWidth;
+				if (this.isBound()) {
+					parentWidth = this.getParent().getWidth();
+				}
+				n_width = parentWidth - this.fillWidthMargin * 2;
 			}
-			this.width = parentWidth - this.fillWidthMargin * 2;
-		}
 
-		if (this.fillHeight) {
-			float parentHeight = Main.windowHeight;
-			if (this.isBound()) {
-				parentHeight = this.getParent().getHeight();
+			if (this.fillHeight) {
+				float parentHeight = Main.windowHeight;
+				if (this.isBound()) {
+					parentHeight = this.getParent().getHeight();
+				}
+				n_height = parentHeight - this.fillHeightMargin * 2;
 			}
-			this.height = parentHeight - this.fillHeightMargin * 2;
+
+			this.setDimensions(n_width, n_height);
 		}
 
 		float width = this.width;
@@ -527,12 +554,33 @@ public abstract class UIElement extends Entity {
 
 		this._alignContents();
 
+		//notify listeners
+		for (UIElementListener l : this.listeners) {
+			if (this.changedOffset) {
+				l.uiElementChangedFrameAlignmentOffset(this);
+			}
+			if (this.changedDimensions) {
+				l.uiElementChangedDimensions(this);
+			}
+			if (this.changedFrameAlignmentStyle) {
+				l.uiElementChangedFrameAlignmentStyle(this);
+			}
+			if (this.changedContentAlignmentStyle) {
+				l.uiElementChangedContentAlignmentStyle(this);
+			}
+			if (this.changedRotationRads) {
+				l.uiElementChangedRotationRads(this);
+			}
+		}
+
+		//reset flags
 		this.changedOffset = false;
 		this.changedFrameAlignmentStyle = false;
 		this.changedContentAlignmentStyle = false;
 		this.changedDimensions = false;
 		this.changedRotationRads = false;
 
+		//update model transform
 		Mat4 modelMat4 = this.getScaleMat4().muli(this.getTranslateMat4());
 		this.modelInstance.getModelTransform().setCustomMat4(modelMat4);
 		this.modelInstance.updateInstance();

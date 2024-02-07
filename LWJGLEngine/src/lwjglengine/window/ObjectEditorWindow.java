@@ -21,6 +21,7 @@ import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
+import lwjglengine.ui.UISectionListener;
 import myutils.math.MathUtils;
 import myutils.math.Vec2;
 import myutils.math.Vec3;
@@ -28,7 +29,7 @@ import myutils.math.Vec4;
 import myutils.misc.Pair;
 import myutils.misc.Triple;
 
-public class ObjectEditorWindow extends Window {
+public class ObjectEditorWindow extends Window implements UISectionListener {
 	//this is an editor that we should be able to put any object inside and edit. 
 
 	//it will first list out all getters and setters of the given class, and will generate input fields 
@@ -39,8 +40,8 @@ public class ObjectEditorWindow extends Window {
 	//TODO 
 	// - only call the get and set functions when we need to. 
 	//   - calling the setters every frame is actually very expensive. 
-	// - cosmetic scroll bar overlay. 
-	//   - perhaps should abstract away scrolling into uisection?
+	// - add filter to search for attributes. 
+	//	 - perhaps we can just regenerate all input fields with the filter in mind. 
 
 	private static final int CLASS_TYPE_UNKNOWN = -1;
 
@@ -76,7 +77,6 @@ public class ObjectEditorWindow extends Window {
 
 	private UIFilledRectangle editorBackgroundRect;
 	private int editorHeight = 0;
-	private int scrollOffset = 0;
 
 	public ObjectEditorWindow(Window parentWindow) {
 		super(parentWindow);
@@ -97,6 +97,7 @@ public class ObjectEditorWindow extends Window {
 
 	private void init() {
 		this.editorSection = new UISection();
+		this.editorSection.setIsScrollable(true);
 		this.editorSection.getBackgroundRect().setFillWidth(true);
 		this.editorSection.getBackgroundRect().setFillHeight(true);
 		this.editorSection.getBackgroundRect().setMaterial(this.topBarDefaultMaterial);
@@ -104,7 +105,6 @@ public class ObjectEditorWindow extends Window {
 		this.editorSection.getBackgroundRect().setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		this.editorSection.getBackgroundRect().setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 
-		this.editorSection.setIsScrollable(true);
 		this.editorBackgroundRect = this.editorSection.getScrollBackgroundRect();
 
 		this.rootUIElement.setMaterial(this.topBarDefaultMaterial);
@@ -112,6 +112,10 @@ public class ObjectEditorWindow extends Window {
 		this.inputFields = new ArrayList<>();
 
 		this.variableNameToMethods = new HashMap<>();
+
+		this.editorSection.addListener(this);
+
+		this._resize();
 	}
 
 	private void removeInputFields() {
@@ -547,13 +551,13 @@ public class ObjectEditorWindow extends Window {
 
 	@Override
 	protected void _kill() {
+		this.editorSection.removeListener(this);
 		this.editorSection.kill();
 	}
 
 	@Override
 	protected void _resize() {
 		this.editorSection.setScreenDimensions(this.getWidth(), this.getHeight());
-		this.setScrollOffset(this.scrollOffset);
 	}
 
 	@Override
@@ -734,7 +738,6 @@ public class ObjectEditorWindow extends Window {
 
 	@Override
 	protected void renderContent(Framebuffer outputBuffer) {
-		this.editorBackgroundRect.setYOffset(-this.scrollOffset);
 		this.editorSection.render(outputBuffer, this.getWindowMousePos());
 	}
 
@@ -768,12 +771,6 @@ public class ObjectEditorWindow extends Window {
 
 	}
 
-	private void setScrollOffset(int offset) {
-		int minScrollOffset = 0;
-		int maxScrollOffset = Math.max(0, this.editorHeight - this.getHeight());
-		this.scrollOffset = MathUtils.clamp(minScrollOffset, maxScrollOffset, offset);
-	}
-
 	@Override
 	protected void _mousePressed(int button) {
 		this.editorSection.mousePressed(button);
@@ -787,7 +784,6 @@ public class ObjectEditorWindow extends Window {
 	@Override
 	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
 		this.editorSection.mouseScrolled(wheelOffset, smoothOffset);
-		//this.setScrollOffset((int) (this.scrollOffset - smoothOffset * 10.0f));
 	}
 
 	@Override
@@ -798,6 +794,11 @@ public class ObjectEditorWindow extends Window {
 	@Override
 	protected void _keyReleased(int key) {
 		this.editorSection.keyReleased(key);
+	}
+
+	@Override
+	public void uiSectionScrolled(UISection section) {
+
 	}
 
 }

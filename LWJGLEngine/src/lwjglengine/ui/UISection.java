@@ -1,5 +1,7 @@
 package lwjglengine.ui;
 
+import java.util.HashSet;
+
 import lwjglengine.graphics.Framebuffer;
 import lwjglengine.graphics.Material;
 import lwjglengine.input.Input;
@@ -9,9 +11,16 @@ import myutils.math.MathUtils;
 import myutils.math.Vec2;
 import myutils.math.Vec4;
 
-public class UISection {
+public class UISection implements UIElementListener {
 	//just making ui easier. 
 	//idk if this is inefficient, maybe there's a better way to do this. 
+
+	//TODO:
+	// - make it so that the user can click and drag the scroll bar
+	//   - problem is that with stuff that dynamically loads stuff based off of scroll position, how are we going to notify them?
+	//   - i implemented a uiSection listener interface that should notify them :)
+
+	private HashSet<UISectionListener> listeners;
 
 	private final int BACKGROUND_SCENE = Scene.generateScene();
 	private final int SELECTION_SCENE = Scene.generateScene();
@@ -42,7 +51,7 @@ public class UISection {
 
 	private boolean renderScrollBar = true;
 
-	//TODO implement horizontal scrolling
+	//TODO make sure horizontal scrolling actually works as intended
 	private boolean isHorizontalScroll = false;
 
 	public UISection() {
@@ -50,6 +59,8 @@ public class UISection {
 	}
 
 	public void init() {
+		this.listeners = new HashSet<>();
+
 		this.backgroundScreen = new UIScreen();
 		this.selectionScreen = new UIScreen();
 		this.textScreen = new UIScreen();
@@ -77,6 +88,17 @@ public class UISection {
 		this.scrollBarRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
 		this.scrollBarRect.setMaterial(Material.transparent());
 		this.scrollBarRect.bind(this.backgroundRect);
+
+		this.backgroundRect.addListener(this);
+		this.scrollBackgroundRect.addListener(this);
+	}
+
+	public void addListener(UISectionListener o) {
+		this.listeners.add(o);
+	}
+
+	public void removeListener(UISectionListener o) {
+		this.listeners.remove(o);
 	}
 
 	/**
@@ -102,16 +124,12 @@ public class UISection {
 		this.selectionScreen.kill();
 		this.textScreen.kill();
 		this.scrollBarScreen.kill();
+
+		this.backgroundRect.removeListener(this);
 	}
 
 	public void update() {
 		Input.inputsHovered(hoveredEntityID, SELECTION_SCENE);
-
-		if (this.isScrollable) {
-			//make sure scroll offset is correct. 
-			//TODO try not to do this every frame via some event listener or something. 
-			this.setScrollOffset(this.scrollOffset);
-		}
 	}
 
 	public void setDoHoverChecks(boolean b) {
@@ -136,11 +154,15 @@ public class UISection {
 		this.isHorizontalScroll = b;
 
 		if (this.isHorizontalScroll) {
+			this.scrollBarRect.setFillWidth(false);
+			this.scrollBarRect.setFillHeight(true);
 			this.scrollBarRect.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_BOTTOM);
 			this.scrollBarRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_BOTTOM);
 			this.scrollBarRect.setWidth(scrollBarWidth);
 		}
 		else {
+			this.scrollBarRect.setFillWidth(true);
+			this.scrollBarRect.setFillHeight(false);
 			this.scrollBarRect.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 			this.scrollBarRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
 			this.scrollBarRect.setHeight(scrollBarWidth);
@@ -160,6 +182,9 @@ public class UISection {
 	}
 
 	public void setScrollRectHeight(int height) {
+		if (this.scrollBackgroundRect.getHeight() == height) {
+			return;
+		}
 		this.scrollBackgroundRect.setHeight(height);
 		this.setScrollOffset(this.scrollOffset);
 	}
@@ -170,6 +195,10 @@ public class UISection {
 	}
 
 	private void setScrollOffset(int offset) {
+		if (!this.isScrollable) {
+			return;
+		}
+
 		if (this.isHorizontalScroll) {
 			int minOffset = 0;
 			int maxOffset = Math.max(0, (int) (this.scrollBackgroundRect.getWidth() - this.backgroundRect.getWidth()));
@@ -207,6 +236,11 @@ public class UISection {
 				int scrollBarOffset = (int) ((this.backgroundRect.getHeight() - scrollBarHeight) * (this.scrollOffset / (this.scrollBackgroundRect.getHeight() - this.backgroundRect.getHeight())));
 				this.scrollBarRect.setYOffset(scrollBarOffset);
 			}
+		}
+
+		//notify listeners
+		for (UISectionListener o : this.listeners) {
+			o.uiSectionScrolled(this);
 		}
 	}
 
@@ -277,5 +311,39 @@ public class UISection {
 
 	public void keyReleased(int key) {
 		Input.inputsKeyReleased(key, SELECTION_SCENE);
+	}
+
+	@Override
+	public void uiElementChangedDimensions(UIElement e) {
+		if (e == this.backgroundRect) {
+			this.setScrollOffset(this.scrollOffset);
+		}
+		if (e == this.scrollBackgroundRect) {
+			this.setScrollOffset(this.scrollOffset);
+		}
+	}
+
+	@Override
+	public void uiElementChangedFrameAlignmentOffset(UIElement e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void uiElementChangedFrameAlignmentStyle(UIElement e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void uiElementChangedContentAlignmentStyle(UIElement e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void uiElementChangedRotationRads(UIElement e) {
+		// TODO Auto-generated method stub
+
 	}
 }

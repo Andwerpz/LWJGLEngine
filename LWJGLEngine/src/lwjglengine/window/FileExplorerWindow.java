@@ -66,7 +66,7 @@ public class FileExplorerWindow extends Window {
 	private UIFilledRectangle directoryRect;
 	public static Material directoryMaterial = new Material(new Vec3((float) (20 / 255.0)));
 
-	public static int directoryGrabTolerancePx = 4;
+	public static int directoryGrabTolerancePx = 10;
 	private boolean directoryGrabbed = false;
 
 	private DirectoryEntry rootDirectoryEntry;
@@ -141,8 +141,14 @@ public class FileExplorerWindow extends Window {
 		this.folderWindow.setAllowInputWhenNotSelected(false);
 		this.folderWindow.setRenderTopBar(false);
 		this.folderWindow.setCloseOnSubmit(false);
+		this.folderWindow.setInheritParentCursor(true);
 
 		this._resize();
+	}
+
+	@Override
+	protected int _getCursorShape() {
+		return this.canGrabDirectory() || this.directoryGrabbed ? GLFW.GLFW_HRESIZE_CURSOR : GLFW.GLFW_ARROW_CURSOR;
 	}
 
 	//this is how we switch directories by double clicking a folder entry. 
@@ -357,15 +363,17 @@ public class FileExplorerWindow extends Window {
 
 	}
 
+	private boolean canGrabDirectory() {
+		int mouseX = (int) this.getWindowMousePos().x;
+		return mouseX <= this.directoryWidth && Math.abs(this.directoryWidth - mouseX) <= directoryGrabTolerancePx;
+	}
+
 	@Override
 	protected void _mousePressed(int button) {
 		this.topBarSection.mousePressed(button);
 
-		int mouseX = (int) this.getWindowMousePos().x;
-		int mouseY = (int) this.getWindowMousePos().y;
-
 		//see if user is trying to drag the directory window
-		if (Math.abs(this.directoryWidth - mouseX) <= directoryGrabTolerancePx) {
+		if (this.canGrabDirectory()) {
 			this.directoryGrabbed = true;
 			return;
 		}

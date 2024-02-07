@@ -22,12 +22,13 @@ import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
+import lwjglengine.ui.UISectionListener;
 import myutils.graphics.GraphicsTools;
 import myutils.math.MathUtils;
 import myutils.math.Vec3;
 import myutils.math.Vec4;
 
-public class ListViewerWindow extends Window {
+public class ListViewerWindow extends Window implements UISectionListener {
 
 	protected UISection topBarSection, bottomBarSection, contentSection;
 
@@ -104,6 +105,7 @@ public class ListViewerWindow extends Window {
 
 		this.contentSection.setIsScrollable(true);
 		this.contentSection.setRenderScrollBar(true);
+		this.contentSection.addListener(this);
 
 		this.entryList = new ArrayList<>();
 		this.filteredEntryList = new ArrayList<>();
@@ -409,6 +411,8 @@ public class ListViewerWindow extends Window {
 
 	@Override
 	protected void _kill() {
+		this.contentSection.removeListener(this);
+
 		this.topBarSection.kill();
 		this.contentSection.kill();
 		this.bottomBarSection.kill();
@@ -641,7 +645,6 @@ public class ListViewerWindow extends Window {
 	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
 		if (this.hoveredSectionID == this.contentSection.getBackgroundRect().getID()) {
 			this.contentSection.mouseScrolled(wheelOffset, smoothOffset);
-			this.alignEntries();
 		}
 	}
 
@@ -657,6 +660,13 @@ public class ListViewerWindow extends Window {
 	@Override
 	protected void _keyReleased(int key) {
 		this.topBarSection.keyReleased(key);
+	}
+
+	@Override
+	public void uiSectionScrolled(UISection section) {
+		if (section == this.contentSection) {
+			this.alignEntries();
+		}
 	}
 
 	class ListEntry {
