@@ -621,6 +621,7 @@ public class ListViewerWindow extends Window implements UISectionListener {
 	protected void _mouseReleased(int button) {
 		this.topBarSection.mouseReleased(button);
 		this.bottomBarSection.mouseReleased(button);
+		this.contentSection.mouseReleased(button);
 
 		if (this.hoveredSectionID == this.bottomBarSection.getBackgroundRect().getID()) {
 			switch (Input.getClicked(this.bottomBarSection.getSelectionScene())) {

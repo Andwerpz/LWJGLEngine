@@ -23,12 +23,13 @@ import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
+import lwjglengine.ui.UISectionListener;
 import myutils.file.FileUtils;
 import myutils.math.MathUtils;
 import myutils.math.Vec3;
 import myutils.math.Vec4;
 
-public class FileExplorerWindow extends Window {
+public class FileExplorerWindow extends Window implements UISectionListener {
 	//this class handles the interactions with navigating directories, it delegates displaying the contents of a directory
 	//and selecting to the list viewer class. 
 
@@ -41,8 +42,6 @@ public class FileExplorerWindow extends Window {
 	// - ability to create folder inside selected directory
 	// - when selecting a folder or directory entry, just make sure that it exists first.
 	// - set root directory when creating an instance of file explorer
-	// - ability to save files
-	//   - user should give file name and extension. 
 
 	private UISection directorySection;
 	private UISection topBarSection;
@@ -63,14 +62,13 @@ public class FileExplorerWindow extends Window {
 
 	private static int directoryMinWidth = 75;
 	private int directoryWidth = 200;
-	private UIFilledRectangle directoryRect;
+	private UIFilledRectangle directoryBackgroundRect, directoryRect;
 	public static Material directoryMaterial = new Material(new Vec3((float) (20 / 255.0)));
 
-	public static int directoryGrabTolerancePx = 10;
+	public static int directoryGrabTolerancePx = 5;
 	private boolean directoryGrabbed = false;
 
 	private DirectoryEntry rootDirectoryEntry;
-	private int directoryYOffset = 0;
 
 	private DirectoryEntry selectedDirectoryEntry = null;
 
@@ -88,15 +86,21 @@ public class FileExplorerWindow extends Window {
 
 	private void init() {
 		this.directorySection = new UISection();
+		this.directorySection.setIsScrollable(true);
+		this.directorySection.setIsHorizontalScroll(false);
+		this.directorySection.addListener(this);
+
 		this.topBarSection = new UISection();
 
-		this.directoryRect = this.directorySection.getBackgroundRect();
-		this.directoryRect.setFrameAlignmentOffset(0, topBarHeight);
-		this.directoryRect.setDimensions(this.directoryWidth, this.getHeight() - topBarHeight);
-		this.directoryRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
-		this.directoryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
-		this.directoryRect.setMaterial(directoryMaterial);
-		this.directoryRect.bind(this.rootUIElement);
+		this.directoryBackgroundRect = this.directorySection.getBackgroundRect();
+		this.directoryBackgroundRect.setFrameAlignmentOffset(0, topBarHeight);
+		this.directoryBackgroundRect.setDimensions(this.directoryWidth, this.getHeight() - topBarHeight);
+		this.directoryBackgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
+		this.directoryBackgroundRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
+		this.directoryBackgroundRect.setMaterial(directoryMaterial);
+		this.directoryBackgroundRect.bind(this.rootUIElement);
+
+		this.directoryRect = this.directorySection.getScrollBackgroundRect();
 
 		this.topBarRect = this.topBarSection.getBackgroundRect();
 		this.topBarRect.setFrameAlignmentOffset(0, 0);
@@ -111,7 +115,7 @@ public class FileExplorerWindow extends Window {
 		this.rootDirectoryEntry = new DirectoryEntry(null, "", "", this.directoryRect, this.directorySection.getSelectionScene(), this.directorySection.getTextScene());
 		this.rootDirectoryEntry.display();
 		this.rootDirectoryEntry.expand();
-		this.rootDirectoryEntry.align(this.directoryYOffset);
+		this.alignDirectoryEntries();
 
 		this.topBarBackButton = new Button(3, 0, 20, 20, "btn_directory_back", "          ", new Font("Dialog", Font.PLAIN, 12), 12, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
 		this.topBarBackButton.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
@@ -199,12 +203,12 @@ public class FileExplorerWindow extends Window {
 			this.folderWindow.setBottomLeftCoords(this.directoryWidth, 0);
 		}
 
-		if (this.directoryRect != null) {
-			this.directoryRect.setWidth(this.directoryWidth);
-			this.directoryRect.setHeight(this.getHeight() - topBarHeight);
+		if (this.directoryBackgroundRect != null) {
+			this.directoryBackgroundRect.setWidth(this.directoryWidth);
+			this.directoryBackgroundRect.setHeight(this.getHeight() - topBarHeight);
 
 			//realign entries
-			this.setDirectoryYOffset(this.directoryYOffset);
+			this.alignDirectoryEntries();
 		}
 
 		if (this.topBarRect != null) {
@@ -215,6 +219,7 @@ public class FileExplorerWindow extends Window {
 	@Override
 	protected void _update() {
 		this.topBarSection.update();
+		this.directorySection.update();
 
 		this.rootDirectoryEntry.hovered(this.hoveredDirectoryEntryID);
 		this.rootDirectoryEntry.update();
@@ -238,7 +243,7 @@ public class FileExplorerWindow extends Window {
 
 		this.hoveredSectionID = -1;
 		if (this.directorySection.isSectionHovered()) {
-			this.hoveredSectionID = this.directoryRect.getID();
+			this.hoveredSectionID = this.directoryBackgroundRect.getID();
 		}
 		else if (this.topBarSection.isSectionHovered()) {
 			this.hoveredSectionID = this.topBarRect.getID();
@@ -254,15 +259,9 @@ public class FileExplorerWindow extends Window {
 
 	}
 
-	private void setDirectoryYOffset(int newYOffset) {
-		int directoryEntryTotalHeight = this.rootDirectoryEntry.countDisplayed() * entryHeight;
-
-		int minYOffset = 0;
-		int maxYOffset = (int) (directoryEntryTotalHeight - this.directoryRect.getHeight());
-		maxYOffset = Math.max(maxYOffset, 0);
-		this.directoryYOffset = MathUtils.clamp(minYOffset, maxYOffset, newYOffset);
-
-		this.rootDirectoryEntry.align(-this.directoryYOffset);
+	private void alignDirectoryEntries() {
+		this.directorySection.setScrollRectHeight(this.rootDirectoryEntry.countDisplayed() * FileExplorerWindow.entryHeight);
+		this.rootDirectoryEntry.align();
 	}
 
 	public void setCurrentDirectory(String path) {
@@ -286,7 +285,7 @@ public class FileExplorerWindow extends Window {
 			else {
 				e.expand();
 			}
-			this.setDirectoryYOffset(this.directoryYOffset);
+			this.alignDirectoryEntries();
 			return;
 		}
 
@@ -327,8 +326,10 @@ public class FileExplorerWindow extends Window {
 		this.rootDirectoryEntry.computeOrder(-1);
 		int numAbove = this.selectedDirectoryEntry.getOrder();
 		int maxYOffset = numAbove * entryHeight;
-		int minYOffset = maxYOffset - (int) this.directoryRect.getHeight() + entryHeight;
-		this.setDirectoryYOffset((MathUtils.clamp(minYOffset, maxYOffset, this.directoryYOffset)));
+		int minYOffset = maxYOffset - (int) this.directoryBackgroundRect.getHeight() + entryHeight;
+		int newScrollOffset = MathUtils.clamp(minYOffset, maxYOffset, this.directorySection.getScrollOffset());
+		this.directorySection.setScrollOffset(newScrollOffset);
+		this.alignDirectoryEntries();
 
 		//populate list window with files
 		File[] files = FileUtils.getAllFilesFromDirectory(e.getPath());
@@ -371,6 +372,7 @@ public class FileExplorerWindow extends Window {
 	@Override
 	protected void _mousePressed(int button) {
 		this.topBarSection.mousePressed(button);
+		this.directorySection.mousePressed(button);
 
 		//see if user is trying to drag the directory window
 		if (this.canGrabDirectory()) {
@@ -378,15 +380,13 @@ public class FileExplorerWindow extends Window {
 			return;
 		}
 
-		if (this.hoveredSectionID == this.directoryRect.getID()) {
-			if (this.hoveredDirectoryEntryID != this.directoryRect.getID()) {
+		if (this.hoveredSectionID == this.directoryBackgroundRect.getID()) {
+			if (this.hoveredDirectoryEntryID != this.directoryBackgroundRect.getID()) {
 				//select the directory entry
 				this.rootDirectoryEntry.selected(this.hoveredDirectoryEntryID);
 
 				DirectoryEntry e = this.rootDirectoryEntry.getSelected();
 				this.setSelectedDirectoryEntry(e);
-
-				this.setDirectoryYOffset(this.directoryYOffset);
 			}
 		}
 	}
@@ -409,9 +409,7 @@ public class FileExplorerWindow extends Window {
 
 	@Override
 	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
-		if (this.hoveredSectionID == this.directoryRect.getID()) {
-			this.setDirectoryYOffset(this.directoryYOffset - (int) (smoothOffset) * entryHeight);
-		}
+		this.directorySection.mouseScrolled(wheelOffset, smoothOffset);
 	}
 
 	@Override
@@ -426,6 +424,14 @@ public class FileExplorerWindow extends Window {
 	@Override
 	protected void _keyReleased(int key) {
 		this.topBarSection.keyReleased(key);
+	}
+
+	@Override
+	public void uiSectionScrolled(UISection section) {
+		if (section == this.directorySection) {
+			//update visibility of entries
+			this.alignDirectoryEntries();
+		}
 	}
 
 	class DirectoryEntry {
@@ -512,13 +518,14 @@ public class FileExplorerWindow extends Window {
 			}
 		}
 
-		public void align(int offset) {
+		public void align() {
 			if (this.parent != null) {
-				System.err.println("TRIED TO ALIGN DIRECTORY ENTRY THAT IS NOT ROOT");
+				System.err.println("FileExplorerWindow : TRIED TO ALIGN DIRECTORY ENTRY THAT IS NOT ROOT");
 				return;
 			}
 
-			this._align(-FileExplorerWindow.entryHeight + offset);
+			//offset by one entry because the actual root element should be invisible. 
+			this._align(-FileExplorerWindow.entryHeight);
 		}
 
 		//aligns this subtree of directory entries
@@ -532,8 +539,9 @@ public class FileExplorerWindow extends Window {
 			this.yOffset = yOffset;
 
 			//check if this thing is visible
+			int scrollOffset = directorySection.getScrollOffset();
 			this.isVisible = false;
-			if (-FileExplorerWindow.entryHeight <= this.yOffset && this.yOffset <= this.rootUIElement.getHeight()) {
+			if (-FileExplorerWindow.entryHeight <= this.yOffset - scrollOffset && this.yOffset - scrollOffset <= directorySection.getBackgroundRect().getHeight()) {
 				this.isVisible = true;
 			}
 
@@ -689,7 +697,7 @@ public class FileExplorerWindow extends Window {
 				return;
 			}
 			if (!this.isDisplayed) {
-				System.err.println("PRESSED ON ENTRY THAT ISN'T DISPLAYED : " + this.filename);
+				System.err.println("FileExplorerWindow : PRESSED ON ENTRY THAT ISN'T DISPLAYED : " + this.filename);
 				//we can't expand an entry if we can't see it. 
 				return;
 			}
@@ -729,7 +737,7 @@ public class FileExplorerWindow extends Window {
 			//set background material
 			if (this.isVisible) {
 				if (!this.entryBaseUIElement.isAlive()) {
-					System.err.println("UIELEMENT ID : " + this.entryBaseUIElement.getID() + " IS NOT ALIVE!!!");
+					System.err.println("FileExplorerWindow : UIELEMENT ID : " + this.entryBaseUIElement.getID() + " IS NOT ALIVE!!!");
 				}
 				if (this.isSelected) {
 					this.entryBaseUIElement.setMaterial(selectedDirectoryEntryMaterial);

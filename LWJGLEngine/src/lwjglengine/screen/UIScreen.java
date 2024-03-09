@@ -140,6 +140,21 @@ public class UIScreen extends Screen {
 		this.calculateBounds();
 	}
 
+	/**
+	 * Viewport bounds is the size of the screen in worldspace
+	 * @param w
+	 * @param h
+	 */
+	public void setViewportDimensions(float w, float h) {
+		this.viewportWidth = w;
+		this.viewportHeight = h;
+		this.calculateBounds();
+	}
+
+	/**
+	 * Viewport offset is the offset of the bottom left corner of what you see in worldspace
+	 * @param v
+	 */
 	public void setViewportOffset(Vec2 v) {
 		this.viewportOffset.set(v);
 		this.calculateBounds();

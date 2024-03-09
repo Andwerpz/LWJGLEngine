@@ -11,7 +11,10 @@ import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.opengl.GL43.*;
 
-import myutils.file.SystemUtils;
+import java.nio.IntBuffer;
+import java.nio.LongBuffer;
+
+import org.lwjgl.BufferUtils;
 
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.*;
@@ -54,6 +57,13 @@ public class ShaderStorageBuffer {
 		}
 		this.bind();
 		glBufferData(GL_SHADER_STORAGE_BUFFER, nrBytes, this.usage);
+	}
+
+	public long getSize() {
+		this.bind();
+		IntBuffer ret = BufferUtils.createIntBuffer(1);
+		glGetBufferParameteriv(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, ret);
+		return ret.get();
 	}
 
 	public void setData(int[] data) {

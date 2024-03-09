@@ -105,7 +105,7 @@ public abstract class UIElement extends Entity {
 	private float easingTargetXOffset, easingTargetYOffset;
 
 	protected int horizontalAlignContent, verticalAlignContent;
-	protected float offsetX, offsetY; //x and y coordinates of the bottom left corner after frame offsets have been applied
+	protected float offsetX, offsetY; //x and y coordinates of the content offset reference point relative to bottom left corner of parent
 	protected float z; //needed as float for layering purposes
 
 	//dimensions of the frame

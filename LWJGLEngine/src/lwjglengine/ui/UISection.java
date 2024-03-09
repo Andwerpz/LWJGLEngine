@@ -50,9 +50,13 @@ public class UISection implements UIElementListener {
 	private int scrollOffset = 0;
 
 	private boolean renderScrollBar = true;
+	private boolean scrollBarGrabbed = false;
+	private int scrollBarGrabDist; //if vertical, it's distance to top of the scroll bar. if horizontal, it's dist to left. 
 
 	//TODO make sure horizontal scrolling actually works as intended
 	private boolean isHorizontalScroll = false;
+
+	private Vec2 relMousePos = new Vec2(0); //relative to bottom left corner of background rect
 
 	public UISection() {
 		this.init();
@@ -129,6 +133,27 @@ public class UISection implements UIElementListener {
 	}
 
 	public void update() {
+		if (this.scrollBarGrabbed) {
+			//reverse engineer a scroll offset such that the scroll bar matches with the mouse
+			float nextScrollBarOffset, scrollRange, scrollBarRange;
+			if (this.isHorizontalScroll) {
+				nextScrollBarOffset = (this.relMousePos.x) - this.scrollBarGrabDist;
+				nextScrollBarOffset = MathUtils.clamp(0, this.backgroundRect.getWidth(), nextScrollBarOffset);
+				scrollRange = Math.max(0, this.scrollBackgroundRect.getWidth() - this.backgroundRect.getWidth());
+				scrollBarRange = Math.max(0, this.backgroundRect.getWidth() - this.scrollBarRect.getWidth());
+			}
+			else {
+				nextScrollBarOffset = (this.backgroundRect.getHeight() - this.relMousePos.y) - this.scrollBarGrabDist;
+				nextScrollBarOffset = MathUtils.clamp(0, this.backgroundRect.getHeight() - this.scrollBarRect.getHeight(), nextScrollBarOffset);
+				scrollRange = Math.max(0, this.scrollBackgroundRect.getHeight() - this.backgroundRect.getHeight());
+				scrollBarRange = Math.max(0, this.backgroundRect.getHeight() - this.scrollBarRect.getHeight());
+			}
+			int nextScrollOffset = (int) (scrollRange * (nextScrollBarOffset / scrollBarRange));
+			if (nextScrollOffset != this.scrollOffset) {
+				this.setScrollOffset(nextScrollOffset);
+			}
+		}
+
 		Input.inputsHovered(hoveredEntityID, SELECTION_SCENE);
 	}
 
@@ -154,15 +179,15 @@ public class UISection implements UIElementListener {
 		this.isHorizontalScroll = b;
 
 		if (this.isHorizontalScroll) {
-			this.scrollBarRect.setFillWidth(false);
-			this.scrollBarRect.setFillHeight(true);
+			this.scrollBackgroundRect.setFillWidth(false);
+			this.scrollBackgroundRect.setFillHeight(true);
 			this.scrollBarRect.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_BOTTOM);
 			this.scrollBarRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_BOTTOM);
 			this.scrollBarRect.setWidth(scrollBarWidth);
 		}
 		else {
-			this.scrollBarRect.setFillWidth(true);
-			this.scrollBarRect.setFillHeight(false);
+			this.scrollBackgroundRect.setFillWidth(true);
+			this.scrollBackgroundRect.setFillHeight(false);
 			this.scrollBarRect.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 			this.scrollBarRect.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
 			this.scrollBarRect.setHeight(scrollBarWidth);
@@ -194,7 +219,7 @@ public class UISection implements UIElementListener {
 		this.setScrollOffset(this.scrollOffset);
 	}
 
-	private void setScrollOffset(int offset) {
+	public void setScrollOffset(int offset) {
 		if (!this.isScrollable) {
 			return;
 		}
@@ -202,7 +227,8 @@ public class UISection implements UIElementListener {
 		if (this.isHorizontalScroll) {
 			int minOffset = 0;
 			int maxOffset = Math.max(0, (int) (this.scrollBackgroundRect.getWidth() - this.backgroundRect.getWidth()));
-			this.scrollOffset = MathUtils.clamp(minOffset, maxOffset, offset);
+			int newOffset = MathUtils.clamp(minOffset, maxOffset, offset);
+			this.scrollOffset = newOffset;
 			this.scrollBackgroundRect.setFrameAlignmentOffset(-this.scrollOffset, 0);
 
 			int scrollBarWidth = (int) (this.backgroundRect.getWidth() * (this.backgroundRect.getWidth() / this.scrollBackgroundRect.getWidth()));
@@ -221,20 +247,21 @@ public class UISection implements UIElementListener {
 		else {
 			int minOffset = 0;
 			int maxOffset = Math.max(0, (int) (this.scrollBackgroundRect.getHeight() - this.backgroundRect.getHeight()));
-			this.scrollOffset = MathUtils.clamp(minOffset, maxOffset, offset);
+			int newOffset = MathUtils.clamp(minOffset, maxOffset, offset);
+			this.scrollOffset = newOffset;
 			this.scrollBackgroundRect.setFrameAlignmentOffset(0, -this.scrollOffset);
 
 			int scrollBarHeight = (int) (this.backgroundRect.getHeight() * (this.backgroundRect.getHeight() / this.scrollBackgroundRect.getHeight()));
 			scrollBarHeight = Math.max(scrollBarHeight, minScrollBarHeight);
+			this.scrollBarRect.setHeight(scrollBarHeight);
+			int scrollBarOffset = (int) ((this.backgroundRect.getHeight() - scrollBarHeight) * (this.scrollOffset / (this.scrollBackgroundRect.getHeight() - this.backgroundRect.getHeight())));
+			this.scrollBarRect.setYOffset(scrollBarOffset);
+
 			if (scrollBarHeight >= this.backgroundRect.getHeight()) {
 				this.scrollBarRect.setMaterial(Material.transparent());
 			}
 			else {
 				this.scrollBarRect.setMaterial(scrollBarMaterial);
-				this.scrollBarRect.setHeight(scrollBarHeight);
-
-				int scrollBarOffset = (int) ((this.backgroundRect.getHeight() - scrollBarHeight) * (this.scrollOffset / (this.scrollBackgroundRect.getHeight() - this.backgroundRect.getHeight())));
-				this.scrollBarRect.setYOffset(scrollBarOffset);
 			}
 		}
 
@@ -250,7 +277,10 @@ public class UISection implements UIElementListener {
 		this.textScreen.setViewportOffset(offset);
 	}
 
+	//mouse pos is relative to whatever screen / window this section is rendered on. 
 	public void render(Framebuffer outputBuffer, Vec2 mousePos) {
+		this.relMousePos.x = mousePos.x - this.backgroundRect.getAlignedX();
+		this.relMousePos.y = mousePos.y - this.backgroundRect.getAlignedY();
 		int mouseX = (int) mousePos.x;
 		int mouseY = (int) mousePos.y;
 
@@ -263,6 +293,9 @@ public class UISection implements UIElementListener {
 
 		this.sectionHovered = this.backgroundScreen.getEntityIDAtCoordDelayed(mouseX, mouseY) == this.backgroundRect.getID();
 		this.hoveredEntityID = this.selectionScreen.getEntityIDAtCoordDelayed(mouseX, mouseY);
+		if (this.isScrollable && this.scrollBarScreen.getEntityIDAtCoordDelayed(mouseX, mouseY) == this.scrollBarRect.getID()) {
+			this.hoveredEntityID = this.scrollBarRect.getID();
+		}
 	}
 
 	public boolean isSectionHovered() {
@@ -292,11 +325,27 @@ public class UISection implements UIElementListener {
 	public void mousePressed(int button) {
 		if (this.sectionHovered) {
 			Input.inputsPressed(this.hoveredEntityID, SELECTION_SCENE);
+
+			if (this.isScrollable && this.hoveredEntityID == this.scrollBarRect.getID()) {
+				this.scrollBarGrabbed = true;
+
+				if (this.isHorizontalScroll) {
+					int mouseDistToLeft = (int) (this.relMousePos.x);
+					int scrollBarDistToLeft = (int) (this.scrollBarRect.getXOffset());
+					this.scrollBarGrabDist = mouseDistToLeft - scrollBarDistToLeft;
+				}
+				else {
+					int mouseDistToTop = (int) (this.backgroundRect.getHeight() - this.relMousePos.y);
+					int scrollBarDistToTop = (int) (this.scrollBarRect.getYOffset());
+					this.scrollBarGrabDist = mouseDistToTop - scrollBarDistToTop;
+				}
+			}
 		}
 	}
 
 	public void mouseReleased(int button) {
 		Input.inputsReleased(this.hoveredEntityID, SELECTION_SCENE);
+		this.scrollBarGrabbed = false;
 	}
 
 	public void mouseScrolled(float wheelOffset, float smoothOffset) {
