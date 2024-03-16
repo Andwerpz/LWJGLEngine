@@ -114,8 +114,8 @@ public class ModelViewerWindow extends BorderedWindow {
 			float x2 = x1;
 			float y1 = -gridlineLength / 2.0f;
 			float y2 = gridlineLength / 2.0f;
-			this.verticalGridlines[i] = Line.addLine(x1, 0, y1, x2, 0, y2, WORLD_SCENE);
-			this.horizontalGridlines[i] = Line.addLine(y1, 0, x1, y2, 0, x2, WORLD_SCENE);
+			this.verticalGridlines[i] = Line.addDefaultLine(x1, 0, y1, x2, 0, y2, WORLD_SCENE);
+			this.horizontalGridlines[i] = Line.addDefaultLine(y1, 0, x1, y2, 0, x2, WORLD_SCENE);
 
 			this.verticalGridlines[i].setMaterial(new Material(new Vec3(102 / 255.0f)));
 			this.horizontalGridlines[i].setMaterial(new Material(new Vec3(102 / 255.0f)));

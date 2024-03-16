@@ -65,10 +65,10 @@ public abstract class BorderedWindow extends Window {
 			this.windowBorder[i].kill();
 		}
 
-		this.windowBorder[0] = Line.addLine(0, 1, this.getWidth(), 1, BORDER_SCENE);
-		this.windowBorder[1] = Line.addLine(1, 0, 1, this.getHeight(), BORDER_SCENE);
-		this.windowBorder[2] = Line.addLine(this.getWidth(), 0, this.getWidth(), this.getHeight(), BORDER_SCENE);
-		this.windowBorder[3] = Line.addLine(0, this.getHeight(), this.getWidth(), this.getHeight(), BORDER_SCENE);
+		this.windowBorder[0] = Line.addDefaultLine(0, 1, this.getWidth(), 1, BORDER_SCENE);
+		this.windowBorder[1] = Line.addDefaultLine(1, 0, 1, this.getHeight(), BORDER_SCENE);
+		this.windowBorder[2] = Line.addDefaultLine(this.getWidth(), 0, this.getWidth(), this.getHeight(), BORDER_SCENE);
+		this.windowBorder[3] = Line.addDefaultLine(0, this.getHeight(), this.getWidth(), this.getHeight(), BORDER_SCENE);
 
 		for (int i = 0; i < 4; i++) {
 			this.windowBorder[i].setMaterial(this.isSubtreeSelected() ? this.selectedBorderMaterial : this.deselectedBorderMaterial);
