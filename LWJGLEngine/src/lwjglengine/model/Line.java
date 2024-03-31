@@ -59,8 +59,16 @@ public class Line extends Model {
 		return Line.generateLineModelTransform(a.x, a.y, b.x, b.y);
 	}
 
+	public static ModelTransform generateLineModelTransform(Vec2 a, Vec2 b, float z) {
+		return Line.generateLineModelTransform(a.x, a.y, z, b.x, b.y, z);
+	}
+
 	public static ModelInstance addDefaultLine(float x1, float y1, float z1, float x2, float y2, float z2, int scene) {
 		return DEFAULT_LINE.addLine(new Vec3(x1, y1, z1), new Vec3(x2, y2, z2), scene);
+	}
+
+	public static ModelInstance addDefaultLine(int scene) {
+		return Line.addDefaultLine(0, 0, 0, 1, 1, 1, scene);
 	}
 
 	public static ModelInstance addDefaultLine(Vec3 a, Vec3 b, int scene) {

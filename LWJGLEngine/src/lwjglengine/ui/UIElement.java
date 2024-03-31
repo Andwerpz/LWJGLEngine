@@ -273,6 +273,10 @@ public abstract class UIElement extends Entity {
 		this.changedOffset = true;
 	}
 
+	public void setFrameAlignmentOffset(Vec2 offset) {
+		this.setFrameAlignmentOffset(offset.x, offset.y);
+	}
+
 	public void setXOffset(float xOffset) {
 		this.setFrameAlignmentOffset(xOffset, this.getYOffset());
 	}

@@ -24,12 +24,20 @@ import myutils.math.Vec4;
 
 public class Text extends UIElement {
 	// utilizes java.fx to generate the text texture, which it then draws onto the screen using a filled rectangle
-
 	// width of text is fixed, text will be cut off if it grows too wide.
 
+	//note that text only really functions if you're fine with the 'world space' size of the text to be equal to 
+	//the texture size. otherwise, it completely breaks. 
+
 	//TODO 
+	// - rework this entire thing D: Ideally, should render using a texture atlas, entirely cutting off java fx. 
+	//   - should be able to independently set the texture and uielement size. 
+	//   - when setting text, there should be an option to not change the dimensions of the uielement. 
 	// - figure out how to fix transparency issues when text size becomes small
 	//   - seems like small text using java.fx is just kinda bad. It works well if the text and the background are around the same color. 
+	//   - one fix could be to directly load from a texture atlas, but that's kinda annoying. 
+	//   - upside is that we'll be able to render all our text in one render call, as we're just rendering from an atlas, 
+	//     and we won't have annoying issues with text scaling. We can just set the font size, and it'll autoscale. 
 
 	// FIXED
 	// - with string "C:" with color set to white, font Dialogue, plain, size 12, the texture fails to generate. 

@@ -31,9 +31,7 @@ public class FilledRectangle extends Model {
 	}
 
 	public ModelInstance addRectangle(float x, float y, float z, float width, float height, int scene) {
-		ModelTransform transform = new ModelTransform();
-		transform.setScale(new Vec3(width, height, 1));
-		transform.setTranslation(new Vec3(x, y, z));
+		ModelTransform transform = FilledRectangle.generateRectangleModelTransform(x, y, z, width, height);
 		return new ModelInstance(this, transform, scene);
 	}
 
@@ -47,6 +45,19 @@ public class FilledRectangle extends Model {
 		return this.addRectangle(bl.x, bl.y, z, width, height, scene);
 	}
 
+	public static ModelTransform generateRectangleModelTransform(float x, float y, float z, float width, float height) {
+		ModelTransform transform = new ModelTransform();
+		transform.setScale(new Vec3(width, height, 1));
+		transform.setTranslation(new Vec3(x, y, z));
+		return transform;
+	}
+
+	public static ModelTransform generateRectangleModelTransform(Vec2 bl, Vec2 tr, float z) {
+		float width = tr.x - bl.x;
+		float height = tr.y - bl.y;
+		return FilledRectangle.generateRectangleModelTransform(bl.x, bl.y, z, width, height);
+	}
+
 	public static ModelInstance addDefaultRectangle(float x, float y, float z, float width, float height, int scene) {
 		return DEFAULT_RECTANGLE.addRectangle(x, y, z, width, height, scene);
 	}
@@ -57,6 +68,10 @@ public class FilledRectangle extends Model {
 
 	public static ModelInstance addDefaultRectangle(Vec2 bl, Vec2 tr, float z, int scene) {
 		return DEFAULT_RECTANGLE.addRectangle(bl, tr, z, scene);
+	}
+
+	public static ModelInstance addDefaultRectangle(int scene) {
+		return DEFAULT_RECTANGLE.addRectangle(0, 0, 0, 1, 1, scene);
 	}
 
 	public TextureMaterial getTextureMaterial() {
