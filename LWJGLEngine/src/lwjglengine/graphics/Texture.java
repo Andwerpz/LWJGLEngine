@@ -181,6 +181,17 @@ public class Texture {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	public void setMinSampleType(int type) {
+		glBindTexture(GL_TEXTURE_2D, this.textureID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, type);
+
+	}
+
+	public void setMagSampleType(int type) {
+		glBindTexture(GL_TEXTURE_2D, this.textureID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, type);
+	}
+
 	public BufferedImage toBufferedImage() {
 		glBindTexture(GL_TEXTURE_2D, this.textureID);
 		int width = this.getWidth();

@@ -857,7 +857,6 @@ public class TextEditorWindow extends Window {
 	}
 
 	class Line {
-
 		private ArrayList<Character> chars;
 		private ArrayList<Pair<Integer, Integer>> charOffsets;
 		private ArrayList<Integer> charSubline; //if the window is narrow enough, each line can be wrapped into sublines. 

@@ -319,6 +319,10 @@ public abstract class Window {
 		this.setContextMenuActions(new ArrayList<String>(Arrays.asList(actions)));
 	}
 
+	/**
+	 * Default true
+	 * @param b
+	 */
 	protected void setUpdateWhenNotSelected(boolean b) {
 		this.updateWhenNotSelected = b;
 	}

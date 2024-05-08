@@ -30,7 +30,7 @@ import myutils.math.Vec4;
 
 public class ListViewerWindow extends Window implements UISectionListener {
 
-	protected UISection topBarSection, bottomBarSection, contentSection;
+	private UISection topBarSection, bottomBarSection, contentSection;
 
 	private Button bottomBarSubmitBtn;
 
@@ -61,6 +61,7 @@ public class ListViewerWindow extends Window implements UISectionListener {
 	private long hoveredTopBarID, hoveredContentID;
 
 	private boolean renderTopBar = true;
+	private boolean renderBottomBar = true;
 
 	private String filterString = "";
 	private boolean shouldRefilterList = false;
@@ -85,8 +86,6 @@ public class ListViewerWindow extends Window implements UISectionListener {
 
 	//if there is only 1 selected list entry, and the user clicks on it, then it will submit if this is true. 
 	private boolean submitOnClickingSelectedListEntry = false;
-
-	private boolean renderBottomBar = true;
 
 	public ListViewerWindow(int xOffset, int yOffset, int width, int height, Window callbackWindow, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
@@ -337,6 +336,7 @@ public class ListViewerWindow extends Window implements UISectionListener {
 	}
 
 	//TODO fix this
+	//update: i think this is good?
 	private void alignEntries() {
 		if (this.shouldResortList) {
 			this.sortList();
@@ -671,7 +671,6 @@ public class ListViewerWindow extends Window implements UISectionListener {
 	}
 
 	class ListEntry {
-
 		private Object o;
 
 		private int selectionScene = -1;
