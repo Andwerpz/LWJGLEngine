@@ -119,6 +119,9 @@ public abstract class Window {
 	//if this is true, input is allowed regardless of selected status
 	private boolean allowInputWhenNotSelected = false;
 
+	//if this is true, input is allowed if the parent or some child of the parent window is selected. 
+	private boolean allowInputWhenParentSubtreeSelected = false;
+
 	//for debugging
 	public boolean renderAlpha = false;
 
@@ -381,6 +384,10 @@ public abstract class Window {
 
 	public void setAllowInputWhenNotSelected(boolean b) {
 		this.allowInputWhenNotSelected = b;
+	}
+
+	public void setAllowInputWhenParentSubtreeSelected(boolean b) {
+		this.allowInputWhenParentSubtreeSelected = b;
 	}
 
 	public boolean isAllowModifyingChildren() {
@@ -1014,6 +1021,9 @@ public abstract class Window {
 			return false;
 		}
 		if (this.isSubtreeSelected && this.allowInputWhenSubtreeSelected) {
+			return true;
+		}
+		if (this.parentWindow != null && this.parentWindow.isSubtreeSelected() && this.allowInputWhenParentSubtreeSelected) {
 			return true;
 		}
 		if (this.isSelected || this.allowInputWhenNotSelected) {

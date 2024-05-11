@@ -28,6 +28,7 @@ import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
 import lwjglengine.ui.UISectionListener;
 import myutils.file.JarUtils;
+import myutils.file.SystemUtils;
 import myutils.file.xml.XMLNode;
 
 public class NestedListViewerWindow extends Window implements UISectionListener {
@@ -60,17 +61,26 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 	private TextureMaterial dropdownArrowTexture;
 	private FilledRectangle dropdownArrowTextureRect;
 
-	public NestedListViewerWindow(int xOffset, int yOffset, int width, int height, Window callback_window, Window parent_window) {
+	private boolean submitOnDoubleClick = false;
+	private boolean closeOnSubmit = true;
+
+	private boolean onlySubmitLeafEntries = true;
+
+	private NestedListViewerCallback callback;
+
+	public NestedListViewerWindow(int xOffset, int yOffset, int width, int height, NestedListViewerCallback callback, Window parent_window) {
 		super(xOffset, yOffset, width, height, parent_window);
-		this.init(callback_window);
+		this.init(callback);
 	}
 
-	public NestedListViewerWindow(Window callback_window, Window parent_window) {
+	public NestedListViewerWindow(NestedListViewerCallback callback, Window parent_window) {
 		super(parent_window);
-		this.init(callback_window);
+		this.init(callback);
 	}
 
-	private void init(Window callback_window) {
+	private void init(NestedListViewerCallback callback) {
+		this.callback = callback;
+
 		this.rootEntry = new ListEntry(null, null, " ");
 
 		this.contentSection = new UISection();
@@ -123,6 +133,24 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 		}
 
 		this._resize();
+	}
+
+	public void setRenderTopBar(boolean b) {
+		this.renderTopBar = b;
+		this._resize();
+	}
+
+	public void setRenderBottomBar(boolean b) {
+		this.renderBottomBar = b;
+		this._resize();
+	}
+
+	public void setSubmitOnDoubleClick(boolean b) {
+		this.submitOnDoubleClick = b;
+	}
+
+	public void setCloseOnSubmit(boolean b) {
+		this.closeOnSubmit = b;
 	}
 
 	private ArrayList<ListEntry> listVisibleEntries() {
@@ -214,16 +242,6 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 		this.topBarEntryPathText.setWidth(this.getWidth() - 6);
 
 		this.triggerUpdateVisibility();
-	}
-
-	public void setRenderTopBar(boolean b) {
-		this.renderTopBar = b;
-		this._resize();
-	}
-
-	public void setRenderBottomBar(boolean b) {
-		this.renderBottomBar = b;
-		this._resize();
 	}
 
 	@Override
@@ -446,6 +464,17 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 
 	}
 
+	public void submit(ListEntry e) {
+		if (this.onlySubmitLeafEntries && e.children.size() != 0) {
+			return;
+		}
+
+		this.callback.handleCallback(e.getPath(), e.contents);
+		if (this.closeOnSubmit) {
+			this.close();
+		}
+	}
+
 	@Override
 	protected void _mousePressed(int button) {
 		this.contentSection.mousePressed(button);
@@ -454,7 +483,11 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 
 		if (this.hoveredSectionID == this.contentSection.getBackgroundRect().getID()) {
 			for (ListEntry e : this.listVisibleEntries()) {
+				boolean already_selected = e.isSelected;
 				if (e.clicked(this.hoveredContentID)) {
+					if (this.submitOnDoubleClick && already_selected) {
+						this.submit(e);
+					}
 					this.topBarEntryPathText.setText(e.getPath());
 				}
 			}
@@ -493,7 +526,7 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 
 	public static int entryHeightPx = 16;
 	public static int entryLeftMarginBasePx = 16;
-	public static int entryLeftMarginIntervalPx = 15;
+	public static int entryLeftMarginIntervalPx = 12;
 
 	public static Font entryFont = new Font("Dialogue", Font.PLAIN, 12);
 	public static int entryFontSize = 12;
@@ -502,7 +535,7 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 		public ListEntry parent;
 		public ArrayList<ListEntry> children;
 
-		public Object o;
+		public Object contents;
 		public String text;
 		public UIFilledRectangle entryRect;
 		public Text entryText;
@@ -522,7 +555,7 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 		public int depth;
 		public int subtreeHeightPx = 0;
 
-		public ListEntry(ListEntry parent, Object o, String text) {
+		public ListEntry(ListEntry parent, Object contents, String text) {
 			this.parent = parent;
 			this.children = new ArrayList<>();
 			if (this.parent != null) {
@@ -537,7 +570,7 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 			}
 			this.subtreeHeightPx = entryHeightPx;
 
-			this.o = o;
+			this.contents = contents;
 			this.text = text;
 			this.entryRect = null;
 			this.entryText = null;
@@ -652,6 +685,9 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 		}
 
 		public void setIsExpanded(boolean b) {
+			if (this.children.size() == 0) {
+				return;
+			}
 			if (b != this.isExpanded) {
 				triggerRealignEntries();
 			}
@@ -678,5 +714,9 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 			return this.parent.getPath() + "/" + this.text;
 		}
 
+	}
+
+	public interface NestedListViewerCallback {
+		void handleCallback(String path, Object contents);
 	}
 }
