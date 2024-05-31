@@ -75,14 +75,17 @@ public class TextField extends Input {
 
 	private boolean textWrapping = false;
 
-	public TextField(float x, float y, float width, float height, String sID, String hintText, int fontSize, int selectionScene, int textScene) {
-		super(x, y, 0, width, height, sID, selectionScene);
-		this.init(hintText, new Font("Dialogue", Font.PLAIN, fontSize), textScene);
+	public TextField(float x, float y, float width, float height, String sID, String hintText, Font font, int fontSize, InputCallback callback, int selectionScene, int textScene) {
+		super(x, y, 0, width, height, sID, callback, selectionScene);
+		this.init(hintText, FontUtils.deriveSize(fontSize, font), textScene);
 	}
 
-	public TextField(float x, float y, float width, float height, String sID, String hintText, Font font, int fontSize, int selectionScene, int textScene) {
-		super(x, y, 0, width, height, sID, selectionScene);
-		this.init(hintText, FontUtils.deriveSize(fontSize, font), textScene);
+	public TextField(float x, float y, float width, float height, String sID, String hintText, InputCallback callback, int selectionScene, int textScene) {
+		this(x, y, width, height, sID, hintText, new Font("Dialogue", Font.PLAIN, 12), 12, callback, selectionScene, textScene);
+	}
+
+	public TextField(float x, float y, float width, float height, String sID, String hintText, int fontSize, InputCallback callback, int selectionScene, int textScene) {
+		this(x, y, width, height, sID, hintText, new Font("Dialogue", Font.PLAIN, 12), fontSize, callback, selectionScene, textScene);
 	}
 
 	private void init(String hintText, Font font, int textScene) {
@@ -208,6 +211,10 @@ public class TextField extends Input {
 	}
 
 	public void setText(String text) {
+		if (this.text.equals(text)) {
+			return;
+		}
+
 		this.text = text;
 
 		if (this.text.length() == 0) {
@@ -220,6 +227,10 @@ public class TextField extends Input {
 		}
 
 		this.checkIfInputTextIsValid();
+
+		if (this.isInputValid) {
+			this.notifyInputChanged();
+		}
 	}
 
 	private void checkIfInputTextIsValid() {
@@ -347,6 +358,7 @@ public class TextField extends Input {
 	public void keyPressed(int key) {
 		if (this.isClicked()) {
 			pressedKeys.add(key);
+			String n_text = this.text;
 
 			// looking for ctrl + v
 			if ((pressedKeys.contains(GLFW_KEY_LEFT_CONTROL) || pressedKeys.contains(GLFW_KEY_RIGHT_CONTROL)) && pressedKeys.contains(GLFW_KEY_V)) {
@@ -361,16 +373,16 @@ public class TextField extends Input {
 				catch (IOException e) {
 					e.printStackTrace();
 				}
-				this.text += result;
+				n_text += result;
 				return;
 			}
 			else if (key == GLFW_KEY_BACKSPACE) {
-				if (this.text.length() != 0) {
-					this.text = this.text.substring(0, this.text.length() - 1);
+				if (n_text.length() != 0) {
+					n_text = n_text.substring(0, n_text.length() - 1);
 				}
 			}
 			else if (key == GLFW_KEY_SPACE) {
-				this.text += " ";
+				n_text += " ";
 			}
 			else {
 				String keyName = glfwGetKeyName(key, 0);
@@ -381,10 +393,9 @@ public class TextField extends Input {
 				if (pressedKeys.contains(GLFW_KEY_LEFT_SHIFT) || pressedKeys.contains(GLFW_KEY_RIGHT_SHIFT)) {
 					k = KeyboardInput.shiftMap.get(k);
 				}
-				this.text += k;
+				n_text += k;
 			}
-
-			this.setText(this.text);
+			this.setText(n_text);
 		}
 	}
 

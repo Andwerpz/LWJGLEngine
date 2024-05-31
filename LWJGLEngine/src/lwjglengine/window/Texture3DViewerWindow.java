@@ -12,6 +12,7 @@ import lwjglengine.graphics.Material;
 import lwjglengine.graphics.Shader;
 import lwjglengine.graphics.Texture3D;
 import lwjglengine.input.Input;
+import lwjglengine.input.Input.InputCallback;
 import lwjglengine.input.TextField;
 import lwjglengine.input.ToggleButton;
 import lwjglengine.main.Main;
@@ -20,7 +21,7 @@ import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UISection;
 
-public class Texture3DViewerWindow extends Window {
+public class Texture3DViewerWindow extends Window implements InputCallback {
 
 	private UISection uiSection;
 
@@ -46,7 +47,7 @@ public class Texture3DViewerWindow extends Window {
 		this.uiSection.getBackgroundRect().setFillHeight(true);
 		this.uiSection.getBackgroundRect().setMaterial(Material.transparent());
 
-		TextField zLevelTf = new TextField(5, 5, 100, 20, "tf_zlevel", "Depth", 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+		TextField zLevelTf = new TextField(5, 5, 100, 20, "tf_zlevel", "Depth", 12, this, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
 		zLevelTf.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		zLevelTf.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		zLevelTf.getTextUIElement().setDoAntialiasing(false);
@@ -54,28 +55,28 @@ public class Texture3DViewerWindow extends Window {
 		zLevelTf.setFieldType(TextField.FIELD_TYPE_FLOAT);
 		zLevelTf.bind(this.uiSection.getBackgroundRect());
 
-		this.displayRedTb = new ToggleButton(5, 30, 100, 20, "tb_red", "Red", 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+		this.displayRedTb = new ToggleButton(5, 30, 100, 20, "tb_red", "Red", 12, this, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
 		this.displayRedTb.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		this.displayRedTb.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		this.displayRedTb.getButtonText().setDoAntialiasing(false);
 		this.displayRedTb.setIsToggled(true);
 		this.displayRedTb.bind(this.uiSection.getBackgroundRect());
 
-		this.displayGreenTb = new ToggleButton(5, 55, 100, 20, "tb_green", "Green", 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+		this.displayGreenTb = new ToggleButton(5, 55, 100, 20, "tb_green", "Green", 12, this, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
 		this.displayGreenTb.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		this.displayGreenTb.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		this.displayGreenTb.getButtonText().setDoAntialiasing(false);
 		this.displayGreenTb.setIsToggled(true);
 		this.displayGreenTb.bind(this.uiSection.getBackgroundRect());
 
-		this.displayBlueTb = new ToggleButton(5, 80, 100, 20, "tb_blue", "Blue", 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+		this.displayBlueTb = new ToggleButton(5, 80, 100, 20, "tb_blue", "Blue", 12, this, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
 		this.displayBlueTb.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		this.displayBlueTb.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		this.displayBlueTb.getButtonText().setDoAntialiasing(false);
 		this.displayBlueTb.setIsToggled(true);
 		this.displayBlueTb.bind(this.uiSection.getBackgroundRect());
 
-		this.displayAlphaTb = new ToggleButton(5, 105, 100, 20, "tb_alpha", "Alpha", 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+		this.displayAlphaTb = new ToggleButton(5, 105, 100, 20, "tb_alpha", "Alpha", 12, this, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
 		this.displayAlphaTb.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		this.displayAlphaTb.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		this.displayAlphaTb.getButtonText().setDoAntialiasing(false);
@@ -218,6 +219,18 @@ public class Texture3DViewerWindow extends Window {
 	@Override
 	protected void _keyReleased(int key) {
 		this.uiSection.keyReleased(key);
+	}
+
+	@Override
+	public void inputClicked(String sID) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void inputChanged(String sID) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

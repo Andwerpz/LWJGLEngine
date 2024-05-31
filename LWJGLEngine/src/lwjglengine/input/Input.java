@@ -20,11 +20,6 @@ public abstract class Input extends UIElement {
 	//   - perhaps we also have to specify which selection scene an input is from?
 
 	private static HashMap<Integer, HashMap<String, Input>> inputs = new HashMap<>();
-	private static HashMap<Long, String> entityToStringID = new HashMap<>();
-	private static HashMap<String, Long> stringToEntityID = new HashMap<>();
-
-	//this does kind of the same thing as 'inputs'
-	private static HashMap<Integer, HashSet<Input>> sceneToInput = new HashMap<>();
 
 	private int selectionScene;
 
@@ -39,13 +34,11 @@ public abstract class Input extends UIElement {
 
 	private String sID;
 
-	public Input(float x, float y, float z, float width, float height, String sID, FilledRectangle baseRect, int scene) {
-		super(x, y, z, width, height, baseRect, scene);
-		this.init(sID, scene);
-	}
+	protected InputCallback callback = null;
 
-	public Input(float x, float y, float z, float width, float height, String sID, int scene) {
+	public Input(float x, float y, float z, float width, float height, String sID, InputCallback callback, int scene) {
 		super(x, y, z, width, height, scene);
+		this.callback = callback;
 		this.init(sID, scene);
 	}
 
@@ -58,24 +51,12 @@ public abstract class Input extends UIElement {
 		this.hovered = false;
 		this.clicked = false;
 
-		Input.addInput(sID, this);
+		Input.addInput(this);
 	}
 
 	@Override
 	protected void __kill() {
-		inputs.remove(this.sID);
-		if (stringToEntityID.get(this.sID) == null) {
-			System.err.println("Can't find input : " + this.sID);
-		}
-		else {
-			long entityID = stringToEntityID.get(this.sID);
-			entityToStringID.remove(entityID);
-			stringToEntityID.remove(this.sID);
-			sceneToInput.get(this.getScene()).remove(this);
-			if (sceneToInput.get(this.getScene()).size() == 0) {
-				sceneToInput.remove(this.getScene());
-			}
-		}
+		Input.removeInput(this);
 		this.___kill();
 	}
 
@@ -119,6 +100,7 @@ public abstract class Input extends UIElement {
 	private void released(long entityID) {
 		if (this.pressed && entityID == this.getID()) {
 			this.clicked = true;
+			this.notifyInputClicked();
 			this._clicked();
 		}
 		else {
@@ -154,21 +136,29 @@ public abstract class Input extends UIElement {
 		return this.pressed;
 	}
 
-	public static void addInput(String id, Input input) {
+	public static void addInput(Input input) {
+		String id = input.sID;
 		int selectionScene = input.selectionScene;
 
 		if (inputs.get(selectionScene) == null) {
 			inputs.put(selectionScene, new HashMap<String, Input>());
 		}
+		assert !inputs.get(selectionScene).containsKey(id) : "Input : sID \"" + id + "\" already exists";
 		inputs.get(selectionScene).put(id, input);
+	}
 
-		entityToStringID.put(input.getID(), id);
-		stringToEntityID.put(id, input.getID());
+	public static void removeInput(Input input) {
+		String id = input.sID;
+		int selectionScene = input.selectionScene;
 
-		if (sceneToInput.get(input.getScene()) == null) {
-			sceneToInput.put(input.getScene(), new HashSet<>());
+		assert inputs.containsKey(selectionScene) : "Input : scene " + selectionScene + " doesn't exist";
+		assert inputs.get(selectionScene).containsKey(id) : "Input : sID \"" + id + "\" doesn't exist";
+		assert inputs.get(selectionScene).get(id) == input : "Input : entry in input map doesn't match up";
+
+		inputs.get(selectionScene).remove(id);
+		if (inputs.get(selectionScene).size() == 0) {
+			inputs.remove(selectionScene);
 		}
-		sceneToInput.get(input.getScene()).add(input);
 	}
 
 	public static Input getInput(String id, int scene) {
@@ -181,37 +171,6 @@ public abstract class Input extends UIElement {
 	public static boolean isClicked(String id, int scene) {
 		Input b = Input.getInput(id, scene);
 		return b == null ? false : b.isClicked();
-	}
-
-	/**
-	 * Returns the sID of the input if something was clicked, empty string if otherwise
-	 * @param id
-	 * @return
-	 */
-
-	public static String getClicked(int scene) {
-		if (sceneToInput.get(scene) == null) {
-			return "";
-		}
-		for (Input i : sceneToInput.get(scene)) {
-			if (i.isClicked()) {
-				return i.sID;
-			}
-		}
-		return "";
-	}
-
-	public static String getHovered(int scene) {
-		if (inputs.get(scene) == null) {
-			return "";
-		}
-		for (String s : inputs.get(scene).keySet()) {
-			Input i = inputs.get(scene).get(s);
-			if (i.isHovered() && i.getScene() == scene) {
-				return s;
-			}
-		}
-		return "";
 	}
 
 	public static String getText(String id, int scene) {
@@ -231,37 +190,37 @@ public abstract class Input extends UIElement {
 	protected abstract void __update();
 
 	public static void inputsHovered(long entityID, int scene) {
-		if (sceneToInput.get(scene) == null) {
+		if (inputs.get(scene) == null) {
 			return;
 		}
-		for (Input b : sceneToInput.get(scene)) {
+		for (Input b : inputs.get(scene).values()) {
 			b.hovered(entityID);
 		}
 	}
 
 	public static void inputsPressed(long entityID, int scene) {
-		if (sceneToInput.get(scene) == null) {
+		if (inputs.get(scene) == null) {
 			return;
 		}
-		for (Input b : sceneToInput.get(scene)) {
+		for (Input b : inputs.get(scene).values()) {
 			b.pressed(entityID);
 		}
 	}
 
 	public static void inputsReleased(long entityID, int scene) {
-		if (sceneToInput.get(scene) == null) {
+		if (inputs.get(scene) == null) {
 			return;
 		}
-		for (Input b : sceneToInput.get(scene)) {
+		for (Input b : inputs.get(scene).values()) {
 			b.released(entityID);
 		}
 	}
 
 	public static void inputsKeyPressed(int key, int scene) {
-		if (sceneToInput.get(scene) == null) {
+		if (inputs.get(scene) == null) {
 			return;
 		}
-		for (Input b : sceneToInput.get(scene)) {
+		for (Input b : inputs.get(scene).values()) {
 			b.keyPressed(key);
 		}
 	}
@@ -269,14 +228,44 @@ public abstract class Input extends UIElement {
 	public abstract void keyPressed(int key);
 
 	public static void inputsKeyReleased(int key, int scene) {
-		if (sceneToInput.get(scene) == null) {
+		if (inputs.get(scene) == null) {
 			return;
 		}
-		for (Input b : sceneToInput.get(scene)) {
+		for (Input b : inputs.get(scene).values()) {
 			b.keyReleased(key);
 		}
 	}
 
 	public abstract void keyReleased(int key);
+
+	//	public void disable() {
+	//
+	//	}
+	//
+	//	protected abstract void _disable();
+	//
+	//	public void enable() {
+	//
+	//	}
+	//
+	//	protected abstract void _enable();
+
+	protected void notifyInputClicked() {
+		if (this.callback != null) {
+			this.callback.inputClicked(this.sID);
+		}
+	}
+
+	protected void notifyInputChanged() {
+		if (this.callback != null) {
+			this.callback.inputChanged(this.sID);
+		}
+	}
+
+	public interface InputCallback {
+		void inputClicked(String sID);
+
+		void inputChanged(String sID);
+	}
 
 }

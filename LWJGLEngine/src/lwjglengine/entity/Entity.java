@@ -75,7 +75,10 @@ public abstract class Entity {
 	}
 
 	public static void updateEntities() {
-		for (Entity e : entities.values()) {
+		//move to array to avoid concurrent modification exception
+		Entity[] e_list = new Entity[entities.size()];
+		entities.values().toArray(e_list);
+		for (Entity e : e_list) {
 			e.update();
 		}
 	}

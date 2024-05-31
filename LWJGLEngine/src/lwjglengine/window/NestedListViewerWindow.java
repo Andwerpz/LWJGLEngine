@@ -192,8 +192,8 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 	}
 
 	public void clearList() {
-		for (ListEntry e : this.rootEntry.children) {
-			e.kill();
+		for (int i = this.rootEntry.children.size() - 1; i >= 0; i--) {
+			this.rootEntry.children.get(i).kill();
 		}
 	}
 
@@ -653,8 +653,8 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 			}
 			this.setVisible(false);
 
-			for (ListEntry e : this.children) {
-				e.kill();
+			for (int i = this.children.size() - 1; i >= 0; i--) {
+				this.children.get(i).kill();
 			}
 		}
 

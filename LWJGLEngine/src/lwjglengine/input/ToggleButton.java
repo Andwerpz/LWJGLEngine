@@ -24,20 +24,19 @@ public class ToggleButton extends Input {
 	private boolean changeTextOnToggle = false;
 	private String toggledText = "True";
 	private String untoggledText = "False";
+	private String defaultText;
 
-	public ToggleButton(float x, float y, float width, float height, String sID, String text, int fontSize, int selectionScene, int textScene) {
-		super(x, y, 0, width, height, sID, selectionScene);
-		this.init(text, new Font("Dialogue", Font.PLAIN, fontSize), textScene);
-	}
-
-	public ToggleButton(float x, float y, float width, float height, String sID, String text, Font font, int fontSize, FilledRectangle baseRect, int selectionScene, int textScene) {
-		super(x, y, 0, width, height, sID, baseRect, selectionScene);
+	public ToggleButton(float x, float y, float width, float height, String sID, String text, Font font, int fontSize, InputCallback callback, int selectionScene, int textScene) {
+		super(x, y, 0, width, height, sID, callback, selectionScene);
 		this.init(text, FontUtils.deriveSize(fontSize, font), textScene);
 	}
 
-	public ToggleButton(float x, float y, float width, float height, String sID, String text, Font font, int fontSize, int selectionScene, int textScene) {
-		super(x, y, 0, width, height, sID, selectionScene);
-		this.init(text, FontUtils.deriveSize(fontSize, font), textScene);
+	public ToggleButton(float x, float y, float width, float height, String sID, String text, InputCallback callback, int selectionScene, int textScene) {
+		this(x, y, width, height, sID, text, new Font("Dialogue", Font.PLAIN, 12), 12, callback, selectionScene, textScene);
+	}
+
+	public ToggleButton(float x, float y, float width, float height, String sID, String text, int fontSize, InputCallback callback, int selectionScene, int textScene) {
+		this(x, y, width, height, sID, text, new Font("Dialogue", Font.PLAIN, 12), fontSize, callback, selectionScene, textScene);
 	}
 
 	// text size should already be included in the font
@@ -45,6 +44,7 @@ public class ToggleButton extends Input {
 		this.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
 		this.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 
+		this.defaultText = text;
 		this.buttonText = new Text(0, 0, this.z + depthSpacing, text, font, new Material(Color.WHITE), textScene);
 		this.buttonText.setFrameAlignmentStyle(UIElement.FROM_CENTER_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.buttonText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
@@ -117,29 +117,52 @@ public class ToggleButton extends Input {
 	}
 
 	public void setIsToggled(boolean b) {
+		if (this.isToggled == b) {
+			return;
+		}
+
 		this.isToggled = b;
 
 		if (this.changeTextOnToggle) {
 			String nextText = this.isToggled ? this.toggledText : this.untoggledText;
-			this.buttonText.setWidth(GraphicsTools.calculateTextWidth(nextText, this.buttonText.getFont()));
-			this.buttonText.setText(nextText);
-			this.buttonText.align();
+			this.setButtonText(nextText);
 		}
+
+		this.notifyInputChanged();
+	}
+
+	private void setButtonText(String text) {
+		this.buttonText.setWidth(GraphicsTools.calculateTextWidth(text, this.buttonText.getFont()));
+		this.buttonText.setText(text);
+		this.buttonText.align();
 	}
 
 	public void setChangeTextOnToggle(boolean b) {
+		if (this.changeTextOnToggle == b) {
+			return;
+		}
 		this.changeTextOnToggle = b;
-		this.setIsToggled(this.isToggled);
+		if (this.changeTextOnToggle) {
+			String nextText = this.isToggled ? this.toggledText : this.untoggledText;
+			this.setButtonText(nextText);
+		}
+		else {
+			this.setButtonText(this.defaultText);
+		}
 	}
 
 	public void setToggledText(String s) {
 		this.toggledText = s;
-		this.setIsToggled(this.isToggled);
+		if (this.isToggled) {
+			this.setButtonText(this.toggledText);
+		}
 	}
 
 	public void setUntoggledText(String s) {
 		this.untoggledText = s;
-		this.setIsToggled(this.isToggled);
+		if (!this.isToggled) {
+			this.setButtonText(this.untoggledText);
+		}
 	}
 
 	@Override

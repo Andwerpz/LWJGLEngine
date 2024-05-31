@@ -7,6 +7,7 @@ import lwjglengine.graphics.Framebuffer;
 import lwjglengine.graphics.Material;
 import lwjglengine.input.Button;
 import lwjglengine.input.Input;
+import lwjglengine.input.Input.InputCallback;
 import lwjglengine.main.Main;
 import lwjglengine.model.Line;
 import lwjglengine.model.Model;
@@ -17,7 +18,7 @@ import lwjglengine.ui.UISection;
 import myutils.math.Vec3;
 import myutils.math.Vec4;
 
-public class ContextMenuWindow extends BorderedWindow {
+public class ContextMenuWindow extends BorderedWindow implements InputCallback {
 
 	private static int entryHeight = 20;
 	private static int entryTextHorizontalMargin = 5;
@@ -56,7 +57,7 @@ public class ContextMenuWindow extends BorderedWindow {
 		this.buttons = new ArrayList<>();
 
 		for (int i = 0; i < this.options.size(); i++) {
-			Button b = new Button(0, i * entryHeight, 100, entryHeight, "btn " + this.options.get(i), this.options.get(i), new Font("Dialogue", Font.PLAIN, 12), 12, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+			Button b = new Button(0, i * entryHeight, 100, entryHeight, this.options.get(i), this.options.get(i), new Font("Dialogue", Font.PLAIN, 12), 12, this, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
 			width = Math.max(width, b.getButtonText().getTextWidth() + entryTextHorizontalMargin * 2);
 			b.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 			b.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
@@ -168,13 +169,6 @@ public class ContextMenuWindow extends BorderedWindow {
 	@Override
 	protected void _mouseReleased(int button) {
 		this.uiSection.mouseReleased(button);
-
-		String which = Input.getClicked(this.uiSection.getSelectionScene());
-
-		if (which != "") {
-			this.callbackWindow.handleContextMenuAction(which.substring(which.indexOf(" ") + 1));
-			this.shouldClose = true;
-		}
 	}
 
 	@Override
@@ -192,6 +186,17 @@ public class ContextMenuWindow extends BorderedWindow {
 	@Override
 	protected void _keyReleased(int key) {
 		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void inputClicked(String sID) {
+		this.callbackWindow.handleContextMenuAction(sID);
+		this.close();
+	}
+
+	@Override
+	public void inputChanged(String sID) {
 
 	}
 

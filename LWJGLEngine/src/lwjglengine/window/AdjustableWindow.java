@@ -8,6 +8,7 @@ import lwjglengine.graphics.Framebuffer;
 import lwjglengine.graphics.Material;
 import lwjglengine.input.Button;
 import lwjglengine.input.Input;
+import lwjglengine.input.Input.InputCallback;
 import lwjglengine.input.KeyboardInput;
 import lwjglengine.input.MouseInput;
 import lwjglengine.main.Main;
@@ -23,10 +24,10 @@ import myutils.math.Vec2;
 import myutils.math.Vec3;
 import myutils.math.Vec4;
 
-public class AdjustableWindow extends BorderedWindow {
+public class AdjustableWindow extends BorderedWindow implements InputCallback {
 	//TODO 
 	// - implement snapping to windows that are children of the same parent. 
-	// - fullscreen
+	// - fullscreen, halfscreen
 
 	private final int BACKGROUND_SCENE = Scene.generateScene();
 
@@ -95,6 +96,9 @@ public class AdjustableWindow extends BorderedWindow {
 	//more specifically, this just enables and disables the ability to grab onto an edge of the window. 
 	private boolean allowManualResizing = true;
 
+	//if true, allows the user to hold ctrl while dragging to renest the window
+	private boolean allowUserRenesting = true;
+
 	public AdjustableWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window contentWindow, Window parentWindow) {
 		super(xOffset, yOffset, contentWidth, contentHeight + titleBarHeight, parentWindow);
 		this.init(contentWindow, title);
@@ -162,7 +166,7 @@ public class AdjustableWindow extends BorderedWindow {
 		this.titleBarText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.titleBarText.bind(this.titleBarRect);
 
-		this.titleBarCloseBtn = new Button(0, 0, titleBarHeight, titleBarHeight, "btn_close", "X", 12, this.titleBarSection.getSelectionScene(), this.titleBarSection.getTextScene());
+		this.titleBarCloseBtn = new Button(0, 0, titleBarHeight, titleBarHeight, "btn_close", "X", 12, this, this.titleBarSection.getSelectionScene(), this.titleBarSection.getTextScene());
 		this.titleBarCloseBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 		this.titleBarCloseBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
 		this.titleBarCloseBtn.getButtonText().setDoAntialiasing(false);
@@ -258,8 +262,8 @@ public class AdjustableWindow extends BorderedWindow {
 		this.allowManualResizing = b;
 	}
 
-	public boolean allowManualResizing() {
-		return this.allowManualResizing;
+	public void setAllowUserRenesting(boolean b) {
+		this.allowUserRenesting = b;
 	}
 
 	@Override
@@ -317,7 +321,7 @@ public class AdjustableWindow extends BorderedWindow {
 		//update offset if the title bar is grabbed
 		if (this.titleBarGrabbed) {
 			//nesting and un-nesting
-			if (KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL)) {
+			if (this.allowUserRenesting && (KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_LEFT_CONTROL) || KeyboardInput.isKeyPressed(GLFW.GLFW_KEY_RIGHT_CONTROL))) {
 				//check if we should un-nest
 				{
 					//find furthest window that we can un-nest to
@@ -521,7 +525,7 @@ public class AdjustableWindow extends BorderedWindow {
 		this.bottomEdgeGrabbed = false;
 		this.topEdgeGrabbed = false;
 
-		if (this.allowManualResizing()) {
+		if (this.allowManualResizing) {
 			this.leftEdgeGrabbed = this.canGrabLeftEdge();
 			this.rightEdgeGrabbed = this.canGrabRightEdge();
 			this.bottomEdgeGrabbed = this.canGrabBottomEdge();
@@ -539,12 +543,6 @@ public class AdjustableWindow extends BorderedWindow {
 	@Override
 	protected void _mouseReleased(int button) {
 		this.titleBarSection.mouseReleased(button);
-
-		switch (Input.getClicked(this.titleBarSection.getSelectionScene())) {
-		case "btn_close":
-			this.close();
-			break;
-		}
 
 		this.leftEdgeGrabbed = false;
 		this.rightEdgeGrabbed = false;
@@ -565,6 +563,21 @@ public class AdjustableWindow extends BorderedWindow {
 
 	@Override
 	protected void _keyReleased(int key) {
+
+	}
+
+	@Override
+	public void inputClicked(String sID) {
+		switch (sID) {
+		case "btn_close": {
+			this.close();
+			break;
+		}
+		}
+	}
+
+	@Override
+	public void inputChanged(String sID) {
 
 	}
 

@@ -13,6 +13,7 @@ import lwjglengine.graphics.Framebuffer;
 import lwjglengine.graphics.Material;
 import lwjglengine.input.Button;
 import lwjglengine.input.Input;
+import lwjglengine.input.Input.InputCallback;
 import lwjglengine.input.TextField;
 import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
@@ -21,7 +22,7 @@ import lwjglengine.ui.UISection;
 import myutils.file.FileUtils;
 import myutils.math.Vec3;
 
-public class FileCreatorWindow extends Window {
+public class FileCreatorWindow extends Window implements InputCallback {
 
 	private UISection bottomBarSection;
 
@@ -66,13 +67,13 @@ public class FileCreatorWindow extends Window {
 		this.bottomBarRect.setMaterial(bottomBarMaterial);
 		this.bottomBarRect.bind(this.rootUIElement);
 
-		this.bottomBarFilenameTf = new TextField(3, 3, this.getWidth() - confirmBtnWidth - 8, bottomBarHeight - 5, "tf_filename", "Enter New File Name", 12, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
+		this.bottomBarFilenameTf = new TextField(3, 3, this.getWidth() - confirmBtnWidth - 8, bottomBarHeight - 5, "tf_filename", "Enter New File Name", 12, this, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
 		this.bottomBarFilenameTf.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
 		this.bottomBarFilenameTf.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 		this.bottomBarFilenameTf.getTextUIElement().setDoAntialiasing(false);
 		this.bottomBarFilenameTf.bind(this.bottomBarRect);
 
-		this.bottomBarConfirmBtn = new Button(3, 3, confirmBtnWidth, bottomBarHeight - 5, "btn_confirm", "Confirm", 12, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
+		this.bottomBarConfirmBtn = new Button(3, 3, confirmBtnWidth, bottomBarHeight - 5, "btn_confirm", "Confirm", 12, this, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
 		this.bottomBarConfirmBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_BOTTOM);
 		this.bottomBarConfirmBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_BOTTOM);
 		this.bottomBarConfirmBtn.getButtonText().setDoAntialiasing(false);
@@ -148,8 +149,27 @@ public class FileCreatorWindow extends Window {
 	@Override
 	protected void _mouseReleased(int button) {
 		this.bottomBarSection.mouseReleased(button);
+	}
 
-		switch (Input.getClicked(this.bottomBarSection.getSelectionScene())) {
+	@Override
+	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	protected void _keyPressed(int key) {
+		this.bottomBarSection.keyPressed(key);
+	}
+
+	@Override
+	protected void _keyReleased(int key) {
+		this.bottomBarSection.keyReleased(key);
+	}
+
+	@Override
+	public void inputClicked(String sID) {
+		switch (sID) {
 		case "btn_confirm": {
 			String directory = this.fileExplorer.getCurrentDirectory();
 			String filename = this.bottomBarFilenameTf.getText();
@@ -194,7 +214,6 @@ public class FileCreatorWindow extends Window {
 					}
 				}
 				catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 
@@ -206,19 +225,8 @@ public class FileCreatorWindow extends Window {
 	}
 
 	@Override
-	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
-		// TODO Auto-generated method stub
+	public void inputChanged(String sID) {
 
-	}
-
-	@Override
-	protected void _keyPressed(int key) {
-		this.bottomBarSection.keyPressed(key);
-	}
-
-	@Override
-	protected void _keyReleased(int key) {
-		this.bottomBarSection.keyReleased(key);
 	}
 
 }

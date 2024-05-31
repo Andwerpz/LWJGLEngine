@@ -14,6 +14,7 @@ import lwjglengine.entity.Entity;
 import lwjglengine.graphics.Framebuffer;
 import lwjglengine.graphics.Material;
 import lwjglengine.input.Input;
+import lwjglengine.input.Input.InputCallback;
 import lwjglengine.input.Button;
 import lwjglengine.input.TextField;
 import lwjglengine.model.Model;
@@ -29,7 +30,7 @@ import myutils.math.MathUtils;
 import myutils.math.Vec3;
 import myutils.math.Vec4;
 
-public class FileExplorerWindow extends Window implements UISectionListener {
+public class FileExplorerWindow extends Window implements UISectionListener, InputCallback {
 	//this class handles the interactions with navigating directories, it delegates displaying the contents of a directory
 	//and selecting to the list viewer class. 
 
@@ -117,7 +118,7 @@ public class FileExplorerWindow extends Window implements UISectionListener {
 		this.rootDirectoryEntry.expand();
 		this.alignDirectoryEntries();
 
-		this.topBarBackButton = new Button(3, 0, 20, 20, "btn_directory_back", "          ", new Font("Dialog", Font.PLAIN, 12), 12, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
+		this.topBarBackButton = new Button(3, 0, 20, 20, "btn_directory_back", "          ", new Font("Dialog", Font.PLAIN, 12), 12, this, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
 		this.topBarBackButton.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.topBarBackButton.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.topBarBackButton.setReleasedMaterial(new Material(new Vec3(100 / 255.0f)));
@@ -125,7 +126,7 @@ public class FileExplorerWindow extends Window implements UISectionListener {
 		this.topBarBackButton.setPressedMaterial(new Material(new Vec3(200 / 255.0f)));
 		this.topBarBackButton.bind(this.topBarRect);
 
-		this.topBarFilterTextField = new TextField(3, 0, topBarFilterTextFieldWidth, 20, "tf_filter", "Search Folder", new Font("Dialog", Font.PLAIN, 12), 12, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
+		this.topBarFilterTextField = new TextField(3, 0, topBarFilterTextFieldWidth, 20, "tf_filter", "Search Folder", new Font("Dialog", Font.PLAIN, 12), 12, this, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
 		this.topBarFilterTextField.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.topBarFilterTextField.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 		this.topBarFilterTextField.getTextUIElement().setDoAntialiasing(false);
@@ -396,14 +397,6 @@ public class FileExplorerWindow extends Window implements UISectionListener {
 		this.directorySection.mouseReleased(button);
 		this.topBarSection.mouseReleased(button);
 
-		switch (Input.getClicked(this.topBarSection.getSelectionScene())) {
-		case "btn_directory_back":
-			if (this.selectedDirectoryEntry != null && this.selectedDirectoryEntry.getParent() != this.rootDirectoryEntry) {
-				this.setSelectedDirectoryEntry(this.selectedDirectoryEntry.getParent());
-			}
-			break;
-		}
-
 		this.directoryGrabbed = false;
 	}
 
@@ -415,10 +408,6 @@ public class FileExplorerWindow extends Window implements UISectionListener {
 	@Override
 	protected void _keyPressed(int key) {
 		this.topBarSection.keyPressed(key);
-
-		if (this.topBarFilterTextField.isClicked()) {
-			this.folderWindow.setFilter(this.topBarFilterTextField.getText());
-		}
 	}
 
 	@Override
@@ -431,6 +420,28 @@ public class FileExplorerWindow extends Window implements UISectionListener {
 		if (section == this.directorySection) {
 			//update visibility of entries
 			this.alignDirectoryEntries();
+		}
+	}
+
+	@Override
+	public void inputClicked(String sID) {
+		switch (sID) {
+		case "btn_directory_back": {
+			if (this.selectedDirectoryEntry != null && this.selectedDirectoryEntry.getParent() != this.rootDirectoryEntry) {
+				this.setSelectedDirectoryEntry(this.selectedDirectoryEntry.getParent());
+			}
+			break;
+		}
+		}
+	}
+
+	@Override
+	public void inputChanged(String sID) {
+		switch (sID) {
+		case "tf_filter": {
+			this.folderWindow.setFilter(this.topBarFilterTextField.getText());
+			break;
+		}
 		}
 	}
 

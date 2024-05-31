@@ -8,13 +8,14 @@ import lwjglengine.graphics.Framebuffer;
 import lwjglengine.graphics.Material;
 import lwjglengine.input.Button;
 import lwjglengine.input.Input;
+import lwjglengine.input.Input.InputCallback;
 import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
 import myutils.math.Vec3;
 
-public class FileSelectorWindow extends Window {
+public class FileSelectorWindow extends Window implements InputCallback {
 
 	private UISection bottomBarSection;
 
@@ -59,7 +60,7 @@ public class FileSelectorWindow extends Window {
 		this.bottomBarSelectedFileText.setDoAntialiasing(false);
 		this.bottomBarSelectedFileText.bind(this.bottomBarRect);
 
-		this.bottomBarSubmitFileButton = new Button(3, 0, 100, 20, "btn_submit_file", "Select File", new Font("Dialog", Font.PLAIN, 12), 12, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
+		this.bottomBarSubmitFileButton = new Button(3, 0, 100, 20, "btn_submit_file", "Select File", new Font("Dialog", Font.PLAIN, 12), 12, this, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
 		this.bottomBarSubmitFileButton.getButtonText().setDoAntialiasing(false);
 		this.bottomBarSubmitFileButton.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.bottomBarSubmitFileButton.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
@@ -141,16 +142,6 @@ public class FileSelectorWindow extends Window {
 	@Override
 	protected void _mouseReleased(int button) {
 		this.bottomBarSection.mouseReleased(button);
-
-		switch (Input.getClicked(this.bottomBarSection.getSelectionScene())) {
-		case "btn_submit_file":
-			File[] files = this.fileExplorer.getSelectedFiles();
-			if (files.length != 0) {
-				this.callbackWindow.handleFiles(files);
-				this.close();
-			}
-			break;
-		}
 	}
 
 	@Override
@@ -168,6 +159,25 @@ public class FileSelectorWindow extends Window {
 	@Override
 	protected void _keyReleased(int key) {
 		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void inputClicked(String sID) {
+		switch (sID) {
+		case "btn_submit_file": {
+			File[] files = this.fileExplorer.getSelectedFiles();
+			if (files.length != 0) {
+				this.callbackWindow.handleFiles(files);
+				this.close();
+			}
+			break;
+		}
+		}
+	}
+
+	@Override
+	public void inputChanged(String sID) {
 
 	}
 

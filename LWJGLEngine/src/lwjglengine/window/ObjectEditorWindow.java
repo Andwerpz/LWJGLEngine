@@ -14,6 +14,7 @@ import java.util.HashSet;
 import lwjglengine.graphics.Framebuffer;
 import lwjglengine.graphics.Material;
 import lwjglengine.input.Input;
+import lwjglengine.input.Input.InputCallback;
 import lwjglengine.input.TextField;
 import lwjglengine.input.ToggleButton;
 import lwjglengine.screen.UIScreen;
@@ -29,7 +30,7 @@ import myutils.math.Vec4;
 import myutils.misc.Pair;
 import myutils.misc.Triple;
 
-public class ObjectEditorWindow extends Window implements UISectionListener {
+public class ObjectEditorWindow extends Window implements UISectionListener, InputCallback {
 	//this is an editor that we should be able to put any object inside and edit. 
 
 	//it will first list out all getters and setters of the given class, and will generate input fields 
@@ -38,8 +39,6 @@ public class ObjectEditorWindow extends Window implements UISectionListener {
 	//it will only generate input fields for some predetermined set of basic types. 
 
 	//TODO 
-	// - only call the get and set functions when we need to. 
-	//   - calling the setters every frame is actually very expensive. 
 	// - add filter to search for attributes. 
 	//	 - perhaps we can just regenerate all input fields with the filter in mind. 
 
@@ -144,8 +143,7 @@ public class ObjectEditorWindow extends Window implements UISectionListener {
 			}
 		}
 
-		//for each 'set' method, find a matching 'get' method. Ensure that the type of the argument of the 'set' method 
-		//is the same as the return type of the 'get' method. 
+		//go through all methods, find the ones that have 0 arguments and start with 'get'
 		HashMap<String, Method> getMethods = new HashMap<>();
 		for (Method m : methods) {
 			if (m.getName().startsWith("get") && m.getParameterCount() == 0) {
@@ -153,6 +151,8 @@ public class ObjectEditorWindow extends Window implements UISectionListener {
 			}
 		}
 
+		//create all valid 'set' and 'get' method pairs. 
+		//Ensure that the type of the argument of the 'set' method is the same as the return type of the 'get' method. 
 		ArrayList<Pair<Method, Method>> validMethodPairs = new ArrayList<>(); //'get', 'set'
 		for (Method m : setMethods) {
 			String variableName = m.getName().substring(3);
@@ -267,7 +267,7 @@ public class ObjectEditorWindow extends Window implements UISectionListener {
 
 		if (classType == CLASS_TYPE_FLOAT || classType == CLASS_TYPE_DOUBLE || classType == CLASS_TYPE_BYTE || classType == CLASS_TYPE_SHORT || classType == CLASS_TYPE_INTEGER || classType == CLASS_TYPE_LONG) {
 			//numerical primitives
-			TextField textField = new TextField(0, 0, 150, 20, variableName, variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+			TextField textField = new TextField(0, 0, 150, 20, variableName, variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 			textField.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			textField.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 			textField.getTextUIElement().setDoAntialiasing(false);
@@ -316,7 +316,7 @@ public class ObjectEditorWindow extends Window implements UISectionListener {
 		}
 		else if (classType == CLASS_TYPE_BOOLEAN) {
 			//toggle button
-			ToggleButton toggleButton = new ToggleButton(0, 0, 150, 20, variableName, variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+			ToggleButton toggleButton = new ToggleButton(0, 0, 150, 20, variableName, variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 			toggleButton.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			toggleButton.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 			toggleButton.getButtonText().setDoAntialiasing(false);
@@ -338,7 +338,7 @@ public class ObjectEditorWindow extends Window implements UISectionListener {
 		}
 		else if (classType == CLASS_TYPE_STRING || classType == CLASS_TYPE_CHAR) {
 			//free text field
-			TextField textField = new TextField(0, 0, 150, 20, variableName, variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+			TextField textField = new TextField(0, 0, 150, 20, variableName, variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 			textField.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			textField.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 			textField.getTextUIElement().setDoAntialiasing(false);
@@ -368,14 +368,14 @@ public class ObjectEditorWindow extends Window implements UISectionListener {
 
 			switch (classType) {
 			case CLASS_TYPE_VEC2: {
-				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+				TextField tfX = new TextField(0, 25, 150, 20, variableName + " x", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfX.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
-				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+				TextField tfY = new TextField(0, 50, 150, 20, variableName + " y", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfY.setFieldType(TextField.FIELD_TYPE_FLOAT);
@@ -411,21 +411,21 @@ public class ObjectEditorWindow extends Window implements UISectionListener {
 			}
 
 			case CLASS_TYPE_VEC3: {
-				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+				TextField tfX = new TextField(0, 25, 150, 20, variableName + " x", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfX.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
-				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+				TextField tfY = new TextField(0, 50, 150, 20, variableName + " y", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfY.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfY.getTextUIElement().setDoAntialiasing(false);
 				tfY.bind(boundingRect);
 
-				TextField tfZ = new TextField(0, 75, 150, 20, variableName + ".z", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+				TextField tfZ = new TextField(0, 75, 150, 20, variableName + " z", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfZ.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfZ.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfZ.setFieldType(TextField.FIELD_TYPE_FLOAT);
@@ -468,28 +468,28 @@ public class ObjectEditorWindow extends Window implements UISectionListener {
 			}
 
 			case CLASS_TYPE_VEC4: {
-				TextField tfX = new TextField(0, 25, 150, 20, variableName + ".x", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+				TextField tfX = new TextField(0, 25, 150, 20, variableName + " x", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfX.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
-				TextField tfY = new TextField(0, 50, 150, 20, variableName + ".y", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+				TextField tfY = new TextField(0, 50, 150, 20, variableName + " y", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfY.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfY.getTextUIElement().setDoAntialiasing(false);
 				tfY.bind(boundingRect);
 
-				TextField tfZ = new TextField(0, 75, 150, 20, variableName + ".z", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+				TextField tfZ = new TextField(0, 75, 150, 20, variableName + " z", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfZ.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfZ.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfZ.setFieldType(TextField.FIELD_TYPE_FLOAT);
 				tfZ.getTextUIElement().setDoAntialiasing(false);
 				tfZ.bind(boundingRect);
 
-				TextField tfW = new TextField(0, 100, 150, 20, variableName + ".w", variableName, 12, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
+				TextField tfW = new TextField(0, 100, 150, 20, variableName + " w", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfW.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfW.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfW.setFieldType(TextField.FIELD_TYPE_FLOAT);
@@ -565,175 +565,177 @@ public class ObjectEditorWindow extends Window implements UISectionListener {
 		return "Object Editor Window";
 	}
 
+	private void callSetter(String variableName) {
+		if (!this.variableNameToMethods.containsKey(variableName)) {
+			return;
+		}
+
+		int classType = this.variableNameToMethods.get(variableName).first;
+		Method getter = this.variableNameToMethods.get(variableName).second;
+		Method setter = this.variableNameToMethods.get(variableName).third;
+
+		Object val = null;
+
+		switch (classType) {
+		case CLASS_TYPE_FLOAT: {
+			TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
+			if (!tf.isInputValid()) {
+				break;
+			}
+			val = Float.parseFloat(tf.getText());
+			break;
+		}
+
+		case CLASS_TYPE_DOUBLE: {
+			TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
+			if (!tf.isInputValid()) {
+				break;
+			}
+			val = Double.parseDouble(tf.getText());
+			break;
+		}
+
+		case CLASS_TYPE_BYTE: {
+			TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
+			if (!tf.isInputValid()) {
+				break;
+			}
+			val = Byte.parseByte(tf.getText());
+			break;
+		}
+
+		case CLASS_TYPE_SHORT: {
+			TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
+			if (!tf.isInputValid()) {
+				break;
+			}
+			val = Short.parseShort(tf.getText());
+			break;
+		}
+
+		case CLASS_TYPE_INTEGER: {
+			TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
+			if (!tf.isInputValid()) {
+				break;
+			}
+			val = Integer.parseInt(tf.getText());
+			break;
+		}
+
+		case CLASS_TYPE_LONG: {
+			TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
+			if (!tf.isInputValid()) {
+				break;
+			}
+			val = Long.parseLong(tf.getText());
+			break;
+		}
+
+		case CLASS_TYPE_CHAR: {
+			TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
+			if (!tf.isInputValid()) {
+				break;
+			}
+			val = tf.getText().charAt(0);
+			break;
+		}
+
+		case CLASS_TYPE_STRING: {
+			TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
+			if (!tf.isInputValid()) {
+				break;
+			}
+			val = tf.getText();
+			break;
+		}
+
+		case CLASS_TYPE_BOOLEAN: {
+			ToggleButton tb = (ToggleButton) Input.getInput(variableName, this.editorSection.getSelectionScene());
+			val = tb.isToggled();
+			break;
+		}
+
+		case CLASS_TYPE_VEC2: {
+			TextField tfX = (TextField) Input.getInput(variableName + " x", this.editorSection.getSelectionScene());
+			if (!tfX.isInputValid()) {
+				break;
+			}
+			TextField tfY = (TextField) Input.getInput(variableName + " y", this.editorSection.getSelectionScene());
+			if (!tfY.isInputValid()) {
+				break;
+			}
+			float x = Float.parseFloat(tfX.getText());
+			float y = Float.parseFloat(tfY.getText());
+			val = new Vec2(x, y);
+			break;
+		}
+
+		case CLASS_TYPE_VEC3: {
+			TextField tfX = (TextField) Input.getInput(variableName + " x", this.editorSection.getSelectionScene());
+			if (!tfX.isInputValid()) {
+				break;
+			}
+			TextField tfY = (TextField) Input.getInput(variableName + " y", this.editorSection.getSelectionScene());
+			if (!tfY.isInputValid()) {
+				break;
+			}
+			TextField tfZ = (TextField) Input.getInput(variableName + " z", this.editorSection.getSelectionScene());
+			if (!tfZ.isInputValid()) {
+				break;
+			}
+			float x = Float.parseFloat(tfX.getText());
+			float y = Float.parseFloat(tfY.getText());
+			float z = Float.parseFloat(tfZ.getText());
+			val = new Vec3(x, y, z);
+			break;
+		}
+
+		case CLASS_TYPE_VEC4: {
+			TextField tfX = (TextField) Input.getInput(variableName + " x", this.editorSection.getSelectionScene());
+			if (!tfX.isInputValid()) {
+				break;
+			}
+			TextField tfY = (TextField) Input.getInput(variableName + " y", this.editorSection.getSelectionScene());
+			if (!tfY.isInputValid()) {
+				break;
+			}
+			TextField tfZ = (TextField) Input.getInput(variableName + " z", this.editorSection.getSelectionScene());
+			if (!tfZ.isInputValid()) {
+				break;
+			}
+			TextField tfW = (TextField) Input.getInput(variableName + " w", this.editorSection.getSelectionScene());
+			if (!tfW.isInputValid()) {
+				break;
+			}
+			float x = Float.parseFloat(tfX.getText());
+			float y = Float.parseFloat(tfY.getText());
+			float z = Float.parseFloat(tfZ.getText());
+			float w = Float.parseFloat(tfW.getText());
+			val = new Vec4(x, y, z, w);
+			break;
+		}
+		}
+
+		//call the setter. 
+		if (val != null) {
+			try {
+				setter.invoke(this.object, val);
+			}
+			catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			}
+			catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+			catch (InvocationTargetException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	@Override
 	protected void _update() {
 		this.editorSection.update();
-
-		//go through all method pairs, and run all the setters. 
-		for (String variableName : this.variableNameToMethods.keySet()) {
-			int classType = this.variableNameToMethods.get(variableName).first;
-			Method getter = this.variableNameToMethods.get(variableName).second;
-			Method setter = this.variableNameToMethods.get(variableName).third;
-
-			Object val = null;
-
-			//just call the setter. TODO first check if the getter is equal to whatever is in the input fields. 
-			switch (classType) {
-			case CLASS_TYPE_FLOAT: {
-				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
-				if (!tf.isInputValid()) {
-					break;
-				}
-				val = Float.parseFloat(tf.getText());
-				break;
-			}
-
-			case CLASS_TYPE_DOUBLE: {
-				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
-				if (!tf.isInputValid()) {
-					break;
-				}
-				val = Double.parseDouble(tf.getText());
-				break;
-			}
-
-			case CLASS_TYPE_BYTE: {
-				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
-				if (!tf.isInputValid()) {
-					break;
-				}
-				val = Byte.parseByte(tf.getText());
-				break;
-			}
-
-			case CLASS_TYPE_SHORT: {
-				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
-				if (!tf.isInputValid()) {
-					break;
-				}
-				val = Short.parseShort(tf.getText());
-				break;
-			}
-
-			case CLASS_TYPE_INTEGER: {
-				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
-				if (!tf.isInputValid()) {
-					break;
-				}
-				val = Integer.parseInt(tf.getText());
-				break;
-			}
-
-			case CLASS_TYPE_LONG: {
-				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
-				if (!tf.isInputValid()) {
-					break;
-				}
-				val = Long.parseLong(tf.getText());
-				break;
-			}
-
-			case CLASS_TYPE_CHAR: {
-				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
-				if (!tf.isInputValid()) {
-					break;
-				}
-				val = tf.getText().charAt(0);
-				break;
-			}
-
-			case CLASS_TYPE_STRING: {
-				TextField tf = (TextField) Input.getInput(variableName, this.editorSection.getSelectionScene());
-				if (!tf.isInputValid()) {
-					break;
-				}
-				val = tf.getText();
-				break;
-			}
-
-			case CLASS_TYPE_BOOLEAN: {
-				ToggleButton tb = (ToggleButton) Input.getInput(variableName, this.editorSection.getSelectionScene());
-				val = tb.isToggled();
-				break;
-			}
-
-			case CLASS_TYPE_VEC2: {
-				TextField tfX = (TextField) Input.getInput(variableName + ".x", this.editorSection.getSelectionScene());
-				if (!tfX.isInputValid()) {
-					break;
-				}
-				TextField tfY = (TextField) Input.getInput(variableName + ".y", this.editorSection.getSelectionScene());
-				if (!tfY.isInputValid()) {
-					break;
-				}
-				float x = Float.parseFloat(tfX.getText());
-				float y = Float.parseFloat(tfY.getText());
-				val = new Vec2(x, y);
-				break;
-			}
-
-			case CLASS_TYPE_VEC3: {
-				TextField tfX = (TextField) Input.getInput(variableName + ".x", this.editorSection.getSelectionScene());
-				if (!tfX.isInputValid()) {
-					break;
-				}
-				TextField tfY = (TextField) Input.getInput(variableName + ".y", this.editorSection.getSelectionScene());
-				if (!tfY.isInputValid()) {
-					break;
-				}
-				TextField tfZ = (TextField) Input.getInput(variableName + ".z", this.editorSection.getSelectionScene());
-				if (!tfZ.isInputValid()) {
-					break;
-				}
-				float x = Float.parseFloat(tfX.getText());
-				float y = Float.parseFloat(tfY.getText());
-				float z = Float.parseFloat(tfZ.getText());
-				val = new Vec3(x, y, z);
-				break;
-			}
-
-			case CLASS_TYPE_VEC4: {
-				TextField tfX = (TextField) Input.getInput(variableName + ".x", this.editorSection.getSelectionScene());
-				if (!tfX.isInputValid()) {
-					break;
-				}
-				TextField tfY = (TextField) Input.getInput(variableName + ".y", this.editorSection.getSelectionScene());
-				if (!tfY.isInputValid()) {
-					break;
-				}
-				TextField tfZ = (TextField) Input.getInput(variableName + ".z", this.editorSection.getSelectionScene());
-				if (!tfZ.isInputValid()) {
-					break;
-				}
-				TextField tfW = (TextField) Input.getInput(variableName + ".w", this.editorSection.getSelectionScene());
-				if (!tfW.isInputValid()) {
-					break;
-				}
-				float x = Float.parseFloat(tfX.getText());
-				float y = Float.parseFloat(tfY.getText());
-				float z = Float.parseFloat(tfZ.getText());
-				float w = Float.parseFloat(tfW.getText());
-				val = new Vec4(x, y, z, w);
-				break;
-			}
-			}
-
-			//call the setter. 
-			if (val != null) {
-				try {
-					setter.invoke(this.object, val);
-				}
-				catch (IllegalArgumentException e) {
-					e.printStackTrace();
-				}
-				catch (IllegalAccessException e) {
-					e.printStackTrace();
-				}
-				catch (InvocationTargetException e) {
-					e.printStackTrace();
-				}
-			}
-		}
 	}
 
 	@Override
@@ -799,6 +801,17 @@ public class ObjectEditorWindow extends Window implements UISectionListener {
 	@Override
 	public void uiSectionScrolled(UISection section) {
 
+	}
+
+	@Override
+	public void inputClicked(String sID) {
+		//do nothing
+	}
+
+	@Override
+	public void inputChanged(String sID) {
+		//call the setter corresponding for the variable that changed. 
+		this.callSetter(sID.split(" ")[0]);
 	}
 
 }

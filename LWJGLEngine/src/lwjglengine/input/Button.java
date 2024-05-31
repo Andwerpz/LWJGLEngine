@@ -37,19 +37,17 @@ public class Button extends Input {
 	private Material pressedTextMaterial, releasedTextMaterial, hoveredTextMaterial;
 	private Material currentMaterial;
 
-	public Button(float x, float y, float width, float height, String sID, String text, int fontSize, int selectionScene, int textScene) {
-		super(x, y, 0, width, height, sID, selectionScene);
-		this.init(text, new Font("Dialogue", Font.PLAIN, fontSize), textScene);
-	}
-
-	public Button(float x, float y, float width, float height, String sID, String text, Font font, int fontSize, FilledRectangle baseRect, int selectionScene, int textScene) {
-		super(x, y, 0, width, height, sID, baseRect, selectionScene);
+	public Button(float x, float y, float width, float height, String sID, String text, Font font, int fontSize, InputCallback callback, int selectionScene, int textScene) {
+		super(x, y, 0, width, height, sID, callback, selectionScene);
 		this.init(text, FontUtils.deriveSize(fontSize, font), textScene);
 	}
 
-	public Button(float x, float y, float width, float height, String sID, String text, Font font, int fontSize, int selectionScene, int textScene) {
-		super(x, y, 0, width, height, sID, selectionScene);
-		this.init(text, FontUtils.deriveSize(fontSize, font), textScene);
+	public Button(float x, float y, float width, float height, String sID, String text, InputCallback callback, int selectionScene, int textScene) {
+		this(x, y, width, height, sID, text, new Font("Dialogue", Font.PLAIN, 12), 12, callback, selectionScene, textScene);
+	}
+
+	public Button(float x, float y, float width, float height, String sID, String text, int fontSize, InputCallback callback, int selectionScene, int textScene) {
+		this(x, y, width, height, sID, text, new Font("Dialogue", Font.PLAIN, 12), fontSize, callback, selectionScene, textScene);
 	}
 
 	// text size should already be included in the font
@@ -122,14 +120,10 @@ public class Button extends Input {
 
 	@Override
 	public void keyPressed(int key) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void keyReleased(int key) {
-		// TODO Auto-generated method stub
-
 	}
 
 }

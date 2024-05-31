@@ -122,6 +122,9 @@ public abstract class Window {
 	//if this is true, input is allowed if the parent or some child of the parent window is selected. 
 	private boolean allowInputWhenParentSubtreeSelected = false;
 
+	//if this is true, mouse input will be allowed regardless of whether or not this window is hovered. 
+	private boolean allowMouseInputWhenNotHovered = false;
+
 	//for debugging
 	public boolean renderAlpha = false;
 
@@ -256,6 +259,9 @@ public abstract class Window {
 
 	protected abstract void _kill();
 
+	/**
+	 * Schedules this window to close on the next update
+	 */
 	public void close() {
 		this.shouldClose = true;
 	}
@@ -388,6 +394,10 @@ public abstract class Window {
 
 	public void setAllowInputWhenParentSubtreeSelected(boolean b) {
 		this.allowInputWhenParentSubtreeSelected = b;
+	}
+
+	public void setAllowMouseInputWhenNotHovered(boolean b) {
+		this.allowMouseInputWhenNotHovered = b;
 	}
 
 	public boolean isAllowModifyingChildren() {
@@ -1032,8 +1042,26 @@ public abstract class Window {
 		return false;
 	}
 
+	private boolean shouldAllowMouseInput() {
+		if (!this.shouldAllowInput()) {
+			return false;
+		}
+		if (!this.allowMouseInputWhenNotHovered && this != hoveredWindow) {
+			return false;
+		}
+		return true;
+	}
+
+	private boolean shouldAllowKeyboardInput() {
+		if (!this.shouldAllowInput()) {
+			return false;
+		}
+		return true;
+	}
+
+	//we try to make a guarantee that for every mouse pressed input, there has to be a corresponding mouse released input. 
 	public void mousePressed(int button) {
-		if (this.shouldAllowInput()) {
+		if (this.shouldAllowMouseInput()) {
 			if (button == GLFW.GLFW_MOUSE_BUTTON_2 && this.contextMenuRightClick && !Main.isCursorLocked()) {
 				//spawn context menu
 				if (this.contextMenuWindow != null && this.contextMenuWindow.isAlive()) {
@@ -1070,7 +1098,7 @@ public abstract class Window {
 	protected abstract void _mouseReleased(int button);
 
 	public void mouseScrolled(float wheelOffset, float smoothOffset) {
-		if (this.shouldAllowInput()) {
+		if (this.shouldAllowMouseInput()) {
 			this._mouseScrolled(wheelOffset, smoothOffset);
 		}
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {
@@ -1082,7 +1110,7 @@ public abstract class Window {
 	protected abstract void _mouseScrolled(float wheelOffset, float smoothOffset);
 
 	public void keyPressed(int key) {
-		if (this.shouldAllowInput()) {
+		if (this.shouldAllowKeyboardInput()) {
 			if (key == GLFW.GLFW_KEY_ESCAPE) {
 				if (this.deselectOnEscPressed) {
 					this.deselect();
@@ -1103,7 +1131,7 @@ public abstract class Window {
 	protected abstract void _keyPressed(int key);
 
 	public void keyReleased(int key) {
-		if (this.shouldAllowInput()) {
+		if (this.shouldAllowKeyboardInput()) {
 			this._keyReleased(key);
 		}
 		for (int i = this.childWindows.size() - 1; i >= 0; i--) {

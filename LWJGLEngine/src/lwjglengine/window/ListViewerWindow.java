@@ -14,6 +14,7 @@ import lwjglengine.graphics.Framebuffer;
 import lwjglengine.graphics.Material;
 import lwjglengine.input.Button;
 import lwjglengine.input.Input;
+import lwjglengine.input.Input.InputCallback;
 import lwjglengine.input.KeyboardInput;
 import lwjglengine.input.TextField;
 import lwjglengine.scene.Scene;
@@ -28,7 +29,7 @@ import myutils.math.MathUtils;
 import myutils.math.Vec3;
 import myutils.math.Vec4;
 
-public class ListViewerWindow extends Window implements UISectionListener {
+public class ListViewerWindow extends Window implements UISectionListener, InputCallback {
 
 	private UISection topBarSection, bottomBarSection, contentSection;
 
@@ -120,7 +121,7 @@ public class ListViewerWindow extends Window implements UISectionListener {
 		topBarBackgroundRect.setMaterial(this.topBarDefaultMaterial);
 		topBarBackgroundRect.bind(this.rootUIElement);
 
-		this.topBarSearchTf = new TextField(3, 0, topBarSearchTfWidthPx, 16, "tf_filter", "Filter Entries", 12, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
+		this.topBarSearchTf = new TextField(3, 0, topBarSearchTfWidthPx, 16, "tf_filter", "Filter Entries", 12, this, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
 		this.topBarSearchTf.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.topBarSearchTf.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 		this.topBarSearchTf.getTextUIElement().setDoAntialiasing(false);
@@ -135,8 +136,8 @@ public class ListViewerWindow extends Window implements UISectionListener {
 		UIFilledRectangle contentBackgroundRect = this.contentSection.getBackgroundRect();
 		contentBackgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
 		contentBackgroundRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
+		contentBackgroundRect.setFrameAlignmentOffset(0, 0);
 		contentBackgroundRect.setFillWidth(true);
-		contentBackgroundRect.setFillWidthMargin(0);
 		contentBackgroundRect.setMaterial(contentDefaultMaterial);
 		contentBackgroundRect.bind(this.rootUIElement);
 
@@ -153,7 +154,7 @@ public class ListViewerWindow extends Window implements UISectionListener {
 		bottomBarRect.setMaterial(this.topBarDefaultMaterial);
 		bottomBarRect.bind(this.rootUIElement);
 
-		this.bottomBarSubmitBtn = new Button(3, 0, 100, 16, "btn_submit", "Submit", 12, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
+		this.bottomBarSubmitBtn = new Button(3, 0, 100, 16, "btn_submit", "Submit", 12, this, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
 		this.bottomBarSubmitBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.bottomBarSubmitBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 		this.bottomBarSubmitBtn.getButtonText().setDoAntialiasing(false);
@@ -601,10 +602,7 @@ public class ListViewerWindow extends Window implements UISectionListener {
 		this.bottomBarSection.mousePressed(button);
 		this.contentSection.mousePressed(button);
 
-		if (this.hoveredSectionID == this.topBarSection.getBackgroundRect().getID()) {
-
-		}
-		else if (this.hoveredSectionID == this.contentSection.getBackgroundRect().getID()) {
+		if (this.hoveredSectionID == this.contentSection.getBackgroundRect().getID()) {
 			if (this.hoveredContentID != this.contentSection.getBackgroundRect().getID()) {
 				for (ListEntry i : this.entryList) {
 					i.selected(this.hoveredContentID);
@@ -622,24 +620,6 @@ public class ListViewerWindow extends Window implements UISectionListener {
 		this.topBarSection.mouseReleased(button);
 		this.bottomBarSection.mouseReleased(button);
 		this.contentSection.mouseReleased(button);
-
-		if (this.hoveredSectionID == this.bottomBarSection.getBackgroundRect().getID()) {
-			switch (Input.getClicked(this.bottomBarSection.getSelectionScene())) {
-			case "btn_submit": {
-				if (this.selectedListEntries.size() != 0) {
-					Object[] objects = new Object[this.selectedListEntries.size()];
-					int i = 0;
-					for (ListEntry e : this.selectedListEntries) {
-						objects[i] = e.getObject();
-						i++;
-					}
-
-					this.submitEntries(objects);
-				}
-				break;
-			}
-			}
-		}
 	}
 
 	@Override
@@ -667,6 +647,35 @@ public class ListViewerWindow extends Window implements UISectionListener {
 	public void uiSectionScrolled(UISection section) {
 		if (section == this.contentSection) {
 			this.alignEntries();
+		}
+	}
+
+	@Override
+	public void inputClicked(String sID) {
+		switch (sID) {
+		case "btn_submit": {
+			if (this.selectedListEntries.size() != 0) {
+				Object[] objects = new Object[this.selectedListEntries.size()];
+				int i = 0;
+				for (ListEntry e : this.selectedListEntries) {
+					objects[i] = e.getObject();
+					i++;
+				}
+
+				this.submitEntries(objects);
+			}
+			break;
+		}
+		}
+	}
+
+	@Override
+	public void inputChanged(String sID) {
+		switch (sID) {
+		case "tf_filter": {
+			this.setFilter(this.topBarSearchTf.getText());
+			break;
+		}
 		}
 	}
 
@@ -765,7 +774,7 @@ public class ListViewerWindow extends Window implements UISectionListener {
 					this.entryRect = new UIFilledRectangle(0, 0, 0, this.horizontalAlignWidth, this.entryHeightPx, this.selectionScene);
 					this.entryRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 					this.entryRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
-					this.entryRect.setMaterial(new Material(new Vec4(1)));
+					this.entryRect.setMaterial(this.defaultMaterial);
 					this.entryRect.bind(this.baseUIElement);
 
 					this.entryText = new Text(0, 0, this.text, 12, Color.WHITE, this.textScene);
@@ -842,5 +851,4 @@ public class ListViewerWindow extends Window implements UISectionListener {
 		}
 
 	}
-
 }
