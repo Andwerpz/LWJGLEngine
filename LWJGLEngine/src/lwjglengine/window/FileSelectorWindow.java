@@ -25,17 +25,17 @@ public class FileSelectorWindow extends Window implements InputCallback {
 	private Text bottomBarSelectedFileText;
 	private Button bottomBarSubmitFileButton;
 
-	private Window callbackWindow;
+	private FileSelectorCallback callback;
 
 	private FileExplorerWindow fileExplorer;
 
-	public FileSelectorWindow(Window callbackWindow) {
-		super(callbackWindow);
-		this.init(callbackWindow);
+	public FileSelectorWindow(FileSelectorCallback callback) {
+		super(null);
+		this.init(callback);
 	}
 
-	private void init(Window callbackWindow) {
-		this.callbackWindow = callbackWindow;
+	private void init(FileSelectorCallback callback) {
+		this.callback = callback;
 
 		this.fileExplorer = new FileExplorerWindow(this);
 		this.fileExplorer.setAlignmentStyle(Window.FROM_LEFT, Window.FROM_TOP);
@@ -168,7 +168,7 @@ public class FileSelectorWindow extends Window implements InputCallback {
 		case "btn_submit_file": {
 			File[] files = this.fileExplorer.getSelectedFiles();
 			if (files.length != 0) {
-				this.callbackWindow.handleFiles(files);
+				this.callback.handleCallback(files);
 				this.close();
 			}
 			break;
@@ -179,6 +179,10 @@ public class FileSelectorWindow extends Window implements InputCallback {
 	@Override
 	public void inputChanged(String sID) {
 
+	}
+
+	public interface FileSelectorCallback {
+		void handleCallback(File[] files);
 	}
 
 }

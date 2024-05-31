@@ -47,7 +47,7 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 
 	private int bottomBarHeightPx = 20;
 
-	private Window callbackWindow;
+	private ListViewerCallback callback;
 
 	private TextField topBarSearchTf;
 	private Text topBarSelectedEntryText;
@@ -88,17 +88,22 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 	//if there is only 1 selected list entry, and the user clicks on it, then it will submit if this is true. 
 	private boolean submitOnClickingSelectedListEntry = false;
 
-	public ListViewerWindow(int xOffset, int yOffset, int width, int height, Window callbackWindow, Window parentWindow) {
+	public ListViewerWindow(int xOffset, int yOffset, int width, int height, ListViewerCallback callback, Window parentWindow) {
 		super(xOffset, yOffset, width, height, parentWindow);
-		this.init(callbackWindow);
+		this.init(callback);
 	}
 
-	public ListViewerWindow(Window callbackWindow, Window parentWindow) {
+	public ListViewerWindow(ListViewerCallback callback, Window parentWindow) {
 		super(0, 0, 300, 300, parentWindow);
-		this.init(callbackWindow);
+		this.init(callback);
 	}
 
-	private void init(Window callbackWindow) {
+	public ListViewerWindow(ListViewerCallback callback) {
+		super(0, 0, 300, 300, null);
+		this.init(callback);
+	}
+
+	private void init(ListViewerCallback callback) {
 		this.topBarSection = new UISection();
 		this.contentSection = new UISection();
 		this.bottomBarSection = new UISection();
@@ -111,7 +116,7 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 		this.filteredEntryList = new ArrayList<>();
 		this.selectedListEntries = new HashSet<>();
 
-		this.callbackWindow = callbackWindow;
+		this.callback = callback;
 
 		UIFilledRectangle topBarBackgroundRect = this.topBarSection.getBackgroundRect();
 		topBarBackgroundRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
@@ -450,7 +455,7 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 	}
 
 	protected void submitEntries(Object[] o) {
-		this.callbackWindow.handleObjects(o);
+		this.callback.handleListViewerCallback(o);
 		if (this.closeOnSubmit) {
 			this.close();
 			return;
@@ -677,6 +682,10 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 			break;
 		}
 		}
+	}
+
+	public interface ListViewerCallback {
+		void handleListViewerCallback(Object[] contents);
 	}
 
 	class ListEntry {

@@ -18,10 +18,11 @@ import lwjglengine.screen.PerspectiveScreen;
 import lwjglengine.screen.UIScreen;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
+import lwjglengine.window.FileSelectorWindow.FileSelectorCallback;
 import myutils.math.Mat4;
 import myutils.math.Vec3;
 
-public class ModelViewerWindow extends BorderedWindow {
+public class ModelViewerWindow extends BorderedWindow implements FileSelectorCallback {
 	//TODO
 	// - have an orientation compass thingy like blender does
 	// - draw gridlines that automatically adjust depending on the current position of the camera. 
@@ -139,17 +140,6 @@ public class ModelViewerWindow extends BorderedWindow {
 			break;
 		}
 		}
-	}
-
-	@Override
-	public void handleFiles(File[] f) {
-		if (f.length != 1) {
-			System.err.println("ModelViewerWindow : File amount should only be 1");
-			return;
-		}
-
-		//size of array should be exactly 1
-		this.setModel(f[0]);
 	}
 
 	@Override
@@ -279,6 +269,17 @@ public class ModelViewerWindow extends BorderedWindow {
 	protected void _keyReleased(int key) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public void handleCallback(File[] f) {
+		if (f.length != 1) {
+			System.err.println("ModelViewerWindow : File amount should only be 1");
+			return;
+		}
+
+		//size of array should be exactly 1
+		this.setModel(f[0]);
 	}
 
 }

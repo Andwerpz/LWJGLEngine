@@ -125,7 +125,6 @@ public class ContextMenuWindow extends BorderedWindow implements InputCallback {
 
 	@Override
 	protected void _renderOverlay(Framebuffer outputBuffer) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -140,25 +139,22 @@ public class ContextMenuWindow extends BorderedWindow implements InputCallback {
 
 	@Override
 	protected void _subtreeSelected() {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	protected void _subtreeDeselected() {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	protected void selected() {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	protected void deselected() {
-		this.shouldClose = true;
+		this.close();
 	}
 
 	@Override
@@ -173,19 +169,16 @@ public class ContextMenuWindow extends BorderedWindow implements InputCallback {
 
 	@Override
 	protected void _mouseScrolled(float wheelOffset, float smoothOffset) {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	protected void _keyPressed(int key) {
-		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	protected void _keyReleased(int key) {
-		// TODO Auto-generated method stub
 
 	}
 

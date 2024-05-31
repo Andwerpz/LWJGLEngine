@@ -25,12 +25,13 @@ import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
 import lwjglengine.ui.UISectionListener;
+import lwjglengine.window.ListViewerWindow.ListViewerCallback;
 import myutils.file.FileUtils;
 import myutils.math.MathUtils;
 import myutils.math.Vec3;
 import myutils.math.Vec4;
 
-public class FileExplorerWindow extends Window implements UISectionListener, InputCallback {
+public class FileExplorerWindow extends Window implements UISectionListener, InputCallback, ListViewerCallback {
 	//this class handles the interactions with navigating directories, it delegates displaying the contents of a directory
 	//and selecting to the list viewer class. 
 
@@ -154,23 +155,6 @@ public class FileExplorerWindow extends Window implements UISectionListener, Inp
 	@Override
 	protected int _getCursorShape() {
 		return this.canGrabDirectory() || this.directoryGrabbed ? GLFW.GLFW_HRESIZE_CURSOR : GLFW.GLFW_ARROW_CURSOR;
-	}
-
-	//this is how we switch directories by double clicking a folder entry. 
-	@Override
-	public void handleObjects(Object[] objects) {
-		if (objects.length != 1) {
-			return;
-		}
-
-		File f = (File) objects[0];
-
-		if (f.isDirectory()) {
-			this.rootDirectoryEntry.selected(f.getPath() + "\\");
-			DirectoryEntry e = this.rootDirectoryEntry.getSelected();
-
-			this.setSelectedDirectoryEntry(e);
-		}
 	}
 
 	@Override
@@ -442,6 +426,22 @@ public class FileExplorerWindow extends Window implements UISectionListener, Inp
 			this.folderWindow.setFilter(this.topBarFilterTextField.getText());
 			break;
 		}
+		}
+	}
+
+	@Override
+	public void handleListViewerCallback(Object[] contents) {
+		if (contents.length != 1) {
+			return;
+		}
+
+		File f = (File) contents[0];
+
+		if (f.isDirectory()) {
+			this.rootDirectoryEntry.selected(f.getPath() + "\\");
+			DirectoryEntry e = this.rootDirectoryEntry.getSelected();
+
+			this.setSelectedDirectoryEntry(e);
 		}
 	}
 

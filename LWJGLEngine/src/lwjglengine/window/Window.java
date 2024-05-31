@@ -336,21 +336,8 @@ public abstract class Window {
 		this.updateWhenNotSelected = b;
 	}
 
-	//an option on the context menu has been pressed, handle it here. 
+	//	//an option on the context menu has been pressed, handle it here. 
 	public void handleContextMenuAction(String action) {
-		/* keeping it optional to implement */
-	}
-
-	//A file has been loaded in a file explorer window; handle it here. 
-	public void handleFiles(File[] files) {
-		/* keeping it optional to implement */
-	}
-
-	public void handleString(String str) {
-		/* keeping it optional to implement */
-	}
-
-	public void handleObjects(Object[] o) {
 		/* keeping it optional to implement */
 	}
 
