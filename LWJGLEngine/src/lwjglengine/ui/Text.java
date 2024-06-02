@@ -65,6 +65,12 @@ public class Text extends UIElement {
 
 	private boolean changedText = false;
 
+	public Text(float x, float y, String text, int scene) {
+		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
+		Font font = new Font("Dialogue", Font.PLAIN, 12);
+		this.init(GraphicsTools.calculateTextWidth(text, font), text, font, new Material(Color.WHITE));
+	}
+
 	public Text(float x, float y, String text, int fontSize, Material material, int scene) {
 		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
 		Font derivedFont = new Font("Dialogue", Font.PLAIN, fontSize);
