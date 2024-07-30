@@ -25,6 +25,8 @@ import static org.lwjgl.opengl.GL33.*;
 public class ShaderStorageBuffer {
 	//utility class for opengl SSBOs 
 
+	//make sure to set the usage before you set the data. 
+
 	private int ssbo;
 
 	private int usage = GL_STATIC_READ;

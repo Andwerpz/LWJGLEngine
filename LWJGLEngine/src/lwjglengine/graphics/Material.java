@@ -10,7 +10,11 @@ import myutils.math.Vec3;
 import myutils.math.Vec4;
 
 public class Material {
+	//just a container which holds a bunch of material related values. 
+
 	//generally, these material attributes will just scale whatever attributes the texture has. 
+
+	//when adding an attribute, don't forget to modify the set() and copy constructor
 
 	private Vec4 diffuse; //RGBA
 	private Vec4 specular; //Reflection RGB,
@@ -20,6 +24,8 @@ public class Material {
 	private float roughness = 1; //between 0 and 1, 0 is like mirror, and 1 is ceramic
 	private float refractiveIndex = 0; //if greater than 1, the material is transmissive
 	private float metalness = 0; //0 is not metal (dielectric) and 1 is metal
+
+	private float dispersion = 0; //measures how much wavelength will affect ior
 
 	public static Material defaultMaterial() {
 		return new Material(new Vec3(1f), new Vec3(1f), 64f);
@@ -37,6 +43,7 @@ public class Material {
 		this.roughness = m.roughness;
 		this.refractiveIndex = m.refractiveIndex;
 		this.metalness = m.metalness;
+		this.dispersion = m.dispersion;
 	}
 
 	public Material(Vec3 diffuse) {
@@ -89,6 +96,7 @@ public class Material {
 		this.roughness = m.getRoughness();
 		this.refractiveIndex = m.getRefractiveIndex();
 		this.metalness = m.getMetalness();
+		this.dispersion = m.getDispersion();
 	}
 
 	public Vec4 getDiffuse() {
@@ -139,6 +147,10 @@ public class Material {
 		this.refractiveIndex = s;
 	}
 
+	public void setDispersion(float s) {
+		this.dispersion = s;
+	}
+
 	public void setEmissive(Vec4 e) {
 		this.emissive.set(e);
 	}
@@ -149,6 +161,10 @@ public class Material {
 
 	public float getRefractiveIndex() {
 		return this.refractiveIndex;
+	}
+
+	public float getDispersion() {
+		return this.dispersion;
 	}
 
 	public Vec4 getEmissive() {
@@ -169,28 +185,6 @@ public class Material {
 		ans += "Refractive Index : " + this.refractiveIndex + "\n";
 		ans += "Emissive : " + this.emissive + "\n";
 		return ans;
-	}
-
-	//this is only used in raytracing, vertex array manually extracts stuff. 
-	public float[] toFloatArr() {
-		float[] res = new float[4 + 4 + 4 + 1 + 1 + 1 + 1];
-		res[0] = this.diffuse.x;
-		res[1] = this.diffuse.y;
-		res[2] = this.diffuse.z;
-		res[3] = this.diffuse.w;
-		res[4] = this.specular.x;
-		res[5] = this.specular.y;
-		res[6] = this.specular.z;
-		res[7] = this.specular.w;
-		res[8] = this.emissive.x;
-		res[9] = this.emissive.y;
-		res[10] = this.emissive.z;
-		res[11] = this.emissive.w;
-		res[12] = this.specularExponent;
-		res[13] = this.roughness;
-		res[14] = this.metalness;
-		res[15] = this.refractiveIndex;
-		return res;
 	}
 
 }

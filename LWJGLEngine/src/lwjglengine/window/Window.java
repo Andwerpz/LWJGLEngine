@@ -46,7 +46,6 @@ public abstract class Window {
 
 	//TODO
 	// - drop shadow?
-	// - force select a window?
 
 	//all these alignments will just align the nearest edge with the side of the parent window
 	public static final int FROM_LEFT = 0;

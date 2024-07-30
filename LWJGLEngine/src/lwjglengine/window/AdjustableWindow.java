@@ -99,6 +99,9 @@ public class AdjustableWindow extends BorderedWindow implements InputCallback {
 	//if true, allows the user to hold ctrl while dragging to renest the window
 	private boolean allowUserRenesting = true;
 
+	//if false, will only resize the content window when the mouse releases the edge when manually resizing. 
+	private boolean resizeContentWindowWhenEdgeGrabbed = true;
+
 	public AdjustableWindow(int xOffset, int yOffset, int contentWidth, int contentHeight, String title, Window contentWindow, Window parentWindow) {
 		super(xOffset, yOffset, contentWidth, contentHeight + titleBarHeight, parentWindow);
 		this.init(contentWindow, title);
@@ -204,7 +207,6 @@ public class AdjustableWindow extends BorderedWindow implements InputCallback {
 		}
 		else {
 			this.renderTitleBar = true;
-
 			this.__resize();
 		}
 	}
@@ -217,7 +219,9 @@ public class AdjustableWindow extends BorderedWindow implements InputCallback {
 			this.contentHeight = this.getHeight() - titleBarHeight;
 		}
 
-		this.contentWindow.setDimensions(this.contentWidth, this.contentHeight);
+		if (this.resizeContentWindowWhenEdgeGrabbed || !(this.leftEdgeGrabbed || this.rightEdgeGrabbed || this.topEdgeGrabbed || this.bottomEdgeGrabbed)) {
+			this.contentWindow.setDimensions(this.contentWidth, this.contentHeight);
+		}
 
 		this.uiScreen.setScreenDimensions(this.getWidth(), this.getHeight());
 
@@ -264,6 +268,10 @@ public class AdjustableWindow extends BorderedWindow implements InputCallback {
 
 	public void setAllowUserRenesting(boolean b) {
 		this.allowUserRenesting = b;
+	}
+
+	public void setResizeContentWindowWhenEdgeGrabbed(boolean b) {
+		this.resizeContentWindowWhenEdgeGrabbed = b;
 	}
 
 	@Override
@@ -544,10 +552,15 @@ public class AdjustableWindow extends BorderedWindow implements InputCallback {
 	protected void _mouseReleased(int button) {
 		this.titleBarSection.mouseReleased(button);
 
+		boolean edge_grabbed = this.leftEdgeGrabbed || this.rightEdgeGrabbed || this.bottomEdgeGrabbed || this.topEdgeGrabbed;
 		this.leftEdgeGrabbed = false;
 		this.rightEdgeGrabbed = false;
 		this.bottomEdgeGrabbed = false;
 		this.topEdgeGrabbed = false;
+		if (edge_grabbed) {
+			this.__resize();
+		}
+
 		this.titleBarGrabbed = false;
 	}
 
