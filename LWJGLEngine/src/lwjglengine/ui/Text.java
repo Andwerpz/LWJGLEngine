@@ -34,13 +34,22 @@ public class Text extends UIElement {
 	// - rework this entire thing D: Ideally, should render using a texture atlas, entirely cutting off java fx. 
 	//   - should be able to independently set the texture and uielement size. 
 	//   - when setting text, there should be an option to not change the dimensions of the uielement. 
-	// - replace all occurrences of '12' related to font with 'DEFAULT_FONT_SIZE'. 
+	// - replace all occurrences of '12' related to font size with 'DEFAULT_FONT_SIZE'
 
 	// FIXED
 	// - with string "C:" with color set to white, font Dialogue, plain, size 12, the texture fails to generate. 
 	//   - to fix, you just add a bunch of spaces to the string, so "C:        " works. 
 	//   - the problem was the texture was too small to generate the required mipmaps. I just made it so that
 	//		when generating a text texture, we don't generate any mipmaps. 
+	// - figure out how to fix transparency issues when text size becomes small
+	//   - seems like small text using java.fx is just kinda bad. It works well if the text and the background are around the same color. 
+	//   - one fix could be to directly load from a texture atlas, but that's kinda annoying. 
+	//   - upside is that we'll be able to render all our text in one render call, as we're just rendering from an atlas, 
+	//     and we won't have annoying issues with text scaling. We can just set the font size, and it'll autoscale. 
+	//   - the problem was that pixels on the edges of letters were being interpolated with transparent pixels, which
+	//     had a default RGB value of (0, 0, 0). This caused them to be darker than they were supposed to be. This 
+	//     is not an isolated problem with text, and I fixed it by making any texture loaded via buffered image be
+	//     premultiplied with alpha. 
 	
 	public static final int DEFAULT_FONT_SIZE = 12;
 	public static final Font DEFAULT_FONT = new Font("Consolas", Font.PLAIN, DEFAULT_FONT_SIZE);
