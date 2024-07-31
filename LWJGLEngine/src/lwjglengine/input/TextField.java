@@ -81,11 +81,11 @@ public class TextField extends Input {
 	}
 
 	public TextField(float x, float y, float width, float height, String sID, String hintText, InputCallback callback, int selectionScene, int textScene) {
-		this(x, y, width, height, sID, hintText, new Font("Dialogue", Font.PLAIN, 12), 12, callback, selectionScene, textScene);
+		this(x, y, width, height, sID, hintText, Text.DEFAULT_FONT, 12, callback, selectionScene, textScene);
 	}
 
 	public TextField(float x, float y, float width, float height, String sID, String hintText, int fontSize, InputCallback callback, int selectionScene, int textScene) {
-		this(x, y, width, height, sID, hintText, new Font("Dialogue", Font.PLAIN, 12), fontSize, callback, selectionScene, textScene);
+		this(x, y, width, height, sID, hintText, Text.DEFAULT_FONT, fontSize, callback, selectionScene, textScene);
 	}
 
 	private void init(String hintText, Font font, int textScene) {

@@ -35,7 +35,7 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 
 	private Button bottomBarSubmitBtn;
 
-	public static Font entryFont = new Font("Dialogue", Font.PLAIN, 12);
+	public static Font entryFont = Text.DEFAULT_FONT;
 	public static int entryFontSize = 12;
 
 	private int entryHeightPx = 16;
@@ -129,13 +129,11 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 		this.topBarSearchTf = new TextField(3, 0, topBarSearchTfWidthPx, 16, "tf_filter", "Filter Entries", 12, this, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
 		this.topBarSearchTf.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.topBarSearchTf.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-		this.topBarSearchTf.getTextUIElement().setDoAntialiasing(false);
 		this.topBarSearchTf.bind(topBarBackgroundRect);
 
 		this.topBarSelectedEntryText = new Text(5, 0, "       ", 12, Color.WHITE, this.topBarSection.getTextScene());
 		this.topBarSelectedEntryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.topBarSelectedEntryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-		this.topBarSelectedEntryText.setDoAntialiasing(false);
 		this.topBarSelectedEntryText.bind(topBarBackgroundRect);
 
 		UIFilledRectangle contentBackgroundRect = this.contentSection.getBackgroundRect();
@@ -149,7 +147,6 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 		this.noListEntriesText = new Text(0, 0, "No List Entries to Display", 12, Color.WHITE, this.contentSection.getTextScene());
 		this.noListEntriesText.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
 		this.noListEntriesText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
-		this.noListEntriesText.setDoAntialiasing(false);
 		this.noListEntriesText.bind(contentBackgroundRect);
 
 		UIFilledRectangle bottomBarRect = this.bottomBarSection.getBackgroundRect();
@@ -162,7 +159,6 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 		this.bottomBarSubmitBtn = new Button(3, 0, 100, 16, "btn_submit", "Submit", 12, this, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
 		this.bottomBarSubmitBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.bottomBarSubmitBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-		this.bottomBarSubmitBtn.getButtonText().setDoAntialiasing(false);
 		this.bottomBarSubmitBtn.bind(bottomBarRect);
 
 		this._resize();
@@ -789,7 +785,6 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 					this.entryText = new Text(0, 0, this.text, 12, Color.WHITE, this.textScene);
 					this.entryText.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
 					this.entryText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
-					this.entryText.setDoAntialiasing(false);
 					this.entryText.bind(this.entryRect);
 
 					this.doFillWidth(this.doFillWidth);

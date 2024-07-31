@@ -32,11 +32,11 @@ public class ToggleButton extends Input {
 	}
 
 	public ToggleButton(float x, float y, float width, float height, String sID, String text, InputCallback callback, int selectionScene, int textScene) {
-		this(x, y, width, height, sID, text, new Font("Dialogue", Font.PLAIN, 12), 12, callback, selectionScene, textScene);
+		this(x, y, width, height, sID, text, Text.DEFAULT_FONT, 12, callback, selectionScene, textScene);
 	}
 
 	public ToggleButton(float x, float y, float width, float height, String sID, String text, int fontSize, InputCallback callback, int selectionScene, int textScene) {
-		this(x, y, width, height, sID, text, new Font("Dialogue", Font.PLAIN, 12), fontSize, callback, selectionScene, textScene);
+		this(x, y, width, height, sID, text, Text.DEFAULT_FONT, fontSize, callback, selectionScene, textScene);
 	}
 
 	// text size should already be included in the font

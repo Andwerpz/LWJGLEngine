@@ -262,7 +262,6 @@ public class ObjectEditorWindow extends Window implements UISectionListener, Inp
 		Text variableNameText = new Text(0, 0, variableName, 12, Color.WHITE, this.editorSection.getTextScene());
 		variableNameText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		variableNameText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-		variableNameText.setDoAntialiasing(false);
 		variableNameText.bind(boundingRect);
 
 		if (classType == CLASS_TYPE_FLOAT || classType == CLASS_TYPE_DOUBLE || classType == CLASS_TYPE_BYTE || classType == CLASS_TYPE_SHORT || classType == CLASS_TYPE_INTEGER || classType == CLASS_TYPE_LONG) {
@@ -270,7 +269,6 @@ public class ObjectEditorWindow extends Window implements UISectionListener, Inp
 			TextField textField = new TextField(0, 0, 150, 20, variableName, variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 			textField.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			textField.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-			textField.getTextUIElement().setDoAntialiasing(false);
 			textField.setFieldType(TextField.FIELD_TYPE_FLOAT);
 			textField.bind(boundingRect);
 
@@ -319,7 +317,6 @@ public class ObjectEditorWindow extends Window implements UISectionListener, Inp
 			ToggleButton toggleButton = new ToggleButton(0, 0, 150, 20, variableName, variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 			toggleButton.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			toggleButton.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-			toggleButton.getButtonText().setDoAntialiasing(false);
 			toggleButton.setChangeTextOnToggle(true);
 			toggleButton.bind(boundingRect);
 
@@ -341,7 +338,6 @@ public class ObjectEditorWindow extends Window implements UISectionListener, Inp
 			TextField textField = new TextField(0, 0, 150, 20, variableName, variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 			textField.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			textField.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-			textField.getTextUIElement().setDoAntialiasing(false);
 			textField.bind(boundingRect);
 
 			try {
@@ -372,14 +368,12 @@ public class ObjectEditorWindow extends Window implements UISectionListener, Inp
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfX.setFieldType(TextField.FIELD_TYPE_FLOAT);
-				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
 				TextField tfY = new TextField(0, 50, 150, 20, variableName + " y", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfY.setFieldType(TextField.FIELD_TYPE_FLOAT);
-				tfY.getTextUIElement().setDoAntialiasing(false);
 				tfY.bind(boundingRect);
 
 				try {
@@ -397,13 +391,11 @@ public class ObjectEditorWindow extends Window implements UISectionListener, Inp
 				Text tX = new Text(0, 25, "X", 12, Color.WHITE, this.editorSection.getTextScene());
 				tX.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tX.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				tX.setDoAntialiasing(false);
 				tX.bind(boundingRect);
 
 				Text tY = new Text(0, 50, "Y", 12, Color.WHITE, this.editorSection.getTextScene());
 				tY.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tY.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				tY.setDoAntialiasing(false);
 				tY.bind(boundingRect);
 
 				boundingRect.setHeight(60);
@@ -415,21 +407,18 @@ public class ObjectEditorWindow extends Window implements UISectionListener, Inp
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfX.setFieldType(TextField.FIELD_TYPE_FLOAT);
-				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
 				TextField tfY = new TextField(0, 50, 150, 20, variableName + " y", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfY.setFieldType(TextField.FIELD_TYPE_FLOAT);
-				tfY.getTextUIElement().setDoAntialiasing(false);
 				tfY.bind(boundingRect);
 
 				TextField tfZ = new TextField(0, 75, 150, 20, variableName + " z", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfZ.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfZ.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfZ.setFieldType(TextField.FIELD_TYPE_FLOAT);
-				tfZ.getTextUIElement().setDoAntialiasing(false);
 				tfZ.bind(boundingRect);
 
 				try {
@@ -448,19 +437,16 @@ public class ObjectEditorWindow extends Window implements UISectionListener, Inp
 				Text tX = new Text(0, 25, "X", 12, Color.WHITE, this.editorSection.getTextScene());
 				tX.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tX.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				tX.setDoAntialiasing(false);
 				tX.bind(boundingRect);
 
 				Text tY = new Text(0, 50, "Y", 12, Color.WHITE, this.editorSection.getTextScene());
 				tY.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tY.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				tY.setDoAntialiasing(false);
 				tY.bind(boundingRect);
 
 				Text tZ = new Text(0, 75, "Z", 12, Color.WHITE, this.editorSection.getTextScene());
 				tZ.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tZ.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				tZ.setDoAntialiasing(false);
 				tZ.bind(boundingRect);
 
 				boundingRect.setHeight(85);
@@ -472,28 +458,24 @@ public class ObjectEditorWindow extends Window implements UISectionListener, Inp
 				tfX.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfX.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfX.setFieldType(TextField.FIELD_TYPE_FLOAT);
-				tfX.getTextUIElement().setDoAntialiasing(false);
 				tfX.bind(boundingRect);
 
 				TextField tfY = new TextField(0, 50, 150, 20, variableName + " y", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfY.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfY.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfY.setFieldType(TextField.FIELD_TYPE_FLOAT);
-				tfY.getTextUIElement().setDoAntialiasing(false);
 				tfY.bind(boundingRect);
 
 				TextField tfZ = new TextField(0, 75, 150, 20, variableName + " z", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfZ.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfZ.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfZ.setFieldType(TextField.FIELD_TYPE_FLOAT);
-				tfZ.getTextUIElement().setDoAntialiasing(false);
 				tfZ.bind(boundingRect);
 
 				TextField tfW = new TextField(0, 100, 150, 20, variableName + " w", variableName, this, this.editorSection.getSelectionScene(), this.editorSection.getTextScene());
 				tfW.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				tfW.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 				tfW.setFieldType(TextField.FIELD_TYPE_FLOAT);
-				tfW.getTextUIElement().setDoAntialiasing(false);
 				tfW.bind(boundingRect);
 
 				try {
@@ -513,25 +495,21 @@ public class ObjectEditorWindow extends Window implements UISectionListener, Inp
 				Text tX = new Text(0, 25, "X", 12, Color.WHITE, this.editorSection.getTextScene());
 				tX.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tX.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				tX.setDoAntialiasing(false);
 				tX.bind(boundingRect);
 
 				Text tY = new Text(0, 50, "Y", 12, Color.WHITE, this.editorSection.getTextScene());
 				tY.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tY.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				tY.setDoAntialiasing(false);
 				tY.bind(boundingRect);
 
 				Text tZ = new Text(0, 75, "Z", 12, Color.WHITE, this.editorSection.getTextScene());
 				tZ.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tZ.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				tZ.setDoAntialiasing(false);
 				tZ.bind(boundingRect);
 
 				Text tW = new Text(0, 100, "W", 12, Color.WHITE, this.editorSection.getTextScene());
 				tW.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 				tW.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				tW.setDoAntialiasing(false);
 				tW.bind(boundingRect);
 
 				boundingRect.setHeight(110);

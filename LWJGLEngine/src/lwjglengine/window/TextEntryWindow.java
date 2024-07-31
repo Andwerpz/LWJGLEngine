@@ -44,13 +44,11 @@ public class TextEntryWindow extends Window implements InputCallback {
 		this.textField.setFillWidth(true);
 		this.textField.setFillHeight(true);
 		this.textField.setTextWrapping(true);
-		this.textField.getTextUIElement().setDoAntialiasing(false);
 		this.textField.bind(this.uiSection.getBackgroundRect());
 
 		this.submitBtn = new Button(2, 2, 100, 20, "submit_btn", "Submit", this, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
 		this.submitBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_BOTTOM);
 		this.submitBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_BOTTOM);
-		this.submitBtn.getButtonText().setDoAntialiasing(false);
 		this.submitBtn.bind(this.uiSection.getBackgroundRect());
 	}
 

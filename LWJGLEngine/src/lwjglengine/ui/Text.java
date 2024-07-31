@@ -2,6 +2,7 @@ package lwjglengine.ui;
 
 import static org.lwjgl.opengl.GL11.GL_LINEAR;
 import static org.lwjgl.opengl.GL11.GL_LINEAR_MIPMAP_LINEAR;
+import static org.lwjgl.opengl.GL11.GL_NEAREST;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -33,17 +34,16 @@ public class Text extends UIElement {
 	// - rework this entire thing D: Ideally, should render using a texture atlas, entirely cutting off java fx. 
 	//   - should be able to independently set the texture and uielement size. 
 	//   - when setting text, there should be an option to not change the dimensions of the uielement. 
-	// - figure out how to fix transparency issues when text size becomes small
-	//   - seems like small text using java.fx is just kinda bad. It works well if the text and the background are around the same color. 
-	//   - one fix could be to directly load from a texture atlas, but that's kinda annoying. 
-	//   - upside is that we'll be able to render all our text in one render call, as we're just rendering from an atlas, 
-	//     and we won't have annoying issues with text scaling. We can just set the font size, and it'll autoscale. 
+	// - replace all occurrences of '12' related to font with 'DEFAULT_FONT_SIZE'. 
 
 	// FIXED
 	// - with string "C:" with color set to white, font Dialogue, plain, size 12, the texture fails to generate. 
 	//   - to fix, you just add a bunch of spaces to the string, so "C:        " works. 
 	//   - the problem was the texture was too small to generate the required mipmaps. I just made it so that
 	//		when generating a text texture, we don't generate any mipmaps. 
+	
+	public static final int DEFAULT_FONT_SIZE = 12;
+	public static final Font DEFAULT_FONT = new Font("Consolas", Font.PLAIN, DEFAULT_FONT_SIZE);
 
 	private int textWidth, textMaxHeight;
 	private int textSampleAscent, textSampleDescent;
@@ -67,19 +67,19 @@ public class Text extends UIElement {
 
 	public Text(float x, float y, String text, int scene) {
 		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
-		Font font = new Font("Dialogue", Font.PLAIN, 12);
+		Font font = DEFAULT_FONT;
 		this.init(GraphicsTools.calculateTextWidth(text, font), text, font, new Material(Color.WHITE));
 	}
 
 	public Text(float x, float y, String text, int fontSize, Material material, int scene) {
 		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
-		Font derivedFont = new Font("Dialogue", Font.PLAIN, fontSize);
+		Font derivedFont = FontUtils.deriveSize(fontSize, DEFAULT_FONT);
 		this.init(GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, material);
 	}
 
 	public Text(float x, float y, String text, int fontSize, Color color, int scene) {
 		super(x, y, 0, 0, 0, new FilledRectangle(), scene);
-		Font derivedFont = new Font("Dialogue", Font.PLAIN, fontSize);
+		Font derivedFont = FontUtils.deriveSize(fontSize, DEFAULT_FONT);
 		this.init(GraphicsTools.calculateTextWidth(text, derivedFont), text, derivedFont, new Material(color));
 	}
 
@@ -133,6 +133,7 @@ public class Text extends UIElement {
 
 		this.font = font;
 		this.fontSize = font.getSize();
+		System.out.println("FONT SIZE : " + this.fontSize);
 
 		this.textWidth = GraphicsTools.calculateTextWidth(text, font);
 
@@ -180,7 +181,8 @@ public class Text extends UIElement {
 		this.setTextureMaterial(new TextureMaterial(this.generateAlignedTexture()));
 	}
 
-	private Texture generateAlignedTexture() {
+	public Texture generateAlignedTexture() {
+		int font_sample_type = GL_LINEAR;
 		System.out.println("CREATE TEXT TEXTURE : " + this.text);
 
 		BufferedImage img = new BufferedImage((int) this.width, (int) this.height, BufferedImage.TYPE_INT_ARGB);
@@ -214,7 +216,7 @@ public class Text extends UIElement {
 
 			g.drawString(this.text, alignedX, this.textSampleAscent);
 
-			return new Texture(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
+			return new Texture(img, 0, GL_LINEAR_MIPMAP_LINEAR, font_sample_type, 1);
 		}
 
 		String currentLine = a[0];
@@ -258,7 +260,7 @@ public class Text extends UIElement {
 			alignedX = (int) this.width - lineWidth;
 		}
 		g.drawString(currentLine, alignedX, curY + this.textSampleAscent);
-		return new Texture(img, 0, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 1);
+		return new Texture(img, 0, GL_LINEAR_MIPMAP_LINEAR, font_sample_type, 1);
 	}
 
 	private int calculateHeight() {

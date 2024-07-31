@@ -436,6 +436,10 @@ public abstract class Window {
 		this.childWindows.remove(w);
 		w.parentWindow = null;
 	}
+	
+	public void addChildAdjWindow(Window contentWindow) {
+		AdjustableWindow adj = new AdjustableWindow(contentWindow, this);
+	}
 
 	public void setParent(Window newParent) {
 		if (this.parentWindow != null && !this.parentWindow.isAllowModifyingChildren()) {

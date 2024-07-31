@@ -57,7 +57,7 @@ public class ContextMenuWindow extends BorderedWindow implements InputCallback {
 		this.buttons = new ArrayList<>();
 
 		for (int i = 0; i < this.options.size(); i++) {
-			Button b = new Button(0, i * entryHeight, 100, entryHeight, this.options.get(i), this.options.get(i), new Font("Dialogue", Font.PLAIN, 12), 12, this, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
+			Button b = new Button(0, i * entryHeight, 100, entryHeight, this.options.get(i), this.options.get(i), this, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());
 			width = Math.max(width, b.getButtonText().getTextWidth() + entryTextHorizontalMargin * 2);
 			b.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 			b.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
@@ -70,7 +70,6 @@ public class ContextMenuWindow extends BorderedWindow implements InputCallback {
 			b.getButtonText().setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 			b.getButtonText().setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 			b.getButtonText().setXOffset(entryTextHorizontalMargin);
-			b.getButtonText().setDoAntialiasing(false);
 
 			this.buttons.add(b);
 		}

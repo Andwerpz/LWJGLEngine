@@ -27,6 +27,10 @@ import static org.lwjgl.opengl.GL42.glTexStorage2D;
 import static org.lwjgl.opengl.GL46.*;
 
 public class Texture {
+	//class for handling textures that are intended for rendering purposes only
+	
+	//textures stored using this are expected to have premultiplied alpha
+	
 	//internalFormat is like data format, but it can be more specific with how many bits each channel gets, eg GL_RGBA8
 	//dataFormat specifies what is being stored, and the ordering, eg GL_RGB, GL_ARGB, GL_RED
 	//dataType specifies how exactly the data is being stored, eg GL_BYTE, GL_FLOAT, GL_INT
@@ -191,7 +195,7 @@ public class Texture {
 		glBindTexture(GL_TEXTURE_2D, this.textureID);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, type);
 	}
-
+	
 	public BufferedImage toBufferedImage() {
 		glBindTexture(GL_TEXTURE_2D, this.textureID);
 		int width = this.getWidth();
@@ -254,17 +258,22 @@ public class Texture {
 
 		int[] data = new int[width * height];
 		for (int i = 0; i < width * height; i++) {
-			int a = (pixels[i] & 0xff000000) >> 24;
-			int r = (pixels[i] & 0xff0000) >> 16;
-			int g = (pixels[i] & 0xff00) >> 8;
-			int b = (pixels[i] & 0xff) >> 0;
+			// '>>>' is unsigned bitshift
+			int a = (pixels[i] & 0xff000000) >>> 24;
+			int r = (pixels[i] & 0xff0000) >>> 16;
+			int g = (pixels[i] & 0xff00) >>> 8;
+			int b = (pixels[i] & 0xff) >>> 0;
 
 			if ((loadOptions & INVERT_COLORS_BIT) != 0) {
-				a = 255 - a;
 				r = 255 - r;
 				g = 255 - g;
 				b = 255 - b;
 			}
+			
+			//premultiply alpha
+			r = (int) ((r / 255.0) * a);
+			g = (int) ((g / 255.0) * a);
+			b = (int) ((b / 255.0) * a);
 
 			data[i] = (a << 24) | (b << 16) | (g << 8) | (r << 0);
 		}

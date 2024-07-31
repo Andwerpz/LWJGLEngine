@@ -70,13 +70,11 @@ public class FileCreatorWindow extends Window implements InputCallback {
 		this.bottomBarFilenameTf = new TextField(3, 3, this.getWidth() - confirmBtnWidth - 8, bottomBarHeight - 5, "tf_filename", "Enter New File Name", 12, this, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
 		this.bottomBarFilenameTf.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
 		this.bottomBarFilenameTf.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
-		this.bottomBarFilenameTf.getTextUIElement().setDoAntialiasing(false);
 		this.bottomBarFilenameTf.bind(this.bottomBarRect);
 
 		this.bottomBarConfirmBtn = new Button(3, 3, confirmBtnWidth, bottomBarHeight - 5, "btn_confirm", "Confirm", 12, this, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
 		this.bottomBarConfirmBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_BOTTOM);
 		this.bottomBarConfirmBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_BOTTOM);
-		this.bottomBarConfirmBtn.getButtonText().setDoAntialiasing(false);
 		this.bottomBarConfirmBtn.bind(this.bottomBarRect);
 
 		this._resize();

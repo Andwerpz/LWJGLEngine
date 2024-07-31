@@ -130,13 +130,11 @@ public class FileExplorerWindow extends Window implements UISectionListener, Inp
 		this.topBarFilterTextField = new TextField(3, 0, topBarFilterTextFieldWidth, 20, "tf_filter", "Search Folder", new Font("Dialog", Font.PLAIN, 12), 12, this, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
 		this.topBarFilterTextField.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.topBarFilterTextField.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-		this.topBarFilterTextField.getTextUIElement().setDoAntialiasing(false);
 		this.topBarFilterTextField.bind(this.topBarRect);
 
 		this.topBarPathText = new Text(this.topBarBackButton.getRightBorder() + 5, 0, "          ", 12, Color.WHITE, this.topBarSection.getTextScene());
 		this.topBarPathText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.topBarPathText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-		this.topBarPathText.setDoAntialiasing(false);
 		this.topBarPathText.bind(this.topBarRect);
 
 		this.folderWindow = new ListViewerWindow(this, this);
@@ -567,7 +565,6 @@ public class FileExplorerWindow extends Window implements UISectionListener, Inp
 					this.entryBaseUIElement.bind(this.rootUIElement);
 
 					this.entryText = new Text(0, 0, this.filename + "         ", 12, Color.WHITE, this.textScene);
-					this.entryText.setDoAntialiasing(false);
 					this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 					this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 					this.entryText.bind(this.entryBaseUIElement);

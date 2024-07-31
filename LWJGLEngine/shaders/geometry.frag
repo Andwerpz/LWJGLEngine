@@ -72,6 +72,12 @@ vec4 scaleWithMaterial(vec4 color, vec4 material) {
 	ans.y = color.g * material.g;
 	ans.z = color.b * material.b;
 	ans.w = color.a * material.a;
+	
+	//premultiply alpha, texture already has premultiplied
+	ans.x *= material.a;
+	ans.y *= material.a;
+	ans.z *= material.a;
+	
 	return ans;
 }
 

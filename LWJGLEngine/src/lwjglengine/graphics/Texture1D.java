@@ -10,6 +10,9 @@ import java.nio.IntBuffer;
 import lwjglengine.util.BufferUtils;
 
 public class Texture1D {
+	
+	//if you're looking to use this, you probably need an ssbo instead. 
+	//only use this if you need texture features such as automatic mipmapping and interpolation. 
 
 	public final int textureID;
 

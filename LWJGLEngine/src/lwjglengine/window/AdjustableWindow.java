@@ -164,7 +164,6 @@ public class AdjustableWindow extends BorderedWindow implements InputCallback {
 
 		this.title = title;
 		this.titleBarText = new Text(this.titleLeftMargin, 0, this.title, 12, this.deselectedTitleTextMaterial, this.titleBarSection.getTextScene());
-		this.titleBarText.setDoAntialiasing(false);
 		this.titleBarText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.titleBarText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.titleBarText.bind(this.titleBarRect);
@@ -172,7 +171,6 @@ public class AdjustableWindow extends BorderedWindow implements InputCallback {
 		this.titleBarCloseBtn = new Button(0, 0, titleBarHeight, titleBarHeight, "btn_close", "X", 12, this, this.titleBarSection.getSelectionScene(), this.titleBarSection.getTextScene());
 		this.titleBarCloseBtn.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 		this.titleBarCloseBtn.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_TOP);
-		this.titleBarCloseBtn.getButtonText().setDoAntialiasing(false);
 		this.titleBarCloseBtn.setReleasedMaterial(this.titleBarMaterial);
 		this.titleBarCloseBtn.setPressedMaterial(this.selectedBackgroundMaterial);
 		this.titleBarCloseBtn.setHoveredMaterial(this.deselectedBackgroundMaterial);

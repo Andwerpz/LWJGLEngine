@@ -1230,7 +1230,6 @@ public class TextEditorWindow extends Window {
 				this.lineIndexText = new Text(2, 0, " ", 12, Color.WHITE, textEditorSection.getTextScene());
 				this.lineIndexText.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_TOP);
 				this.lineIndexText.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
-				this.lineIndexText.setDoAntialiasing(false);
 				this.lineIndexText.bind(lineNumberSidebar);
 			}
 

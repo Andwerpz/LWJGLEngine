@@ -25,6 +25,8 @@ public class PerspectiveScreen extends Screen {
 
 	//TODO move shininess out of the alpha channel, and add emissiveness buffer so we can do full bright particles. 
 	//actually, we can do full bright particles by just moving particle rendering after the lighting step. 
+	
+	//TODO : haven't tested this with premultiplied alpha. Probably will need to fix decal and particle blend mode.
 
 	private static final float NEAR = 0.1f;
 	private static final float FAR = 400.0f;

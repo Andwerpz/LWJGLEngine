@@ -96,7 +96,6 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 		this.noListEntriesText = new Text(0, 0, "No List Entries to Display", 12, Color.WHITE, this.contentSection.getTextScene());
 		this.noListEntriesText.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
 		this.noListEntriesText.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
-		this.noListEntriesText.setDoAntialiasing(false);
 		this.noListEntriesText.bind(this.contentSection.getBackgroundRect());
 
 		this.topBarSection = new UISection();
@@ -111,7 +110,6 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 		this.topBarEntryPathText = new Text(5, 0, "   ", 12, Color.WHITE, this.topBarSection.getTextScene());
 		this.topBarEntryPathText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_BOTTOM);
 		this.topBarEntryPathText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-		this.topBarEntryPathText.setDoAntialiasing(false);
 		this.topBarEntryPathText.bind(this.topBarSection.getBackgroundRect());
 
 		this.bottomBarSection = new UISection();
@@ -528,7 +526,7 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 	public static int entryLeftMarginBasePx = 16;
 	public static int entryLeftMarginIntervalPx = 12;
 
-	public static Font entryFont = new Font("Dialogue", Font.PLAIN, 12);
+	public static Font entryFont = Text.DEFAULT_FONT;
 	public static int entryFontSize = 12;
 
 	class ListEntry {
@@ -628,7 +626,6 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 				this.entryText = new Text(x_offset, 0, this.text, entryFont, entryFontSize, Color.WHITE, contentSection.getTextScene());
 				this.entryText.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 				this.entryText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
-				this.entryText.setDoAntialiasing(false);
 				this.entryText.bind(this.entryRect);
 
 				if (this.children.size() != 0) {
