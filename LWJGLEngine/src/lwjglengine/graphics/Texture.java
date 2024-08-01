@@ -94,7 +94,8 @@ public class Texture {
 		this.textureID = textureID;
 	}
 
-	//initializes a texture with a solid color
+	//initializes a 1x1 texture with a solid color
+	@Deprecated
 	public Texture(int r, int g, int b, float a) {
 		BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 		int alpha = MathUtils.clamp(0, 255, (int) (a * 255f));

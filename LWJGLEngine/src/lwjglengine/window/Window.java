@@ -437,8 +437,8 @@ public abstract class Window {
 		w.parentWindow = null;
 	}
 	
-	public void addChildAdjWindow(Window contentWindow) {
-		AdjustableWindow adj = new AdjustableWindow(contentWindow, this);
+	public AdjustableWindow addChildAdjWindow(Window contentWindow) {
+		return new AdjustableWindow(contentWindow, this);
 	}
 
 	public void setParent(Window newParent) {
