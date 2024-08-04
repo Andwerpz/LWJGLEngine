@@ -1,5 +1,15 @@
 package lwjglengine.window;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL31.*;
+import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL42.glTexStorage2D;
+import static org.lwjgl.opengl.GL46.*;
+
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +29,7 @@ import lwjglengine.ui.Text;
 import lwjglengine.ui.UIElement;
 import lwjglengine.ui.UIFilledRectangle;
 import lwjglengine.ui.UISection;
+import myutils.math.MathUtils;
 import myutils.math.Vec2;
 import myutils.math.Vec3;
 import myutils.noise.NoiseGenerator;
@@ -37,9 +48,9 @@ public class NoiseGeneratorWindow extends Window {
 	//maybe add support for textures in the future. 
 
 	//TODO
-	// - allow user to drag nodes around
 	// - create input and output handles for nodes.
-	// - actually render to the displays. 
+	// - check if setting an input will create a cycle. 
+	// - allow user to drag around the view in a display. 
 
 	private UISection backgroundSection, nodeSection;
 
@@ -47,7 +58,11 @@ public class NoiseGeneratorWindow extends Window {
 	private Vec2 mousePos = new Vec2(0);
 	private boolean draggingCamera = false;
 
+	//node background entity id to node. 
 	private HashMap<Long, Node> nodes;
+
+	private boolean draggingNode = false;
+	private long grabbedNodeID;
 
 	private boolean shouldUpdateDisplays = false;
 
@@ -64,12 +79,14 @@ public class NoiseGeneratorWindow extends Window {
 		this.backgroundSection.getBackgroundRect().bind(this.rootUIElement);
 
 		this.nodeSection = new UISection();
-		this.nodeSection.getBackgroundRect().setDimensions(100, 100);
+		this.nodeSection.getBackgroundRect().setDimensions(1, 1);
 		this.nodeSection.getBackgroundRect().setFrameAlignmentOffset(0, 0);
 		this.nodeSection.getBackgroundRect().setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		this.nodeSection.getBackgroundRect().setMaterial(Material.transparent());
 		this.nodeSection.getBackgroundRect().setZ(this.backgroundSection.getBackgroundRect().getZ() + 1);
 		this.nodeSection.setAllowInputWhenSectionNotHovered(true);
+		this.nodeSection.getBackgroundScreen().setReverseDepthColorID(true);
+		this.nodeSection.getBackgroundScreen().setRenderColorID(true);
 
 		this.nodes = new HashMap<>();
 
@@ -117,8 +134,13 @@ public class NoiseGeneratorWindow extends Window {
 		this.nodeSection.update();
 
 		Vec2 next_mouse_pos = this.getWindowMousePos();
+		Vec2 mouse_diff = next_mouse_pos.sub(this.mousePos);
 		if (this.draggingCamera) {
-			this.viewportCenter.subi(next_mouse_pos.sub(this.mousePos));
+			this.viewportCenter.subi(mouse_diff);
+		}
+		else if (this.draggingNode) {
+			Node n = this.nodes.get(this.grabbedNodeID);
+			n.setPos(n.pos.add(mouse_diff));
 		}
 		this.mousePos.set(next_mouse_pos);
 
@@ -127,6 +149,27 @@ public class NoiseGeneratorWindow extends Window {
 		if (this.shouldUpdateDisplays) {
 			this.shouldUpdateDisplays = false;
 
+			for (Node n : this.nodes.values()) {
+				NoiseGenerator gen = n.generator;
+				int[] data = new int[DISPLAY_RESOLUTION * DISPLAY_RESOLUTION];
+				for (int i = 0; i < DISPLAY_RESOLUTION; i++) {
+					for (int j = 0; j < DISPLAY_RESOLUTION; j++) {
+						float x = (float) i / DISPLAY_RESOLUTION;
+						float y = (float) j / DISPLAY_RESOLUTION;
+						float value = gen.sampleNoise(x, y);
+						value = MathUtils.clamp(0, 1, MathUtils.lerp(0, -1, 1, 1, value));
+
+						int r = (int) (value * 255);
+						int g = (int) (value * 255);
+						int b = (int) (value * 255);
+
+						data[i * DISPLAY_RESOLUTION + j] = (r << 0) + (g << 8) + (b << 16) + (255 << 24);
+					}
+				}
+
+				glBindTexture(GL_TEXTURE_2D, n.displayTexture.getID());
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, DISPLAY_RESOLUTION, DISPLAY_RESOLUTION, GL_RGBA, GL_UNSIGNED_BYTE, data);
+			}
 		}
 	}
 
@@ -174,7 +217,14 @@ public class NoiseGeneratorWindow extends Window {
 	protected void _mousePressed(int button) {
 		this.nodeSection.mousePressed(button);
 
-		if (this.nodeSection.getHoveredBackgroundID() == 0) {
+		long hovered_node_id = this.nodeSection.getHoveredBackgroundID();
+		if (this.nodes.containsKey(hovered_node_id)) {
+			if (this.nodeSection.getHoveredSelectionID() == 0) {
+				this.draggingNode = true;
+				this.grabbedNodeID = hovered_node_id;
+			}
+		}
+		else {
 			this.draggingCamera = true;
 		}
 	}
@@ -183,6 +233,7 @@ public class NoiseGeneratorWindow extends Window {
 	protected void _mouseReleased(int button) {
 		this.nodeSection.mouseReleased(button);
 
+		this.draggingNode = false;
 		this.draggingCamera = false;
 	}
 
@@ -225,19 +276,14 @@ public class NoiseGeneratorWindow extends Window {
 		public ModelInstance[] borderLines;
 
 		public Node(NoiseGenerator _generator) {
-			//assign id to node
-			this.id = -1;
-			while (this.id == -1 || nodes.containsKey(id)) {
-				this.id = (long) (Math.random() * 1e9);
-			}
-			nodes.put(this.id, this);
-
 			this.pos = new Vec2(0);
 
 			this.generator = _generator;
 			this.generateUI();
+			this.setPos(this.pos);
 
-			this.generateBorderLines();
+			this.id = this.backgroundRect.getID();
+			nodes.put(id, this);
 		}
 
 		private int height;
@@ -282,7 +328,7 @@ public class NoiseGeneratorWindow extends Window {
 			texture_rect.setTextureMaterial(new TextureMaterial(this.displayTexture));
 
 			int display_size = NODE_WIDTH - NODE_COMPONENT_SPACING * 2;
-			UIFilledRectangle display_rect = new UIFilledRectangle(0, this.height, 0, display_size, display_size, texture_rect, nodeSection.getBackgroundScene());
+			UIFilledRectangle display_rect = new UIFilledRectangle(0, this.height, 0, display_size, display_size, texture_rect, nodeSection.getSelectionScene());
 			display_rect.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_TOP);
 			display_rect.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_TOP);
 			display_rect.setMaterial(new Material(Color.WHITE));
@@ -315,10 +361,11 @@ public class NoiseGeneratorWindow extends Window {
 				}
 			}
 
-			Vec2 p0 = this.pos.add(0, 1);
-			Vec2 p1 = this.pos.add(0, -this.height);
-			Vec2 p2 = this.pos.add(NODE_WIDTH + 1, -this.height);
-			Vec2 p3 = this.pos.add(NODE_WIDTH + 1, 1);
+			Vec2 p = new Vec2(this.pos.x, this.pos.y);
+			Vec2 p0 = p.add(0, 1);
+			Vec2 p1 = p.add(0, -this.height);
+			Vec2 p2 = p.add(NODE_WIDTH + 1, -this.height);
+			Vec2 p3 = p.add(NODE_WIDTH + 1, 1);
 
 			this.borderLines = new ModelInstance[4];
 			this.borderLines[0] = Line.addDefaultLine(p0, p1.add(0, -1), nodeSection.getSelectionScene());
@@ -332,9 +379,8 @@ public class NoiseGeneratorWindow extends Window {
 
 		public void setPos(Vec2 _pos) {
 			this.pos.set(_pos);
-			this.backgroundRect.setFrameAlignmentOffset(_pos);
+			this.backgroundRect.setFrameAlignmentOffset(this.pos.x, -this.pos.y);
 			this.generateBorderLines();
-
 		}
 
 		@Override

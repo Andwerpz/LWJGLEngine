@@ -98,6 +98,8 @@ public class ObjectEditor extends UIElement implements InputCallback {
 		this.inputFields = new ArrayList<>();
 		this.variableNameToMethods = new HashMap<>();
 
+		this.callbacks = new ArrayList<>();
+
 		{
 			char[] c = new char[SID_PREFIX_LEN];
 			for (int i = 0; i < SID_PREFIX_LEN; i++) {

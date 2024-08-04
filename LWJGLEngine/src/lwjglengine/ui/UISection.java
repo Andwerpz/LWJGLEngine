@@ -335,6 +335,18 @@ public class UISection implements UIElementListener {
 		return TEXT_SCENE;
 	}
 
+	public UIScreen getBackgroundScreen() {
+		return this.backgroundScreen;
+	}
+
+	public UIScreen getSelectionScreen() {
+		return this.selectionScreen;
+	}
+
+	public UIScreen getTextScreen() {
+		return this.textScreen;
+	}
+
 	public void mousePressed(int button) {
 		if (this.sectionHovered || this.allowInputWhenSectionNotHovered) {
 			Input.inputsPressed(this.hoveredSelectionID, SELECTION_SCENE);
