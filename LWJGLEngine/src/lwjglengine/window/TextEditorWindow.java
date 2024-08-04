@@ -174,7 +174,7 @@ public class TextEditorWindow extends Window {
 		cosmeticLineNumberSidebar.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 		cosmeticLineNumberSidebar.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		cosmeticLineNumberSidebar.setFillHeight(true);
-		cosmeticLineNumberSidebar.setMaterial(this.topBarDefaultMaterial);
+		cosmeticLineNumberSidebar.setMaterial(Material.TOP_BAR_DEFAULT_MATERIAL);
 		cosmeticLineNumberSidebar.bind(underlayBackgroundRect);
 
 		Color lineBackgroundColor = new Color(40, 40, 40);
@@ -631,7 +631,7 @@ public class TextEditorWindow extends Window {
 		this.resetHighlighting();
 
 		//find which line was pressed
-		long lineID = this.textEditorSection.getHoveredEntityID();
+		long lineID = this.textEditorSection.getHoveredSelectionID();
 		int pressedLine = -1;
 		for (int i = 0; i < this.lines.size(); i++) {
 			if (this.lines.get(i).textBackgroundRect.getID() == lineID) {

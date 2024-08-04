@@ -16,6 +16,8 @@ public class UISection implements UIElementListener {
 	//idk if this is inefficient, maybe there's a better way to do this. 
 
 	//TODO:
+
+	//finished:
 	// - make it so that the user can click and drag the scroll bar
 	//   - problem is that with stuff that dynamically loads stuff based off of scroll position, how are we going to notify them?
 	//   - i implemented a uiSection listener interface that should notify them :)
@@ -36,9 +38,11 @@ public class UISection implements UIElementListener {
 	private UIFilledRectangle backgroundRect;
 
 	private boolean sectionHovered = false;
-	private long hoveredEntityID;
+	private long hoveredSelectionID, hoveredBackgroundID;
 
 	private boolean doHoverChecks = true;
+
+	private boolean allowInputWhenSectionNotHovered = false;
 
 	//scrolling will modify the offset of the scroll background rect.
 	//the min and max scroll distance is based off of the background rect, and scroll background rect's heights. 
@@ -154,11 +158,15 @@ public class UISection implements UIElementListener {
 			}
 		}
 
-		Input.inputsHovered(hoveredEntityID, SELECTION_SCENE);
+		Input.inputsHovered(hoveredSelectionID, SELECTION_SCENE);
 	}
 
 	public void setDoHoverChecks(boolean b) {
 		this.doHoverChecks = b;
+	}
+
+	public void setAllowInputWhenSectionNotHovered(boolean b) {
+		this.allowInputWhenSectionNotHovered = b;
 	}
 
 	public void setIsScrollable(boolean b) {
@@ -292,9 +300,10 @@ public class UISection implements UIElementListener {
 		}
 
 		this.sectionHovered = this.backgroundScreen.getEntityIDAtCoordDelayed(mouseX, mouseY) == this.backgroundRect.getID();
-		this.hoveredEntityID = this.selectionScreen.getEntityIDAtCoordDelayed(mouseX, mouseY);
+		this.hoveredBackgroundID = this.backgroundScreen.getEntityIDAtCoordDelayed(mouseX, mouseY);
+		this.hoveredSelectionID = this.selectionScreen.getEntityIDAtCoordDelayed(mouseX, mouseY);
 		if (this.isScrollable && this.scrollBarScreen.getEntityIDAtCoordDelayed(mouseX, mouseY) == this.scrollBarRect.getID()) {
-			this.hoveredEntityID = this.scrollBarRect.getID();
+			this.hoveredSelectionID = this.scrollBarRect.getID();
 		}
 	}
 
@@ -302,8 +311,12 @@ public class UISection implements UIElementListener {
 		return this.sectionHovered;
 	}
 
-	public long getHoveredEntityID() {
-		return this.hoveredEntityID;
+	public long getHoveredSelectionID() {
+		return this.hoveredSelectionID;
+	}
+
+	public long getHoveredBackgroundID() {
+		return this.hoveredBackgroundID;
 	}
 
 	public UIFilledRectangle getBackgroundRect() {
@@ -323,10 +336,10 @@ public class UISection implements UIElementListener {
 	}
 
 	public void mousePressed(int button) {
-		if (this.sectionHovered) {
-			Input.inputsPressed(this.hoveredEntityID, SELECTION_SCENE);
+		if (this.sectionHovered || this.allowInputWhenSectionNotHovered) {
+			Input.inputsPressed(this.hoveredSelectionID, SELECTION_SCENE);
 
-			if (this.isScrollable && this.hoveredEntityID == this.scrollBarRect.getID()) {
+			if (this.isScrollable && this.hoveredSelectionID == this.scrollBarRect.getID()) {
 				this.scrollBarGrabbed = true;
 
 				if (this.isHorizontalScroll) {
@@ -344,7 +357,7 @@ public class UISection implements UIElementListener {
 	}
 
 	public void mouseReleased(int button) {
-		Input.inputsReleased(this.hoveredEntityID, SELECTION_SCENE);
+		Input.inputsReleased(this.hoveredSelectionID, SELECTION_SCENE);
 		this.scrollBarGrabbed = false;
 	}
 

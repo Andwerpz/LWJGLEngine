@@ -221,8 +221,8 @@ public class FileExplorerWindow extends Window implements UISectionListener, Inp
 		this.directorySection.render(outputBuffer, this.getWindowMousePos());
 		this.topBarSection.render(outputBuffer, this.getWindowMousePos());
 
-		this.hoveredDirectoryEntryID = this.directorySection.getHoveredEntityID();
-		this.hoveredTopBarID = this.topBarSection.getHoveredEntityID();
+		this.hoveredDirectoryEntryID = this.directorySection.getHoveredSelectionID();
+		this.hoveredTopBarID = this.topBarSection.getHoveredSelectionID();
 
 		this.hoveredSectionID = -1;
 		if (this.directorySection.isSectionHovered()) {

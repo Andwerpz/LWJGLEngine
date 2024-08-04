@@ -14,7 +14,6 @@ import java.util.List;
 import org.lwjgl.glfw.GLFW;
 
 import lwjglengine.graphics.Framebuffer;
-import lwjglengine.graphics.Material;
 import lwjglengine.graphics.Shader;
 import lwjglengine.graphics.Texture;
 import lwjglengine.input.MouseInput;
@@ -30,7 +29,6 @@ import lwjglengine.util.BufferUtils;
 import myutils.math.Mat4;
 import myutils.math.MathUtils;
 import myutils.math.Vec2;
-import myutils.math.Vec3;
 import myutils.misc.Pair;
 
 public abstract class Window {
@@ -59,16 +57,6 @@ public abstract class Window {
 	//keep track of the selected window here. 
 	public static Window selectedWindow = null;
 	public static Window hoveredWindow = null;
-
-	//for now, keep all of the generic window materials here. 
-	//TODO make this better. perhaps put this into a seperate 'constants' class. 
-	protected Material topBarDefaultMaterial = new Material(new Vec3((float) (20 / 255.0)));
-	protected Material topBarHoveredMaterial = new Material(new Vec3((float) (30 / 255.0)));
-	protected Material topBarSelectedMaterial = new Material(new Vec3((float) (40 / 255.0)));
-
-	protected Material contentDefaultMaterial = new Material(new Vec3((float) (40 / 255.0)));
-	protected Material contentHoveredMaterial = new Material(new Vec3((float) (50 / 255.0)));
-	protected Material contentSelectedMaterial = new Material(new Vec3((float) (60 / 255.0)));
 
 	private final int ROOT_UI_SCENE = Scene.generateScene();
 
@@ -436,7 +424,7 @@ public abstract class Window {
 		this.childWindows.remove(w);
 		w.parentWindow = null;
 	}
-	
+
 	public AdjustableWindow addChildAdjWindow(Window contentWindow) {
 		return new AdjustableWindow(contentWindow, this);
 	}

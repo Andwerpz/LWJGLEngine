@@ -27,6 +27,16 @@ public class Material {
 
 	private float dispersion = 0; //measures how much wavelength will affect ior
 
+	//for now, keep all of the generic window materials here. 
+	//TODO make this better. perhaps put this into a seperate 'constants' class. 
+	public static final Material TOP_BAR_DEFAULT_MATERIAL = new Material(new Vec3((float) (20 / 255.0)));
+	public static final Material TOP_BAR_HOVERED_MATERIAL = new Material(new Vec3((float) (30 / 255.0)));
+	public static final Material TOP_BAR_SELECTED_MATERIAL = new Material(new Vec3((float) (40 / 255.0)));
+
+	public static final Material CONTENT_DEFAULT_MATERIAL = new Material(new Vec3((float) (40 / 255.0)));
+	public static final Material CONTENT_HOVERED_MATERIAL = new Material(new Vec3((float) (50 / 255.0)));
+	public static final Material CONTENT_SELECTED_MATERIAL = new Material(new Vec3((float) (60 / 255.0)));
+
 	public static Material defaultMaterial() {
 		return new Material(new Vec3(1f), new Vec3(1f), 64f);
 	}

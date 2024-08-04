@@ -90,7 +90,7 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 		this.contentSection.getBackgroundRect().setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		this.contentSection.getBackgroundRect().setFrameAlignmentOffset(0, 0);
 		this.contentSection.getBackgroundRect().setFillWidth(true);
-		this.contentSection.getBackgroundRect().setMaterial(contentDefaultMaterial);
+		this.contentSection.getBackgroundRect().setMaterial(Material.CONTENT_DEFAULT_MATERIAL);
 		this.contentSection.getBackgroundRect().bind(this.rootUIElement);
 
 		this.noListEntriesText = new Text(0, 0, "No List Entries to Display", 12, Color.WHITE, this.contentSection.getTextScene());
@@ -104,7 +104,7 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 		this.topBarSection.getBackgroundRect().setFrameAlignmentOffset(0, 0);
 		this.topBarSection.getBackgroundRect().setFillWidth(true);
 		this.topBarSection.getBackgroundRect().setHeight(topBarHeightPx);
-		this.topBarSection.getBackgroundRect().setMaterial(topBarDefaultMaterial);
+		this.topBarSection.getBackgroundRect().setMaterial(Material.TOP_BAR_DEFAULT_MATERIAL);
 		this.topBarSection.getBackgroundRect().bind(this.rootUIElement);
 
 		this.topBarEntryPathText = new Text(5, 0, "   ", 12, Color.WHITE, this.topBarSection.getTextScene());
@@ -118,7 +118,7 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 		this.bottomBarSection.getBackgroundRect().setFrameAlignmentOffset(0, 0);
 		this.bottomBarSection.getBackgroundRect().setFillWidth(true);
 		this.bottomBarSection.getBackgroundRect().setHeight(bottomBarHeightPx);
-		this.bottomBarSection.getBackgroundRect().setMaterial(topBarDefaultMaterial);
+		this.bottomBarSection.getBackgroundRect().setMaterial(Material.TOP_BAR_DEFAULT_MATERIAL);
 		this.bottomBarSection.getBackgroundRect().bind(this.rootUIElement);
 
 		{
@@ -428,7 +428,7 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 		}
 
 		this.hoveredSectionID = this.contentSection.getBackgroundRect().getID();
-		this.hoveredContentID = this.contentSection.getHoveredEntityID();
+		this.hoveredContentID = this.contentSection.getHoveredSelectionID();
 		if (this.topBarSection.isSectionHovered()) {
 			this.hoveredSectionID = this.topBarSection.getBackgroundRect().getID();
 		}
@@ -588,13 +588,13 @@ public class NestedListViewerWindow extends Window implements UISectionListener 
 			if (this.isVisible) {
 				//update background rect material based off of current state. 
 				if (this.isSelected) {
-					this.entryRect.setMaterial(contentSelectedMaterial);
+					this.entryRect.setMaterial(Material.CONTENT_SELECTED_MATERIAL);
 				}
 				else if (this.isHovered) {
-					this.entryRect.setMaterial(contentHoveredMaterial);
+					this.entryRect.setMaterial(Material.CONTENT_HOVERED_MATERIAL);
 				}
 				else {
-					this.entryRect.setMaterial(contentDefaultMaterial);
+					this.entryRect.setMaterial(Material.CONTENT_DEFAULT_MATERIAL);
 				}
 			}
 		}

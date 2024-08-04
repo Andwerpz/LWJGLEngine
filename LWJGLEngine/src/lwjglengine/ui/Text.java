@@ -50,7 +50,7 @@ public class Text extends UIElement {
 	//     had a default RGB value of (0, 0, 0). This caused them to be darker than they were supposed to be. This 
 	//     is not an isolated problem with text, and I fixed it by making any texture loaded via buffered image be
 	//     premultiplied with alpha. 
-	
+
 	public static final int DEFAULT_FONT_SIZE = 12;
 	public static final Font DEFAULT_FONT = new Font("Consolas", Font.PLAIN, DEFAULT_FONT_SIZE);
 
@@ -73,6 +73,10 @@ public class Text extends UIElement {
 	private boolean doAntialiasing = true;
 
 	private boolean changedText = false;
+
+	public Text(String text, int scene) {
+		this(0, 0, text, scene);
+	}
 
 	public Text(float x, float y, String text, int scene) {
 		super(x, y, 0, 0, 0, new FilledRectangle(), scene);

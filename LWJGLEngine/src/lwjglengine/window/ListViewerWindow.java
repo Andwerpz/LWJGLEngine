@@ -123,7 +123,7 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 		topBarBackgroundRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 		topBarBackgroundRect.setFillWidth(true);
 		topBarBackgroundRect.setFillWidthMargin(0);
-		topBarBackgroundRect.setMaterial(this.topBarDefaultMaterial);
+		topBarBackgroundRect.setMaterial(Material.TOP_BAR_DEFAULT_MATERIAL);
 		topBarBackgroundRect.bind(this.rootUIElement);
 
 		this.topBarSearchTf = new TextField(3, 0, topBarSearchTfWidthPx, 16, "tf_filter", "Filter Entries", 12, this, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
@@ -141,7 +141,7 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 		contentBackgroundRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 		contentBackgroundRect.setFrameAlignmentOffset(0, 0);
 		contentBackgroundRect.setFillWidth(true);
-		contentBackgroundRect.setMaterial(contentDefaultMaterial);
+		contentBackgroundRect.setMaterial(Material.CONTENT_DEFAULT_MATERIAL);
 		contentBackgroundRect.bind(this.rootUIElement);
 
 		this.noListEntriesText = new Text(0, 0, "No List Entries to Display", 12, Color.WHITE, this.contentSection.getTextScene());
@@ -153,7 +153,7 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 		bottomBarRect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_BOTTOM);
 		bottomBarRect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_BOTTOM);
 		bottomBarRect.setFillWidth(true);
-		bottomBarRect.setMaterial(this.topBarDefaultMaterial);
+		bottomBarRect.setMaterial(Material.TOP_BAR_DEFAULT_MATERIAL);
 		bottomBarRect.bind(this.rootUIElement);
 
 		this.bottomBarSubmitBtn = new Button(3, 0, 100, 16, "btn_submit", "Submit", 12, this, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
@@ -208,7 +208,7 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 		this.clearList();
 
 		for (int i = 0; i < list.size(); i++) {
-			ListEntry e = new ListEntry(list.get(i), this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s.get(i), this.contentSection.getScrollBackgroundRect(), this.contentSection.getSelectionScene(), this.contentSection.getTextScene());
+			ListEntry e = new ListEntry(list.get(i), Material.CONTENT_DEFAULT_MATERIAL, Material.CONTENT_HOVERED_MATERIAL, Material.CONTENT_SELECTED_MATERIAL, s.get(i), this.contentSection.getScrollBackgroundRect(), this.contentSection.getSelectionScene(), this.contentSection.getTextScene());
 			this.entryList.add(e);
 		}
 
@@ -231,7 +231,7 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 			return;
 		}
 
-		ListEntry e = new ListEntry(elem, this.contentDefaultMaterial, this.contentHoveredMaterial, this.contentSelectedMaterial, s, this.contentSection.getScrollBackgroundRect(), this.contentSection.getSelectionScene(), this.contentSection.getTextScene());
+		ListEntry e = new ListEntry(elem, Material.CONTENT_DEFAULT_MATERIAL, Material.CONTENT_HOVERED_MATERIAL, Material.CONTENT_SELECTED_MATERIAL, s, this.contentSection.getScrollBackgroundRect(), this.contentSection.getSelectionScene(), this.contentSection.getTextScene());
 		this.entryList.add(e);
 
 		this.shouldRefilterList = true;
@@ -479,14 +479,14 @@ public class ListViewerWindow extends Window implements UISectionListener, Input
 		if (this.contentSection.isSectionHovered()) {
 			this.hoveredSectionID = this.contentSection.getBackgroundRect().getID();
 		}
-		this.hoveredContentID = this.contentSection.getHoveredEntityID();
+		this.hoveredContentID = this.contentSection.getHoveredSelectionID();
 
 		if (this.renderTopBar) {
 			this.topBarSection.render(outputBuffer, getWindowMousePos());
 			if (this.topBarSection.isSectionHovered()) {
 				this.hoveredSectionID = this.topBarSection.getBackgroundRect().getID();
 			}
-			this.hoveredTopBarID = this.topBarSection.getHoveredEntityID();
+			this.hoveredTopBarID = this.topBarSection.getHoveredSelectionID();
 		}
 
 		if (this.renderBottomBar) {

@@ -301,6 +301,7 @@ public class UIScreen extends Screen {
 		this.colorIDBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND); //should this be enabled?
+		glClear(GL_COLOR_BUFFER_BIT);
 
 		Shader.SPLASH.enable();
 		Shader.SPLASH.setUniform1f("alpha", 1f);

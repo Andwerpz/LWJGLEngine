@@ -1,6 +1,7 @@
 package lwjglengine.window;
 
 import lwjglengine.graphics.Framebuffer;
+import lwjglengine.graphics.Material;
 import lwjglengine.input.Button;
 import lwjglengine.input.Input;
 import lwjglengine.input.Input.InputCallback;
@@ -33,7 +34,7 @@ public class TextEntryWindow extends Window implements InputCallback {
 		this.uiSection = new UISection();
 		this.uiSection.getBackgroundRect().setFillWidth(true);
 		this.uiSection.getBackgroundRect().setFillHeight(true);
-		this.uiSection.getBackgroundRect().setMaterial(contentDefaultMaterial);
+		this.uiSection.getBackgroundRect().setMaterial(Material.CONTENT_DEFAULT_MATERIAL);
 		this.uiSection.getBackgroundRect().bind(this.rootUIElement);
 
 		this.textField = new TextField(0, 0, 100, 100, "text_field", hint_text, this, this.uiSection.getSelectionScene(), this.uiSection.getTextScene());

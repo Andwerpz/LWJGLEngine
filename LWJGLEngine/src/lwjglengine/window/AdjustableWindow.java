@@ -453,28 +453,32 @@ public class AdjustableWindow extends BorderedWindow implements InputCallback {
 	}
 
 	private boolean canGrabLeftEdge() {
-		if(!this.allowManualResizing) return false;
+		if (!this.allowManualResizing)
+			return false;
 		int mx = (int) this.getWindowMousePos().x;
 		int my = (int) this.getWindowMousePos().y;
 		return -this.edgeGrabTolerancePx <= mx && mx <= 0 && -this.edgeGrabTolerancePx <= my && my <= this.edgeGrabTolerancePx + this.getHeight();
 	}
 
 	private boolean canGrabRightEdge() {
-		if(!this.allowManualResizing) return false;
+		if (!this.allowManualResizing)
+			return false;
 		int mx = this.getWidth() - (int) this.getWindowMousePos().x;
 		int my = (int) this.getWindowMousePos().y;
 		return -this.edgeGrabTolerancePx <= mx && mx <= 0 && -this.edgeGrabTolerancePx <= my && my <= this.edgeGrabTolerancePx + this.getHeight();
 	}
 
 	private boolean canGrabBottomEdge() {
-		if(!this.allowManualResizing) return false;
+		if (!this.allowManualResizing)
+			return false;
 		int my = (int) this.getWindowMousePos().y;
 		int mx = (int) this.getWindowMousePos().x;
 		return -this.edgeGrabTolerancePx <= my && my <= 0 && -this.edgeGrabTolerancePx <= mx && mx <= this.edgeGrabTolerancePx + this.getWidth();
 	}
 
 	private boolean canGrabTopEdge() {
-		if(!this.allowManualResizing) return false;
+		if (!this.allowManualResizing)
+			return false;
 		int my = this.getHeight() - (int) this.getWindowMousePos().y;
 		int mx = (int) this.getWindowMousePos().x;
 		return -this.edgeGrabTolerancePx <= my && my <= 0 && -this.edgeGrabTolerancePx <= mx && mx <= this.edgeGrabTolerancePx + this.getWidth();
@@ -482,7 +486,7 @@ public class AdjustableWindow extends BorderedWindow implements InputCallback {
 
 	private boolean canGrabTitleBar() {
 		if (!(this.canGrabLeftEdge() || this.canGrabRightEdge() || this.canGrabBottomEdge() || this.canGrabTopEdge())) {
-			if (this.titleBarSection.isSectionHovered() && this.titleBarSection.getHoveredEntityID() == 0) {
+			if (this.titleBarSection.isSectionHovered() && this.titleBarSection.getHoveredSelectionID() == 0) {
 				return true;
 			}
 		}
@@ -534,7 +538,7 @@ public class AdjustableWindow extends BorderedWindow implements InputCallback {
 		this.rightEdgeGrabbed = false;
 		this.bottomEdgeGrabbed = false;
 		this.topEdgeGrabbed = false;
-		
+
 		this.leftEdgeGrabbed = this.canGrabLeftEdge();
 		this.rightEdgeGrabbed = this.canGrabRightEdge();
 		this.bottomEdgeGrabbed = this.canGrabBottomEdge();
