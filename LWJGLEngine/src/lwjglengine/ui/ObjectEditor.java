@@ -126,6 +126,21 @@ public class ObjectEditor extends UIElement implements InputCallback {
 		this.inputWidth = _width;
 		this.generateInputFields();
 	}
+	
+	public void setHorizontalMargin(int val) {
+		this.horizontalMargin = val;
+		this.generateInputFields();
+	}
+	
+	public void setVerticalMargin(int val) {
+		this.verticalMargin = val;
+		this.generateInputFields();
+	}
+	
+	public void setVerticalPadding(int val) {
+		this.verticalPadding = val;
+		this.generateInputFields();
+	}
 
 	public void addCallback(ObjectEditorCallback c) {
 		this.callbacks.add(c);
@@ -208,6 +223,8 @@ public class ObjectEditor extends UIElement implements InputCallback {
 
 			yptr += boundingRect.getHeight() + verticalPadding;
 		}
+		yptr -= verticalPadding;
+		yptr += verticalMargin;
 		this.setHeight(yptr);
 	}
 
@@ -271,7 +288,7 @@ public class ObjectEditor extends UIElement implements InputCallback {
 		boundingRect.setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_TOP);
 		boundingRect.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_TOP);
 		boundingRect.setFillWidth(true);
-		boundingRect.setFillWidthMargin(5);
+		boundingRect.setFillWidthMargin(this.horizontalMargin);
 		boundingRect.setMaterial(Material.TOP_BAR_DEFAULT_MATERIAL);
 
 		Text variableNameText = new Text(0, 0, variableName, 12, Color.WHITE, this.textScene);

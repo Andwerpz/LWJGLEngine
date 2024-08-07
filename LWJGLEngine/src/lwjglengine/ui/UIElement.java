@@ -135,6 +135,8 @@ public abstract class UIElement extends Entity {
 	//on ui elements that are constantly being resized tho, you might want them to remain as floats. 
 	protected float alignedX, alignedY;
 	private boolean clampAlignedCoordinatesToInt = true;
+	
+	private float globalAlignedX, globalAlignedY;
 
 	protected float rotationRads;
 
@@ -557,9 +559,18 @@ public abstract class UIElement extends Entity {
 		}
 
 		this._alignContents();
+		
+		float pgx = this.globalAlignedX;
+		float pgy = this.globalAlignedY;
+		
+		this.globalAlignedX = this.calcGlobalAlignedX();
+		this.globalAlignedY = this.calcGlobalAlignedY();
 
 		//notify listeners
 		for (UIElementListener l : this.listeners) {
+			if(pgx != this.globalAlignedX || pgy != this.globalAlignedY) {
+				l.uiElementChangedGlobalFrameAlignmentOffset(this);
+			}
 			if (this.changedOffset) {
 				l.uiElementChangedFrameAlignmentOffset(this);
 			}
@@ -605,8 +616,16 @@ public abstract class UIElement extends Entity {
 	public float getAlignedY() {
 		return this.alignedY;
 	}
-
+	
 	public float getGlobalAlignedX() {
+		return this.globalAlignedX;
+	}
+	
+	public float getGlobalAlignedY() {
+		return this.globalAlignedY;
+	}
+
+	private float calcGlobalAlignedX() {
 		float ret = this.getAlignedX();
 		if (this.getParent() != null) {
 			ret += this.getParent().getGlobalAlignedX();
@@ -614,7 +633,7 @@ public abstract class UIElement extends Entity {
 		return ret;
 	}
 
-	public float getGlobalAlignedY() {
+	private float calcGlobalAlignedY() {
 		float ret = this.getAlignedY();
 		if (this.getParent() != null) {
 			ret += this.getParent().getGlobalAlignedY();

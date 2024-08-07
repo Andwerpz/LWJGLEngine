@@ -420,4 +420,10 @@ public class UISection implements UIElementListener {
 		// TODO Auto-generated method stub
 
 	}
+
+	@Override
+	public void uiElementChangedGlobalFrameAlignmentOffset(UIElement e) {
+		// TODO Auto-generated method stub
+		
+	}
 }

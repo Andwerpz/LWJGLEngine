@@ -21,6 +21,7 @@ public abstract class Scene {
 	public static final int DOWN = 5;
 
 	public static final int FRAMEBUFFER_SCENE = generateScene(); // reserved for special objects that are involved in the rendering
+	public static final int TEMP_SCENE = generateScene();	//for things that we don't want rendered. 
 
 	public static HashMap<Integer, Cubemap> skyboxes = new HashMap<>();
 
