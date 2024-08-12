@@ -28,9 +28,9 @@ import static org.lwjgl.opengl.GL46.*;
 
 public class Texture {
 	//class for handling textures that are intended for rendering purposes only
-	
+
 	//textures stored using this are expected to have premultiplied alpha
-	
+
 	//internalFormat is like data format, but it can be more specific with how many bits each channel gets, eg GL_RGBA8
 	//dataFormat specifies what is being stored, and the ordering, eg GL_RGB, GL_ARGB, GL_RED
 	//dataType specifies how exactly the data is being stored, eg GL_BYTE, GL_FLOAT, GL_INT
@@ -75,19 +75,11 @@ public class Texture {
 	}
 
 	public Texture(BufferedImage img, int loadOptions, int internalFormat, int minSampleType, int magSampleType, int nrMipmapLevels) {
-		this.textureID = Texture.createTexture(img, 0, internalFormat, minSampleType, magSampleType, nrMipmapLevels);
+		this.textureID = Texture.createTexture(img, loadOptions, internalFormat, minSampleType, magSampleType, nrMipmapLevels);
 	}
 
 	public Texture(String path, int loadOptions, int internalFormat, int minSampleType, int magSampleType, int nrMipmapLevels) {
 		this.textureID = Texture.createTexture(FileUtils.loadImageRelative(path), 0, internalFormat, minSampleType, magSampleType, nrMipmapLevels);
-	}
-
-	public Texture(int[] data, int width, int height, int minSampleType, int magSampleType) {
-		this.textureID = Texture.createTexture(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, minSampleType, magSampleType, 5, data);
-	}
-
-	public Texture(int width, int height) {
-		this.textureID = Texture.createTexture(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5, null);
 	}
 
 	public Texture(int textureID) {
@@ -119,21 +111,33 @@ public class Texture {
 	}
 
 	// -- BUFFER TEXTURE CONSTRUCTORS -- 
-	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType) {
+	public Texture(int width, int height, int internalFormat, int dataFormat, int dataType, int minSampleType, int magSampleType, int nrMipmapLevels, int[] data) {
+		this.textureID = Texture.createTexture(width, height, internalFormat, dataFormat, dataType, minSampleType, magSampleType, nrMipmapLevels, data);
+	}
+
+	public Texture(int width, int height, int minSampleType, int magSampleType, int[] data) {
+		this.textureID = Texture.createTexture(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, minSampleType, magSampleType, 5, data);
+	}
+
+	public Texture(int width, int height) {
+		this.textureID = Texture.createTexture(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, 5, null);
+	}
+
+	public Texture(int width, int height, int internalFormat, int dataFormat, int dataType) {
 		this.textureID = Texture.createTexture(width, height, internalFormat, dataFormat, dataType, GL_NEAREST, GL_NEAREST, 1, null);
 	}
 
 	/**
 	 * Initializes the texture with given dimensions and uniform color. Color components are to be given in the range [0, 255]. 
-	 * @param internalFormat
 	 * @param width
 	 * @param height
+	 * @param internalFormat
 	 * @param r
 	 * @param g
 	 * @param b
 	 * @param a
 	 */
-	public Texture(int internalFormat, int width, int height, int r, int g, int b, int a) {
+	public Texture(int width, int height, int internalFormat, int r, int g, int b, int a) {
 		int[] pixels = new int[width * height];
 		int rgba = (r << 0) | (g << 8) | (b << 16) | (a << 24);
 		for (int i = 0; i < pixels.length; i++) {
@@ -142,11 +146,11 @@ public class Texture {
 		this.textureID = Texture.createTexture(width, height, internalFormat, GL_RGBA, GL_UNSIGNED_BYTE, GL_NEAREST, GL_NEAREST, 1, pixels);
 	}
 
-	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType, int sampleType) {
+	public Texture(int width, int height, int internalFormat, int dataFormat, int dataType, int sampleType) {
 		this.textureID = Texture.createTexture(width, height, internalFormat, dataFormat, dataType, sampleType, sampleType, 1, null);
 	}
 
-	public Texture(int internalFormat, int width, int height, int dataFormat, int dataType, int[] pixels) {
+	public Texture(int width, int height, int internalFormat, int dataFormat, int dataType, int[] pixels) {
 		this.textureID = Texture.createTexture(width, height, internalFormat, dataFormat, dataType, GL_NEAREST, GL_NEAREST, 1, pixels);
 	}
 
@@ -170,6 +174,14 @@ public class Texture {
 		glBindTexture(GL_TEXTURE_2D, this.textureID);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
+	}
+
+	public void bind() {
+		glBindTexture(GL_TEXTURE_2D, this.textureID);
+	}
+
+	public void unbind() {
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	public void bind(int glTextureLocation) {
@@ -196,7 +208,12 @@ public class Texture {
 		glBindTexture(GL_TEXTURE_2D, this.textureID);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, type);
 	}
-	
+
+	public void generateMipmaps() {
+		this.bind();
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+
 	public BufferedImage toBufferedImage() {
 		glBindTexture(GL_TEXTURE_2D, this.textureID);
 		int width = this.getWidth();
@@ -270,7 +287,7 @@ public class Texture {
 				g = 255 - g;
 				b = 255 - b;
 			}
-			
+
 			//premultiply alpha
 			r = (int) ((r / 255.0) * a);
 			g = (int) ((g / 255.0) * a);

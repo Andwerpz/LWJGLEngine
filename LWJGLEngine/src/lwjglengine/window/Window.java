@@ -291,7 +291,7 @@ public abstract class Window {
 		}
 
 		this.colorBuffer = new Framebuffer(this.width, this.height);
-		this.colorTexture = new Texture(GL_RGBA16F, this.width, this.height, GL_RGBA, GL_FLOAT);
+		this.colorTexture = new Texture(this.width, this.height, GL_RGBA16F, GL_RGBA, GL_FLOAT);
 		this.colorBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.colorTexture.getID());
 		this.colorBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
 		this.colorBuffer.isComplete();

@@ -78,6 +78,7 @@ public class NoiseGeneratorWindow extends Window {
 	// - allow renaming of node titles
 	//   - maybe this can be done by replacing the titles with text fields with transparent backgrounds. 
 	// - allow exporting generated noise of nodes. 
+	//   - in texture form, and maybe also via special 'output node'. 
 	// - ability to remove nodes
 
 	private UISection backgroundSection, nodeSection;
@@ -93,11 +94,11 @@ public class NoiseGeneratorWindow extends Window {
 	private long grabbedNodeID;
 
 	private boolean shouldUpdateDisplays = false;
-	
+
 	private boolean draggingOutputHandle = false;
 	private NodeOutput grabbedNodeOutput;
 	private ModelInstance grabbedOutputHandleLine = null;
-	
+
 	//maybe input handle should map to a NoiseGenerator setter method?
 	private HashMap<Long, NodeInput> nodeInputs;
 	private HashMap<Long, NodeOutput> nodeOutputs;
@@ -123,12 +124,12 @@ public class NoiseGeneratorWindow extends Window {
 		this.nodeSection.setAllowInputWhenSectionNotHovered(true);
 
 		this.nodes = new HashMap<>();
-		
+
 		this.nodeInputs = new HashMap<>();
 		this.nodeOutputs = new HashMap<>();
-		
+
 		this.setContextMenuRightClick(true);
-		this.setContextMenuActions(new String[] {"Add Node"});
+		this.setContextMenuActions(new String[] { "Add Node" });
 
 		Node tmp = new Node(new PerlinNoise());
 		Node tmp2 = new Node(new PerlinNoise());
@@ -171,7 +172,7 @@ public class NoiseGeneratorWindow extends Window {
 		ans.addi(this.getWindowMousePos());
 		return ans;
 	}
-	
+
 	class NoiseGeneratorSelectorCallback implements ListViewerWindow.ListViewerCallback {
 		@Override
 		public void handleListViewerCallback(Object[] contents) {
@@ -181,38 +182,38 @@ public class NoiseGeneratorWindow extends Window {
 				NoiseGenerator gen = c.newInstance();
 				Node node = new Node(gen);
 				node.setPos(getWorldMousePos());
-			} catch (InstantiationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
+			}
+			catch (InstantiationException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+			catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
 		}
 	}
-	
+
 	@Override
 	public void handleContextMenuAction(String action) {
-		switch(action) {
-		case "Add Node":{
+		switch (action) {
+		case "Add Node": {
 			//retrieve entire list of non-abstract classes under NoiseGenerator
 			Reflections r = new Reflections("myutils.noise");
-	        Set<Class<? extends NoiseGenerator>> all_classes = r.getSubTypesOf(NoiseGenerator.class);
-	        Set<Class<? extends NoiseGenerator>> non_abstract = all_classes.stream()
-	                .filter(subclass -> !Modifier.isAbstract(subclass.getModifiers()))
-	                .collect(Collectors.toSet());
-	        
-	        ListViewerWindow noise_selector = new ListViewerWindow(new NoiseGeneratorSelectorCallback());
-	        noise_selector.setSingleEntrySelection(true);
-	        noise_selector.setSortEntries(true);
-	        noise_selector.setRenderBottomBar(false);
-	        noise_selector.setSubmitOnClickingSelectedListEntry(true);
-	        for (Class<? extends NoiseGenerator> c : non_abstract) {
-	        	noise_selector.addToList(c, c.getSimpleName());
-	        }
-	        this.addChildAdjWindow(noise_selector);
-	        
+			Set<Class<? extends NoiseGenerator>> all_classes = r.getSubTypesOf(NoiseGenerator.class);
+			Set<Class<? extends NoiseGenerator>> non_abstract = all_classes.stream().filter(subclass -> !Modifier.isAbstract(subclass.getModifiers())).collect(Collectors.toSet());
+
+			ListViewerWindow noise_selector = new ListViewerWindow(new NoiseGeneratorSelectorCallback());
+			noise_selector.setSingleEntrySelection(true);
+			noise_selector.setSortEntries(true);
+			noise_selector.setRenderBottomBar(false);
+			noise_selector.setSubmitOnClickingSelectedListEntry(true);
+			for (Class<? extends NoiseGenerator> c : non_abstract) {
+				noise_selector.addToList(c, c.getSimpleName());
+			}
+			this.addChildAdjWindow(noise_selector);
+
 			break;
 		}
 		}
@@ -233,13 +234,13 @@ public class NoiseGeneratorWindow extends Window {
 			n.setPos(n.pos.add(mouse_diff));
 		}
 		this.mousePos.set(next_mouse_pos);
-		
-		if(this.draggingOutputHandle) {
-			if(this.grabbedOutputHandleLine != null) {
+
+		if (this.draggingOutputHandle) {
+			if (this.grabbedOutputHandleLine != null) {
 				this.grabbedOutputHandleLine.kill();
 				this.grabbedOutputHandleLine = null;
 			}
-			
+
 			UIFilledRectangle output_handle = this.grabbedNodeOutput.outputHandle;
 			Vec2 handle_pos = new Vec2(output_handle.getGlobalAlignedX(), output_handle.getGlobalAlignedY());
 			handle_pos.addi(output_handle.getWidth() / 2, output_handle.getHeight() / 2);
@@ -323,31 +324,31 @@ public class NoiseGeneratorWindow extends Window {
 
 		long hovered_background_id = this.nodeSection.getHoveredBackgroundID();
 		long hovered_selection_id = this.nodeSection.getHoveredSelectionID();
-		
-		if(hovered_selection_id != 0) {	//check if an input is hovered over
+
+		if (hovered_selection_id != 0) { //check if an input is hovered over
 			//see if the hovered thing is an output handle. 
-			if(this.nodeOutputs.containsKey(hovered_selection_id)) {
+			if (this.nodeOutputs.containsKey(hovered_selection_id)) {
 				this.draggingOutputHandle = true;
 				this.grabbedNodeOutput = this.nodeOutputs.get(hovered_selection_id);
 			}
-			
+
 			//see if the hovered thing is an input handle
-			else if(this.nodeInputs.containsKey(hovered_selection_id)) {
+			else if (this.nodeInputs.containsKey(hovered_selection_id)) {
 				NodeInput input = this.nodeInputs.get(hovered_selection_id);
-				if(input.connectedOutput != null) {
+				if (input.connectedOutput != null) {
 					this.draggingOutputHandle = true;
 					this.grabbedNodeOutput = input.connectedOutput;
 					input.setConnection(null);
 				}
 			}
 		}
-		else if (this.nodes.containsKey(hovered_background_id)) {	//otherwise, check if we're hovering over a node
+		else if (this.nodes.containsKey(hovered_background_id)) { //otherwise, check if we're hovering over a node
 			if (this.nodeSection.getHoveredSelectionID() == 0) {
 				this.draggingNode = true;
 				this.grabbedNodeID = hovered_background_id;
 			}
 		}
-		else {	//otherwise, drag the camera. 
+		else { //otherwise, drag the camera. 
 			this.draggingCamera = true;
 		}
 	}
@@ -355,22 +356,22 @@ public class NoiseGeneratorWindow extends Window {
 	@Override
 	protected void _mouseReleased(int button) {
 		this.nodeSection.mouseReleased(button);
-		
+
 		long hovered_background_id = this.nodeSection.getHoveredBackgroundID();
 		long hovered_selection_id = this.nodeSection.getHoveredSelectionID();
 
 		this.draggingNode = false;
 		this.draggingCamera = false;
-		
-		if(this.draggingOutputHandle) {
+
+		if (this.draggingOutputHandle) {
 			this.draggingOutputHandle = false;
-			if(this.grabbedOutputHandleLine != null) {
+			if (this.grabbedOutputHandleLine != null) {
 				this.grabbedOutputHandleLine.kill();
 				this.grabbedOutputHandleLine = null;
 			}
-			
+
 			//check if we released the mouse over some input handle. 
-			if(this.nodeInputs.containsKey(hovered_selection_id)) {
+			if (this.nodeInputs.containsKey(hovered_selection_id)) {
 				NodeInput input = this.nodeInputs.get(hovered_selection_id);
 				input.setConnection(this.grabbedNodeOutput);
 			}
@@ -398,11 +399,11 @@ public class NoiseGeneratorWindow extends Window {
 	private static final int NODE_HORIZONTAL_MARGIN = 8;
 
 	private static final int DISPLAY_RESOLUTION = NODE_WIDTH - 2 * NODE_COMPONENT_SPACING;
-	
+
 	private static final int NODE_HANDLE_SIZE = 8;
-	
+
 	private static final Material NODE_BACKGROUND_MATERIAL = Material.TOP_BAR_DEFAULT_MATERIAL;
-	
+
 	private static final Material CONNECTION_MATERIAL = Material.CONTENT_SELECTED_MATERIAL;
 
 	class Node implements ObjectEditorCallback {
@@ -420,10 +421,10 @@ public class NoiseGeneratorWindow extends Window {
 		public Texture displayTexture;
 
 		public ModelInstance[] borderLines;
-		
+
 		public UIFilledRectangle[] inputHandles;
 		public UIFilledRectangle outputHandle;
-		
+
 		public NodeInput[] inputs;
 		public NodeOutput output;
 
@@ -436,22 +437,22 @@ public class NoiseGeneratorWindow extends Window {
 
 			this.id = this.backgroundRect.getID();
 			nodes.put(id, this);
-			
+
 			//generate node inputs and outputs
 			this.output = new NodeOutput(this.outputHandle, this.generator);
 			HashMap<String, Method> method_map = new HashMap<>();
 			{
 				Method[] methods = this.generator.getClass().getMethods();
-				for(Method m : methods) {
+				for (Method m : methods) {
 					method_map.put(m.getName(), m);
 				}
 			}
-			
-			if(this.generator instanceof NoiseUnaryOperator) {
+
+			if (this.generator instanceof NoiseUnaryOperator) {
 				this.inputs = new NodeInput[1];
 				this.inputs[0] = new NodeInput(this.inputHandles[0], method_map.get("setA"));
 			}
-			else if(this.generator instanceof NoiseBinaryOperator) {
+			else if (this.generator instanceof NoiseBinaryOperator) {
 				this.inputs = new NodeInput[2];
 				this.inputs[0] = new NodeInput(this.inputHandles[0], method_map.get("setA"));
 				this.inputs[1] = new NodeInput(this.inputHandles[1], method_map.get("setB"));
@@ -459,7 +460,7 @@ public class NoiseGeneratorWindow extends Window {
 			else {
 				this.inputs = new NodeInput[0];
 			}
-			
+
 			updateDisplays();
 		}
 
@@ -477,72 +478,72 @@ public class NoiseGeneratorWindow extends Window {
 			this.generateTitleBar();
 			this.generateDisplay();
 			this.outputHandle = this.generateOutputHandle();
-			
-			if(this.generator instanceof NoiseBase) {
+
+			if (this.generator instanceof NoiseBase) {
 				this.inputHandles = new UIFilledRectangle[0];
 			}
-			else if(this.generator instanceof NoiseUnaryOperator) {
+			else if (this.generator instanceof NoiseUnaryOperator) {
 				this.inputHandles = new UIFilledRectangle[1];
 				this.inputHandles[0] = this.generateInputHandle("Input A");
 			}
-			else if(this.generator instanceof NoiseBinaryOperator) {
+			else if (this.generator instanceof NoiseBinaryOperator) {
 				this.inputHandles = new UIFilledRectangle[2];
 				this.inputHandles[0] = this.generateInputHandle("Input A");
 				this.inputHandles[1] = this.generateInputHandle("Input B");
 			}
-			
+
 			this.generateObjectEditor();
 
 			this.backgroundRect.setHeight(this.height);
 		}
-		
+
 		private UIFilledRectangle generateOutputHandle() {
 			UIFilledRectangle backing_rect = new UIFilledRectangle(0, this.height, 0, NODE_WIDTH, 20, nodeSection.getBackgroundScene());
 			backing_rect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 			backing_rect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 			backing_rect.setMaterial(NODE_BACKGROUND_MATERIAL);
 			backing_rect.bind(this.backgroundRect);
-			
+
 			Text output_text = new Text("Output", nodeSection.getTextScene());
 			output_text.setFrameAlignmentOffset(NODE_HORIZONTAL_MARGIN, 0);
 			output_text.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			output_text.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 			output_text.setMaterial(new Material(Color.WHITE));
 			output_text.bind(backing_rect);
-			
+
 			UIFilledRectangle output_handle = new UIFilledRectangle(0, 0, 0, NODE_HANDLE_SIZE, NODE_HANDLE_SIZE, nodeSection.getSelectionScene());
 			output_handle.setMaterial(Material.CONTENT_SELECTED_MATERIAL);
 			output_handle.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 			output_handle.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 			output_handle.bind(backing_rect);
-			
+
 			this.height += 20 + NODE_COMPONENT_SPACING;
-			
+
 			return output_handle;
 		}
-		
+
 		private UIFilledRectangle generateInputHandle(String name) {
 			UIFilledRectangle backing_rect = new UIFilledRectangle(0, this.height, 0, NODE_WIDTH, 20, nodeSection.getBackgroundScene());
 			backing_rect.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_TOP);
 			backing_rect.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_TOP);
 			backing_rect.setMaterial(NODE_BACKGROUND_MATERIAL);
 			backing_rect.bind(this.backgroundRect);
-			
+
 			Text output_text = new Text(name, nodeSection.getTextScene());
 			output_text.setFrameAlignmentOffset(NODE_HORIZONTAL_MARGIN, 0);
 			output_text.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 			output_text.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 			output_text.setMaterial(new Material(Color.WHITE));
 			output_text.bind(backing_rect);
-			
+
 			UIFilledRectangle input_handle = new UIFilledRectangle(0, 0, 0, NODE_HANDLE_SIZE, NODE_HANDLE_SIZE, nodeSection.getSelectionScene());
 			input_handle.setMaterial(Material.CONTENT_DEFAULT_MATERIAL);
 			input_handle.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 			input_handle.setContentAlignmentStyle(UIElement.ALIGN_CENTER, UIElement.ALIGN_CENTER);
 			input_handle.bind(backing_rect);
-			
+
 			this.height += 20 + NODE_COMPONENT_SPACING;
-			
+
 			return input_handle;
 		}
 
@@ -598,13 +599,13 @@ public class NoiseGeneratorWindow extends Window {
 
 		public void kill() {
 			this.backgroundRect.kill();
-			
+
 			nodes.remove(this.id);
 			this.output.kill();
-			for(NodeInput i : this.inputs) {
+			for (NodeInput i : this.inputs) {
 				i.kill();
 			}
-			
+
 			updateDisplays();
 		}
 
@@ -641,66 +642,72 @@ public class NoiseGeneratorWindow extends Window {
 		public void objectModified(Object o) {
 			updateDisplays();
 		}
-		
+
 		class NodeInput {
 			//also responsible for drawing the line between this and whatever connected output
-			
+
 			public long id;
 			public UIFilledRectangle inputHandle;
-			
+
 			public Method setter;
-			
+
 			public NodeOutput connectedOutput = null;
-			
+
 			public UILine line = null;
-			
+
 			public NodeInput(UIFilledRectangle input_handle, Method setter) {
 				this.id = input_handle.getID();
 				this.setter = setter;
 				this.inputHandle = input_handle;
-				
+
 				nodeInputs.put(this.id, this);
 			}
-			
+
 			public void setConnection(NodeOutput o) {
 				this.connectedOutput = o;
-				if(this.line != null) {
+				if (this.line != null) {
 					this.line.kill();
 					this.line = null;
 				}
-				
-				if(this.connectedOutput == null) {
+
+				if (this.connectedOutput == null) {
 					try {
 						setter.invoke(generator, (NoiseGenerator) null);
-					} catch (IllegalAccessException e) {
+					}
+					catch (IllegalAccessException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					} catch (IllegalArgumentException e) {
+					}
+					catch (IllegalArgumentException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					} catch (InvocationTargetException e) {
+					}
+					catch (InvocationTargetException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
-				else {			
+				else {
 					try {
 						setter.invoke(generator, this.connectedOutput.generator);
-					} catch (IllegalAccessException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IllegalArgumentException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InvocationTargetException e) {
+					}
+					catch (IllegalAccessException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					
+					catch (IllegalArgumentException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					catch (InvocationTargetException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
 					//create line
 					UIFilledRectangle output_handle = this.connectedOutput.outputHandle;
 					UIFilledRectangle input_handle = this.inputHandle;
-					
+
 					this.line = new UILine(nodeSection.getBackgroundScene());
 					this.line.getE1().setFrameAlignmentOffset(0, 0);
 					this.line.getE1().setFrameAlignmentStyle(UIElement.FROM_CENTER_LEFT, UIElement.FROM_CENTER_TOP);
@@ -712,32 +719,32 @@ public class NoiseGeneratorWindow extends Window {
 					this.line.getE2().bind(input_handle);
 					this.line.setMaterial(CONNECTION_MATERIAL);
 				}
-				
+
 				updateDisplays();
 			}
-			
+
 			public void kill() {
 				nodeInputs.remove(this.id);
-				
-				if(this.line != null) {
+
+				if (this.line != null) {
 					this.line.kill();
 				}
 			}
 		}
-		
+
 		class NodeOutput {
-			
+
 			public long id;
 			public UIFilledRectangle outputHandle;
 			public NoiseGenerator generator;
-			
+
 			public NodeOutput(UIFilledRectangle output_handle, NoiseGenerator generator) {
 				this.id = output_handle.getID();
 				this.outputHandle = output_handle;
 				this.generator = generator;
 				nodeOutputs.put(this.id, this);
 			}
-			
+
 			public void kill() {
 				nodeOutputs.remove(this.id);
 			}

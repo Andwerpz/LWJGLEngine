@@ -13,6 +13,8 @@ import myutils.math.Vec3;
 import myutils.math.Vec4;
 
 public class Shader {
+	//perhaps should make a distinction between shaders and programs. 
+	//in fact, most of these 'shaders' are actually programs. 
 
 	public static Shader GEOMETRY, SKYBOX, LIGHTING, DEPTH, CUBE_DEPTH, GEOM_POST_PROCESS;
 	public static Shader IMG_POST_PROCESS, SPLASH, OVERWRITE_ALPHA, RENDER_BUFFER;
@@ -178,7 +180,17 @@ public class Shader {
 	}
 
 	public void kill() {
-		glDeleteShader(this.ID);
+		this.disable();
+		System.out.println("Deleting shader " + this.ID);
+		if (glIsProgram(this.ID)) {
+			glDeleteProgram(this.ID);
+		}
+		else if (glIsShader(this.ID)) {
+			glDeleteShader(this.ID);
+		}
+		else {
+			System.err.println("Trying to delete unknown shader type");
+		}
 	}
 
 }
