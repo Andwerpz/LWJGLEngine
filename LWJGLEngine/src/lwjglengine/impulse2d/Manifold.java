@@ -113,7 +113,7 @@ public class Manifold {
 			// t.Normalize( );
 			Vec2 t = new Vec2(rv);
 			t.addsi(normal, -Vec2.dot(rv, normal));
-			t.normalize();
+			t.normalize(); //tangent velocity
 
 			// j tangent magnitude
 			float jt = -Vec2.dot(rv, t);

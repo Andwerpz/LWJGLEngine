@@ -72,6 +72,14 @@ public abstract class Screen {
 		this.camera = c;
 	}
 
+	public int getScreenWidth() {
+		return this.screenWidth;
+	}
+
+	public int getScreenHeight() {
+		return this.screenHeight;
+	}
+
 	public static void updateActiveScreens() {
 		for (Screen s : activeScreens) {
 			s.update();

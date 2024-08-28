@@ -374,7 +374,6 @@ public class TextField extends Input {
 					e.printStackTrace();
 				}
 				n_text += result;
-				return;
 			}
 			else if (key == GLFW_KEY_BACKSPACE) {
 				if (n_text.length() != 0) {
