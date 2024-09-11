@@ -48,6 +48,10 @@ public class ShaderStorageBuffer {
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
+	public int getHandle() {
+		return this.ssbo;
+	}
+
 	public void setUsage(int usage) {
 		this.usage = usage;
 	}
