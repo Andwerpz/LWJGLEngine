@@ -314,6 +314,7 @@ public class Texture {
 	 */
 	public static int createTexture(int width, int height, int internalFormat, int dataFormat, int dataType, int minSampleType, int magSampleType, int nrMipmapLevels, int[] data) {
 		if (width <= 0 || height <= 0) {
+			System.err.println("Texture area must be greater than 0");
 			SystemUtils.printStackTrace();
 			System.exit(0);
 		}
