@@ -189,7 +189,7 @@ public class Main implements Runnable {
 		this.outputBuffer = new Framebuffer(0);
 
 		//DEBUG MODE
-		//GLUtil.setupDebugMessageCallback();
+		//		GLUtil.setupDebugMessageCallback();
 		//System.err.println("Max SSBO Size : " + glGetInteger(GL_MAX_SHADER_STORAGE_BLOCK_SIZE));
 	}
 

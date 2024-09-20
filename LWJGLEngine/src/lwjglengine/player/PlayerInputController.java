@@ -26,8 +26,8 @@ public class PlayerInputController {
 	private static float runningSpeed = 0.05f;
 	private static float walkingSpeed = 0.02f; //TBD
 
-	private static float noclipSpeed = 0.3f;
-	private static float noclipFriction = 0.7f;
+	private float noclipSpeed = 0.3f;
+	private float noclipFriction = 0.7f;
 
 	private Vec3 pos, vel;
 	private float radius = 0.33f;
@@ -40,6 +40,10 @@ public class PlayerInputController {
 
 	private boolean acceptPlayerInputs = true;
 
+	private boolean doNoclip = true;
+
+	private int collisionScene = -1;
+
 	Vec2 mouse;
 
 	private float camXRot;
@@ -51,6 +55,22 @@ public class PlayerInputController {
 		this.pos = new Vec3(pos);
 		this.vel = new Vec3(0);
 		mouse = MouseInput.getMousePos();
+	}
+
+	public void setDoNoclip(boolean b) {
+		this.doNoclip = b;
+	}
+
+	public void setCollisionScene(int s) {
+		this.collisionScene = s;
+	}
+
+	public void setNoclipSpeed(float s) {
+		this.noclipSpeed = s;
+	}
+
+	public void setNoclipFriction(float s) {
+		this.noclipFriction = s;
 	}
 
 	public Vec3 getBottom() {
@@ -118,7 +138,16 @@ public class PlayerInputController {
 		this.camXRot = MathUtils.clamp((float) -(Math.PI - 0.01) / 2f, (float) (Math.PI - 0.01) / 2f, camXRot);
 
 		// TRANSLATION
-		move_noclip();
+		if (this.doNoclip) {
+			move_noclip();
+		}
+		else {
+			if (this.collisionScene == -1) {
+				System.err.println("PlayerInputController : need to assign collision scene for collision move to work");
+			}
+			move_collision(this.collisionScene);
+		}
+
 	}
 
 	public void setPos(Vec3 v) {

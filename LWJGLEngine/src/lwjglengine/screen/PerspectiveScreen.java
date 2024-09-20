@@ -6,6 +6,7 @@ import static org.lwjgl.opengl.GL14.*;
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL30.*;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 import lwjglengine.graphics.Cubemap;
@@ -25,8 +26,11 @@ public class PerspectiveScreen extends Screen {
 
 	//TODO move shininess out of the alpha channel, and add emissiveness buffer so we can do full bright particles. 
 	//actually, we can do full bright particles by just moving particle rendering after the lighting step. 
-	
-	//TODO : haven't tested this with premultiplied alpha. Probably will need to fix decal and particle blend mode.
+
+	//TODO : 
+	// - haven't tested this with premultiplied alpha. Probably will need to fix decal and particle blend mode.
+	//   - ok, fixed premultiplied alpha with lighting, but still need to test decal and particles. 
+	// - give option to precompute point light shadow cubemaps so we don't need to re-compute them every frame. 
 
 	private static final float NEAR = 0.1f;
 	private static final float FAR = 400.0f;
@@ -49,23 +53,25 @@ public class PerspectiveScreen extends Screen {
 
 	private Framebuffer geometryBuffer;
 	private Framebuffer lightingBuffer;
-	private Framebuffer shadowBuffer;
+	private Framebuffer shadowCascadeBuffer;
+	private Framebuffer shadowCubemapBuffer;
 	private Framebuffer skyboxBuffer;
 
-	private Texture geometryPositionMap; // RGB: pos, A: normalized depth; 0 - 1
-	private Texture geometryNormalMap; // RGB: normal
-	private Texture geometrySpecularMap; // RGB: specular, A: shininess
-	private Texture geometryColorMap; // RGB: color, A: alpha
-	private Texture geometryColorIDMap; // RGB: colorID
+	public Texture geometryPositionMap; // RGB: pos, A: normalized depth; 0 - 1
+	public Texture geometryNormalMap; // RGB: normal
+	public Texture geometrySpecularMap; // RGB: specular, A: shininess
+	public Texture geometryColorMap; // RGB: color, A: alpha
+	public Texture geometryColorIDMap; // RGB: colorID
 
-	private Texture lightingColorMap; // RGB: color
-	private Texture lightingBrightnessMap; // R: brightness
+	public Texture lightingColorMap; // RGB: color
+	public Texture lightingBrightnessMap; // R: brightness
 
 	private Texture shadowDepthMap; // R: depth
 	private Texture shadowBackfaceMap; // R: isBackface
+
 	private Cubemap shadowCubemap; // R: depth
 
-	private Texture skyboxColorMap; // RGB: color
+	public Texture skyboxColorMap; // RGB: color
 
 	private boolean renderSkybox = false;
 
@@ -84,7 +90,8 @@ public class PerspectiveScreen extends Screen {
 	protected void _kill() {
 		this.geometryBuffer.kill();
 		this.lightingBuffer.kill();
-		this.shadowBuffer.kill();
+		this.shadowCascadeBuffer.kill();
+		this.shadowCubemapBuffer.kill();
 		this.skyboxBuffer.kill();
 		this.playermodelBuffer.kill();
 	}
@@ -103,8 +110,11 @@ public class PerspectiveScreen extends Screen {
 		if (this.skyboxBuffer != null) {
 			this.skyboxBuffer.kill();
 		}
-		if (this.shadowBuffer != null) {
-			this.shadowBuffer.kill();
+		if (this.shadowCascadeBuffer != null) {
+			this.shadowCascadeBuffer.kill();
+		}
+		if (this.shadowCubemapBuffer != null) {
+			this.shadowCubemapBuffer.kill();
 		}
 
 		this.geometryBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
@@ -133,21 +143,24 @@ public class PerspectiveScreen extends Screen {
 		this.playermodelBuffer.isComplete();
 
 		this.lightingBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
-		this.lightingColorMap = new Texture(this.screenWidth, this.screenHeight, GL_RGBA32F, GL_RGBA, GL_UNSIGNED_BYTE);
-		this.lightingBrightnessMap = new Texture(this.screenWidth, this.screenHeight, GL_RGBA32F, GL_RGBA, GL_FLOAT);
+		this.lightingColorMap = new Texture(this.screenWidth, this.screenHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE); //RGBA8 because RGBA32 will let alpha overflow to over 1
+		this.lightingBrightnessMap = new Texture(this.screenWidth, this.screenHeight, GL_RGBA8, GL_RGBA, GL_FLOAT);
 		this.lightingBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.lightingColorMap.getID());
 		this.lightingBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, this.lightingBrightnessMap.getID());
 		this.lightingBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 });
 		this.lightingBuffer.isComplete();
 
-		this.shadowBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
+		this.shadowCascadeBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
 		this.shadowDepthMap = new Texture(this.screenWidth, this.screenHeight, GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT);
 		this.shadowBackfaceMap = new Texture(this.screenWidth, this.screenHeight, GL_RGBA32F, GL_RGBA, GL_FLOAT);
-		this.shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.shadowDepthMap.getID());
-		this.shadowBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.shadowBackfaceMap.getID());
-		this.shadowBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
-		this.shadowBuffer.isComplete();
-		this.shadowCubemap = new Cubemap(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
+		this.shadowCascadeBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.shadowDepthMap.getID());
+		this.shadowCascadeBuffer.bindTextureToBuffer(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this.shadowBackfaceMap.getID());
+		this.shadowCascadeBuffer.setDrawBuffers(new int[] { GL_COLOR_ATTACHMENT0 });
+		this.shadowCascadeBuffer.isComplete();
+
+		int shadow_cubemap_resolution = 1024;
+		this.shadowCubemapBuffer = new Framebuffer(shadow_cubemap_resolution, shadow_cubemap_resolution);
+		this.shadowCubemap = new Cubemap(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, shadow_cubemap_resolution);
 
 		this.skyboxBuffer = new Framebuffer(this.screenWidth, this.screenHeight);
 		this.skyboxColorMap = new Texture(this.screenWidth, this.screenHeight, GL_RGBA32F, GL_RGBA, GL_FLOAT);
@@ -316,7 +329,7 @@ public class PerspectiveScreen extends Screen {
 				Mat4 lightMat = Mat4.lookAt(new Vec3(0), lightDir, new Vec3(0, 1, 0));
 
 				// re-bind directional depth map texture as depth map
-				shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.shadowDepthMap.getID());
+				shadowCascadeBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this.shadowDepthMap.getID());
 
 				// do this for each cascade near / far plane
 				for (int cascade = 0; cascade < PerspectiveScreen.SHADOW_MAP_NR_CASCADES; cascade++) {
@@ -370,7 +383,7 @@ public class PerspectiveScreen extends Screen {
 					lightCamera.setFacing(lightDir);
 
 					// render shadow map
-					shadowBuffer.bind();
+					shadowCascadeBuffer.bind();
 					glViewport(0, 0, this.screenWidth, this.screenHeight);
 					glEnable(GL_DEPTH_TEST);
 					glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -399,7 +412,7 @@ public class PerspectiveScreen extends Screen {
 				Light light = lights.get(i);
 
 				// generate cubemap
-				shadowBuffer.bind();
+				shadowCubemapBuffer.bind();
 				Shader.CUBE_DEPTH.enable();
 				float near = 0.1f;
 				float far = 50f;
@@ -428,10 +441,10 @@ public class PerspectiveScreen extends Screen {
 					cubemapCamera.setUp(camVectors[j][1]);
 
 					int face = GL_TEXTURE_CUBE_MAP_POSITIVE_X + j;
-					shadowBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, face, shadowCubemap.getID());
-					shadowBuffer.bind();
+					shadowCubemapBuffer.bindTextureToBuffer(GL_DEPTH_ATTACHMENT, face, shadowCubemap.getID());
+					shadowCubemapBuffer.bind();
 					glClear(GL_DEPTH_BUFFER_BIT);
-					// world.render(Shader.CUBE_DEPTH, cubemapCamera);
+
 					this.setShaderCameraUniforms(Shader.CUBE_DEPTH, cubemapCamera);
 					Shader.CUBE_DEPTH.enable();
 					Model.renderModels(this.world_scene);
@@ -506,7 +519,9 @@ public class PerspectiveScreen extends Screen {
 
 		this.lightingColorMap.bind(GL_TEXTURE0);
 		//this.geometryPositionMap.bind(GL_TEXTURE0);
+		//this.geometryColorMap.bind(GL_TEXTURE0);
 		screenQuad.render();
+
 	}
 
 }

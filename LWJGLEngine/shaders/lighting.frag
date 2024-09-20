@@ -203,14 +203,16 @@ void main()
 	diffuse *= (1 - shadow);
 	specular *= (1 - shadow);
 	
+	vec3 brightness = vec3(ambient) + (vec3(diffuse) + specular) * (1.0 - shadow);
+	
 	//compute color vector
 	vec3 ambientColor  = light.color * fragColor * ambient;
     vec3 diffuseColor  = light.color * fragColor * diffuse;
     vec3 specularColor = light.color * specular;
     
-	lColor = vec4(ambientColor + (diffuseColor + specularColor) * (1 - shadow), fragAlpha);
+	lColor = vec4(ambientColor + (diffuseColor + specularColor) * (1.0 - shadow), fragAlpha);
 	//lColor = vec4(vec3(fragShininess), 1);
-	lBrightness = vec4(vec3(ambient + diffuse + specular), 1);
+	lBrightness = vec4(brightness, 1);
     
 } 
 

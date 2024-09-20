@@ -80,7 +80,7 @@ public class Cubemap {
 		for (int i = 0; i < 6; i++) {
 			int[] data = new int[bufSize];
 			glGetTexImage(sides[i].getID(), 0, internalFormat[0], GL_INT, data);
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat[0], w[0], h[1], 0, internalFormat[0], GL_UNSIGNED_BYTE, data);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat[0], w[0], h[0], 0, internalFormat[0], GL_UNSIGNED_BYTE, data);
 		}
 
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -110,22 +110,22 @@ public class Cubemap {
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-
 		return id;
 	}
 
 	public int load(int internalFormat, int dataFormat, int dataType, int resolution) {
+		this.size = resolution;
 		int id = glGenTextures();
 		glBindTexture(GL_TEXTURE_CUBE_MAP, id);
 		for (int i = 0; i < 6; i++) {
-			// note that we store each face with 16 bit floating point values
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, resolution, resolution, 0, dataFormat, dataType, (ByteBuffer) null);
 		}
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 		return id;
 	}
 

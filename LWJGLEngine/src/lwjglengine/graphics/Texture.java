@@ -333,7 +333,7 @@ public class Texture {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minSampleType);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magSampleType);
 		//set border behaviour
-		if (internalFormat == GL_DEPTH_COMPONENT) { //special case for depth textures
+		if (dataFormat == GL_DEPTH_COMPONENT) { //special case for depth textures
 			//we make depth textures clamp to border because of how perspective screen does directional lighting. 
 			//if it didn't clamp to border, any pixel outside of the shadow cascade will appear lit as default, or it will wrap. 
 			//probably want to make this sort of thing something to choose. 
@@ -347,6 +347,7 @@ public class Texture {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		}
 		glBindTexture(GL_TEXTURE_2D, 0);
+
 		return textureID;
 	}
 
