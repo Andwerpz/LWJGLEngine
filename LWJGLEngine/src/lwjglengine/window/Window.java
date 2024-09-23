@@ -1024,6 +1024,10 @@ public abstract class Window {
 		if (!this.shouldAllowInput()) {
 			return false;
 		}
+		if (this.isSelected && Main.isCursorLocked()) {
+			//we're locked into this window
+			return true;
+		}
 		if (!this.allowMouseInputWhenNotHovered && this != hoveredWindow) {
 			return false;
 		}
