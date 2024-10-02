@@ -26,7 +26,7 @@ public class TextureViewerWindow extends Window implements InputCallback {
 
 	private UISection uiSection;
 
-	private boolean shouldUnload = false;
+	private boolean shouldUnload = false; //this should only be true if this window was the one to load the texture
 	private Texture texture;
 
 	private ToggleButton displayRedTb;

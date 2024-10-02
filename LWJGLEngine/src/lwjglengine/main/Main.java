@@ -39,6 +39,7 @@ import org.lwjgl.openal.AL;
 import org.lwjgl.openal.ALC;
 import org.lwjgl.openal.ALCCapabilities;
 import org.lwjgl.openal.ALCapabilities;
+import org.lwjgl.opengl.GL43;
 import org.lwjgl.opengl.GLUtil;
 
 import lwjglengine.entity.Entity;
@@ -190,6 +191,13 @@ public class Main implements Runnable {
 
 		//DEBUG MODE
 		//		GLUtil.setupDebugMessageCallback();
+		//		GL43.glDebugMessageControl(GL_DONT_CARE, // Filter all sources
+		//				GL_DONT_CARE, // Filter all types
+		//				GL_DEBUG_SEVERITY_NOTIFICATION, // Suppress notifications only
+		//				(int[]) null, // No specific message IDs
+		//				false // Disable the messages
+		//		);
+
 		//System.err.println("Max SSBO Size : " + glGetInteger(GL_MAX_SHADER_STORAGE_BLOCK_SIZE));
 	}
 

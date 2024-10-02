@@ -179,6 +179,10 @@ public class Shader {
 		enabled = false;
 	}
 
+	public int getID() {
+		return this.ID;
+	}
+
 	public void kill() {
 		this.disable();
 		System.out.println("Deleting shader " + this.ID);
