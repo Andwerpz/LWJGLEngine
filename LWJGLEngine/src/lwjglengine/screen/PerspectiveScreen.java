@@ -520,6 +520,7 @@ public class PerspectiveScreen extends Screen {
 		this.lightingColorMap.bind(GL_TEXTURE0);
 		//this.geometryPositionMap.bind(GL_TEXTURE0);
 		//this.geometryColorMap.bind(GL_TEXTURE0);
+		//this.geometryNormalMap.bind(GL_TEXTURE0);
 		screenQuad.render();
 
 	}

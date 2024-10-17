@@ -212,6 +212,7 @@ void main()
     
 	lColor = vec4(ambientColor + (diffuseColor + specularColor) * (1.0 - shadow), fragAlpha);
 	//lColor = vec4(vec3(fragShininess), 1);
+	//lColor = vec4(vec3(specular), fragAlpha);
 	lBrightness = vec4(brightness, 1);
     
 } 
