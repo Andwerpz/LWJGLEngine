@@ -384,8 +384,6 @@ public class VertexArray {
 			int b = indices[i + 1];
 			int c = indices[i + 2];
 
-			// System.out.println(a + " " + b + " " + c);
-
 			Vec3 va = new Vec3(vertices[a * 3], vertices[a * 3 + 1], vertices[a * 3 + 2]);
 			Vec3 vb = new Vec3(vertices[b * 3], vertices[b * 3 + 1], vertices[b * 3 + 2]);
 			Vec3 vc = new Vec3(vertices[c * 3], vertices[c * 3 + 1], vertices[c * 3 + 2]);
@@ -415,13 +413,9 @@ public class VertexArray {
 			angWeights[i + 1] = angB;
 			angWeights[i + 2] = angC;
 
-			// System.out.println(angA + " " + angB + " " + angC);
-
 			normals[a].addi(cross.mul(angA));
 			normals[b].addi(cross.mul(angB));
 			normals[c].addi(cross.mul(angC));
-
-			// System.out.println(normals[a] + " " + normals[b] + " " + normals[c]);
 		}
 
 		for (int i = 0; i < n; i++) {
@@ -515,6 +509,30 @@ public class VertexArray {
 
 	public int getRenderType() {
 		return this.renderType;
+	}
+
+	public int getVBO() {
+		return this.vbo;
+	}
+
+	public int getTBO() {
+		return this.tbo;
+	}
+
+	public int getNBO() {
+		return this.nbo;
+	}
+
+	public int getNTBO() {
+		return this.ntbo;
+	}
+
+	public int getNBTBO() {
+		return this.nbtbo;
+	}
+
+	public int getIBO() {
+		return this.ibo;
 	}
 
 	public void bind() {

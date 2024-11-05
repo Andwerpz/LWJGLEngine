@@ -508,7 +508,7 @@ public class PerspectiveScreen extends Screen {
 		outputBuffer.bind();
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		Shader.SPLASH.enable();
 		Shader.SPLASH.setUniform1f("alpha", 1f);
 
@@ -519,8 +519,8 @@ public class PerspectiveScreen extends Screen {
 
 		this.lightingColorMap.bind(GL_TEXTURE0);
 		//this.geometryPositionMap.bind(GL_TEXTURE0);
-		//this.geometryColorMap.bind(GL_TEXTURE0);
-		//this.geometryNormalMap.bind(GL_TEXTURE0);
+		//		this.geometryColorMap.bind(GL_TEXTURE0);
+		//		this.geometryNormalMap.bind(GL_TEXTURE0);
 		screenQuad.render();
 
 	}

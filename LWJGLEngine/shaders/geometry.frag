@@ -112,6 +112,7 @@ void main()
     gSpecular.rgb = scaleWithMaterial(texture(tex_specular, texCoords).rgba, frag_material_specular.rgba).rgb;
     gSpecular.a = frag_material_shininess;
     gNormal.rgb = normalize(normal);
+    gNormal.a = 1;
     gColorID = vec4(frag_colorID / 255, 1);
 } 
 

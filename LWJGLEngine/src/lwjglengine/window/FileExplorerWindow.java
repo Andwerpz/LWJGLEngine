@@ -119,7 +119,7 @@ public class FileExplorerWindow extends Window implements UISectionListener, Inp
 		this.rootDirectoryEntry.expand();
 		this.alignDirectoryEntries();
 
-		this.topBarBackButton = new Button(3, 0, 20, 20, "btn_directory_back", "          ", new Font("Dialog", Font.PLAIN, 12), 12, this, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
+		this.topBarBackButton = new Button(3, 0, 20, 20, "btn_directory_back", "          ", 12, this, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
 		this.topBarBackButton.setFrameAlignmentStyle(UIElement.FROM_LEFT, UIElement.FROM_CENTER_TOP);
 		this.topBarBackButton.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.topBarBackButton.setReleasedMaterial(new Material(new Vec3(100 / 255.0f)));
@@ -127,7 +127,7 @@ public class FileExplorerWindow extends Window implements UISectionListener, Inp
 		this.topBarBackButton.setPressedMaterial(new Material(new Vec3(200 / 255.0f)));
 		this.topBarBackButton.bind(this.topBarRect);
 
-		this.topBarFilterTextField = new TextField(3, 0, topBarFilterTextFieldWidth, 20, "tf_filter", "Search Folder", new Font("Dialog", Font.PLAIN, 12), 12, this, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
+		this.topBarFilterTextField = new TextField(3, 0, topBarFilterTextFieldWidth, 20, "tf_filter", "Search Folder", 12, this, this.topBarSection.getSelectionScene(), this.topBarSection.getTextScene());
 		this.topBarFilterTextField.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.topBarFilterTextField.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 		this.topBarFilterTextField.bind(this.topBarRect);

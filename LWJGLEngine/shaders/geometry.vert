@@ -45,6 +45,15 @@ void main()
     vec3 B = normalize(normalMatrix * bitangent);
     vec3 N = normalize(normalMatrix * normal);
     
+    float det = determinant(normalMatrix);
+    if(det < 0){	
+    	//md_matrix somehow switched from left to right hand axes. 
+    	//this should never really happen, but just in case ig. 
+   		T *= -1;
+   		N *= -1;
+   	}
+    
     //convert from real to tangent space
    	TBN = transpose(mat3(T, B, N));
+   	
 }

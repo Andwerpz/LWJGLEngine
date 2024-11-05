@@ -59,7 +59,7 @@ public class FileSelectorWindow extends Window implements InputCallback {
 		this.bottomBarSelectedFileText.setContentAlignmentStyle(UIElement.ALIGN_LEFT, UIElement.ALIGN_CENTER);
 		this.bottomBarSelectedFileText.bind(this.bottomBarRect);
 
-		this.bottomBarSubmitFileButton = new Button(3, 0, 100, 20, "btn_submit_file", "Select File", new Font("Dialog", Font.PLAIN, 12), 12, this, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
+		this.bottomBarSubmitFileButton = new Button(3, 0, 100, 20, "btn_submit_file", "Select File", 12, this, this.bottomBarSection.getSelectionScene(), this.bottomBarSection.getTextScene());
 		this.bottomBarSubmitFileButton.setFrameAlignmentStyle(UIElement.FROM_RIGHT, UIElement.FROM_CENTER_TOP);
 		this.bottomBarSubmitFileButton.setContentAlignmentStyle(UIElement.ALIGN_RIGHT, UIElement.ALIGN_CENTER);
 		this.bottomBarSubmitFileButton.bind(this.bottomBarRect);
