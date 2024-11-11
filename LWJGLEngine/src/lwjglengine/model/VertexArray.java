@@ -97,6 +97,13 @@ public class VertexArray {
 		this.init(vertices, normals, tangents, bitangents, uvs, indices, renderType);
 	}
 
+	public VertexArray(float[] vertices, int[] indices, int renderType) {
+		int n = vertices.length;
+		float[] uvs = new float[(n / 3) * 2], normals = new float[n], tangents = new float[n], bitangents = new float[n];
+		computeTBN(vertices, uvs, indices, normals, tangents, bitangents);
+		this.init(vertices, normals, tangents, bitangents, uvs, indices, renderType);
+	}
+
 	public VertexArray(float[] vertices, float[] uvs, int[] indices, int renderType) {
 		int n = vertices.length;
 		float[] normals = new float[n], tangents = new float[n], bitangents = new float[n];

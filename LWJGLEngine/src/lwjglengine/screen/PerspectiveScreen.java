@@ -35,7 +35,7 @@ public class PerspectiveScreen extends Screen {
 	private static final float NEAR = 0.1f;
 	private static final float FAR = 400.0f;
 
-	private int world_scene;
+	private int[] world_scenes;
 	private int decal_scene;
 
 	private int playermodel_scene;
@@ -187,7 +187,11 @@ public class PerspectiveScreen extends Screen {
 	}
 
 	public void setWorldScene(int scene) {
-		this.world_scene = scene;
+		this.world_scenes = new int[] { scene };
+	}
+
+	public void setWorldScenes(int[] scenes) {
+		this.world_scenes = scenes;
 	}
 
 	public void setDecalScene(int scene) {
@@ -241,7 +245,9 @@ public class PerspectiveScreen extends Screen {
 		Shader.GEOMETRY.enable();
 		this.setCameraFOV(this.worldFOV);
 		this.setShaderCameraUniforms(Shader.GEOMETRY, this.camera);
-		Model.renderModels(this.world_scene);
+		for (int scene : this.world_scenes) {
+			Model.renderModels(scene);
+		}
 
 		// -- DECALS -- : screen space decals
 		//decals can be transparent, but they cannot have a shininess value greater than 0. 
@@ -316,7 +322,7 @@ public class PerspectiveScreen extends Screen {
 		glDisable(GL_CULL_FACE);
 
 		// calculate lighting with each light seperately
-		ArrayList<Light> lights = Light.lights.get(this.world_scene);
+		ArrayList<Light> lights = Light.lights.get(this.world_scenes[0]);
 		if (lights == null || lights.size() == 0) {
 			System.err.println("PerspectiveScreen : Must have at least 1 light in world scene to render");
 			return;
@@ -395,7 +401,9 @@ public class PerspectiveScreen extends Screen {
 					Shader.DEPTH.enable();
 
 					this.setShaderCameraUniforms(Shader.DEPTH, lightCamera);
-					Model.renderModels(this.world_scene);
+					for (int scene : this.world_scenes) {
+						Model.renderModels(scene);
+					}
 
 					// render portion of lit scene
 					lightingBuffer.bind();
@@ -447,7 +455,9 @@ public class PerspectiveScreen extends Screen {
 
 					this.setShaderCameraUniforms(Shader.CUBE_DEPTH, cubemapCamera);
 					Shader.CUBE_DEPTH.enable();
-					Model.renderModels(this.world_scene);
+					for (int scene : this.world_scenes) {
+						Model.renderModels(scene);
+					}
 				}
 
 				// render lit scene
@@ -488,7 +498,7 @@ public class PerspectiveScreen extends Screen {
 
 		// -- SKYBOX -- : we'll use this texture in the post-processing step
 		if (this.renderSkybox) {
-			if (Scene.skyboxes.containsKey(this.world_scene)) {
+			if (Scene.skyboxes.containsKey(this.world_scenes[0])) {
 				skyboxBuffer.bind();
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				glDisable(GL_CULL_FACE);
@@ -496,11 +506,11 @@ public class PerspectiveScreen extends Screen {
 				Shader.SKYBOX.enable();
 				Shader.SKYBOX.setUniformMat4("vw_matrix", this.camera.getViewMatrix());
 				Shader.SKYBOX.setUniformMat4("pr_matrix", this.camera.getProjectionMatrix());
-				Scene.skyboxes.get(this.world_scene).bind(GL_TEXTURE0);
+				Scene.skyboxes.get(this.world_scenes[0]).bind(GL_TEXTURE0);
 				SkyboxCube.skyboxCube.render();
 			}
 			else {
-				System.err.println("PerspectiveScreen : NO SKYBOX ENTRY FOR SCENE " + this.world_scene);
+				System.err.println("PerspectiveScreen : NO SKYBOX ENTRY FOR SCENE " + this.world_scenes[0]);
 			}
 		}
 
