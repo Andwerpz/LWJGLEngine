@@ -97,6 +97,26 @@ public class VertexArray {
 		this.init(vertices, normals, tangents, bitangents, uvs, indices, renderType);
 	}
 
+	public VertexArray(ArrayList<Vec3> vertex_list, ArrayList<Integer> index_list, int renderType) {
+		float[] vertices = new float[vertex_list.size() * 3];
+		int[] indices = new int[index_list.size()];
+		for (int i = 0; i < vertex_list.size(); i++) {
+			vertices[i * 3 + 0] = vertex_list.get(i).x;
+			vertices[i * 3 + 1] = vertex_list.get(i).y;
+			vertices[i * 3 + 2] = vertex_list.get(i).z;
+		}
+		for (int i = 0; i < index_list.size(); i++) {
+			indices[i] = index_list.get(i);
+		}
+		int n = vertices.length;
+		float[] uvs = new float[(n / 3) * 2], normals = new float[n], tangents = new float[n], bitangents = new float[n];
+		for (int i = 0; i < uvs.length; i++) {
+			uvs[i] = (float) Math.random();
+		}
+		computeTBN(vertices, uvs, indices, normals, tangents, bitangents);
+		this.init(vertices, normals, tangents, bitangents, uvs, indices, renderType);
+	}
+
 	public VertexArray(float[] vertices, int[] indices, int renderType) {
 		int n = vertices.length;
 		float[] uvs = new float[(n / 3) * 2], normals = new float[n], tangents = new float[n], bitangents = new float[n];

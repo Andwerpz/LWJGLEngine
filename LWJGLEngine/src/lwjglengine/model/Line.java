@@ -20,9 +20,7 @@ public class Line extends Model {
 	@Override
 	public void create() {
 		float[] vertices = new float[] { 0, 0, 0, 1, 1, 1, };
-
 		float[] uvs = new float[] { 0, 0, 1, 1, };
-
 		int[] indices = new int[] { 0, 1, 0, };// 3 points since everything has to be a triangle
 
 		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_LINES));
