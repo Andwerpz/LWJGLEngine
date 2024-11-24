@@ -464,7 +464,8 @@ public class Model {
 
 	protected static void updateInstance(long ID) {
 		if (IDtoScene.get(ID) == null) {
-			System.err.println("Model: Can't find model instance " + ID + " when updating");
+			System.err.println("Model: Can't find model instance " + ID + " scene when updating");
+			System.exit(0);
 			return;
 		}
 		int scene = IDtoScene.get(ID);

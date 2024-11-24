@@ -71,6 +71,9 @@ public class ModelInstance {
 	}
 
 	public void updateInstance() {
+		if (!this.isAlive()) {
+			System.err.println("ModelInstance : trying to update dead model instance " + this.id);
+		}
 		Model.updateInstance(this.id);
 	}
 
