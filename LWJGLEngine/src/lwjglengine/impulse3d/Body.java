@@ -3,6 +3,7 @@ package lwjglengine.impulse3d;
 import lwjglengine.impulse3d.bvh.KDOP;
 import lwjglengine.impulse3d.shape.Shape;
 import myutils.math.Mat3;
+import myutils.math.MathUtils;
 import myutils.math.Quaternion;
 import myutils.math.Vec3;
 
@@ -44,8 +45,48 @@ public class Body {
 		this.is_static = true;
 		this.inv_mass = 0;
 	}
+	
+	/**
+	 * Applies an impulse to body given world space impulse point and direction. 
+	 * @param world_pt
+	 * @param impulse
+	 */
+	public void applyImpulse(Vec3 world_pt, Vec3 impulse) {
+		float impulse_mag = impulse.length();
+		impulse.normalize();
+		Vec3 rvec = new Vec3(world_pt, this.pos);
+		Vec3 rotaxis = MathUtils.cross(impulse, rvec);
+		float inv_moment = 0;
+		if(rotaxis.lengthSq() != 0) {
+			rotaxis.normalize();
+			inv_moment = 1.0f / MathUtils.dot(rotaxis, this.calcITensorWorld().mul(rotaxis));
+		}
+		
+		this.vel.addi(impulse.mul(impulse_mag * this.inv_mass));
+		this.angvel.addi(MathUtils.cross(impulse, rvec).mul(impulse_mag * inv_moment));
+	}
+	
+	public Vec3 calcBodyPtVel(Vec3 world_pt) {
+		Vec3 ret = new Vec3(this.vel); //linear velocity
+		ret.addi(MathUtils.cross(this.angvel, new Vec3(this.pos, world_pt))); //angular velocity
+		return ret;
+	}
+	
+	/**
+	 * returns the inertia tensor in world space for the current orientation
+	 * @return
+	 */
+	public Mat3 calcITensorWorld() {
+		Mat3 rotmat = MathUtils.quaternionToRotationMat3(this.orient);
+		Mat3 rotmat_t = (new Mat3(rotmat)).transpose();
+		Mat3 itensor_world = rotmat.mul(this.moment).mul(rotmat_t);
+		return itensor_world;
+	}
 
-	//returns a bounding box in world space
+	/**
+	 * returns a bvh bounding box in world space
+	 * @return
+	 */
 	public KDOP calcBoundingBox() {
 		KDOP box = this.shape.calcBoundingBox(this.orient, this.pos);
 		return box;

@@ -328,7 +328,7 @@ public class Texture {
 		if (data != null) {
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, dataFormat, dataType, data); //initialize 0th mipmap layer of texture
 		}
-		glGenerateMipmap(GL_TEXTURE_2D); //generate mipmaps
+		
 		//set interpolation filters
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minSampleType);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magSampleType);
@@ -346,6 +346,7 @@ public class Texture {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		}
+		glGenerateMipmap(GL_TEXTURE_2D); //generate mipmaps
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		return textureID;
