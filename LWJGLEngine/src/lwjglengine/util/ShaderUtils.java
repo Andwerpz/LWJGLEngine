@@ -43,7 +43,7 @@ public class ShaderUtils {
 		}
 		if (error) {
 			System.err.println(glGetProgramInfoLog(program));
-			return null;
+//			return null;
 		}
 
 		glDeleteShader(vertID);
@@ -59,6 +59,20 @@ public class ShaderUtils {
 		glAttachShader(program, shaderID);
 		glLinkProgram(program);
 		glValidateProgram(program);
+		
+		boolean error = false;
+		if (glGetProgrami(program, GL_VALIDATE_STATUS) == GL_FALSE) {
+			System.err.println("Failed to link program");
+			error = true;
+		}
+		if (glGetProgrami(program, GL_LINK_STATUS) == GL_FALSE) {
+			System.err.println("Failed to validate program");
+			error = true;
+		}
+		if (error) {
+			System.err.println(glGetProgramInfoLog(program));
+//			return null;
+		}
 
 		glDeleteShader(shaderID);
 
