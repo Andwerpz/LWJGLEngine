@@ -34,6 +34,8 @@ public class ImpulseScene {
 	// - properly solve for friction in Manifold. 
 	// - still some weird stuff going on with moment of inertia of thin objects
 	// - optimize kdop-kdop collision narrow phase
+	// - implement convex collision meshes using GJK
+	//   - also see if we can convert KDOPs into convex collision meshes
 
 	private final int WORLD_SCENE;
 	private final int WIREFRAME_SCENE = Scene.generateScene();

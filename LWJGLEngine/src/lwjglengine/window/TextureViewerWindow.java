@@ -24,6 +24,8 @@ import myutils.file.FileUtils;
 
 public class TextureViewerWindow extends Window implements InputCallback {
 
+	private String title = "Texture Viewer";
+
 	private UISection uiSection;
 
 	private boolean shouldUnload = false; //this should only be true if this window was the one to load the texture
@@ -46,6 +48,13 @@ public class TextureViewerWindow extends Window implements InputCallback {
 		super(0, 0, 400, 300, null);
 		this.init();
 		this.setTexture(texture);
+	}
+
+	public TextureViewerWindow(Texture texture, String name) {
+		super(0, 0, 400, 300, null);
+		this.init();
+		this.setTexture(texture);
+		this.title = name;
 	}
 
 	private void init() {
@@ -86,7 +95,7 @@ public class TextureViewerWindow extends Window implements InputCallback {
 
 	@Override
 	public String getDefaultTitle() {
-		return "Texture Viewer";
+		return this.title;
 	}
 
 	public void setTexture(Texture texture) {
