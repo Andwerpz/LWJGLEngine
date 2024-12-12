@@ -58,7 +58,7 @@ public class BVH {
 
 		//figure out best partition for the bounding boxes
 		//just look for maximum separation along all axes	
-		int best_sep = -1;
+		int best_sep = 0;
 		float max_sep = -1;
 		for (int i = 0; i < KDOP.axes.length; i++) {
 			if (dim[i] > max_sep) {
