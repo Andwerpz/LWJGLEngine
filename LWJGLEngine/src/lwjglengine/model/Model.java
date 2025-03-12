@@ -67,7 +67,7 @@ public class Model {
 	private static HashSet<Long> modelInstanceIDs = new HashSet<>();
 	private static HashMap<Long, Integer> IDtoScene = new HashMap<>(); // which scene each instance is in
 	private static HashMap<Long, Model> IDtoModel = new HashMap<>();
-
+	
 	// for each scene, which model instances have active collision
 	// this system really needs a rework. 
 	private static HashMap<Integer, HashSet<Long>> activeCollisionMeshes = new HashMap<>();
@@ -78,6 +78,7 @@ public class Model {
 	private HashSet<Integer> scenesNeedingUpdates;
 
 	// per mesh 3D vertex information. Should be in the same order that Assimp loaded them. 
+	// these should not change after initialization
 	protected ArrayList<VertexArray> meshes;
 
 	// default per instance traditional blinn-phong Ka, Ks, Kd
@@ -88,132 +89,24 @@ public class Model {
 
 	// created in init(), stores the same data that meshes stores, just all in triangles.
 	private ArrayList<CollisionMesh> collisionMeshes;
-
-	public Model() {
-		this.meshes = new ArrayList<>();
-		this.defaultMaterials = new ArrayList<>();
-		this.textureMaterials = new ArrayList<>();
-		this.create();
-
-		init();
-	}
-
-	public Model(ArrayList<VertexArray> meshes, ArrayList<Material> defaultMaterials, ArrayList<TextureMaterial> textureMaterials) {
-		this.meshes = meshes;
-		this.defaultMaterials = defaultMaterials;
-		this.textureMaterials = textureMaterials;
-
-		init();
-	}
-
-	public Model(VertexArray mesh) {
-		this.meshes = new ArrayList<VertexArray>(Arrays.asList(mesh));
-		this.defaultMaterials = new ArrayList<Material>(Arrays.asList(DEFAULT_MATERIAL));
-		this.textureMaterials = new ArrayList<TextureMaterial>(Arrays.asList(TextureMaterial.defaultTextureMaterial()));
-
-		init();
-	}
-
-	public Model(VertexArray mesh, TextureMaterial material) {
-		this.meshes = new ArrayList<VertexArray>(Arrays.asList(mesh));
-		this.defaultMaterials = new ArrayList<Material>(Arrays.asList(DEFAULT_MATERIAL));
-		this.textureMaterials = new ArrayList<TextureMaterial>(Arrays.asList(material));
-
-		init();
-	}
-
-	private void init() {
-		this.collisionMeshes = new ArrayList<>();
-		for (VertexArray vao : meshes) {
-			this.collisionMeshes.add(new CollisionMesh(vao));
-		}
-		this.scenesNeedingUpdates = new HashSet<Integer>();
-		this.sceneToID = new HashMap<Integer, HashSet<Long>>();
-		models.add(this);
-	}
-
-	public static int getNumInstances() {
-		return modelInstanceIDs.size();
-	}
-
-	public static int getNumModels() {
-		return models.size();
-	}
-
-	public static long generateNewID() {
-		long ans = 0;
-		while (ans == 0 || modelInstanceIDs.contains(ans)) {
-			ans = (long) (Math.random() * 256) + (long) (Math.random() * 256) * 1000l + (long) (Math.random() * 256) * 1000000l;
-		}
-		return ans;
-	}
-
-	public static long convertRGBToID(Vec3 rgb) {
-		return (long) rgb.x * 1000000l + (long) rgb.y * 1000l + (long) rgb.z;
-	}
-
-	public static Vec3 convertIDToRGB(long ID) {
-		return new Vec3((ID / 1000000) % 1000, (ID / 1000) % 1000, ID % 1000);
-	}
-
-	public void setTextureMaterial(TextureMaterial m, int index) {
-		if (index >= this.textureMaterials.size()) {
-			System.err.println("Texture material index out of bounds");
-			return;
-		}
-		this.textureMaterials.get(index).kill();
-		this.textureMaterials.set(index, m);
-	}
-
-	public void setTextureMaterial(TextureMaterial m) {
-		this.setTextureMaterial(m, 0);
-	}
-
-	public ArrayList<VertexArray> getMeshes() {
-		return this.meshes;
-	}
-
-	public void create() {
-	}
-
-	/**
-	 * When loading .obj files, must have .mtl file to be able to load materials
-	 * 
-	 * @param file
-	 * @return
-	 * @throws IOException
-	 */
-	public static Model loadModelFile(File file) {
-		String filepath = file.getAbsolutePath();
-		String parentFilepath = file.getParent() + "\\";
-
-		System.out.println("LOADING MESH: " + file.getName());
-
+	
+	public Model(AIScene aiscene, String parentFilepath) throws IOException {
 		ArrayList<VertexArray> meshes = new ArrayList<>();
 		ArrayList<Material> defaultMaterials = new ArrayList<>();
 		ArrayList<TextureMaterial> textureMaterials = new ArrayList<>();
-
-		AIScene scene = aiImportFile(filepath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
-
-		if (scene == null) {
-			System.err.println("Failed to load model " + file.getName());
-			String error = Assimp.aiGetErrorString();
-			System.err.println("Assimp Error: " + error);
-			return null;
-		}
 
 		// group meshes with the same material
 		ArrayList<ArrayList<Vec3>> vertices = new ArrayList<>();
 		ArrayList<ArrayList<Vec2>> uvs = new ArrayList<>();
 		ArrayList<ArrayList<Integer>> indices = new ArrayList<>();
 
-		for (int i = 0; i < scene.mNumMaterials(); i++) {
+		for (int i = 0; i < aiscene.mNumMaterials(); i++) {
 			vertices.add(new ArrayList<>());
 			uvs.add(new ArrayList<>());
 			indices.add(new ArrayList<>());
 		}
 
-		PointerBuffer buffer = scene.mMeshes();
+		PointerBuffer buffer = aiscene.mMeshes();
 
 		System.out.println("meshes: " + buffer.limit());
 
@@ -252,8 +145,8 @@ public class Model {
 			}
 		}
 
-		PointerBuffer materials = scene.mMaterials(); // array of pointers to AIMaterial structs
-		for (int i = 0; i < scene.mNumMaterials(); i++) {
+		PointerBuffer materials = aiscene.mMaterials(); // array of pointers to AIMaterial structs
+		for (int i = 0; i < aiscene.mNumMaterials(); i++) {
 			if (vertices.get(i).size() == 0) { // empty mesh, don't load
 				continue;
 			}
@@ -370,9 +263,115 @@ public class Model {
 			textureMaterials.add(material);
 		}
 
-		System.out.println("SUCCESS");
+		this.init(meshes, defaultMaterials, textureMaterials);
+	}
 
-		return new Model(meshes, defaultMaterials, textureMaterials);
+	public Model(ArrayList<VertexArray> meshes, ArrayList<Material> defaultMaterials, ArrayList<TextureMaterial> textureMaterials) {
+		this.init(meshes, defaultMaterials, textureMaterials);
+	}
+
+	public Model(VertexArray mesh) {
+		ArrayList<VertexArray> meshes = new ArrayList<VertexArray>(Arrays.asList(mesh));
+		ArrayList<Material> defaultMaterials = new ArrayList<Material>(Arrays.asList(DEFAULT_MATERIAL));
+		ArrayList<TextureMaterial> textureMaterials = new ArrayList<TextureMaterial>(Arrays.asList(TextureMaterial.defaultTextureMaterial()));
+		this.init(meshes, defaultMaterials, textureMaterials);
+	}
+
+	public Model(VertexArray mesh, TextureMaterial material) {
+		ArrayList<VertexArray> meshes = new ArrayList<VertexArray>(Arrays.asList(mesh));
+		ArrayList<Material> defaultMaterials = new ArrayList<Material>(Arrays.asList(DEFAULT_MATERIAL));
+		ArrayList<TextureMaterial> textureMaterials = new ArrayList<TextureMaterial>(Arrays.asList(material));
+		this.init(meshes, defaultMaterials, textureMaterials);
+	}
+
+	private void init(ArrayList<VertexArray> meshes, ArrayList<Material> defaultMaterials, ArrayList<TextureMaterial> textureMaterials) {
+		this.meshes = meshes;
+		this.defaultMaterials = defaultMaterials;
+		this.textureMaterials = textureMaterials;
+		
+		this.collisionMeshes = new ArrayList<>();
+		for (VertexArray vao : meshes) {
+			this.collisionMeshes.add(new CollisionMesh(vao));
+		}
+		this.scenesNeedingUpdates = new HashSet<Integer>();
+		this.sceneToID = new HashMap<Integer, HashSet<Long>>();
+		models.add(this);
+	}
+
+	public static int getNumInstances() {
+		return modelInstanceIDs.size();
+	}
+
+	public static int getNumModels() {
+		return models.size();
+	}
+
+	public static long generateNewID() {
+		long ans = 0;
+		while (ans == 0 || modelInstanceIDs.contains(ans)) {
+			ans = (long) (Math.random() * 256) + (long) (Math.random() * 256) * 1000l + (long) (Math.random() * 256) * 1000000l;
+		}
+		return ans;
+	}
+
+	public static long convertRGBToID(Vec3 rgb) {
+		return (long) rgb.x * 1000000l + (long) rgb.y * 1000l + (long) rgb.z;
+	}
+
+	public static Vec3 convertIDToRGB(long ID) {
+		return new Vec3((ID / 1000000) % 1000, (ID / 1000) % 1000, ID % 1000);
+	}
+
+	public void setTextureMaterial(TextureMaterial m, int index) {
+		if (index >= this.textureMaterials.size()) {
+			System.err.println("Texture material index out of bounds");
+			return;
+		}
+		this.textureMaterials.get(index).kill();
+		this.textureMaterials.set(index, m);
+	}
+
+	public void setTextureMaterial(TextureMaterial m) {
+		this.setTextureMaterial(m, 0);
+	}
+
+	public ArrayList<VertexArray> getMeshes() {
+		return this.meshes;
+	}
+
+	/**
+	 * When loading .obj files, must have .mtl file to be able to load materials
+	 * 
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
+	public static Model loadModelFile(File file) {
+		String filepath = file.getAbsolutePath();
+		String parentFilepath = file.getParent() + "\\";
+
+		System.out.println("LOADING MODEL: " + file.getName());
+
+		AIScene scene = aiImportFile(filepath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+
+		if (scene == null) {
+			System.err.println("Failed to load model " + file.getName());
+			String error = Assimp.aiGetErrorString();
+			System.err.println("Assimp Error: " + error);
+			return null;
+		}
+
+		Model model;
+		try {
+			model = new Model(scene, parentFilepath);
+		} catch (IOException e) {
+			System.out.println("FAILED");
+			e.printStackTrace();
+			return null;
+		}
+		System.out.println("SUCCESS");
+		
+		return model;
 	}
 
 	public static Model loadModelFile(String filepath) throws IOException {
@@ -535,26 +534,6 @@ public class Model {
 				VertexArray v = this.meshes.get(i);
 				v.updateInstances(instances, i, scene);
 			}
-
-//			ArrayList<Long> ids = new ArrayList<>();
-//			ArrayList<ModelTransform> transforms = new ArrayList<>();
-//			ArrayList<ArrayList<Material>> materials = new ArrayList<>();
-//			for (int i = 0; i < this.defaultMaterials.size(); i++) {
-//				materials.add(new ArrayList<Material>());
-//			}
-//			for (long ID : this.sceneToID.get(scene)) {
-//				ModelInstance instance = Model.IDtoInstance.get(ID);
-//
-//				ids.add(ID);
-//				transforms.add(instance.getModelTransform());
-//				for (int i = 0; i < instance.getMaterials().size(); i++) {
-//					materials.get(i).add(instance.getMaterials().get(i));
-//				}
-//			}
-//			for (int i = 0; i < this.meshes.size(); i++) {
-//				VertexArray v = this.meshes.get(i);
-//				v.updateInstances(ids, transforms, materials.get(i), scene);
-//			}
 		}
 
 		this.scenesNeedingUpdates.clear();
@@ -673,8 +652,14 @@ public class Model {
 		for (VertexArray v : this.meshes) {
 			v.kill();
 		}
+		
+		this._kill();
 
 		models.remove(this);
+	}
+	
+	protected void _kill() {
+		/* for child class */
 	}
 
 	public static void printAliveInstanceIDs() {

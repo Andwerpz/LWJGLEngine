@@ -14,20 +14,29 @@ public class FilledRectangle extends Model {
 	public static final FilledRectangle DEFAULT_RECTANGLE = new FilledRectangle();
 
 	public FilledRectangle() {
-		super();
+		super(createMesh());
 	}
 
-	@Override
-	public void create() {
-		float[] vertices = new float[] { 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, };
-
-		float[] uvs = new float[] { 0, 0, 1, 0, 1, 1, 0, 1, };
-
-		int[] indices = new int[] { 0, 1, 2, 0, 2, 3, };
-
-		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_TRIANGLES));
-		this.defaultMaterials.add(DEFAULT_MATERIAL);
-		this.textureMaterials.add(TextureMaterial.defaultTextureMaterial());
+	private static VertexArray createMesh() {
+		//@formatter:off
+		float[] vertices = new float[] { 
+				0, 0, 0, 
+				1, 0, 0, 
+				1, 1, 0, 
+				0, 1, 0, 
+		};
+		float[] uvs = new float[] { 
+				0, 0, 
+				1, 0, 
+				1, 1, 
+				0, 1, 
+		};
+		int[] indices = new int[] { 
+				0, 1, 2,
+				0, 2, 3,
+		};
+		//@formatter:on
+		return new VertexArray(vertices, uvs, indices, GL_TRIANGLES);
 	}
 
 	public ModelInstance addRectangle(float x, float y, float z, float width, float height, int scene) {

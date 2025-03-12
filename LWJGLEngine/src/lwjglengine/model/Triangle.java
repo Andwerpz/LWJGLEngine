@@ -14,18 +14,14 @@ public class Triangle extends Model {
 	private static Triangle triangle = new Triangle();
 
 	public Triangle() {
-		super();
+		super(createMesh());
 	}
 
-	@Override
-	public void create() {
+	private static VertexArray createMesh() {
 		float[] vertices = new float[] { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
 		float[] uvs = new float[] { 0, 0, 1, 0, 0, 1 };
 		int[] indices = new int[] { 0, 1, 2 };
-
-		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_TRIANGLES));
-		this.defaultMaterials.add(Material.defaultMaterial());
-		this.textureMaterials.add(TextureMaterial.defaultTextureMaterial());
+		return new VertexArray(vertices, uvs, indices, GL_TRIANGLES);
 	}
 
 	public static ModelTransform generateTriangleModelTransform(Vec3 a, Vec3 b, Vec3 c) {

@@ -7,11 +7,11 @@ import lwjglengine.graphics.TextureMaterial;
 public class Decal extends Model {
 
 	public Decal() {
-		super();
+		super(createMesh());
 	}
-
-	@Override
-	public void create() {
+	
+	private static VertexArray createMesh() {
+		//@formatter:off
 		float[] vertices = new float[] { 
 			0, 0, 0, 
 			1, 0, 0, 
@@ -39,10 +39,8 @@ public class Decal extends Model {
 			1, 5, 4,
 			1, 4, 0
 		};
-
-		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_TRIANGLES));
-		this.defaultMaterials.add(DEFAULT_MATERIAL);
-		this.textureMaterials.add(TextureMaterial.defaultTextureMaterial());
+		//@formatter:on
+		return new VertexArray(vertices, uvs, indices, GL_TRIANGLES);
 	}
 
 }

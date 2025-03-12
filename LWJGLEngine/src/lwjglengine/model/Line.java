@@ -14,18 +14,14 @@ public class Line extends Model {
 	public static final Line DEFAULT_LINE = new Line();
 
 	public Line() {
-		super();
+		super(createMesh());
 	}
-
-	@Override
-	public void create() {
+	
+	private static VertexArray createMesh() {
 		float[] vertices = new float[] { 0, 0, 0, 1, 1, 1, };
 		float[] uvs = new float[] { 0, 0, 1, 1, };
 		int[] indices = new int[] { 0, 1, 0, };// 3 points since everything has to be a triangle
-
-		this.meshes.add(new VertexArray(vertices, uvs, indices, GL_LINES));
-		this.defaultMaterials.add(DEFAULT_MATERIAL);
-		this.textureMaterials.add(TextureMaterial.defaultTextureMaterial());
+		return new VertexArray(vertices, uvs, indices, GL_LINES);
 	}
 
 	public ModelInstance addLine(Vec3 a, Vec3 b, int scene) {
