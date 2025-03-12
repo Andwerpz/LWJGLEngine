@@ -101,7 +101,7 @@ public class ModelInstance {
 	 */
 	public void setMaterials(ArrayList<Material> m) {
 		if (m.size() != this.materials.size()) {
-			System.err.println("Model Instance Warning : Input materials list is wrong size");
+			System.err.println("ModelInstance : Input materials list is wrong size");
 			return;
 		}
 

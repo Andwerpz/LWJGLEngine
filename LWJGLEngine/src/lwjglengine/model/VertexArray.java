@@ -19,7 +19,6 @@ import myutils.math.Vec3;
 import myutils.misc.Pair;
 
 public class VertexArray {
-
 	// vertex array buffers and buffer objects aren't created under each other,
 	// but a buffer object can be bound to a vertex array object.
 
@@ -37,12 +36,31 @@ public class VertexArray {
 	public static final int BITANGENT_ATTRIB = 4;
 	public static final int INSTANCED_MODEL_ATTRIB = 5; // takes up 4 slots
 	public static final int INSTANCED_COLOR_ATTRIB = 9; // used for quick model selection
-	public static final int INSTANCED_MATERIAL_ATTRIB = 10; // takes up 3 slots
+	public static final int INSTANCED_MATERIAL_ATTRIB = 10; // takes up 4 slots
+	
+	//TODO integrate animation
+	// - bones will be per-vertex, they don't need to be per-instance
+	//public static final int BONE_IND_ATTRIB = 14;	//{id0, id1, id2, id3} 
+	//public static final int BONE_WEIGHT_ATTRIB = 15;	//{w0, w1, w2, w3} 
+	// - node positions need to be per-instance. We'll just maintain a buffer per-scene that we bind as there may be alot of them.
+	// - animations will be enabled per-model? If a model has animations enabled, then before rendering should bind 
+	//   a buffer with all the per-instance node locations.
+	// - then, will also have a per-instance offset into the buffer. 
+	// - also need to bind another buffer telling for each bone, its offset matrix. This matrix is the transformation from
+	//   model space to bone space. Then, we can just apply the bone's animation matrix to get the final animated vertex position. 
+	//Should we make a seperate class for animated vertex arrays? Probably. Nah, i'll just shove it in with everything else.
+	//However, for animated Models, we should probably create a seperate class. 
+	//If a model is animated, then it will save its AIScene when loading, and each ModelInstance will have its own 
+	//array of AnimationHandlers, one for each mesh of its model. 
+	//When updating the vertex array, it will also pack all the bone offset matrices into a SSBO for the geometry shader
+	//When rendering an animated model, we'll assume that the bound shader accepts the bone transforms, so we'll just bind the SSBO without knowledge of the shader in use.
+	//(if they don't they can't properly render the model anyways). 
 
 	private int renderType;
 	private int vao, vbo, tbo, nbo, ntbo, nbtbo, ibo;
-	private HashMap<Integer, int[]> scenes; // numInstances, mat4, colorID, material
 	private int triCount; // number of triangles in the mesh
+	
+	private HashMap<Integer, int[]> scenes; // numInstances, mat4, colorID, material
 
 	// don't edit these, these are just for future reference
 	private float[] vertices, normals, tangents, bitangents, uvs;
@@ -191,23 +209,39 @@ public class VertexArray {
 		this.killVertexBuffers();
 		this.init(v.getVertices(), v.getNormals(), v.getTangents(), v.getBitangents(), v.getUVs(), v.getIndices(), v.getRenderType());
 	}
-
+	
+	public void updateInstances(ModelInstance inst, int whichScene) {
+		ArrayList<ModelInstance> list = new ArrayList<>();
+		list.add(inst);
+		this.updateInstances(list, 0, whichScene);
+	}
+	
 	//ok, if the size of the buffer doesn't change, then we just use glBufferSubData, 
 	//but if it does, then we have to reallocate the buffer. 
-
 	//the issue that if one instance changes, then they all change still remains, but
 	//it's acceptable to just update all of them for now. 
-	public void updateInstances(ArrayList<Long> idList, ArrayList<ModelTransform> transformList, ArrayList<Material> materialList, int whichScene) {
-		int numInstances = idList.size();
+	//there may be multiple vertex arrays associated with a single model, so va_ind tells you which one is this one
+	public void updateInstances(ArrayList<ModelInstance> instList, int va_ind, int whichScene) {
+		int numInstances = instList.size();
+		long[] idList = new long[numInstances];
+		ModelTransform[] transformList = new ModelTransform[numInstances];
+		Material[] materialList = new Material[numInstances];
+		for(int i = 0; i < numInstances; i++) {
+			ModelInstance inst = instList.get(i);
+			idList[i] = inst.getID();
+			transformList[i] = inst.getModelTransform();
+			materialList[i] = inst.getMaterials().get(va_ind);
+		}
+		
 		Mat4[] modelMats = new Mat4[numInstances];
 		Vec3[] colorIDs = new Vec3[numInstances];
 		Material[] materials = new Material[numInstances];
 
-		for (int i = 0; i < idList.size(); i++) {
-			long ID = idList.get(i);
+		for (int i = 0; i < numInstances; i++) {
+			long ID = idList[i];
 			colorIDs[i] = Model.convertIDToRGB(ID);
-			modelMats[i] = transformList.get(i).getModelMatrix(); //convert model transform object to mat4
-			materials[i] = materialList.get(i);
+			modelMats[i] = transformList[i].getModelMatrix(); //convert model transform object to mat4
+			materials[i] = materialList[i];
 		}
 
 		if (scenes.get(whichScene) == null || scenes.get(whichScene)[0] != numInstances) {
@@ -578,6 +612,7 @@ public class VertexArray {
 
 	public void render(int whichScene) {
 		if (this.scenes.get(whichScene) == null) { // TODO fix this
+			System.err.println("VertexArray : trying to render a scene that doesn't exist in VertexArray.scenes");
 			return;
 		}
 		int numInstances = this.scenes.get(whichScene)[0];

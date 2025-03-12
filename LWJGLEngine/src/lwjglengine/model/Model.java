@@ -29,6 +29,7 @@ import org.lwjgl.assimp.AIString;
 import org.lwjgl.assimp.AITexture;
 import org.lwjgl.assimp.AIVector2D;
 import org.lwjgl.assimp.AIVector3D;
+import org.lwjgl.assimp.Assimp;
 
 import lwjglengine.graphics.Material;
 import lwjglengine.graphics.Shader;
@@ -76,7 +77,7 @@ public class Model {
 
 	private HashSet<Integer> scenesNeedingUpdates;
 
-	// per model 3D vertex information
+	// per mesh 3D vertex information. Should be in the same order that Assimp loaded them. 
 	protected ArrayList<VertexArray> meshes;
 
 	// default per instance traditional blinn-phong Ka, Ks, Kd
@@ -176,10 +177,8 @@ public class Model {
 	}
 
 	/**
-	 * Legacy method to load .obj file.
+	 * When loading .obj files, must have .mtl file to be able to load materials
 	 * 
-	 * must have .mtl file to be able to load materials
-	 * this assumes that all textures are located in the same directory as the actual model
 	 * @param file
 	 * @return
 	 * @throws IOException
@@ -198,6 +197,8 @@ public class Model {
 
 		if (scene == null) {
 			System.err.println("Failed to load model " + file.getName());
+			String error = Assimp.aiGetErrorString();
+			System.err.println("Assimp Error: " + error);
 			return null;
 		}
 
@@ -525,27 +526,35 @@ public class Model {
 			if (this.sceneToID.get(scene) == null) {
 				continue;
 			}
-
-			ArrayList<Long> ids = new ArrayList<>();
-			ArrayList<ModelTransform> transforms = new ArrayList<>();
-			ArrayList<ArrayList<Material>> materials = new ArrayList<>();
-			for (int i = 0; i < this.defaultMaterials.size(); i++) {
-				materials.add(new ArrayList<Material>());
+			
+			ArrayList<ModelInstance> instances = new ArrayList<>();
+			for(long ID : this.sceneToID.get(scene)) {
+				instances.add(IDtoInstance.get(ID));
 			}
-			for (long ID : this.sceneToID.get(scene)) {
-				ModelInstance instance = Model.IDtoInstance.get(ID);
-
-				ids.add(ID);
-				transforms.add(instance.getModelTransform());
-				for (int i = 0; i < instance.getMaterials().size(); i++) {
-					materials.get(i).add(instance.getMaterials().get(i));
-				}
-			}
-
-			for (int i = 0; i < this.meshes.size(); i++) {
+			for(int i = 0; i < this.meshes.size(); i++) {
 				VertexArray v = this.meshes.get(i);
-				v.updateInstances(ids, transforms, materials.get(i), scene);
+				v.updateInstances(instances, i, scene);
 			}
+
+//			ArrayList<Long> ids = new ArrayList<>();
+//			ArrayList<ModelTransform> transforms = new ArrayList<>();
+//			ArrayList<ArrayList<Material>> materials = new ArrayList<>();
+//			for (int i = 0; i < this.defaultMaterials.size(); i++) {
+//				materials.add(new ArrayList<Material>());
+//			}
+//			for (long ID : this.sceneToID.get(scene)) {
+//				ModelInstance instance = Model.IDtoInstance.get(ID);
+//
+//				ids.add(ID);
+//				transforms.add(instance.getModelTransform());
+//				for (int i = 0; i < instance.getMaterials().size(); i++) {
+//					materials.get(i).add(instance.getMaterials().get(i));
+//				}
+//			}
+//			for (int i = 0; i < this.meshes.size(); i++) {
+//				VertexArray v = this.meshes.get(i);
+//				v.updateInstances(ids, transforms, materials.get(i), scene);
+//			}
 		}
 
 		this.scenesNeedingUpdates.clear();
