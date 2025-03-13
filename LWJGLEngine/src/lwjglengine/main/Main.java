@@ -190,13 +190,13 @@ public class Main implements Runnable {
 		this.outputBuffer = new Framebuffer(0);
 
 		//DEBUG MODE
-		//		GLUtil.setupDebugMessageCallback();
-		//		GL43.glDebugMessageControl(GL_DONT_CARE, // Filter all sources
-		//				GL_DONT_CARE, // Filter all types
-		//				GL_DEBUG_SEVERITY_NOTIFICATION, // Suppress notifications only
-		//				(int[]) null, // No specific message IDs
-		//				false // Disable the messages
-		//		);
+//				GLUtil.setupDebugMessageCallback();
+//				GL43.glDebugMessageControl(GL_DONT_CARE, // Filter all sources
+//						GL_DONT_CARE, // Filter all types
+//						GL_DEBUG_SEVERITY_NOTIFICATION, // Suppress notifications only
+//						(int[]) null, // No specific message IDs
+//						false // Disable the messages
+//				);
 
 		//System.err.println("Max SSBO Size : " + glGetInteger(GL_MAX_SHADER_STORAGE_BLOCK_SIZE));
 	}

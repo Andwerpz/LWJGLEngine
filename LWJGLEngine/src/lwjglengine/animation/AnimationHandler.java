@@ -38,6 +38,7 @@ public class AnimationHandler {
 	private final int DEBUG_SCENE;
 	
 	private AnimatedModel model;
+	private AnimatedModelInstance modelInstance;
 	private Mat4[] nodeTransforms;
 	
 	//if curAnimation != null, then we're currently playing one.
@@ -59,15 +60,21 @@ public class AnimationHandler {
 	private boolean renderSkeleton = false;
 	private ModelInstance[] skeletonInstances;
 	
-	public AnimationHandler(AnimatedModel _model, int _DEBUG_SCENE) {
+	public AnimationHandler(AnimatedModelInstance _modelInstance, int _DEBUG_SCENE) {
 		this.DEBUG_SCENE = _DEBUG_SCENE;
-		this.model = _model;
+		this.modelInstance = _modelInstance;
+		this.model = (AnimatedModel) _modelInstance.getModel();
 		
 		int node_cnt = this.model.getNodeCount();
 		this.nodeTransforms = new Mat4[node_cnt];
+		for(int i = 0; i < node_cnt; i++) {
+			this.nodeTransforms[i] = Mat4.identity();
+		}
 		this.posptrs = new int[node_cnt];
 		this.orientptrs = new int[node_cnt];
 		this.scaleptrs = new int[node_cnt];
+		
+		this.computeNodeTransforms();
 	}
 	
 	public void stopAnimation() {
@@ -102,6 +109,10 @@ public class AnimationHandler {
 		this.doLooping = b;
 	}
 	
+	public boolean getRenderSkeleton() {
+		return this.renderSkeleton;
+	}
+	
 	public void setRenderSkeleton(boolean b) {
 		if(this.renderSkeleton == b) {
 			return;
@@ -123,12 +134,8 @@ public class AnimationHandler {
 		}
 	}
 	
-	public Vec3[] getNodePositions() {
-		Vec3[] ret = new Vec3[this.model.getNodeCount()];
-		for(int i = 0; i < this.model.getNodeCount(); i++) {
-			ret[i] = this.nodeTransforms[i].mul(new Vec3(0), 1);
-		}
-		return ret;
+	public Mat4[] getNodeTransforms() {
+		return this.nodeTransforms;
 	}
 	
 	private void generateSkeleton() {
@@ -162,6 +169,7 @@ public class AnimationHandler {
 		if(this.renderSkeleton) {
 			this.generateSkeleton();
 		}
+		this.modelInstance.updateInstance();
 	}
 	
 	//recompute node positions. 

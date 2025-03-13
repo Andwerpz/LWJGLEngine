@@ -5,6 +5,7 @@ import lwjglengine.model.ModelInstance;
 
 public class AnimatedModelInstance extends ModelInstance {
 	private AnimationHandler animationHandler;
+	private int nodeOffset = -1;	//set by AnimatedModel before being sent off to VertexArray
 
 	public AnimatedModelInstance(AnimatedModel model, int scene) {
 		super(model, scene);
@@ -12,7 +13,7 @@ public class AnimatedModelInstance extends ModelInstance {
 	}
 	
 	private void init() {
-		this.animationHandler = new AnimationHandler((AnimatedModel) this.getModel(), this.getScene());
+		this.animationHandler = new AnimationHandler(this, this.getScene());
 	}
 	
 	public AnimationHandler getAnimationHandler() {
@@ -25,5 +26,13 @@ public class AnimatedModelInstance extends ModelInstance {
 	
 	public void stopAnimation() {
 		this.animationHandler.stopAnimation();
+	}
+	
+	protected void setNodeOffset(int off) {
+		this.nodeOffset = off;
+	}
+	
+	public int getNodeOffset() {
+		return this.nodeOffset;
 	}
 }

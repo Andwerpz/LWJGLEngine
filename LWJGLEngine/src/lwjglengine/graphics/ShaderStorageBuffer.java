@@ -11,6 +11,7 @@ import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL33.*;
 import static org.lwjgl.opengl.GL43.*;
 
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.LongBuffer;
 
@@ -109,5 +110,27 @@ public class ShaderStorageBuffer {
 	public void kill() {
 		glDeleteBuffers(this.ssbo);
 	}
+
+	public void setData(FloatBuffer buf, int byteOffset) {
+		this.bind();
+		glBufferData(GL_SHADER_STORAGE_BUFFER, buf, this.usage);
+	}
+	
+	public void setData(IntBuffer buf, int byteOffset) {
+		this.bind();
+		glBufferData(GL_SHADER_STORAGE_BUFFER, buf, this.usage);
+	}
+	
+	public void setSubData(FloatBuffer buf, int byteOffset) {
+		this.bind();
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, byteOffset, buf);
+	}
+	
+	public void setSubData(IntBuffer buf, int byteOffset) {
+		this.bind();
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, byteOffset, buf);
+	}
+
+	
 
 }

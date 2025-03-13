@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.TreeSet;
 
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.assimp.AIColor4D;
@@ -73,9 +74,11 @@ public class Model {
 	private static HashMap<Integer, HashSet<Long>> activeCollisionMeshes = new HashMap<>();
 
 	//for each model, map each scene to a set of model instance ids
-	private HashMap<Integer, HashSet<Long>> sceneToID;
+	//I use a tree set here to give all the instances some ordering. 
+	//this is required for AnimatedModel to work properly. 
+	protected HashMap<Integer, TreeSet<Long>> sceneToID;
 
-	private HashSet<Integer> scenesNeedingUpdates;
+	protected HashSet<Integer> scenesNeedingUpdates;
 
 	// per mesh 3D vertex information. Should be in the same order that Assimp loaded them. 
 	// these should not change after initialization
@@ -294,7 +297,7 @@ public class Model {
 			this.collisionMeshes.add(new CollisionMesh(vao));
 		}
 		this.scenesNeedingUpdates = new HashSet<Integer>();
-		this.sceneToID = new HashMap<Integer, HashSet<Long>>();
+		this.sceneToID = new HashMap<Integer, TreeSet<Long>>();
 		models.add(this);
 	}
 
@@ -320,6 +323,10 @@ public class Model {
 
 	public static Vec3 convertIDToRGB(long ID) {
 		return new Vec3((ID / 1000000) % 1000, (ID / 1000) % 1000, ID % 1000);
+	}
+	
+	public static ModelInstance getModelInstanceFromID(long ID) {
+		return IDtoInstance.get(ID);
 	}
 
 	public void setTextureMaterial(TextureMaterial m, int index) {
@@ -419,7 +426,7 @@ public class Model {
 	protected static long addInstance(Model model, ModelTransform transform, int scene, ModelInstance instance) {
 		long ID = generateNewID();
 		if (model.sceneToID.get(scene) == null) {
-			model.sceneToID.put(scene, new HashSet<Long>());
+			model.sceneToID.put(scene, new TreeSet<Long>());
 		}
 
 		IDtoInstance.put(ID, instance);
@@ -516,7 +523,7 @@ public class Model {
 		updateModelsMillis = System.currentTimeMillis() - startMillis;
 	}
 
-	private void updateModelMats() {
+	protected void updateModelMats() {
 		if (this.scenesNeedingUpdates.size() == 0) {
 			return;
 		}
@@ -609,7 +616,8 @@ public class Model {
 			}
 		}
 	}
-
+	
+	//TODO only render models that have model instances in that scene
 	public static void renderModels(int scene) {
 		long startMillis = System.currentTimeMillis();
 		for (Model m : models) {
@@ -637,7 +645,7 @@ public class Model {
 	public void kill() {
 		//dispose of all model instances
 		ArrayList<Long> instanceIDs = new ArrayList<>();
-		for (HashSet<Long> i : this.sceneToID.values()) {
+		for (TreeSet<Long> i : this.sceneToID.values()) {
 			for (Long id : i) {
 				instanceIDs.add(id);
 			}
@@ -652,14 +660,8 @@ public class Model {
 		for (VertexArray v : this.meshes) {
 			v.kill();
 		}
-		
-		this._kill();
 
 		models.remove(this);
-	}
-	
-	protected void _kill() {
-		/* for child class */
 	}
 
 	public static void printAliveInstanceIDs() {

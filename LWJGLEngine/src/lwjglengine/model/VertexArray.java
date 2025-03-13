@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import lwjglengine.animation.AnimatedModelInstance;
 import lwjglengine.graphics.Material;
+import lwjglengine.graphics.ShaderStorageBuffer;
 import lwjglengine.scene.Scene;
 import lwjglengine.util.BufferUtils;
 import myutils.math.Mat4;
@@ -35,30 +37,25 @@ public class VertexArray {
 	public static final int TANGENT_ATTRIB = 3;
 	public static final int BITANGENT_ATTRIB = 4;
 	public static final int INSTANCED_MODEL_ATTRIB = 5; // takes up 4 slots
-	public static final int INSTANCED_COLOR_ATTRIB = 9; // used for quick model selection
-	public static final int INSTANCED_MATERIAL_ATTRIB = 10; // takes up 4 slots
+	public static final int INSTANCED_COLOR_ATTRIB = 9; // {r, g, b, node_offset}
+	public static final int INSTANCED_MATERIAL_ATTRIB = 10; // takes up 3 slots
+	public static final int BONE_IND_ATTRIB = 13;	//used to index into boneTransformBuffer
+	public static final int BONE_NODE_IND_ATTRIB = 14;	//used to find the node animation transforms
+	public static final int BONE_WEIGHT_ATTRIB = 15;	//{w0, w1, w2, w3} 
 	
-	//TODO integrate animation
-	// - bones will be per-vertex, they don't need to be per-instance
-	//public static final int BONE_IND_ATTRIB = 14;	//{id0, id1, id2, id3} 
-	//public static final int BONE_WEIGHT_ATTRIB = 15;	//{w0, w1, w2, w3} 
-	// - node positions need to be per-instance. We'll just maintain a buffer per-scene that we bind as there may be alot of them.
-	// - animations will be enabled per-model? If a model has animations enabled, then before rendering should bind 
-	//   a buffer with all the per-instance node locations.
-	// - then, will also have a per-instance offset into the buffer. 
-	// - also need to bind another buffer telling for each bone, its offset matrix. This matrix is the transformation from
-	//   model space to bone space. Then, we can just apply the bone's animation matrix to get the final animated vertex position. 
-	//Should we make a seperate class for animated vertex arrays? Probably. Nah, i'll just shove it in with everything else.
-	//However, for animated Models, we should probably create a seperate class. 
-	//If a model is animated, then it will save its AIScene when loading, and each ModelInstance will have its own 
-	//array of AnimationHandlers, one for each mesh of its model. 
-	//When updating the vertex array, it will also pack all the bone offset matrices into a SSBO for the geometry shader
-	//When rendering an animated model, we'll assume that the bound shader accepts the bone transforms, so we'll just bind the SSBO without knowledge of the shader in use.
-	//(if they don't they can't properly render the model anyways). 
+	public static final int BONE_TRANSFORM_SSBO_LOC = 0;
+	public static final int NODE_TRANSFORM_SSBO_LOC = 1;
+	
+	//TODO reimplement emissive
+	//had to remove it when integrating animation as there is a maximum of 16 vertex attributes. 
+	//we can pack VERTEX_ATTRIB, NORMAL_ATTRIB, TANGENT_ATTRIB, BITANGENT_ATTRIB into 3 channels
 
 	private int renderType;
-	private int vao, vbo, tbo, nbo, ntbo, nbtbo, ibo;
+	private int vao, vbo, tbo, nbo, ntbo, nbtbo, bibo, bnibo, bwbo, ibo;
 	private int triCount; // number of triangles in the mesh
+	
+	//bind this before rendering if it's not null
+	private ShaderStorageBuffer boneTransformBuffer = null;
 	
 	private HashMap<Integer, int[]> scenes; // numInstances, mat4, colorID, material
 
@@ -194,6 +191,26 @@ public class VertexArray {
 		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(bitangents), GL_STATIC_DRAW);
 		glVertexAttribPointer(BITANGENT_ATTRIB, 3, GL_FLOAT, false, 0, 0);
 		glEnableVertexAttribArray(BITANGENT_ATTRIB);
+		
+		//these bone attributes will be set later
+		int vertex_cnt = vertices.length / 3;
+		bibo = glGenBuffers();	//bone index
+		glBindBuffer(GL_ARRAY_BUFFER, bibo);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createIntBuffer(new int[vertex_cnt * 4]), GL_STATIC_DRAW);
+		glVertexAttribIPointer(BONE_IND_ATTRIB, 4, GL_INT, 0, 0);
+		glEnableVertexAttribArray(BONE_IND_ATTRIB);
+		
+		bnibo = glGenBuffers();	//bone node index
+		glBindBuffer(GL_ARRAY_BUFFER, bnibo);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createIntBuffer(new int[vertex_cnt * 4]), GL_STATIC_DRAW);
+		glVertexAttribIPointer(BONE_NODE_IND_ATTRIB, 4, GL_INT, 0, 0);
+		glEnableVertexAttribArray(BONE_NODE_IND_ATTRIB);
+		
+		bwbo = glGenBuffers();	//bone weight
+		glBindBuffer(GL_ARRAY_BUFFER, bwbo);
+		glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(new float[vertex_cnt * 4]), GL_STATIC_DRAW);
+		glVertexAttribPointer(BONE_WEIGHT_ATTRIB, 4, GL_FLOAT, false, 0, 0);
+		glEnableVertexAttribArray(BONE_WEIGHT_ATTRIB);
 
 		ibo = glGenBuffers();
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
@@ -203,11 +220,43 @@ public class VertexArray {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
-
-	//copies over the information in the given vertex array to this one
-	public void set(VertexArray v) {
-		this.killVertexBuffers();
-		this.init(v.getVertices(), v.getNormals(), v.getTangents(), v.getBitangents(), v.getUVs(), v.getIndices(), v.getRenderType());
+	
+	//this should happen once at initialization. 
+	public void setBoneBuffers(int[] bone_inds, int[] bone_node_inds, float[] bone_weights, Mat4[] bone_transforms) {
+		int vertex_cnt = this.vertices.length / 3;
+		if(bone_inds.length / 4 != vertex_cnt) {
+			System.err.println("VertexArray : bone_inds is wrong length");
+			return;
+		}
+		if(bone_node_inds.length / 4 != vertex_cnt) {
+			System.err.println("VertexArray : bone_node_inds is wrong length");
+			return;
+		}
+		if(bone_weights.length / 4 != vertex_cnt) {
+			System.err.println("VertexArray : bone_weights is wrong length");
+			return;
+		}
+		if(bone_transforms == null) {
+			System.err.println("VertexArray : bone_transforms is null");
+			return;
+		}
+		if(this.boneTransformBuffer != null) {
+			System.err.println("VertexArray : warning, should probably only call setBoneBuffers once");
+		}
+		
+		glBindBuffer(GL_ARRAY_BUFFER, this.bibo);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, BufferUtils.createIntBuffer(bone_inds));
+		glBindBuffer(GL_ARRAY_BUFFER, this.bnibo);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, BufferUtils.createIntBuffer(bone_node_inds));
+		glBindBuffer(GL_ARRAY_BUFFER, this.bwbo);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, BufferUtils.createFloatBuffer(bone_weights));
+		
+		if(this.boneTransformBuffer != null) {
+			this.boneTransformBuffer.kill();
+		}
+		this.boneTransformBuffer = new ShaderStorageBuffer();
+		this.boneTransformBuffer.setUsage(GL_STATIC_DRAW);
+		this.boneTransformBuffer.setData(BufferUtils.createFloatBuffer(bone_transforms), 0);
 	}
 	
 	public void updateInstances(ModelInstance inst, int whichScene) {
@@ -236,12 +285,25 @@ public class VertexArray {
 		Mat4[] modelMats = new Mat4[numInstances];
 		Vec3[] colorIDs = new Vec3[numInstances];
 		Material[] materials = new Material[numInstances];
+		int[] nodeOffsets = new int[numInstances];
 
 		for (int i = 0; i < numInstances; i++) {
 			long ID = idList[i];
 			colorIDs[i] = Model.convertIDToRGB(ID);
 			modelMats[i] = transformList[i].getModelMatrix(); //convert model transform object to mat4
 			materials[i] = materialList[i];
+			nodeOffsets[i] = -1;
+			if(instList.get(i) instanceof AnimatedModelInstance) {
+				nodeOffsets[i] = ((AnimatedModelInstance) instList.get(i)).getNodeOffset();
+			}
+		}
+		
+		float[] colorID_data = new float[numInstances * 4];
+		for(int i = 0; i < numInstances; i++) {
+			colorID_data[i * 4 + 0] = colorIDs[i].x;
+			colorID_data[i * 4 + 1] = colorIDs[i].y;
+			colorID_data[i * 4 + 2] = colorIDs[i].z;
+			colorID_data[i * 4 + 3] = Float.intBitsToFloat(nodeOffsets[i]);
 		}
 
 		if (scenes.get(whichScene) == null || scenes.get(whichScene)[0] != numInstances) {
@@ -260,7 +322,7 @@ public class VertexArray {
 			glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);
 			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(modelMats), GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
-			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorIDs), GL_DYNAMIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(colorID_data), GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
 			glBufferData(GL_ARRAY_BUFFER, BufferUtils.createFloatBuffer(materials), GL_DYNAMIC_DRAW);
 		}
@@ -274,7 +336,7 @@ public class VertexArray {
 			glBindBuffer(GL_ARRAY_BUFFER, modelMatBuffer);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, BufferUtils.createFloatBuffer(modelMats));
 			glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
-			glBufferSubData(GL_ARRAY_BUFFER, 0, BufferUtils.createFloatBuffer(colorIDs));
+			glBufferSubData(GL_ARRAY_BUFFER, 0, BufferUtils.createFloatBuffer(colorID_data));
 			glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, BufferUtils.createFloatBuffer(materials));
 		}
@@ -301,23 +363,34 @@ public class VertexArray {
 		}
 
 		glBindBuffer(GL_ARRAY_BUFFER, colorIDBuffer);
-		glVertexAttribPointer(INSTANCED_COLOR_ATTRIB, 3, GL_FLOAT, false, 0, 0);
+		glVertexAttribPointer(INSTANCED_COLOR_ATTRIB, 4, GL_FLOAT, false, 0, 0);
 		glVertexAttribDivisor(INSTANCED_COLOR_ATTRIB, 1);
 		glEnableVertexAttribArray(INSTANCED_COLOR_ATTRIB);
 
+//		glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
+//		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 0, 4, GL_FLOAT, false, 16 * 4, 0); // diffuse : 4 floats
+//		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 1, 4, GL_FLOAT, false, 16 * 4, 16); // specular : 4 floats
+//		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 2, 4, GL_FLOAT, false, 16 * 4, 32); // specular exponent, roughness, metallic, specular probability : 4 floats
+//		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 3, 4, GL_FLOAT, false, 16 * 4, 48); // emissive : 4 floats
+//		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 0, 1);
+//		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 1, 1);
+//		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 2, 1);
+//		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 3, 1);
+//		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 0);
+//		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 1);
+//		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 2);
+//		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 3);
+		
 		glBindBuffer(GL_ARRAY_BUFFER, materialBuffer);
-		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 0, 4, GL_FLOAT, false, 16 * 4, 0); // diffuse : 4 floats
-		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 1, 4, GL_FLOAT, false, 16 * 4, 16); // specular : 4 floats
-		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 2, 4, GL_FLOAT, false, 16 * 4, 32); // specular exponent, roughness, metallic, specular probability : 4 floats
-		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 3, 4, GL_FLOAT, false, 16 * 4, 48); // emissive : 4 floats
+		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 0, 4, GL_FLOAT, false, 12 * 4, 0); // diffuse : 4 floats
+		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 1, 4, GL_FLOAT, false, 12 * 4, 16); // specular : 4 floats
+		glVertexAttribPointer(INSTANCED_MATERIAL_ATTRIB + 2, 4, GL_FLOAT, false, 12 * 4, 32); // specular exponent, roughness, metallic, specular probability : 4 floats
 		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 0, 1);
 		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 1, 1);
 		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 2, 1);
-		glVertexAttribDivisor(INSTANCED_MATERIAL_ATTRIB + 3, 1);
 		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 0);
 		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 1);
 		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 2);
-		glEnableVertexAttribArray(INSTANCED_MATERIAL_ATTRIB + 3);
 
 		glBindVertexArray(0);
 	}
@@ -599,11 +672,19 @@ public class VertexArray {
 	public void bind() {
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+		
+		if(this.boneTransformBuffer != null) {
+			this.boneTransformBuffer.bindToBase(BONE_TRANSFORM_SSBO_LOC);
+		}
 	}
 
 	public void unbind() {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
+		
+		if(this.boneTransformBuffer != null) {
+			this.boneTransformBuffer.unbind();
+		}
 	}
 
 	public void drawInstanced(int amt) {
@@ -626,11 +707,14 @@ public class VertexArray {
 	public void kill() {
 		this.killVertexBuffers();
 		this.killInstanceBuffers();
+		if(this.boneTransformBuffer != null) {
+			this.boneTransformBuffer.kill();
+		}
 	}
 
 	private void killVertexBuffers() {
 		glDeleteVertexArrays(new int[] { this.vao });
-		glDeleteBuffers(new int[] { this.vbo, this.nbo, this.tbo, this.ntbo, this.nbtbo, this.ibo });
+		glDeleteBuffers(new int[] { this.vbo, this.nbo, this.tbo, this.ntbo, this.nbtbo, this.bibo, this.bnibo, this.bwbo, this.ibo });
 	}
 
 	private void killInstanceBuffers() {
