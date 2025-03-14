@@ -105,6 +105,14 @@ public class AnimationHandler {
 		return this.curAnimation != null;
 	}
 	
+	public void setApplyAnimationToDefaultPose(boolean b) {
+		this.applyAnimationToDefaultPose = b;
+	}
+	
+	public boolean getApplyAnimationToDefaultPose() {
+		return this.applyAnimationToDefaultPose;
+	}
+	
 	public void setDoLooping(boolean b) {
 		this.doLooping = b;
 	}
@@ -168,6 +176,10 @@ public class AnimationHandler {
 		this.computeTransform(this.model.getNode(0));
 		if(this.renderSkeleton) {
 			this.generateSkeleton();
+			//zero out all the model transforms so we can actually see the skeleton
+			for(int i = 0; i < this.nodeTransforms.length; i++) {
+				this.nodeTransforms[i] = new Mat4();
+			}
 		}
 		this.modelInstance.updateInstance();
 	}

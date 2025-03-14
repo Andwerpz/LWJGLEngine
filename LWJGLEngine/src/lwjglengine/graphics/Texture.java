@@ -11,6 +11,7 @@ import javax.imageio.ImageIO;
 
 import lwjglengine.util.BufferUtils;
 import myutils.file.FileUtils;
+import myutils.file.JarUtils;
 import myutils.file.SystemUtils;
 import myutils.graphics.GraphicsTools;
 import myutils.math.MathUtils;
@@ -256,6 +257,12 @@ public class Texture {
 	 */
 	public static int[] getDataFromImage(BufferedImage img, int loadOptions, int[] outWH) {
 		int[] pixels = null;
+		
+		if(img == null) {
+			//replace img with error texture
+			System.err.println("Texture : img is null");
+			img = JarUtils.loadImage("/error_texture.png");
+		}
 
 		//convert image to proper format
 		BufferedImage image = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
