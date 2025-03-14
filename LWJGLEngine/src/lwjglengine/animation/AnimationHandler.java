@@ -151,11 +151,16 @@ public class AnimationHandler {
 			System.err.println("AnimationHandler : tried to generate skeleton while skeletonInstances == null");
 			return;
 		}
+		
+		Mat4[] stransforms = new Mat4[this.model.getNodeCount()];
 		for(int i = 0; i < this.model.getNodeCount(); i++) {
-			Vec3 cpos = this.nodeTransforms[i].mul(new Vec3(0), 1);
+			stransforms[i] = this.nodeTransforms[i].mul(this.modelInstance.getModelTransform().getModelMatrix());
+		}
+		for(int i = 0; i < this.model.getNodeCount(); i++) {
+			Vec3 cpos = stransforms[i].mul(new Vec3(0), 1);
 			Vec3 ppos = new Vec3(cpos);
 			if(i != 0) {
-				ppos = this.nodeTransforms[this.model.getNode(i).parent.id].mul(new Vec3(0), 1);
+				ppos = stransforms[this.model.getNode(i).parent.id].mul(new Vec3(0), 1);
 			}
 			ModelTransform t = Line.generateLineModelTransform(ppos, cpos);
 			this.skeletonInstances[i].setModelTransform(t);

@@ -235,7 +235,7 @@ public class PerspectiveScreen extends Screen {
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 		glEnable(GL_CULL_FACE);
-		glDisable(GL_CULL_FACE);
+//		glDisable(GL_CULL_FACE);
 		glCullFace(GL_BACK);
 		glPolygonMode(GL_FRONT, GL_FILL);
 		glDisable(GL_BLEND);

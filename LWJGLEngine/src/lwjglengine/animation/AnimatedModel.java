@@ -25,6 +25,7 @@ import static org.lwjgl.opengl.GL46.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -36,11 +37,15 @@ import org.lwjgl.assimp.AIAnimation;
 import org.lwjgl.assimp.AIBone;
 import org.lwjgl.assimp.AIMatrix4x4;
 import org.lwjgl.assimp.AIMesh;
+import org.lwjgl.assimp.AIMetaData;
+import org.lwjgl.assimp.AIMetaDataEntry;
+import org.lwjgl.assimp.AIMetaDataEntry.Buffer;
 import org.lwjgl.assimp.AINode;
 import org.lwjgl.assimp.AINodeAnim;
 import org.lwjgl.assimp.AIQuatKey;
 import org.lwjgl.assimp.AIQuaternion;
 import org.lwjgl.assimp.AIScene;
+import org.lwjgl.assimp.AIString;
 import org.lwjgl.assimp.AIVector3D;
 import org.lwjgl.assimp.AIVectorKey;
 import org.lwjgl.assimp.AIVertexWeight;
@@ -123,6 +128,9 @@ public class AnimatedModel extends Model {
 			
 			//load bones
 			PointerBuffer aibones = aimesh.mBones();
+			if(aibones == null) {
+				continue;
+			}
 			Bone[] bones = new Bone[aibones.limit()];
 			Mat4[] offset_mats = new Mat4[aibones.limit()];
 			for(int j = 0; j < aibones.limit(); j++) {
@@ -156,7 +164,6 @@ public class AnimatedModel extends Model {
 				weights[j].sort((a, b) -> -Float.compare(a.weight, b.weight));
 				float sum = 0;
 				for(int k = 0; k < Math.min(4, weights[j].size()); k++) {
-					System.out.println(weights[j].get(k).weight);
 					sum += weights[j].get(k).weight;
 				}
 				for(int k = 0; k < Math.min(4, weights[j].size()); k++) {
@@ -284,13 +291,13 @@ public class AnimatedModel extends Model {
 		return this.animations.length;
 	}
 	
-	public static AnimatedModel loadAnimatedModelFile(File file) {
+	public static AnimatedModel loadAnimatedModelFile(File file, int flags) {
 		String filepath = file.getAbsolutePath();
 		String parentFilepath = file.getParent() + "\\";
 
 		System.out.println("LOADING ANIMATED MODEL: " + file.getName());
 
-		AIScene scene = aiImportFile(filepath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+		AIScene scene = aiImportFile(filepath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | flags);
 
 		if (scene == null) {
 			System.err.println("Failed to load model " + file.getName());
@@ -312,12 +319,24 @@ public class AnimatedModel extends Model {
 		return model;
 	}
 	
+	public static AnimatedModel loadAnimatedModel(File file) {
+		return AnimatedModel.loadAnimatedModelFile(file, 0);
+	}
+	
 	public static AnimatedModel loadAnimatedModelFile(String filepath) throws IOException {
-		return AnimatedModel.loadAnimatedModelFile(FileUtils.loadFile(filepath));
+		return AnimatedModel.loadAnimatedModelFile(FileUtils.loadFile(filepath), 0);
+	}
+	
+	public static AnimatedModel loadAnimatedModelFile(String filepath, int flags) {
+		return AnimatedModel.loadAnimatedModelFile(FileUtils.loadFile(filepath), flags);
 	}
 
 	public static AnimatedModel loadAnimatedModelFileRelative(String relativeFilepath) throws IOException {
 		return AnimatedModel.loadAnimatedModelFile(FileUtils.generateAbsoluteFilepath(relativeFilepath));
+	}
+	
+	public static AnimatedModel loadAnimatedModelFileRelative(String relativeFilepath, int flags) throws IOException {
+		return AnimatedModel.loadAnimatedModelFile(FileUtils.generateAbsoluteFilepath(relativeFilepath), flags);
 	}
 	
 	class Animation {
@@ -392,10 +411,60 @@ public class AnimatedModel extends Model {
 		Mat4 defaultTransform;
 		
 		public Node(AINode ainode, Node _parent, HashMap<String, Integer> name_to_id) {
-			System.out.println("AINODE : " + ainode.mName().dataString());
 			this.id = name_to_id.size();
 			this.parent = _parent;
 			name_to_id.put(ainode.mName().dataString(), this.id);
+			System.out.println("AINODE : " + this.id + " " + ainode.mName().dataString());
+			
+			AIMetaData aimeta = ainode.mMetadata();
+			if(aimeta != null) {
+				System.out.println("METADATA");
+				Buffer aiproperties = aimeta.mValues();
+				AIString.Buffer aikeys = aimeta.mKeys();
+				for (int i = 0; i < aiproperties.limit(); i++) {
+			        AIMetaDataEntry entry = aiproperties.get(i);
+			        AIString key = aimeta.mKeys().get(i); 
+			        int type = entry.mType();          
+			        ByteBuffer buf;
+			        System.out.print(key.dataString() + " : ");
+
+			        switch (type) {
+			            case 0: // bool
+			            {
+			            	buf = ByteBuffer.allocate(1);
+			            	entry.mData(buf);
+			            	boolean val = buf.get() != 0;
+			                System.out.println(val? "True" : "False");
+			                break;
+			            }
+			            case 1: // int32
+			            {
+			            	buf = ByteBuffer.allocate(4);
+			            	entry.mData(buf);
+			            	int val = buf.getInt();
+			                System.out.println(val);
+			                break;
+			            }
+			            case 5: // String
+			            {
+			            	buf = ByteBuffer.allocate(64);
+			            	entry.mData(buf);
+			            	StringBuilder val = new StringBuilder();
+			            	char c;
+			            	while(buf.hasRemaining() && (c = buf.getChar()) != '\0') { 
+			            		val.append(c);
+			            	}
+			                System.out.println(val.toString());
+			                break;
+			            }
+			            default:
+			                System.out.println("Unsupported metadata type: " + type);
+			                break;
+			        }
+			    }
+			}
+			System.out.println();
+			
 			
 			this.defaultTransform = new Mat4();
 			AIMatrix4x4 aimat = ainode.mTransformation();

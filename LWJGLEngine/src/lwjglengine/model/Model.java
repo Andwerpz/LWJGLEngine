@@ -353,13 +353,13 @@ public class Model {
 	 * @return
 	 * @throws IOException
 	 */
-	public static Model loadModelFile(File file) {
+	public static Model loadModelFile(File file, int flags) {
 		String filepath = file.getAbsolutePath();
 		String parentFilepath = file.getParent() + "\\";
 
 		System.out.println("LOADING MODEL: " + file.getName());
 
-		AIScene scene = aiImportFile(filepath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+		AIScene scene = aiImportFile(filepath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | flags);
 
 		if (scene == null) {
 			System.err.println("Failed to load model " + file.getName());
@@ -380,13 +380,25 @@ public class Model {
 		
 		return model;
 	}
+	
+	public static Model loadModelFile(File file) {
+		return Model.loadModelFile(file, 0);
+	}
 
 	public static Model loadModelFile(String filepath) throws IOException {
-		return Model.loadModelFile(FileUtils.loadFile(filepath));
+		return Model.loadModelFile(FileUtils.loadFile(filepath), 0);
+	}
+	
+	public static Model loadModelFile(String filepath, int flags) {
+		return Model.loadModelFile(FileUtils.loadFile(filepath), flags);
 	}
 
 	public static Model loadModelFileRelative(String relativeFilepath) throws IOException {
 		return Model.loadModelFile(FileUtils.generateAbsoluteFilepath(relativeFilepath));
+	}
+	
+	public static Model loadModelFileRelative(String relativeFilepath, int flags) {
+		return Model.loadModelFile(FileUtils.generateAbsoluteFilepath(relativeFilepath), flags);
 	}
 
 	public static BufferedImage loadImage(String path) throws IOException {
