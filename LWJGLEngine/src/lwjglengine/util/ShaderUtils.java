@@ -35,15 +35,17 @@ public class ShaderUtils {
 		boolean error = false;
 		if (glGetProgrami(program, GL_VALIDATE_STATUS) == GL_FALSE) {
 			System.err.println("Failed to link program");
+			System.err.println(glGetProgramInfoLog(program));
 			error = true;
 		}
 		if (glGetProgrami(program, GL_LINK_STATUS) == GL_FALSE) {
 			System.err.println("Failed to validate program");
+			System.err.println(glGetProgramInfoLog(program));
 			error = true;
 		}
 		if (error) {
 			System.err.println(glGetProgramInfoLog(program));
-//			return null;
+			return null;
 		}
 
 		glDeleteShader(vertID);

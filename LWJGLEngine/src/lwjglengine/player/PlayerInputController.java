@@ -49,12 +49,18 @@ public class PlayerInputController {
 	private float camXRot;
 	private float camYRot;
 	private float camZRot;
+	
+	private float movementSpeedMultiplier = 1.0f;
 
 	public PlayerInputController(Vec3 pos) {
 		super();
 		this.pos = new Vec3(pos);
 		this.vel = new Vec3(0);
 		mouse = MouseInput.getMousePos();
+	}
+	
+	public void setMovementSpeedMultiplier(float f) {
+		this.movementSpeedMultiplier = f;
 	}
 
 	public void setDoNoclip(boolean b) {
@@ -164,7 +170,7 @@ public class PlayerInputController {
 		this.vel.z *= noclipFriction;
 		this.vel.y *= noclipFriction;
 
-		this.pos.addi(this.vel);
+		this.pos.addi(this.vel.mul(this.movementSpeedMultiplier));
 
 		if (this.acceptPlayerInputs) {
 			Vec3 forward = new Vec3(0, 0, -1);

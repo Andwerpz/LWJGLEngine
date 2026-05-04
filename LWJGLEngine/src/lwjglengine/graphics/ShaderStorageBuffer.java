@@ -30,7 +30,7 @@ public class ShaderStorageBuffer {
 
 	private int ssbo;
 
-	private int usage = GL_STATIC_READ;
+	private int usage = GL_STATIC_DRAW;
 
 	public ShaderStorageBuffer() {
 		this.ssbo = glGenBuffers();

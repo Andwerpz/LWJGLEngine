@@ -25,7 +25,7 @@ public abstract class Screen {
 	private static HashSet<Screen> activeScreens = new HashSet<>();
 
 	protected static ScreenQuad screenQuad = new ScreenQuad();
-
+	
 	protected int screenWidth, screenHeight;
 
 	protected Camera camera;
@@ -39,7 +39,7 @@ public abstract class Screen {
 		if (this.screenWidth == 0 || this.screenHeight == 0) {
 			return;
 		}
-
+		
 		this.buildBuffers();
 	}
 
@@ -50,7 +50,7 @@ public abstract class Screen {
 		if (this.screenWidth <= 0 || this.screenHeight <= 0) {
 			return;
 		}
-
+		
 		this.buildBuffers();
 	}
 
@@ -93,7 +93,7 @@ public abstract class Screen {
 	public void render(Framebuffer outputBuffer) {
 		//maybe we should handle this externally, and just say that screens render to whatever viewport dimensions 
 		//are currently active. 
-		//but then, the textures bound to the screen have to match in size huh.. 
+		//but then, the textures bound to the screen have to match in size huh.. 		
 		glViewport(0, 0, this.screenWidth, this.screenHeight);
 		this._render(outputBuffer);
 		glViewport(0, 0, Main.windowWidth, Main.windowHeight);
