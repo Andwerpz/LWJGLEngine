@@ -113,82 +113,95 @@ public class Manifold {
 		Vec3 angaccel_b = new Vec3(0);
 		for (Contact c : this.contacts) {
 			Vec3 cpt = c.pos; //in world space
-			Vec3 cnorm = new Vec3(this.separating_axis); //should be facing towards a
-			cnorm.normalize(); //just in case
+			Vec3 unit_norm = new Vec3(this.separating_axis); //should be facing towards a
+			unit_norm.normalize(); //just in case
 
 			//compute relative velocity from a's perspective. 
 			//this means rvel should be pointing in the same direction as cnorm if there is a collision
 			Vec3 rvel = calcBodyPtVel(cpt, this.b);
 			rvel.subi(calcBodyPtVel(cpt, this.a));
 
-			float norm_mag = MathUtils.dot(cnorm, rvel);
+			float norm_mag = MathUtils.dot(unit_norm, rvel);
 			if (norm_mag < 0) {
 				//no collision, they are travelling away
 				return;
 			}
-			Vec3 norm = cnorm.mul(MathUtils.dot(cnorm, rvel));
+			Vec3 norm = unit_norm.mul(MathUtils.dot(unit_norm, rvel));
 			Vec3 tang = rvel.sub(norm);
 			float tang_mag = tang.length();
 
-			Vec3 unit_norm = new Vec3(norm).normalize();
 			Vec3 unit_tang = new Vec3(tang).normalize();
 
 			//vector from center of shape to collision point
 			Vec3 radiusvec_a = new Vec3(a.pos, cpt);
 			Vec3 radiusvec_b = new Vec3(b.pos, cpt);
+			
+			// - normal component
+			float norm_scalar = 0;	//used to compute friction
+			{
+				//axis of rotation that the normal component will apply torque to
+				Vec3 norm_rotaxis_a = MathUtils.cross(unit_norm, radiusvec_a);
+				Vec3 norm_rotaxis_b = MathUtils.cross(radiusvec_b, unit_norm);
 
-			//axis of rotation that the normal component will apply torque to
-			Vec3 rotaxis_a = MathUtils.cross(cnorm, radiusvec_a);
-			Vec3 rotaxis_b = MathUtils.cross(radiusvec_b, cnorm);
+				//moment of inertia around axes in question
+				float norm_inv_moment_a = 0, norm_inv_moment_b = 0;
+				if (norm_rotaxis_a.lengthSq() != 0) {
+					norm_rotaxis_a.normalize();
+					norm_inv_moment_a = 1.0f / calcMomentAroundAxis(itensorworld_a, norm_rotaxis_a);
+				}
+				if (norm_rotaxis_b.lengthSq() != 0) {
+					norm_rotaxis_b.normalize();
+					norm_inv_moment_b = 1.0f / calcMomentAroundAxis(itensorworld_b, norm_rotaxis_b);
+				}
 
-			//moment of inertia around axes in question
-			float inv_moment_a = 0, inv_moment_b = 0;
-			if (rotaxis_a.lengthSq() != 0) {
-				rotaxis_a.normalize();
-				inv_moment_a = 1.0f / calcMomentAroundAxis(itensorworld_a, rotaxis_a);
+				//compute normal scalar. 
+				float norm_inv_mass_sum = a.inv_mass + b.inv_mass;
+				norm_inv_mass_sum += MathUtils.cross(radiusvec_a, unit_norm).lengthSq() * norm_inv_moment_a;
+				norm_inv_mass_sum += MathUtils.cross(radiusvec_b, unit_norm).lengthSq() * norm_inv_moment_b;
+				norm_scalar = norm_mag * (1.0f + coll_restitution) / norm_inv_mass_sum;
+
+				//compute accelerations due to force
+				accel_a.addi(unit_norm.mul(norm_scalar * a.inv_mass));
+				accel_b.addi(unit_norm.mul(-norm_scalar * b.inv_mass));
+				angaccel_a.addi(MathUtils.cross(unit_norm, radiusvec_a).mul(-norm_scalar * norm_inv_moment_a));
+				angaccel_b.addi(MathUtils.cross(unit_norm, radiusvec_b).mul(norm_scalar * norm_inv_moment_b));
 			}
-			if (rotaxis_b.lengthSq() != 0) {
-				rotaxis_b.normalize();
-				inv_moment_b = 1.0f / calcMomentAroundAxis(itensorworld_b, rotaxis_b);
+			
+			// - tangent component
+			{
+				//axis of rotation that the tangent component will apply torque to
+				Vec3 tang_rotaxis_a = MathUtils.cross(unit_tang, radiusvec_a);
+				Vec3 tang_rotaxis_b = MathUtils.cross(radiusvec_b, unit_tang);
+				
+				//moment of inertia around axes in question
+				float tang_inv_moment_a = 0, tang_inv_moment_b = 0;
+				if (tang_rotaxis_a.lengthSq() != 0) {
+					tang_rotaxis_a.normalize();
+					tang_inv_moment_a = 1.0f / calcMomentAroundAxis(itensorworld_a, tang_rotaxis_a);
+				}
+				if (tang_rotaxis_b.lengthSq() != 0) {
+					tang_rotaxis_b.normalize();
+					tang_inv_moment_b = 1.0f / calcMomentAroundAxis(itensorworld_b, tang_rotaxis_b);
+				}
+				
+				//compute tangent scalar
+				float tang_inv_mass_sum = a.inv_mass + b.inv_mass;
+				tang_inv_mass_sum += MathUtils.cross(radiusvec_a, unit_tang).lengthSq() * tang_inv_moment_a;
+				tang_inv_mass_sum += MathUtils.cross(radiusvec_b, unit_tang).lengthSq() * tang_inv_moment_b;
+
+				//friction
+				float tang_scalar = tang_mag / tang_inv_mass_sum; //static friction
+				if (tang_scalar > norm_scalar * static_friction) {
+					//if the force is too great for static friction, switch to dynamic friction
+					tang_scalar = norm_scalar * dynamic_friction;
+				}
+
+				accel_a.addi(unit_tang.mul(tang_scalar * a.inv_mass));
+				accel_b.addi(unit_tang.mul(-tang_scalar * b.inv_mass));
+				angaccel_a.addi(MathUtils.cross(unit_tang, radiusvec_a).mul(-tang_scalar * tang_inv_moment_a));
+				angaccel_b.addi(MathUtils.cross(unit_tang, radiusvec_b).mul(tang_scalar * tang_inv_moment_b));
 			}
-
-			//compute normal scalar. 
-			float inv_mass_sum = a.inv_mass + b.inv_mass;
-			inv_mass_sum += MathUtils.cross(radiusvec_a, cnorm).lengthSq() * inv_moment_a;
-			inv_mass_sum += MathUtils.cross(radiusvec_b, cnorm).lengthSq() * inv_moment_b;
-			float norm_scalar = norm_mag * (1.0f + coll_restitution) / inv_mass_sum;
-
-			//compute accelerations due to force
-			accel_a.addi(unit_norm.mul(norm_scalar * a.inv_mass));
-			accel_b.addi(unit_norm.mul(-norm_scalar * b.inv_mass));
-			angaccel_a.addi(MathUtils.cross(unit_norm, radiusvec_a).mul(-norm_scalar * inv_moment_a));
-			angaccel_b.addi(MathUtils.cross(unit_norm, radiusvec_b).mul(norm_scalar * inv_moment_b));
-
-			//friction
-			float tang_scalar = tang_mag / inv_mass_sum; //static friction
-			if (tang_scalar > norm_scalar * static_friction) {
-				//if the force is too great for static friction, switch to dynamic friction
-				tang_scalar = norm_scalar * dynamic_friction;
-			}
-
-			Vec3 tang_rotaxis_a = MathUtils.cross(unit_tang, radiusvec_a);
-			Vec3 tang_rotaxis_b = MathUtils.cross(unit_tang, radiusvec_b);
-
-			float tang_inv_moment_a = 0, tang_inv_moment_b = 0;
-			if (tang_rotaxis_a.lengthSq() != 0) {
-				tang_rotaxis_a.normalize();
-				tang_inv_moment_a = 1.0f / calcMomentAroundAxis(itensorworld_a, tang_rotaxis_a);
-			}
-			if (tang_rotaxis_b.lengthSq() != 0) {
-				tang_rotaxis_b.normalize();
-				tang_inv_moment_b = 1.0f / calcMomentAroundAxis(itensorworld_b, tang_rotaxis_b);
-			}
-
-			accel_a.addi(unit_tang.mul(tang_scalar * a.inv_mass));
-			accel_b.addi(unit_tang.mul(-tang_scalar * b.inv_mass));
-			angaccel_a.addi(MathUtils.cross(unit_tang, radiusvec_a).mul(-tang_scalar * tang_inv_moment_a));
-			angaccel_b.addi(MathUtils.cross(unit_tang, radiusvec_b).mul(tang_scalar * tang_inv_moment_b));
-
+			
 			//			System.out.println("ROTAXIS A B : " + rotaxis_a + " " + rotaxis_b);
 			//			System.out.println("INV MOMENT A B : " + inv_moment_a + " " + inv_moment_b);
 			//			System.out.println("INV MASS SUM : " + inv_mass_sum);
